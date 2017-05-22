@@ -11,6 +11,13 @@
     <OutputPath>.</OutputPath>
     <Name>CADETMatch</Name>
     <RootNamespace>CADETMatch</RootNamespace>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments>langmuir.json</CommandLineArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+    <InterpreterArguments>
+    </InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,6 +29,35 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="CADETMatch.py" />
+    <Compile Include="cma.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="evo.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="peakdetect.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="score.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="spea2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="util.py">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="langmuir.json" />
+    <Content Include="mssma.json" />
+    <Content Include="README.txt" />
+    <Content Include="sma.json" />
+    <Content Include="smabreak.json" />
+    <Content Include="smabreak2.json" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

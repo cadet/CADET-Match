@@ -1,0 +1,109 @@
+{
+  "crossoverRate": 0.8,
+  "checkpointFile": "check",
+  "CSV": "output.csv",
+  "stopAverage": 0.99,
+  "stopBest": 0.994,
+  "CADETPath": "C:\\Users\\kosh_000\\cadet_build\\cadet_3\\cadet\\MS_SMKL_RELEASE\\bin\\cadet-cli.exe",
+  "keepTop": 0.99,
+  "resultsDir": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170514_SMABREAK",
+  "experiments": [
+    {
+      "CSV": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170514_SMABREAK\\match.csv",
+      "isotherm": "/output/solution/unit_001/SOLUTION_COLUMN_OUTLET_COMP_001",
+      "features": [
+        {
+          "name": "Primary",
+          "start": 700,
+          "stop": 1500,
+          "type": "similarity"
+        },
+        {
+          "name": "Derivative",
+          "start": 700,
+          "stop": 1500,
+          "type": "derivative_similarity"
+        },
+        {
+          "name": "Overall",
+          "start": 0,
+          "stop": 1500,
+          "type": "curve"
+        }
+      ],
+      "HDF5": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170514_SMABREAK\\match.h5",
+      "name": "Match",
+      "timeout": 30,
+      "NCOL": 32,
+      "NPAR": 16
+    },
+    {
+      "CSV": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170514_SMABREAK\\sma_1b.csv",
+      "isotherm": "/output/solution/unit_001/SOLUTION_COLUMN_OUTLET_COMP_001",
+      "features": [
+        {
+          "name": "Primary",
+          "start": 100,
+          "stop": 1000,
+          "type": "similarity"
+        },
+        {
+          "name": "Derivative",
+          "start": 100,
+          "stop": 1000,
+          "type": "derivative_similarity"
+        },
+        {
+          "name": "Overall",
+          "start": 0,
+          "stop": 1500,
+          "type": "curve"
+        }
+      ],
+      "HDF5": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170514_SMABREAK\\sma_1b.h5",
+      "name": "Break",
+      "timeout": 30,
+      "NCOL": 32,
+      "NPAR": 16
+    }
+  ],
+  "generations": 100,
+  "keep": 0.2,
+  "mutationRate": 0.05,
+  "parameters": [
+    {
+      "name": "KA",
+      "transform": "rate",
+      "position": [ 1 ],
+      "location": [ "/input/model/unit_001/adsorption/SMA_KA" ],
+      "min": [ 1e-10 ],
+      "max": [ 1e10 ]
+    },
+    {
+      "name": "KEQ",
+      "transform": "keq",
+      "position": [ 1 ],
+      "location": [ "/input/model/unit_001/adsorption/SMA_KA", "/input/model/unit_001/adsorption/SMA_KD" ],
+      "min": [ 1e-5 ],
+      "max": [ 1e5 ]
+    },
+    {
+      "name": "NU",
+      "transform": "none",
+      "position": [ 1 ],
+      "location": [ "/input/model/unit_001/adsorption/SMA_NU" ],
+      "min": [ 1 ],
+      "max": [ 100 ]
+    },
+    {
+      "name": "SIGMA",
+      "transform": "none",
+      "position": [ 1 ],
+      "location": [ "/input/model/unit_001/adsorption/SMA_SIGMA" ],
+      "min": [ 1 ],
+      "max": [ 100 ]
+    }
+
+  ],
+  "population": 300
+}
