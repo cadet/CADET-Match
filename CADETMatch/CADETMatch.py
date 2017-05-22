@@ -10,9 +10,7 @@ def main():
 
     evo.createCSV(evo.settings, evo.headers)
     evo.setupTemplates(evo.settings, evo.target)
-    pop, logbook, hof = evo.run(evo.settings, evo.toolbox)
-
-    return pop, logbook, hof
+    evo.run(evo.settings, evo.toolbox)
 
 
 if __name__ == "__main__":

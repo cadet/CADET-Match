@@ -1,6 +1,6 @@
 {
   "crossoverRate": 0.8,
-  "searchMethod":  "mocmaes",
+  "searchMethod":  "SPEA2",
   "checkpointFile": "check",
   "CSV": "output.csv",
   "stopAverage": 0.99,

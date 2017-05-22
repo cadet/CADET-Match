@@ -16,8 +16,7 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>langmuir.json</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>
-    </InterpreterArguments>
+    <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,9 +28,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="CADETMatch.py" />
-    <Compile Include="cma.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="evo.py">
       <SubType>Code</SubType>
     </Compile>

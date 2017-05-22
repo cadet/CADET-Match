@@ -35,7 +35,6 @@ import tempfile
 import shutil
 
 import spea2
-import cma
 
 #parallelization
 from scoop import futures
@@ -246,15 +245,6 @@ def setup(settings_filename):
         target = createTarget(settings)
         MIN_VALUE, MAX_VALUE = buildMinMax(settings)
         toolbox = setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE)
-
-
-        #WARNING! This is truly evil and wrong, don't do this if you can find another option
-        #Because SCOOP pickles for parallelization you can't have wrapped functions and even
-        #object methods cause problems. As a result is relies on variables that are handed in as function
-        #arguments or globally resolveable. CMA needs MIN_VALUE and MAX_VALUE to be globally resolveable
-        #since the function interface does not allow it
-        cma.MIN_VALUE = MIN_VALUE
-        cma.MAX_VALUE = MAX_VALUE
     return settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox
 
 def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE):
@@ -263,8 +253,6 @@ def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE):
     toolbox = base.Toolbox()
     if searchMethod == 'SPEA2':
         return spea2.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools)
-    elif searchMethod == 'mocmaes':
-        return cma.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools)
 
 def buildMinMax(settings):
     "build the minimum and maximum parameter boundaries"
@@ -389,8 +377,6 @@ def run(settings, toolbox):
     searchMethod = settings.get('searchMethod', 'SPEA2')
     if searchMethod == 'SPEA2':
         spea2.run(settings, toolbox, tools, creator)
-    elif searchMethod == 'mocmaes':
-        cma.run(settings, toolbox, tools, creator)
 
 def setupTemplates(settings, target):
     "setup all the experimental templates"
