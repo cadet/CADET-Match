@@ -39,11 +39,14 @@ import spea2
 #parallelization
 from scoop import futures
 
+import scipy.signal
+
 ERROR = {'scores': None,
          'path': None,
          'time': None,
          'value': None,
-         'error': None}
+         'error': None,
+         'cadetValues':None}
 
 def fitness(individual):
 
@@ -85,11 +88,16 @@ def fitness(individual):
     #generate save name
     save_name_base = hashlib.md5(str(individual).encode('utf-8','ignore')).hexdigest()
 
+    for result in results.values():
+        if result['cadetValues']:
+            cadetValues = result['cadetValues']
+            break
+
     #generate csv
     path = Path(settings['resultsDir'], settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
-        writer.writerow([time.ctime(), save_name_base] + ["%.5g" % i for i in individual] + ["%.5g" % i for i in scores] + list(humanScores)) 
+        writer.writerow([time.ctime(), save_name_base] + ["%.5g" % i for i in cadetValues] + ["%.5g" % i for i in scores] + list(humanScores)) 
 
     if keep_result:
         saveExperiments(save_name_base, settings, target, results)
@@ -121,6 +129,7 @@ def plotExperiments(save_name_base, settings, target, results):
     for experiment in settings['experiments']:
         experimentName = experiment['name']
         dst = Path(settings['resultsDir'], '%s_%s.png' % (save_name_base, experimentName))
+        fft_dst = Path(settings['resultsDir'], 'fft_%s_%s.png' % (save_name_base, experimentName))
 
         numPlots = len(experiment['features'])
 
@@ -140,22 +149,83 @@ def plotExperiments(save_name_base, settings, target, results):
 
             selected = target[experimentName][featureName]['selected']
 
-            if featureType in ('similarity', 'curve'):
-                graph.plot(sim_time[selected], sim_value[selected], 'r--', label='Simulation')
-                graph.plot(exp_time[selected], exp_value[selected], 'g:', label='Experiment')
-            elif featureType == 'derivative_similarity':
-                sim_spline = scipy.interpolate.splrep(sim_time[selected], sim_value[selected])
-                exp_spline = scipy.interpolate.splrep(exp_time[selected], exp_value[selected])
+            sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], util.smoothing(sim_time[selected], sim_value[selected]), s=1e-4)
+            exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], util.smoothing(sim_time[selected], exp_value[selected]), s=1e-4)
 
-                graph.plot(sim_time[selected], scipy.interpolate.splev(sim_time[selected], sim_spline, der=1), 'r--', label='Simulation')
-                graph.plot(exp_time[selected], scipy.interpolate.splev(exp_time[selected], exp_spline, der=1), 'g:', label='Experiment')
+            if featureType in ('similarity', 'curve'):
+                
+                graph.plot(sim_time[selected], sim_spline(sim_time[selected]), 'r--', label='Simulation')
+                graph.plot(exp_time[selected], exp_spline(exp_time[selected]), 'g:', label='Experiment')
+            elif featureType == 'derivative_similarity':
+                sim_spline = sim_spline.derivative(1)
+                exp_spline = exp_spline.derivative(1)
+
+                graph.plot(sim_time[selected], sim_spline(sim_time[selected]), 'r--', label='Simulation')
+                graph.plot(exp_time[selected], exp_spline(exp_time[selected]), 'g:', label='Experiment')
             graph.legend()
 
         plt.savefig(bytes(dst), dpi=100)
         plt.close()
 
+
+        #fig = plt.figure(figsize=[10, numPlots*10])
+
+        #from scipy.fftpack import rfft, irfft, fftfreq
+        #for idx,feature in enumerate(experiment['features']):
+        #    graph = fig.add_subplot(numPlots, 1, idx+1)
+
+        #    featureName = feature['name']
+        #    featureType = feature['type']
+
+        #    selected = target[experimentName][featureName]['selected']
+
+        #    if featureType in ('similarity', 'curve'):
+        #        N = len(sim_time[selected])
+        #        T = (sim_time[selected][-1] - sim_time[selected][0]) / N
+        #        W = fftfreq(N, d=sim_time[selected][1]-sim_time[selected][0])
+
+        #        fft_sim_value = rfft(sim_value[selected])
+        #        fft_sim_value[fft_sim_value < 0.01] = 0
+        #        fft_exp_value = rfft(exp_value[selected])
+        #        fft_exp_value[fft_exp_value < 0.01] = 0
+        #        fft_x = numpy.linspace(0.0, 1.0/(2.0*T), N//2)
+
+        #        #graph.plot(W, fft_sim_value, 'r--', label='Simulation')
+        #        #graph.plot(W, fft_exp_value, 'g:', label='Experiment')
+        #        graph.plot(sim_time[selected], irfft(fft_sim_value), 'r--', label='Simulation')
+        #        graph.plot(exp_time[selected], irfft(fft_exp_value), 'g:', label='Experiment')
+        #    elif featureType == 'derivative_similarity':
+        #        sim_spline = scipy.interpolate.splrep(sim_time[selected], util.smoothing(sim_time[selected], sim_value[selected]))
+        #        exp_spline = scipy.interpolate.splrep(exp_time[selected], util.smoothing(sim_time[selected], exp_value[selected]))
+
+
+        #        N = len(sim_time[selected])
+        #        T = (sim_time[selected][-1] - sim_time[selected][0]) / N
+        #        fft_sim_value = rfft(scipy.interpolate.splev(sim_time[selected], sim_spline, der=1))
+        #        W = fftfreq(N, d=sim_time[selected][1]-sim_time[selected][0])
+
+        #        fft_sim_value[fft_sim_value < 0.01] = 0
+        #        fft_exp_value = rfft(scipy.interpolate.splev(exp_time[selected], exp_spline, der=1))
+        #        fft_exp_value[fft_exp_value < 0.01] = 0
+        #        fft_x = numpy.linspace(0.0, 1.0/(2.0*T), N//2)
+
+        #        #print(len(fft_sim_value))
+        #        #for i in fft_sim_value:
+        #        #    print(i)
+
+        #        #graph.plot(W, fft_sim_value, 'r--', label='Simulation')
+        #        #graph.plot(W, fft_exp_value, 'g:', label='Experiment')
+        #        graph.plot(sim_time[selected], irfft(fft_sim_value), 'r--', label='Simulation')
+        #        graph.plot(exp_time[selected], irfft(fft_exp_value), 'g:', label='Experiment')
+        #    graph.legend()
+
+        #plt.savefig(bytes(fft_dst), dpi=100)
+        #plt.close()
+
 def set_h5(individual, h5, settings):
     util.log("individual", individual)
+
+    cadetValues = []
 
     idx = 0
     for parameter in settings['parameters']:
@@ -166,14 +236,18 @@ def set_h5(individual, h5, settings):
             util.log(name, idx, individual[idx], location, position)
             if "rate" == transform:
                 h5[location[0]][position] = 10.0 ** individual[idx]
+                cadetValues.append(h5[location[0]][position])
                 idx += 1
             elif "none" == transform:
                 h5[location[0]][position] = individual[idx]
+                cadetValues.append(h5[location[0]][position])
                 idx += 1
             elif "keq" == transform:
                 h5[location[1]][position] = h5[location[0]][position]/(10.0**individual[idx])
+                cadetValues.append(h5[location[1]][position])
                 idx += 1
     util.log("finished setting hdf5")
+    return cadetValues
 
 def runExperiment(individual, experiment, settings, target):
     template = Path(settings['resultsDir'], "template_%s.h5" % experiment['name'])
@@ -185,7 +259,7 @@ def runExperiment(individual, experiment, settings, target):
     
     #change file
     h5 = h5py.File(path, 'a')
-    set_h5(individual, h5, settings)
+    cadetValues = set_h5(individual, h5, settings)
     h5['/input/solver/NTHREADS'][:] = 1
     h5.close()
 
@@ -219,6 +293,7 @@ def runExperiment(individual, experiment, settings, target):
     temp['path'] = path
     temp['scores'] = []
     temp['error'] = sum((temp['value']-target[experiment['name']]['value'])**2)
+    temp['cadetValues'] = cadetValues
 
     h5.close()
 
@@ -278,8 +353,12 @@ def genHeaders(settings):
     numGoals = 0
 
     for parameter in settings['parameters']:
+        if parameter['transform'] == 'keq':
+            name = 'KD'
+        else:
+            name = parameter['name']
         for position in parameter['position']:
-            headers.append("%s%s" % (parameter['name'], position))
+            headers.append("%s%s" % (name, position))
 
     for idx,experiment in enumerate(settings['experiments']):
         experimentName = experiment['name']
@@ -348,9 +427,11 @@ def createExperiment(experiment):
             temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1])
 
         if featureType == 'derivative_similarity':
-            spline_data = scipy.interpolate.splrep(selectedTimes, selectedValues)
-            spline_derivative_data = scipy.interpolate.splev(selectedTimes, spline_data, der=1)
-            [high, low] = util.find_peak(selectedTimes, scipy.interpolate.splev(selectedTimes, spline_data, der=1))
+            #spline_data = scipy.interpolate.splrep(selectedTimes, util.smoothing(selectedTimes, selectedValues))
+ 
+            exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, util.smoothing(selectedTimes, selectedValues), s=1e-4).derivative(1)
+
+            [high, low] = util.find_peak(selectedTimes, exp_spline(selectedTimes))
 
             temp[featureName]['peak_high'] = high
             temp[featureName]['peak_low'] = low

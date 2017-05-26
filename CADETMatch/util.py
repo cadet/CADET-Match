@@ -3,6 +3,7 @@ import random
 import math
 
 from deap import tools
+import scipy.signal
 
 
 def find_extreme(seq):
@@ -47,3 +48,14 @@ def averageFitness(offspring):
         number += len(i.fitness.values)
         bestMin = max(bestMin, min(i.fitness.values))
     return total/number, bestMin
+
+def smoothing(times, values):
+    #make a 5 minute moving average filter since chromatograms don't change very fast in order to filter numerical noise
+    
+    #filter length must be odd, set to 10% of the feature size and then make it odd if necesary
+    filter_length = int(.1 * len(values))
+    if filter_length % 2 == 0:
+        filter_length += 1
+    return scipy.signal.savgol_filter(values, filter_length, 3)
+    #return scipy.signal.hilbert(values)
+    return values
