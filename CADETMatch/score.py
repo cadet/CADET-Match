@@ -11,17 +11,24 @@ def exponential(x,a):
     return numpy.exp(a*x)
 
 def time_function(CV_time, peak_time):
-    x = numpy.array([0, CV_time/2.0, 2.0*CV_time, 4.0*CV_time])
-    y = numpy.array([1.0, 0.98, 0.5, 0.01])
+    x = numpy.array([0, CV_time/2, 2*CV_time, 5*CV_time, 8*CV_time, 12*CV_time])
+    y = numpy.array([1.0, 0.97, 0.5, 0.15, 0.01, 0])
     
-    args = scipy.optimize.curve_fit(logistic, x, y, [-0.1,2.0*CV_time])[0]
+    #args = scipy.optimize.curve_fit(logistic, x, y, [-0.1,2.0*CV_time])[0]
+    fun = scipy.interpolate.UnivariateSpline(x,y, s=1e-6, ext=1)
     
-    scale = 1.0/logistic(0.0, *args)
+    #scale = 1.0/logistic(0.0, *args)
 
     def wrapper(x):
 
         diff = numpy.abs(x - peak_time)
-        return logistic(diff, *args)*scale
+        value = fun(diff)
+
+        #clip values
+        value = min(value, 1.0)
+        value = max(value, 0.0)
+
+        return value
 
     return wrapper
 
@@ -58,8 +65,8 @@ def scoreSimilarity(sim_data, experimental_data, feature):
 
     time_high, value_high = high
     
-    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=1e-4)
-    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=1e-4)
+    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=1e-6)
+    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=1e-6)
 
     temp = [pear_corr(scipy.stats.pearsonr(sim_spline(exp_time_values), exp_spline(exp_time_values))[0]), feature['value_function'](value_high), feature['time_function'](time_high)]
     return temp
@@ -75,8 +82,8 @@ def scoreDerivativeSimilarity(sim_data, experimental_data, feature):
     #spline_exp = scipy.interpolate.splrep(exp_time_values, util.smoothing(exp_time_values, exp_data_values))
     #spline_sim = scipy.interpolate.splrep(exp_time_values, util.smoothing(exp_time_values, sim_data_values))
 
-    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=1e-4).derivative(1)
-    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=1e-4).derivative(1)
+    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=1e-6).derivative(1)
+    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=1e-6).derivative(1)
 
     #spline_derivative_exp = scipy.interpolate.splev(exp_time_values, spline_exp, der=1)
     #spline_derivative_sim = scipy.interpolate.splev(exp_time_values, spline_sim, der=1)

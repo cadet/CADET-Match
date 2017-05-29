@@ -149,8 +149,8 @@ def plotExperiments(save_name_base, settings, target, results):
 
             selected = target[experimentName][featureName]['selected']
 
-            sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], util.smoothing(sim_time[selected], sim_value[selected]), s=1e-4)
-            exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], util.smoothing(sim_time[selected], exp_value[selected]), s=1e-4)
+            sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], util.smoothing(sim_time[selected], sim_value[selected]), s=1e-6)
+            exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], util.smoothing(sim_time[selected], exp_value[selected]), s=1e-6)
 
             if featureType in ('similarity', 'curve'):
                 
@@ -429,7 +429,7 @@ def createExperiment(experiment):
         if featureType == 'derivative_similarity':
             #spline_data = scipy.interpolate.splrep(selectedTimes, util.smoothing(selectedTimes, selectedValues))
  
-            exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, util.smoothing(selectedTimes, selectedValues), s=1e-4).derivative(1)
+            exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, util.smoothing(selectedTimes, selectedValues), s=1e-6).derivative(1)
 
             [high, low] = util.find_peak(selectedTimes, exp_spline(selectedTimes))
 

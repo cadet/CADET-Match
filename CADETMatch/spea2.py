@@ -25,9 +25,8 @@ def run(settings, toolbox, tools, creator):
 
     hof = tools.HallOfFame(1)
 
-    pop, logbook, hof = eaMuCommaLambda(pop, toolbox, mu=MU, lambda_=LAMBDA,
+    eaMuCommaLambda(pop, toolbox, mu=MU, lambda_=LAMBDA,
         cxpb=settings['crossoverRate'], mutpb=settings['mutationRate'], ngen=totalGenerations, settings=settings, halloffame=hof, tools=tools)
-    return pop, logbook, hof
 
 def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
                     stats=None, halloffame=None, verbose=__debug__, tools=None):
