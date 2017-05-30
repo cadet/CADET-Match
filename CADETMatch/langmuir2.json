@@ -10,52 +10,6 @@
   "resultsDir": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170511_LANGMUIR",
   "experiments": [
     {
-      "CSV": "F:\\Train\\CADETMatch\\20170511_LANGMUIR\\langmuir_1a.csv",
-      "isotherm": "/output/solution/unit_001/SOLUTION_COLUMN_OUTLET_COMP_000",
-      "features": [
-        {
-          "name": "Primary",
-          "start": 0,
-          "stop": 30000,
-          "type": "similarity"
-        },
-        {
-          "name": "Derivative",
-          "start": 0,
-          "stop": 30000,
-          "type": "derivative_similarity"
-        }
-      ],
-      "HDF5": "F:\\Train\\CADETMatch\\20170511_LANGMUIR\\langmuir_1a.h5",
-      "name": "MatchA",
-      "timeout": 10,
-      "NCOL": 16,
-      "NPAR": 4
-    },
-    {
-      "CSV": "F:\\Train\\CADETMatch\\20170511_LANGMUIR\\langmuir_1b.csv",
-      "isotherm": "/output/solution/unit_001/SOLUTION_COLUMN_OUTLET_COMP_000",
-      "features": [
-        {
-          "name": "Primary",
-          "start": 0,
-          "stop": 30000,
-          "type": "similarity"
-        },
-        {
-          "name": "Derivative",
-          "start": 0,
-          "stop": 30000,
-          "type": "derivative_similarity"
-        }
-      ],
-      "HDF5": "F:\\Train\\CADETMatch\\20170511_LANGMUIR\\langmuir_1b.h5",
-      "name": "MatchB",
-      "timeout": 10,
-      "NCOL": 16,
-      "NPAR": 4
-    },
-    {
       "CSV": "C:/Users/kosh_000/Documents/MATLAB/opt_test/langmuir_1c.csv",
       "isotherm": "/output/solution/unit_001/SOLUTION_COLUMN_OUTLET_COMP_000",
       "features": [

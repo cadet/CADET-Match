@@ -149,78 +149,23 @@ def plotExperiments(save_name_base, settings, target, results):
 
             selected = target[experimentName][featureName]['selected']
 
-            sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], util.smoothing(sim_time[selected], sim_value[selected]), s=1e-6)
-            exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], util.smoothing(sim_time[selected], exp_value[selected]), s=1e-6)
+            
 
-            if featureType in ('similarity', 'curve'):
-                
+            if featureType in ('similarity', 'curve', 'breakthrough'):
+                sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=1e-6)
+                exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=1e-6)
                 graph.plot(sim_time[selected], sim_spline(sim_time[selected]), 'r--', label='Simulation')
                 graph.plot(exp_time[selected], exp_spline(exp_time[selected]), 'g:', label='Experiment')
             elif featureType == 'derivative_similarity':
-                sim_spline = sim_spline.derivative(1)
-                exp_spline = exp_spline.derivative(1)
+                sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=1e-5).derivative(1)
+                exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=1e-5).derivative(1)
 
-                graph.plot(sim_time[selected], sim_spline(sim_time[selected]), 'r--', label='Simulation')
-                graph.plot(exp_time[selected], exp_spline(exp_time[selected]), 'g:', label='Experiment')
+                graph.plot(sim_time[selected], util.smoothing(sim_time[selected], sim_spline(sim_time[selected])), 'r--', label='Simulation')
+                graph.plot(exp_time[selected], util.smoothing(exp_time[selected], exp_spline(exp_time[selected])), 'g:', label='Experiment')
             graph.legend()
 
         plt.savefig(bytes(dst), dpi=100)
         plt.close()
-
-
-        #fig = plt.figure(figsize=[10, numPlots*10])
-
-        #from scipy.fftpack import rfft, irfft, fftfreq
-        #for idx,feature in enumerate(experiment['features']):
-        #    graph = fig.add_subplot(numPlots, 1, idx+1)
-
-        #    featureName = feature['name']
-        #    featureType = feature['type']
-
-        #    selected = target[experimentName][featureName]['selected']
-
-        #    if featureType in ('similarity', 'curve'):
-        #        N = len(sim_time[selected])
-        #        T = (sim_time[selected][-1] - sim_time[selected][0]) / N
-        #        W = fftfreq(N, d=sim_time[selected][1]-sim_time[selected][0])
-
-        #        fft_sim_value = rfft(sim_value[selected])
-        #        fft_sim_value[fft_sim_value < 0.01] = 0
-        #        fft_exp_value = rfft(exp_value[selected])
-        #        fft_exp_value[fft_exp_value < 0.01] = 0
-        #        fft_x = numpy.linspace(0.0, 1.0/(2.0*T), N//2)
-
-        #        #graph.plot(W, fft_sim_value, 'r--', label='Simulation')
-        #        #graph.plot(W, fft_exp_value, 'g:', label='Experiment')
-        #        graph.plot(sim_time[selected], irfft(fft_sim_value), 'r--', label='Simulation')
-        #        graph.plot(exp_time[selected], irfft(fft_exp_value), 'g:', label='Experiment')
-        #    elif featureType == 'derivative_similarity':
-        #        sim_spline = scipy.interpolate.splrep(sim_time[selected], util.smoothing(sim_time[selected], sim_value[selected]))
-        #        exp_spline = scipy.interpolate.splrep(exp_time[selected], util.smoothing(sim_time[selected], exp_value[selected]))
-
-
-        #        N = len(sim_time[selected])
-        #        T = (sim_time[selected][-1] - sim_time[selected][0]) / N
-        #        fft_sim_value = rfft(scipy.interpolate.splev(sim_time[selected], sim_spline, der=1))
-        #        W = fftfreq(N, d=sim_time[selected][1]-sim_time[selected][0])
-
-        #        fft_sim_value[fft_sim_value < 0.01] = 0
-        #        fft_exp_value = rfft(scipy.interpolate.splev(exp_time[selected], exp_spline, der=1))
-        #        fft_exp_value[fft_exp_value < 0.01] = 0
-        #        fft_x = numpy.linspace(0.0, 1.0/(2.0*T), N//2)
-
-        #        #print(len(fft_sim_value))
-        #        #for i in fft_sim_value:
-        #        #    print(i)
-
-        #        #graph.plot(W, fft_sim_value, 'r--', label='Simulation')
-        #        #graph.plot(W, fft_exp_value, 'g:', label='Experiment')
-        #        graph.plot(sim_time[selected], irfft(fft_sim_value), 'r--', label='Simulation')
-        #        graph.plot(exp_time[selected], irfft(fft_exp_value), 'g:', label='Experiment')
-        #    graph.legend()
-
-        #plt.savefig(bytes(fft_dst), dpi=100)
-        #plt.close()
 
 def set_h5(individual, h5, settings):
     util.log("individual", individual)
@@ -309,6 +254,8 @@ def runExperiment(individual, experiment, settings, target):
             temp['scores'].extend(score.scoreDerivativeSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName]))
         elif featureType == 'curve':
             temp['scores'].extend(score.scoreCurve(temp, target[experiment['name']], target[experiment['name']][featureName]))
+        elif featureType == 'breakthrough':
+            temp['scores'].extend(score.scoreBreakthrough(temp, target[experiment['name']], target[experiment['name']][featureName]))
 
     return temp
 
@@ -379,6 +326,11 @@ def genHeaders(settings):
                 temp  = ["%s_Similarity" % name]
                 numGoals += 1
 
+            elif feature['type'] == 'breakthrough':
+                name = "%s_%s" % (experimentName, feature['name'])
+                temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time_Start" % name, "%s_Time_Stop" % name]
+                numGoals += 4
+
             headers.extend(temp)
             experiment['headers'].extend(temp)
 
@@ -426,12 +378,18 @@ def createExperiment(experiment):
             temp[featureName]['time_function'] = score.time_function(CV_time, temp[featureName]['peak'][0])
             temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1])
 
+        if featureType == 'breakthrough':
+            temp[featureName]['break'] = util.find_breakthrough(selectedTimes, selectedValues)
+            temp[featureName]['time_function_start'] = score.time_function(CV_time, temp[featureName]['break'][0][0])
+            temp[featureName]['time_function_stop'] = score.time_function(CV_time, temp[featureName]['break'][1][0])
+            temp[featureName]['value_function'] = score.value_function(temp[featureName]['break'][0][1])
+
         if featureType == 'derivative_similarity':
             #spline_data = scipy.interpolate.splrep(selectedTimes, util.smoothing(selectedTimes, selectedValues))
  
-            exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, util.smoothing(selectedTimes, selectedValues), s=1e-6).derivative(1)
+            exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, selectedValues, s=1e-5).derivative(1)
 
-            [high, low] = util.find_peak(selectedTimes, exp_spline(selectedTimes))
+            [high, low] = util.find_peak(selectedTimes, util.smoothing(selectedTimes, exp_spline(selectedTimes)))
 
             temp[featureName]['peak_high'] = high
             temp[featureName]['peak_low'] = low
