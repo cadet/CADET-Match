@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy
 import util
 import score
+import grad
 
 import functools
 import subprocess
@@ -177,7 +178,11 @@ def set_h5(individual, h5, settings):
         location = parameter['location']
         transform = parameter['transform']
         name = parameter['name']
-        for position in parameter['position']:
+        comp = parameter['component']
+        NBOUND = h5['/input/model/%s/discretization/NBOUND' % location[0].split('/')[3]][:]
+        boundOffset = numpy.cumsum(numpy.concatenate([[0.0], NBOUND]))
+        for bound in parameter['bound']:
+            position = boundOffset[comp] + bound
             util.log(name, idx, individual[idx], location, position)
             if "rate" == transform:
                 h5[location[0]][position] = 10.0 ** individual[idx]
@@ -300,12 +305,13 @@ def genHeaders(settings):
     numGoals = 0
 
     for parameter in settings['parameters']:
+        comp = parameter['component']
         if parameter['transform'] == 'keq':
             name = 'KD'
         else:
             name = parameter['name']
-        for position in parameter['position']:
-            headers.append("%s%s" % (name, position))
+        for bound in parameter['bound']:
+            headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
 
     for idx,experiment in enumerate(settings['experiments']):
         experimentName = experiment['name']
@@ -455,6 +461,7 @@ def setupTemplates(settings, target):
 
             h5['/input/model/unit_001/discretization/NCOL'][:] = experiment['NCOL']
             h5['/input/model/unit_001/discretization/NPAR'][:] = experiment['NPAR']
+    grad.setupTemplates(settings, target)
 
 
 #This will run when the module is imported so that each process has its own copy of this data

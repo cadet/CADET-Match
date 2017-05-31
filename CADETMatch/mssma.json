@@ -51,7 +51,8 @@
     {
       "name": "KA",
       "transform": "rate",
-      "position": [ 1, 2 ],
+      "component": 1,
+      "bound": [ 0, 1 ],
       "location": [ "/input/model/unit_001/adsorption/MSSMA_KA" ],
       "min": [ 1e30, 1e27 ],
       "max": [ 2e30, 2e27 ]
@@ -59,7 +60,8 @@
     {
       "name": "KEQ",
       "transform": "keq",
-      "position": [ 1, 2 ],
+      "component": 1,
+      "bound": [ 0, 1 ],
       "location": [ "/input/model/unit_001/adsorption/MSSMA_KA", "/input/model/unit_001/adsorption/MSSMA_KD" ],
       "min": [ 1e-7, 2e-6 ],
       "max": [ 5e-7, 3e-6 ]
@@ -67,7 +69,8 @@
     {
       "name": "NU",
       "transform": "none",
-      "position": [ 1, 2 ],
+      "component": 1,
+      "bound": [ 0, 1 ],
       "location": [ "/input/model/unit_001/adsorption/MSSMA_NU" ],
       "min": [ 13.4, 20.3 ],
       "max": [ 13.6, 20.4 ]
@@ -75,7 +78,8 @@
     {
       "name": "SIGMA",
       "transform": "none",
-      "position": [ 1, 2 ],
+      "component": 1,
+      "bound": [ 0, 1 ],
       "location": [ "/input/model/unit_001/adsorption/MSSMA_SIGMA" ],
       "min": [ 49.8, 67.5 ],
       "max": [ 49.9, 67.6 ]
@@ -83,7 +87,8 @@
     {
       "name": "RATE",
       "transform": "rate",
-      "position": [ 2, 3 ],
+      "component": 1,
+      "bound": [ 1, 2 ],
       "location": [ "/input/model/unit_001/adsorption/MSSMA_RATES" ],
       "min": [ 2e32, 40000 ],
       "max": [ 4e32, 45000 ]

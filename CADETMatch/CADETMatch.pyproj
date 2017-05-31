@@ -31,6 +31,9 @@
     <Compile Include="evo.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="grad.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="peakdetect.py">
       <SubType>Code</SubType>
     </Compile>

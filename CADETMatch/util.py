@@ -1,6 +1,7 @@
 import peakdetect
 import random
 import math
+import numpy
 
 from deap import tools
 import scipy.signal
@@ -63,3 +64,21 @@ def smoothing(times, values):
     return scipy.signal.savgol_filter(values, filter_length, 3)
     #return scipy.signal.hilbert(values)
     return values
+
+def set_value(node, nameH5, dtype, value):
+    "merge the values from parms into node of the hdf5 file"
+    data = numpy.array(value, dtype=dtype)
+    if node.get(nameH5, None) is not None:
+        del node[nameH5]
+    node.create_dataset(nameH5, data=data, maxshape=tuple(None for i in range(data.ndim)), fillvalue=[0])
+
+def set_value_enum(node, nameH5, value):
+    "merge the values from parms into node of the hdf5 file"
+    if isinstance(value, list):
+        dtype = 'S' + str(len(value[0])+1)
+    else:
+        dtype = 'S' + str(len(value)+1)
+    data = numpy.array(value, dtype=dtype)
+    if node.get(nameH5, None) is not None:
+        del node[nameH5]
+    node.create_dataset(nameH5, data=data)

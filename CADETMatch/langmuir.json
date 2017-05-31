@@ -86,7 +86,8 @@
     {
       "name": "KA",
       "transform": "rate",
-      "position": [ 0 ],
+      "component": 0,
+      "bound": [ 0 ],
       "location": [ "/input/model/unit_001/adsorption/MCL_KA" ],
       "min": [ 1.13 ],
       "max": [ 1.15 ]
@@ -94,7 +95,8 @@
     {
       "name": "KEQ",
       "transform": "keq",
-      "position": [ 0 ],
+      "component": 0,
+      "bound": [ 0 ],
       "location": [ "/input/model/unit_001/adsorption/MCL_KA", "/input/model/unit_001/adsorption/MCL_KD" ],
       "min": [ 56 ],
       "max": [ 58 ]
@@ -102,7 +104,8 @@
     {
       "name": "QMAX",
       "transform": "none",
-      "position": [ 0 ],
+      "component": 0,
+      "bound": [ 0 ],
       "location": [ "/input/model/unit_001/adsorption/MCL_QMAX" ],
       "min": [ 12.5 ],
       "max": [ 13.5 ]
