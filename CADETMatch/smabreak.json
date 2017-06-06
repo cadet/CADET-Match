@@ -1,15 +1,17 @@
 {
   "crossoverRate": 0.8,
+  "searchMethod": "SPEA2",
   "checkpointFile": "check",
   "CSV": "output.csv",
   "stopAverage": 0.99,
-  "stopBest": 0.994,
+  "stopBest": 0.995,
   "CADETPath": "C:\\Users\\kosh_000\\cadet_build\\cadet_3\\cadet\\MS_SMKL_RELEASE\\bin\\cadet-cli.exe",
-  "keepTop": 0.99,
+  "keepTop": 0.999,
   "resultsDir": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170514_SMABREAK",
+  "resultsGradDir": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170514_SMABREAK\\grad",
   "experiments": [
     {
-      "CSV": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170514_SMABREAK\\match.csv",
+      "CSV": "F:\\Train\\CADETMatch\\20170514_SMABREAK\\match.csv",
       "isotherm": "/output/solution/unit_001/SOLUTION_COLUMN_OUTLET_COMP_001",
       "features": [
         {
@@ -31,14 +33,14 @@
           "type": "curve"
         }
       ],
-      "HDF5": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170514_SMABREAK\\match.h5",
+      "HDF5": "F:\\Train\\CADETMatch\\20170514_SMABREAK\\match.h5",
       "name": "Match",
       "timeout": 30,
       "NCOL": 32,
       "NPAR": 16
     },
     {
-      "CSV": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170514_SMABREAK\\sma_1b.csv",
+      "CSV": "F:\\Train\\CADETMatch\\20170514_SMABREAK\\sma_1b.csv",
       "isotherm": "/output/solution/unit_001/SOLUTION_COLUMN_OUTLET_COMP_001",
       "features": [
         {
@@ -60,7 +62,7 @@
           "type": "curve"
         }
       ],
-      "HDF5": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170514_SMABREAK\\sma_1b.h5",
+      "HDF5": "F:\\Train\\CADETMatch\\20170514_SMABREAK\\sma_1b.h5",
       "name": "Break",
       "timeout": 30,
       "NCOL": 32,
@@ -72,42 +74,32 @@
   "mutationRate": 0.05,
   "parameters": [
     {
-      "name": "KA",
-      "transform": "rate",
-      "component": 1,
-      "bound": [ 0 ],
-      "location": [ "/input/model/unit_001/adsorption/SMA_KA" ],
-      "min": [ 1e-10 ],
-      "max": [ 1e10 ]
-    },
-    {
-      "name": "KEQ",
       "transform": "keq",
       "component": 1,
       "bound": [ 0 ],
       "location": [ "/input/model/unit_001/adsorption/SMA_KA", "/input/model/unit_001/adsorption/SMA_KD" ],
-      "min": [ 1e-5 ],
-      "max": [ 1e5 ]
+      "minKEQ": [ 1e-2 ],
+      "maxKEQ": [ 1e-1 ],
+      "minKA": [ 35 ],
+      "maxKA": [ 36 ]
     },
     {
-      "name": "NU",
-      "transform": "none",
+      "transform": "log",
       "component": 1,
       "bound": [ 0 ],
-      "location": [ "/input/model/unit_001/adsorption/SMA_NU" ],
-      "min": [ 1 ],
-      "max": [ 100 ]
+      "location": "/input/model/unit_001/adsorption/SMA_NU",
+      "min": [ 4 ],
+      "max": [ 5 ]
     },
     {
-      "name": "SIGMA",
-      "transform": "none",
+      "transform": "log",
       "component": 1,
       "bound": [ 0 ],
-      "location": [ "/input/model/unit_001/adsorption/SMA_SIGMA" ],
-      "min": [ 1 ],
-      "max": [ 100 ]
+      "location": "/input/model/unit_001/adsorption/SMA_SIGMA",
+      "min": [ 11 ],
+      "max": [ 12 ]
     }
 
   ],
-  "population": 300
+  "population": 20
 }

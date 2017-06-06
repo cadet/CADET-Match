@@ -5,6 +5,7 @@ import util
 import numpy
 import array
 from pathlib import Path
+import grad
 
 from deap import algorithms
 
@@ -85,7 +86,7 @@ s
     """
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
-    checkpointFile = Path(settings['resultsDir'], settings['checkpointFile'])
+    checkpointFile = Path(settings['resultsDirMisc'], settings['checkpointFile'])
 
     if checkpointFile.exists():
         with checkpointFile.open('rb') as cp_file:
@@ -96,12 +97,14 @@ s
         halloffame = cp["halloffame"]
         logbook = cp["logbook"]
         random.setstate(cp["rndstate"])
+        gradCheck = cp['gradCheck']
 
     else:
         # Start a new evolution
         start_gen = 0    
 
         logbook = tools.Logbook()
+        gradCheck = 0.7
 
 
         # Evaluate the individuals with an invalid fitness
@@ -121,7 +124,7 @@ s
             print(logbook.stream)
 
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-            logbook=logbook, rndstate=random.getstate())
+            logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(cp, cp_file)
@@ -136,6 +139,9 @@ s
         fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
+
+        gradCheck, newChildren = grad.search(gradCheck, offspring, toolbox)
+        offspring.extend(newChildren)
 
         avg, bestMin = util.averageFitness(offspring)
         print('avg', avg, 'best', bestMin)
@@ -155,9 +161,9 @@ s
             print(logbook.stream)
 
         cp = dict(population=population, generation=gen, halloffame=halloffame,
-            logbook=logbook, rndstate=random.getstate())
+            logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
 
-        hof = Path(settings['resultsDir'], 'hof')
+        hof = Path(settings['resultsDirMisc'], 'hof')
         with hof.open('wb') as data:
             numpy.savetxt(data, numpy.array(halloffame))
         with checkpointFile.open('wb') as cp_file:

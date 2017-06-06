@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy
 import util
 import score
-import grad
 
 import functools
 import subprocess
@@ -50,7 +49,6 @@ ERROR = {'scores': None,
          'cadetValues':None}
 
 def fitness(individual):
-
     if not(util.feasible(individual)):
         return [0.0] * numGoals
 
@@ -81,8 +79,7 @@ def fitness(individual):
     keep_result = 0
     if any(humanScores >= (keepTop * target['bestHumanScores'])):
         keep_result = 1
-
-
+        
     #flip sign of SSE for writing out to file
     humanScores[-1] = -1 * humanScores[-1]
 
@@ -98,7 +95,7 @@ def fitness(individual):
     path = Path(settings['resultsDir'], settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
-        writer.writerow([time.ctime(), save_name_base] + ["%.5g" % i for i in cadetValues] + ["%.5g" % i for i in scores] + list(humanScores)) 
+        writer.writerow([time.ctime(), save_name_base, 'EVO'] + ["%.5g" % i for i in cadetValues] + ["%.5g" % i for i in scores] + list(humanScores)) 
 
     if keep_result:
         saveExperiments(save_name_base, settings, target, results)
@@ -108,15 +105,14 @@ def fitness(individual):
     for result in results.values():
         if result['path']:
             os.remove(result['path'])
-
-
+            
     return scores
 
 def saveExperiments(save_name_base, settings,target, results):
     for experiment in settings['experiments']:
         experimentName = experiment['name']
         src = results[experimentName]['path']
-        dst = Path(settings['resultsDir'], '%s_%s.h5' % (save_name_base, experimentName))
+        dst = Path(settings['resultsDirEvo'], '%s_%s_EVO.h5' % (save_name_base, experimentName))
 
         shutil.copy(src, bytes(dst))
 
@@ -129,8 +125,7 @@ def saveExperiments(save_name_base, settings,target, results):
 def plotExperiments(save_name_base, settings, target, results):
     for experiment in settings['experiments']:
         experimentName = experiment['name']
-        dst = Path(settings['resultsDir'], '%s_%s.png' % (save_name_base, experimentName))
-        fft_dst = Path(settings['resultsDir'], 'fft_%s_%s.png' % (save_name_base, experimentName))
+        dst = Path(settings['resultsDirEvo'], '%s_%s_EVO.png' % (save_name_base, experimentName))
 
         numPlots = len(experiment['features'])
 
@@ -177,30 +172,38 @@ def set_h5(individual, h5, settings):
     for parameter in settings['parameters']:
         location = parameter['location']
         transform = parameter['transform']
-        name = parameter['name']
         comp = parameter['component']
-        NBOUND = h5['/input/model/%s/discretization/NBOUND' % location[0].split('/')[3]][:]
+
+        if transform == 'keq':
+            unit = location[0].split('/')[3]
+        elif transform == 'log':
+            unit = location.split('/')[3]
+
+        NBOUND = h5['/input/model/%s/discretization/NBOUND' % unit][:]
         boundOffset = numpy.cumsum(numpy.concatenate([[0.0], NBOUND]))
-        for bound in parameter['bound']:
-            position = boundOffset[comp] + bound
-            util.log(name, idx, individual[idx], location, position)
-            if "rate" == transform:
-                h5[location[0]][position] = 10.0 ** individual[idx]
+
+        if transform == 'keq':
+            for bound in parameter['bound']:
+                position = boundOffset[comp] + bound
+                h5[location[0]][position] = math.exp(individual[idx])
+                h5[location[1]][position] = math.exp(individual[idx])/(math.exp(individual[idx+1]))
+
                 cadetValues.append(h5[location[0]][position])
-                idx += 1
-            elif "none" == transform:
-                h5[location[0]][position] = individual[idx]
-                cadetValues.append(h5[location[0]][position])
-                idx += 1
-            elif "keq" == transform:
-                h5[location[1]][position] = h5[location[0]][position]/(10.0**individual[idx])
                 cadetValues.append(h5[location[1]][position])
+
+                idx += 2
+
+        elif transform == "log":
+            for bound in parameter['bound']:
+                position = boundOffset[comp] + bound
+                h5[location][position] = math.exp(individual[idx])
+                cadetValues.append(h5[location][position])
                 idx += 1
     util.log("finished setting hdf5")
     return cadetValues
 
 def runExperiment(individual, experiment, settings, target):
-    template = Path(settings['resultsDir'], "template_%s.h5" % experiment['name'])
+    template = Path(settings['resultsDirMisc'], "template_%s.h5" % experiment['name'])
 
     handle, path = tempfile.mkstemp(suffix='.h5')
     os.close(handle)
@@ -268,11 +271,21 @@ def setup(settings_filename):
     "setup the parameter estimation"
     with open(settings_filename) as json_data:
         settings = json.load(json_data)
+        createDirectories(settings)
         headers, numGoals = genHeaders(settings)
         target = createTarget(settings)
         MIN_VALUE, MAX_VALUE = buildMinMax(settings)
         toolbox = setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE)
     return settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox
+
+def createDirectories(settings):
+    os.makedirs(Path(settings['resultsDir']), exist_ok=True)
+    os.makedirs(Path(settings['resultsDir']) / "evo", exist_ok=True)
+    os.makedirs(Path(settings['resultsDir']) / "grad", exist_ok=True)
+    os.makedirs(Path(settings['resultsDir']) / "misc", exist_ok=True)
+    settings['resultsDirEvo'] = Path(settings['resultsDir']) / "evo"
+    settings['resultsDirGrad'] = Path(settings['resultsDir']) / "grad"
+    settings['resultsDirMisc'] = Path(settings['resultsDir']) / "misc"
 
 def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE):
     "setup the DEAP variables"
@@ -287,31 +300,48 @@ def buildMinMax(settings):
     MAX_VALUE = []
 
     for parameter in settings['parameters']:
-        minValues = parameter['min']
-        maxValues = parameter['max']
         transform = parameter['transform']
         location = parameter['location']
 
-        if transform in ("rate", "keq"):
-            minValues = numpy.log10(minValues)
-            maxValues = numpy.log10(maxValues)
+        if transform == 'keq':
+            minKA = parameter['minKA']
+            maxKA = parameter['maxKA']
+            minKEQ = parameter['minKEQ']
+            maxKEQ = parameter['maxKEQ']
+
+            minValues = [item for pair in zip(minKA, minKEQ) for item in pair]
+            maxValues = [item for pair in zip(maxKA, maxKEQ) for item in pair]
+
+            minValues = numpy.log(minValues)
+            maxValues = numpy.log(maxValues)
+
+        elif transform == 'log':
+            minValues = numpy.log(parameter['min'])
+            maxValues = numpy.log(parameter['max'])
+
         MIN_VALUE.extend(minValues)
         MAX_VALUE.extend(maxValues)
     return MIN_VALUE, MAX_VALUE
 
 def genHeaders(settings):
-    headers = ['Time','Name',]
+    headers = ['Time','Name', 'Method',]
 
     numGoals = 0
 
     for parameter in settings['parameters']:
         comp = parameter['component']
         if parameter['transform'] == 'keq':
-            name = 'KD'
-        else:
-            name = parameter['name']
-        for bound in parameter['bound']:
-            headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
+            location = parameter['location']
+            nameKA = location[0].rsplit('/',1)[-1]
+            nameKD = location[1].rsplit('/',1)[-1]
+            for bound in parameter['bound']:
+                headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
+                headers.append("%s Comp:%s Bound:%s" % (nameKD, comp, bound))
+        elif parameter['transform'] == 'log':
+            location = parameter['location']
+            name = location.rsplit('/',1)[-1]
+            for bound in parameter['bound']:
+                headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
 
     for idx,experiment in enumerate(settings['experiments']):
         experimentName = experiment['name']
@@ -352,6 +382,33 @@ def createTarget(settings):
 
     #SSE are negative so they sort correctly with better scores being less negative
     target['bestHumanScores'][4] = -1e308;  
+
+    #setup sensitivities
+    parms = []
+    for parameter in settings['parameters']:
+        comp = parameter['component']
+        transform = parameter['transform']
+
+        if transform == 'keq':
+            location = parameter['location']
+            nameKA = location[0].rsplit('/',1)[-1]
+            nameKD = location[1].rsplit('/',1)[-1]
+            unit = int(location[0].split('/')[3].replace('unit_', ''))
+
+            for bound in parameter['bound']:
+                parms.append((nameKA, unit, comp, bound))
+                parms.append((nameKD, unit, comp, bound))
+
+        elif transform == 'log':
+            location = parameter['location']
+            name = location.rsplit('/',1)[-1]
+            unit = int(location.split('/')[3].replace('unit_', ''))
+            for bound in parameter['bound']:
+                parms.append((name, unit, comp, bound))
+
+    target['sensitivities'] = parms
+
+
     return target
 
 def createExperiment(experiment):
@@ -391,8 +448,6 @@ def createExperiment(experiment):
             temp[featureName]['value_function'] = score.value_function(temp[featureName]['break'][0][1])
 
         if featureType == 'derivative_similarity':
-            #spline_data = scipy.interpolate.splrep(selectedTimes, util.smoothing(selectedTimes, selectedValues))
- 
             exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, selectedValues, s=1e-5).derivative(1)
 
             [high, low] = util.find_peak(selectedTimes, util.smoothing(selectedTimes, exp_spline(selectedTimes)))
@@ -429,7 +484,7 @@ def setupTemplates(settings, target):
         HDF5 = experiment['HDF5']
         name = experiment['name']
 
-        template_path = Path(settings['resultsDir'], "template_%s.h5" % name)
+        template_path = Path(settings['resultsDirMisc'], "template_%s.h5" % name)
 
         shutil.copy(HDF5,  bytes(template_path))
 
@@ -461,7 +516,6 @@ def setupTemplates(settings, target):
 
             h5['/input/model/unit_001/discretization/NCOL'][:] = experiment['NCOL']
             h5['/input/model/unit_001/discretization/NPAR'][:] = experiment['NPAR']
-    grad.setupTemplates(settings, target)
 
 
 #This will run when the module is imported so that each process has its own copy of this data

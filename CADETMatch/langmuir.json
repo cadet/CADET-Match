@@ -1,6 +1,6 @@
 {
   "crossoverRate": 0.8,
-  "searchMethod":  "SPEA2",
+  "searchMethod": "SPEA2",
   "checkpointFile": "check",
   "CSV": "output.csv",
   "stopAverage": 0.99,
@@ -8,6 +8,7 @@
   "CADETPath": "C:\\Users\\kosh_000\\cadet_build\\cadet_3\\cadet\\MS_SMKL_RELEASE\\bin\\cadet-cli.exe",
   "keepTop": 0.999,
   "resultsDir": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170511_LANGMUIR",
+  "resultsGradDir": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170511_LANGMUIR\\grad",
   "experiments": [
     {
       "CSV": "F:\\Train\\CADETMatch\\20170511_LANGMUIR\\langmuir_1a.csv",
@@ -84,29 +85,20 @@
   "mutationRate": 0.10,
   "parameters": [
     {
-      "name": "KA",
-      "transform": "rate",
-      "component": 0,
-      "bound": [ 0 ],
-      "location": [ "/input/model/unit_001/adsorption/MCL_KA" ],
-      "min": [ 1.13 ],
-      "max": [ 1.15 ]
-    },
-    {
-      "name": "KEQ",
       "transform": "keq",
       "component": 0,
       "bound": [ 0 ],
       "location": [ "/input/model/unit_001/adsorption/MCL_KA", "/input/model/unit_001/adsorption/MCL_KD" ],
-      "min": [ 56 ],
-      "max": [ 58 ]
+      "minKA": [ 1.13 ],
+      "maxKA": [ 1.15 ],
+      "minKEQ": [ 56 ],
+      "maxKEQ": [ 58 ]
     },
     {
-      "name": "QMAX",
-      "transform": "none",
+      "transform": "log",
       "component": 0,
       "bound": [ 0 ],
-      "location": [ "/input/model/unit_001/adsorption/MCL_QMAX" ],
+      "location": "/input/model/unit_001/adsorption/MCL_QMAX",
       "min": [ 12.5 ],
       "max": [ 13.5 ]
     }

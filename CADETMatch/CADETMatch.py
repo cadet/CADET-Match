@@ -1,6 +1,7 @@
 
 import sys
 import evo
+import grad
 import util
 
 #due to how scoop works and the need to break things up into multiple processes it is hard to use class based systems
@@ -10,6 +11,7 @@ def main():
 
     evo.createCSV(evo.settings, evo.headers)
     evo.setupTemplates(evo.settings, evo.target)
+    grad.setupTemplates(evo.settings, evo.target)
     evo.run(evo.settings, evo.toolbox)
 
 
