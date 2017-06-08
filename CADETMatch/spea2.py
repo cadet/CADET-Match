@@ -6,6 +6,7 @@ import numpy
 import array
 from pathlib import Path
 import grad
+import evo
 
 from deap import algorithms
 
@@ -13,7 +14,7 @@ def run(settings, toolbox, tools, creator):
     "run the parameter estimation"
     random.seed()
 
-    parameters = len(settings['parameters'])
+    parameters = len(evo.MIN_VALUE)
 
     LAMBDA=parameters * settings['population']
     MU = int(math.ceil(settings['keep']*LAMBDA))
@@ -104,7 +105,7 @@ s
         start_gen = 0    
 
         logbook = tools.Logbook()
-        gradCheck = 0.7
+        gradCheck = settings['gradCheck']
 
 
         # Evaluate the individuals with an invalid fitness
@@ -140,7 +141,9 @@ s
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
+        print("About to start gradient search")
         gradCheck, newChildren = grad.search(gradCheck, offspring, toolbox)
+        print("Finished gradient search with new children", len(newChildren))
         offspring.extend(newChildren)
 
         avg, bestMin = util.averageFitness(offspring)

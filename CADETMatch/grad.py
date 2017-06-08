@@ -58,19 +58,25 @@ def search(gradCheck, offspring, toolbox):
     newOffspring = toolbox.map(gradSearch, checkOffspring)
 
     temp = []
-
+    print("Running gradient check")
     for i in newOffspring:
-        a = toolbox.individual_guess(i.x)
-        fit = toolbox.evaluate(a)
-        a.fitness.values = fit
-        temp.append(a)
-
-    gradCheck = (1-gradCheck)/2.0 + gradCheck
+        if i.success:
+            a = toolbox.individual_guess(i.x)
+            fit = toolbox.evaluate(a)
+            a.fitness.values = fit
+            print(i.x, fit)
+            temp.append(a)
+    
+    if len(temp) > 0:
+        gradCheck = (1-gradCheck)/2.0 + gradCheck
+    print("Finished running on ", len(temp), " individuals new threshold", gradCheck)
     return gradCheck, temp
 
 def gradSearch(x):
     cache = {}
-    return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache})
+    #x0 = scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache})
+    #return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='lm', kwargs={'cache':cache}, ftol=1e-10, xtol=1e-10, gtol=1e-10)
+    return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache}, x_scale='jac')
 
 def jacobian(x, cache):
     jac = numpy.concatenate(cache[tuple(x)], 1)
@@ -116,13 +122,14 @@ def fitness_sens(individual, cache):
             break
 
     #generate csv
-    path = Path(evo.settings['resultsDir'], evo.settings['CSV'])
+    path = Path(evo.settings['resultsDirBase'], evo.settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
-        writer.writerow([time.ctime(), save_name_base, 'GRAD'] + ["%.5g" % i for i in cadetValues] + ["%.5g" % i for i in scores] + list(humanScores)) 
+        writer.writerow([time.ctime(), save_name_base, 'GRAD', numpy.linalg.cond(jacobian(tuple(individual), cache))] + ["%.5g" % i for i in cadetValues] + ["%.5g" % i for i in scores] + list(humanScores)) 
 
-    saveExperimentsSens(save_name_base, evo.settings, evo.target, results)
-    plotExperimentsSens(save_name_base, evo.settings, evo.target, results)
+    notDuplicate = saveExperimentsSens(save_name_base, evo.settings, evo.target, results)
+    if notDuplicate:
+        plotExperimentsSens(save_name_base, evo.settings, evo.target, results)
 
     #cleanup
     for result in results.values():
@@ -137,13 +144,17 @@ def saveExperimentsSens(save_name_base, settings,target, results):
         src = results[experimentName]['path']
         dst = Path(settings['resultsDirGrad'], '%s_%s_GRAD.h5' % (save_name_base, experimentName))
 
-        shutil.copy(src, bytes(dst))
+        if dst.is_file():  #File already exists don't try to write over it
+            return False
+        else:
+            shutil.copy(src, bytes(dst))
 
-        with h5py.File(dst, 'a') as h5:
-            scoreGroup = h5.create_group("score")
+            with h5py.File(dst, 'a') as h5:
+                scoreGroup = h5.create_group("score")
 
-            for (header, score) in zip(experiment['headers'], results[experimentName]['scores']):
-                scoreGroup.create_dataset(header, data=numpy.array(score, 'f8'))
+                for (header, score) in zip(experiment['headers'], results[experimentName]['scores']):
+                    scoreGroup.create_dataset(header, data=numpy.array(score, 'f8'))
+    return True
 
 def plotExperimentsSens(save_name_base, settings, target, results):
     for experiment in settings['experiments']:

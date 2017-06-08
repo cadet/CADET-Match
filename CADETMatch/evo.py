@@ -92,14 +92,15 @@ def fitness(individual):
             break
 
     #generate csv
-    path = Path(settings['resultsDir'], settings['CSV'])
+    path = Path(settings['resultsDirBase'], settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
-        writer.writerow([time.ctime(), save_name_base, 'EVO'] + ["%.5g" % i for i in cadetValues] + ["%.5g" % i for i in scores] + list(humanScores)) 
+        writer.writerow([time.ctime(), save_name_base, 'EVO', 'NA'] + ["%.5g" % i for i in cadetValues] + ["%.5g" % i for i in scores] + list(humanScores)) 
 
     if keep_result:
-        saveExperiments(save_name_base, settings, target, results)
-        plotExperiments(save_name_base, settings, target, results)
+        notDuplicate = saveExperiments(save_name_base, settings, target, results)
+        if notDuplicate:
+            plotExperiments(save_name_base, settings, target, results)
 
     #cleanup
     for result in results.values():
@@ -114,13 +115,16 @@ def saveExperiments(save_name_base, settings,target, results):
         src = results[experimentName]['path']
         dst = Path(settings['resultsDirEvo'], '%s_%s_EVO.h5' % (save_name_base, experimentName))
 
-        shutil.copy(src, bytes(dst))
+        if dst.is_file():  #File already exists don't try to write over it
+            return False
+        else:
+            shutil.copy(src, bytes(dst))
 
-        with h5py.File(dst, 'a') as h5:
-            scoreGroup = h5.create_group("score")
+            with h5py.File(dst, 'a') as h5:
+                scoreGroup = h5.create_group("score")
 
-            for (header, score) in zip(experiment['headers'], results[experimentName]['scores']):
-                scoreGroup.create_dataset(header, data=numpy.array(score, 'f8'))
+                for (header, score) in zip(experiment['headers'], results[experimentName]['scores']):
+                    scoreGroup.create_dataset(header, data=numpy.array(score, 'f8'))
 
 def plotExperiments(save_name_base, settings, target, results):
     for experiment in settings['experiments']:
@@ -271,21 +275,25 @@ def setup(settings_filename):
     "setup the parameter estimation"
     with open(settings_filename) as json_data:
         settings = json.load(json_data)
-        createDirectories(settings)
         headers, numGoals = genHeaders(settings)
         target = createTarget(settings)
         MIN_VALUE, MAX_VALUE = buildMinMax(settings)
         toolbox = setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE)
+
+        #create used paths in settings, only the root process will make the directories later
+        settings['resultsDirEvo'] = Path(settings['resultsDir']) / "evo"
+        settings['resultsDirGrad'] = Path(settings['resultsDir']) / "grad"
+        settings['resultsDirMisc'] = Path(settings['resultsDir']) / "misc"
+        settings['resultsDirBase'] = Path(settings['resultsDir'])
+
+
     return settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox
 
 def createDirectories(settings):
-    os.makedirs(Path(settings['resultsDir']), exist_ok=True)
-    os.makedirs(Path(settings['resultsDir']) / "evo", exist_ok=True)
-    os.makedirs(Path(settings['resultsDir']) / "grad", exist_ok=True)
-    os.makedirs(Path(settings['resultsDir']) / "misc", exist_ok=True)
-    settings['resultsDirEvo'] = Path(settings['resultsDir']) / "evo"
-    settings['resultsDirGrad'] = Path(settings['resultsDir']) / "grad"
-    settings['resultsDirMisc'] = Path(settings['resultsDir']) / "misc"
+    settings['resultsDirBase'].mkdir(parents=True, exist_ok=True)
+    settings['resultsDirGrad'].mkdir(parents=True, exist_ok=True)
+    settings['resultsDirMisc'].mkdir(parents=True, exist_ok=True)
+    settings['resultsDirEvo'].mkdir(parents=True, exist_ok=True)
 
 def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE):
     "setup the DEAP variables"
@@ -324,7 +332,7 @@ def buildMinMax(settings):
     return MIN_VALUE, MAX_VALUE
 
 def genHeaders(settings):
-    headers = ['Time','Name', 'Method',]
+    headers = ['Time','Name', 'Method','Condition Number',]
 
     numGoals = 0
 
@@ -417,7 +425,7 @@ def createExperiment(experiment):
     HDF5 = Path(experiment['HDF5'])
 
     with h5py.File(HDF5, 'r') as h5:
-        CV_time = h5['/input/model/unit_001/COL_LENGTH'].value / h5['/input/model/unit_001/VELOCITY'].value
+        CV_time = (h5['/input/model/unit_001/COL_LENGTH'].value / h5['/input/model/unit_001/VELOCITY'].value)[0]
 
     data = numpy.genfromtxt(experiment['CSV'], delimiter=',')
 
@@ -463,9 +471,7 @@ def createExperiment(experiment):
     return temp
 
 def createCSV(settings, headers):
-    os.makedirs(settings['resultsDir'], exist_ok=True)
-
-    path = Path(settings['resultsDir'], settings['CSV'])
+    path = Path(settings['resultsDirBase'], settings['CSV'])
     if not path.exists():
         with path.open('w', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)

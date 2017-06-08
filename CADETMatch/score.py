@@ -7,26 +7,44 @@ import util
 def logistic(x, a, b):
     return  1.0-1.0/(1.0+numpy.exp(a*(x-b)))
 
-def exponential(x,a):
-    return numpy.exp(a*x)
+def exponential(x, a, b):
+    return a * scipy.exp(b*x)
+
+def linear(x, a, b):
+    return a*x+b
 
 def time_function(CV_time, peak_time):
-    x = numpy.array([0, CV_time/2, 2*CV_time, 5*CV_time, 8*CV_time, 12*CV_time])
-    y = numpy.array([1.0, 0.97, 0.5, 0.15, 0.01, 0])
-    
+    #x = numpy.array([0, CV_time/2, 2*CV_time, 5*CV_time, 8*CV_time, 12*CV_time])
+    #y = numpy.array([1.0, 0.97, 0.5, 0.15, 0.01, 0])
+    #fun = scipy.interpolate.UnivariateSpline(x,y, s=1e-6, ext=1)
+
     #args = scipy.optimize.curve_fit(logistic, x, y, [-0.1,2.0*CV_time])[0]
-    fun = scipy.interpolate.UnivariateSpline(x,y, s=1e-6, ext=1)
+    x_exp = numpy.array([CV_time/2.0, 10.0*CV_time])
+    y_exp = numpy.array([0.97, 0.5])
+
+    x_lin = numpy.array([0, CV_time/2.0])
+    y_lin = numpy.array([1, 0.97])
+
+    args_exp = scipy.optimize.curve_fit(exponential, x_exp, y_exp, [1, -0.1])[0]
+    args_lin = scipy.optimize.curve_fit(linear, x_lin, y_lin, [1, -0.1])[0]
     
     #scale = 1.0/logistic(0.0, *args)
 
     def wrapper(x):
 
         diff = numpy.abs(x - peak_time)
-        value = float(fun(diff))
+
+        if diff < CV_time/2.0:
+            value = linear(diff, *args_lin)
+        else:
+            value = exponential(diff, *args_exp)
+
+
+        #value = float(fun(diff))
 
         #clip values
-        value = min(value, 1.0)
-        value = max(value, 0.0)
+        #value = min(value, 1.0)
+        #value = max(value, 0.0)
 
         return value
 
@@ -36,7 +54,7 @@ def value_function(peak_height):
     x = numpy.array([0.0, 1.0])
     y = numpy.array([1.0, 0.01])
     
-    args = scipy.optimize.curve_fit(exponential, x, y, [-5])[0]
+    args = scipy.optimize.curve_fit(exponential, x, y, [1, -0.1])[0]
 
     scale = 1.0/exponential(0.0, *args)
     

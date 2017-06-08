@@ -8,7 +8,7 @@
   "CADETPath": "C:\\Users\\kosh_000\\cadet_build\\cadet_3\\cadet\\MS_SMKL_RELEASE\\bin\\cadet-cli.exe",
   "keepTop": 0.999,
   "resultsDir": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170511_LANGMUIR",
-  "resultsGradDir": "C:\\Users\\kosh_000\\Documents\\Visual Studio 2017\\Projects\\CADETMatch\\CADETMatch\\20170511_LANGMUIR\\grad",
+  "gradCheck":  0.999,
   "experiments": [
     {
       "CSV": "F:\\Train\\CADETMatch\\20170511_LANGMUIR\\langmuir_1a.csv",
