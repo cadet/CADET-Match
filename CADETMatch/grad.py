@@ -20,6 +20,13 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+class ConditionException(Exception):
+    pass
+
+class GradientException(Exception):
+    pass
+
+
 def setupTemplates(settings, target):
     parms = target['sensitivities']
 
@@ -59,15 +66,20 @@ def search(gradCheck, offspring, toolbox):
 
     temp = []
     print("Running gradient check")
+    failed = []
     for i in newOffspring:
         if i.success:
             a = toolbox.individual_guess(i.x)
             fit = toolbox.evaluate(a)
-            a.fitness.values = fit
-            print(i.x, fit)
-            temp.append(a)
+            if fit is None:
+                failed.append(1)
+            else:
+                failed.append(0)
+                a.fitness.values = fit
+                print(i.x, fit)
+                temp.append(a)
     
-    if len(temp) > 0:
+    if len(temp) > 0 or all(failed):
         gradCheck = (1-gradCheck)/2.0 + gradCheck
     print("Finished running on ", len(temp), " individuals new threshold", gradCheck)
     return gradCheck, temp
@@ -76,7 +88,11 @@ def gradSearch(x):
     cache = {}
     #x0 = scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache})
     #return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='lm', kwargs={'cache':cache}, ftol=1e-10, xtol=1e-10, gtol=1e-10)
-    return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache}, x_scale='jac')
+    try:
+       return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache}, x_scale='jac')
+    except (GradientException, ConditionException):
+        #If the gradient fails return None as the point so the optimizer can adapt
+        return None
 
 def jacobian(x, cache):
     jac = numpy.concatenate(cache[tuple(x)], 1)
@@ -84,7 +100,7 @@ def jacobian(x, cache):
 
 def fitness_sens(individual, cache):
     if not(util.feasible(individual)):
-        return [0.0] * numGoals
+        return [0.0] * evo.numGoals
 
     scores = []
     error = 0.0
@@ -100,7 +116,7 @@ def fitness_sens(individual, cache):
             error += results[experiment['name']]['error']
             diffs.append(result['diff'])
         else:
-            return [0.0] * numGoals
+            raise GradientException("Gradient caused simulation failure, aborting  %s" % ["%.5g" % i for i in cadetValues])
 
     #need
 
@@ -135,7 +151,11 @@ def fitness_sens(individual, cache):
     for result in results.values():
         if result['path']:
             os.remove(result['path'])
-            
+    
+    cond = numpy.linalg.cond(jacobian(tuple(individual), cache))
+    if cond > 1000:
+        raise ConditionException("Condition Number is %s. This location is poorly conditioned. Aborting gradient search" % cond)
+    
     return numpy.concatenate(diffs, 0)
 
 def saveExperimentsSens(save_name_base, settings,target, results):
@@ -277,7 +297,7 @@ def transform(tempJac, target, settings, cadetValues):
 
         if transform == 'keq':
             for bound in parameter['bound']:
-                jac.append(tempJac[idx+1] * cadetValues[idx+1] + cadetValues[idx]/cadetValues[idx+1] * tempJac[idx])   
+                jac.append(tempJac[idx+1] * cadetValues[idx+1] + cadetValues[idx] * tempJac[idx])   
                 jac.append(-tempJac[idx+1] * cadetValues[idx+1])   
                 idx += 2
 
