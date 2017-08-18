@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>langmuir2.json</CommandLineArguments>
+    <CommandLineArguments>F:\AMS-024\Estimation\Dextrane\dextrane.json</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="amgen.json" />
+    <Content Include="langmuir_2comp.json" />
     <Content Include="langmuir2.json" />
     <Content Include="langmuir.json" />
     <Content Include="mssma.json" />

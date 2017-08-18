@@ -15,6 +15,7 @@ import os
 import subprocess
 import csv
 import time
+import sys
 
 import matplotlib
 matplotlib.use('Agg')
@@ -40,7 +41,17 @@ def setupTemplates(settings, target):
         shutil.copy(bytes(template_path),  bytes(template_path_sens))
 
         with h5py.File(template_path_sens, 'a') as h5:
-            h5['/input/sensitivity/NSENS'][:] = len(parms)
+            try:
+                h5['/input/sensitivity/NSENS'][()] = len(parms)
+            except KeyError:
+                sens = h5['/input'].create_group('sensitivity')                
+                util.set_int(sens, 'NSENS', len(parms))
+
+            try:
+                sens = h5['/input/sensitivity']
+                util.set_string(sens, 'SENS_METHOD', 'ad1')
+            except KeyError:
+                pass
 
             sensitivity = h5['/input/sensitivity']
 
@@ -68,20 +79,23 @@ def search(gradCheck, offspring, toolbox):
     print("Running gradient check")
     failed = []
     for i in newOffspring:
-        if i.success:
+        if i is None:
+            failed.append(1)
+        elif i.success:
             a = toolbox.individual_guess(i.x)
             fit = toolbox.evaluate(a)
-            if fit is None:
-                failed.append(1)
-            else:
-                failed.append(0)
-                a.fitness.values = fit
-                print(i.x, fit)
-                temp.append(a)
+            failed.append(0)
+            a.fitness.values = fit
+            print(i.x, fit)
+            temp.append(a)
     
-    if len(temp) > 0 or all(failed):
-        gradCheck = (1-gradCheck)/2.0 + gradCheck
-    print("Finished running on ", len(temp), " individuals new threshold", gradCheck)
+    if temp:
+        avg, bestMin = util.averageFitness(temp)
+        if 0.9 * bestMin > gradCheck:
+            gradCheck = 0.9 * bestMin
+        #if len(temp) > 0 or all(failed):
+        #    gradCheck = (1-gradCheck)/2.0 + gradCheck
+        print("Finished running on ", len(temp), " individuals new threshold", gradCheck)
     return gradCheck, temp
 
 def gradSearch(x):
@@ -90,8 +104,14 @@ def gradSearch(x):
     #return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='lm', kwargs={'cache':cache}, ftol=1e-10, xtol=1e-10, gtol=1e-10)
     try:
        return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache}, x_scale='jac')
-    except (GradientException, ConditionException):
+    except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
+        print("Gradient Failure")
+        print(sys.exc_info()[0])
+        return None
+    except ConditionException:
+        print("Condition Failure")
+        print(sys.exc_info()[0])
         return None
 
 def jacobian(x, cache):
@@ -101,7 +121,7 @@ def jacobian(x, cache):
 def fitness_sens(individual, cache):
     if not(util.feasible(individual)):
         return [0.0] * evo.numGoals
-
+    print("Gradient Running for ", individual)
     scores = []
     error = 0.0
 
@@ -116,7 +136,7 @@ def fitness_sens(individual, cache):
             error += results[experiment['name']]['error']
             diffs.append(result['diff'])
         else:
-            raise GradientException("Gradient caused simulation failure, aborting  %s" % ["%.5g" % i for i in cadetValues])
+            raise GradientException("Gradient caused simulation failure, aborting")
 
     #need
 
@@ -201,14 +221,16 @@ def plotExperimentsSens(save_name_base, settings, target, results):
 
             
 
-            if featureType in ('similarity', 'curve', 'breakthrough'):
-                sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=1e-6)
-                exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=1e-6)
+            if featureType in ('similarity', 'curve', 'breakthrough', 'dextrane'):
+                #sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=1e-6)
+                #exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=1e-6)
+                sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=util.smoothing_factor(sim_value[selected]))
+                exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=util.smoothing_factor(exp_value[selected]))
                 graph.plot(sim_time[selected], sim_spline(sim_time[selected]), 'r--', label='Simulation')
                 graph.plot(exp_time[selected], exp_spline(exp_time[selected]), 'g:', label='Experiment')
             elif featureType == 'derivative_similarity':
-                sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=1e-5).derivative(1)
-                exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=1e-5).derivative(1)
+                sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=util.smoothing_factor(sim_value[selected])).derivative(1)
+                exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=util.smoothing_factor(exp_value[selected])).derivative(1)
 
                 graph.plot(sim_time[selected], util.smoothing(sim_time[selected], sim_spline(sim_time[selected])), 'r--', label='Simulation')
                 graph.plot(exp_time[selected], util.smoothing(exp_time[selected], exp_spline(exp_time[selected])), 'g:', label='Experiment')
@@ -221,6 +243,7 @@ def runExperimentSens(individual, experiment, settings, target, jac):
     template = Path(settings['resultsDirMisc'], "template_%s_sens.h5" % experiment['name'])
 
     handle, path = tempfile.mkstemp(suffix='.h5')
+    print("Temp path", path)
     os.close(handle)
     util.log(template, path)
     shutil.copy(bytes(template), path)
@@ -228,7 +251,7 @@ def runExperimentSens(individual, experiment, settings, target, jac):
     #change file
     with h5py.File(path, 'a') as h5:
         cadetValues = evo.set_h5(individual, h5, evo.settings)
-        h5['/input/solver/NTHREADS'][:] = 1
+        h5['/input/solver/NTHREADS'][()] = 1
 
     def leave():
         os.remove(path)
@@ -237,6 +260,7 @@ def runExperimentSens(individual, experiment, settings, target, jac):
     try:
         subprocess.run([settings['CADETPath'], path], timeout = experiment['timeout'] * len(target['sensitivities']))
     except subprocess.TimeoutExpired:
+        print("Simulation Timed Out")
         return leave()
 
     #read sim data
@@ -255,18 +279,25 @@ def runExperimentSens(individual, experiment, settings, target, jac):
         temp = []
         for idx, parm in enumerate( target['sensitivities']):
             name, unit, comp, bound = parm
+            #-1 means comp independent but the entry is still stored in comp 0
+            if comp == -1:
+                comp = 0
             temp.append(h5['/output/sensitivity/param_%03d/unit_%03d/SENS_COLUMN_OUTLET_COMP_%03d' % (idx, unit, comp)][:])
         temp = transform(temp, target, settings, cadetValues)
+        jacobian = numpy.array(temp)
         jac.append(numpy.array(temp))
 
         temp = {}
         temp['time'] = times
-        temp['value'] = numpy.array(h5[experiment['isotherm']])
+        if isinstance(experiment['isotherm'], list):
+            temp['value'] = numpy.sum([numpy.array(h5[i]) for i in experiment['isotherm']],0)
+        else:
+            temp['value'] = numpy.array(h5[experiment['isotherm']])
         temp['path'] = path
         temp['scores'] = []
         temp['error'] = sum((temp['value']-target[experiment['name']]['value'])**2)
         temp['diff'] = temp['value']-target[experiment['name']]['value']
-        temp['cond'] = numpy.linalg.cond(jac)
+        temp['cond'] = numpy.linalg.cond(jacobian, None)
         temp['cadetValues'] = cadetValues
 
 
@@ -284,6 +315,8 @@ def runExperimentSens(individual, experiment, settings, target, jac):
             temp['scores'].extend(score.scoreCurve(temp, target[experiment['name']], target[experiment['name']][featureName]))
         elif featureType == 'breakthrough':
             temp['scores'].extend(score.scoreBreakthrough(temp, target[experiment['name']], target[experiment['name']][featureName]))
+        elif featureType == 'dextrane':
+            temp['scores'].extend(score.scoreDextrane(temp, target[experiment['name']], target[experiment['name']][featureName]))
 
     return temp
 

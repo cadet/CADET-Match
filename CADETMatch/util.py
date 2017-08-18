@@ -6,6 +6,8 @@ import numpy
 from deap import tools
 import scipy.signal
 
+def smoothing_factor(y):
+    return max(y)/1000000.0
 
 def find_extreme(seq):
     try:
@@ -57,13 +59,14 @@ def averageFitness(offspring):
     return total/number, bestMin
 
 def smoothing(times, values):
+    #temporarily get rid of smoothing for debugging
+    return values
     #filter length must be odd, set to 10% of the feature size and then make it odd if necesary
     filter_length = int(.1 * len(values))
     if filter_length % 2 == 0:
         filter_length += 1
     return scipy.signal.savgol_filter(values, filter_length, 3)
     #return scipy.signal.hilbert(values)
-    return values
 
 def set_value(node, nameH5, dtype, value):
     "merge the values from parms into node of the hdf5 file"
@@ -74,6 +77,31 @@ def set_value(node, nameH5, dtype, value):
 
 def set_value_enum(node, nameH5, value):
     "merge the values from parms into node of the hdf5 file"
+    if isinstance(value, list):
+        dtype = 'S' + str(len(value[0])+1)
+    else:
+        dtype = 'S' + str(len(value)+1)
+    data = numpy.array(value, dtype=dtype)
+    if node.get(nameH5, None) is not None:
+        del node[nameH5]
+    node.create_dataset(nameH5, data=data)
+
+def set_int(node, nameH5, value):
+    "set one or more integers in the hdf5 file"
+    data = numpy.array(value, dtype="i4")
+    if node.get(nameH5, None) is not None:
+        del node[nameH5]
+    node.create_dataset(nameH5, data=data, maxshape=tuple(None for i in range(data.ndim)), fillvalue=[0])
+
+def set_double(node, nameH5, value):
+    "set one or more doubles in the hdf5 file"
+    data = numpy.array(value, dtype="f8")
+    if node.get(nameH5, None) is not None:
+        del node[nameH5]
+    node.create_dataset(nameH5, data=data, maxshape=tuple(None for i in range(data.ndim)), fillvalue=[0])
+
+def set_string(node, nameH5, value):
+    "set a string value in the hdf5 file"
     if isinstance(value, list):
         dtype = 'S' + str(len(value[0])+1)
     else:
