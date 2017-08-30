@@ -485,10 +485,11 @@ def createExperiment(experiment):
 
         #print("CV_time", CV_time)
 
-    data = numpy.genfromtxt(experiment['CSV'], delimiter=',')
+    if 'csv' in experiment:
+        data = numpy.genfromtxt(experiment['CSV'], delimiter=',')
 
-    temp['time'] = data[:,0]
-    temp['value'] = data[:,1]
+        temp['time'] = data[:,0]
+        temp['value'] = data[:,1]
 
     for feature in experiment['features']:
         featureName = feature['name']
@@ -497,10 +498,24 @@ def createExperiment(experiment):
         featureStop = feature['stop']
 
         temp[featureName] = {}
-        temp[featureName]['selected'] = (temp['time'] >= featureStart) & (temp['time'] <= featureStop)
+
+        if 'csv' in feature:
+            dataLocal = numpy.genfromtxt(feature['CSV'], delimiter=',')
+            temp[featureName]['time'] = dataLocal[:,0]
+            temp[featureName]['value'] = dataLocal[:,1]
+        else:
+            temp[featureName]['time'] = data[:,0]
+            temp[featureName]['value'] = data[:,1]
+
+        if 'isotherm' in feature:
+            temp[featureName]['isotherm'] = feature['isotherm']
+        else:
+            temp[featureName]['isotherm'] = experiment['isotherm']
+
+        temp[featureName]['selected'] = (temp[featureName] >= featureStart) & (temp[featureName] <= featureStop)
             
-        selectedTimes = temp['time'][temp[featureName]['selected']]
-        selectedValues = temp['value'][temp[featureName]['selected']]
+        selectedTimes = temp[featureName][temp[featureName]['selected']]
+        selectedValues = temp[featureName]['value'][temp[featureName]['selected']]
 
         if featureType == 'similarity':
             temp[featureName]['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
@@ -536,7 +551,7 @@ def createExperiment(experiment):
             #print(max_time, values[max_index])
             
             temp[featureName]['origSelected'] = temp[featureName]['selected']
-            temp[featureName]['selected'] = temp[featureName]['selected'] & (temp['time'] <= max_time)
+            temp[featureName]['selected'] = temp[featureName]['selected'] & (temp[featureName] <= max_time)
             temp[featureName]['max_time'] = max_time
             temp[featureName]['maxTimeFunction'] = score.time_function_decay(CV_time/10.0, max_time)
             

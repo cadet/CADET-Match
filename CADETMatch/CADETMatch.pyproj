@@ -52,9 +52,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="amgen.json" />
+    <Content Include="langmuir.json" />
     <Content Include="langmuir_2comp.json" />
     <Content Include="langmuir2.json" />
-    <Content Include="langmuir.json" />
     <Content Include="mssma.json" />
     <Content Include="README.txt" />
     <Content Include="sma.json" />
