@@ -27,6 +27,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="cadet.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="CADETMatch.py" />
     <Compile Include="evo.py">
       <SubType>Code</SubType>
