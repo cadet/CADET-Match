@@ -5,6 +5,7 @@ import numpy
 
 from deap import tools
 import scipy.signal
+from scipy.spatial.distance import cdist
 
 def smoothing_factor(y):
     return max(y)/1000000.0
@@ -14,6 +15,24 @@ def find_extreme(seq):
         return max(seq, key=lambda x: abs(x[1]))
     except ValueError:
         return [0,0]
+
+def get_times_values(simulation, target):
+
+    times = simulation.root.output.solution.solution_times
+
+    isotherm = target['isotherm']
+    
+    if isinstance(isotherm, list):
+        values = numpy.sum([simulation[i] for i in isotherm],0)
+    else:
+        values = simulation[isotherm]
+
+    selected = target['selected']
+
+    return times[selected], values[selected]
+
+def sse(data1, data2):
+    return numpy.sum( (data1 - data2)**2 )
 
 def find_peak(times, data):
     "Return tuples of (times,data) for the peak we need"

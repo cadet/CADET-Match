@@ -99,30 +99,31 @@ def pear_corr(cr):
 
 def scoreBreakthrough(sim_data, experimental_data, feature):
     "similarity, value, start stop"
+    sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
+
     selected = feature['selected']
 
     exp_data_values = experimental_data['value'][selected]
     exp_time_values = experimental_data['time'][selected]
-    sim_data_values = sim_data['value'][selected]
 
     [start, stop] = util.find_breakthrough(exp_time_values, sim_data_values)
 
-    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, sim_data_values, s=util.smoothing_factor(sim_data_values))
-    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, exp_data_values, s=util.smoothing_factor(exp_data_values))
+    #sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, sim_data_values, s=util.smoothing_factor(sim_data_values))
+    #exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, exp_data_values, s=util.smoothing_factor(exp_data_values))
 
-    temp = [pear_corr(scipy.stats.pearsonr(sim_spline(exp_time_values), exp_spline(exp_time_values))[0]), 
+    temp = [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), 
             feature['value_function'](start[1]), 
             feature['time_function_start'](start[0]),
             feature['time_function_stop'](stop[0])]
-    return temp
+    return temp, util.sse(sim_data_values, exp_data_values)
 
 def scoreSimilarity(sim_data, experimental_data, feature):
     "Order is Pearson, Value, Time"
+    sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
 
     exp_data_values = experimental_data['value'][selected]
     exp_time_values = experimental_data['time'][selected]
-    sim_data_values = sim_data['value'][selected]
 
     [high, low] = util.find_peak(exp_time_values, sim_data_values)
 
@@ -132,15 +133,15 @@ def scoreSimilarity(sim_data, experimental_data, feature):
     exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, exp_data_values, s=util.smoothing_factor(exp_data_values))
 
     temp = [pear_corr(scipy.stats.pearsonr(sim_spline(exp_time_values), exp_spline(exp_time_values))[0]), feature['value_function'](value_high), feature['time_function'](time_high)]
-    return temp
+    return temp, util.sse(sim_data_values, exp_data_values)
 
 def scoreDerivativeSimilarity(sim_data, experimental_data, feature):
     "Order is Pearson, Value High, Time High, Value Low, Time Low"
+    sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
 
     exp_data_values = experimental_data['value'][selected]
     exp_time_values = experimental_data['time'][selected]
-    sim_data_values = sim_data['value'][selected]
 
     #spline_exp = scipy.interpolate.splrep(exp_time_values, util.smoothing(exp_time_values, exp_data_values))
     #spline_sim = scipy.interpolate.splrep(exp_time_values, util.smoothing(exp_time_values, sim_data_values))
@@ -157,26 +158,26 @@ def scoreDerivativeSimilarity(sim_data, experimental_data, feature):
             feature['value_function_high'](highs[1]), 
             feature['time_function_high'](highs[0]),
             feature['value_function_low'](lows[1]), 
-            feature['time_function_low'](lows[0]),]
+            feature['time_function_low'](lows[0]),], util.sse(sim_data_values, exp_data_values)
 
 def scoreCurve(sim_data, experimental_data, feature):
     "Just Pearson score"
+    sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
 
     exp_data_values = experimental_data['value'][selected]
-    sim_data_values = sim_data['value'][selected]
 
-    return [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0])]
+    return [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0])], util.sse(sim_data_values, exp_data_values)
 
 def scoreDextrane(sim_data, experimental_data, feature):
     "special score designed for dextrane. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
     #print("feature", feature)
+    sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['origSelected']
     max_time = feature['max_time']
 
     exp_time_values = experimental_data['time'][selected]
     exp_data_values = experimental_data['value'][selected]
-    sim_data_values = sim_data['value'][selected]
 
     sim_data_values[sim_data_values < max(sim_data_values)/100.0] = 0
 
@@ -229,6 +230,6 @@ def scoreDextrane(sim_data, experimental_data, feature):
     if scoreDeriv < 0:
         scoreDeriv = 0
 
-    return [score, scoreDeriv, feature['maxTimeFunction'](time)]
+    return [score, scoreDeriv, feature['maxTimeFunction'](time)], util.sse(sim_data_values, exp_data_values)
 
 

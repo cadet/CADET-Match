@@ -16,6 +16,7 @@ import subprocess
 import csv
 import time
 import sys
+from cadet import Cadet
 
 import matplotlib
 matplotlib.use('Agg')
@@ -35,41 +36,33 @@ def setupTemplates(settings, target):
         HDF5 = experiment['HDF5']
         name = experiment['name']
 
-        template_path = Path(settings['resultsDirMisc'], "template_%s.h5" % name)
+        simulationSens = Cadet(experiment['simulation'].root)
+
         template_path_sens = Path(settings['resultsDirMisc'], "template_%s_sens.h5" % name)
+        simulationSens.filename = bytes(template_path_sens)
 
-        shutil.copy(bytes(template_path),  bytes(template_path_sens))
+        simulationSens.root.input.sensitivity.nsens = len(params)
+        simulationSens.root.input.sensitivity.sens_method = 'ad1'
 
-        with h5py.File(template_path_sens, 'a') as h5:
-            try:
-                h5['/input/sensitivity/NSENS'][()] = len(parms)
-            except KeyError:
-                sens = h5['/input'].create_group('sensitivity')                
-                util.set_int(sens, 'NSENS', len(parms))
+        sensitivity = simulationSens.root.input.sensitivity
 
-            try:
-                sens = h5['/input/sensitivity']
-                util.set_string(sens, 'SENS_METHOD', 'ad1')
-            except KeyError:
-                pass
+        for idx, parm in enumerate(parms):
+            name, unit, comp, bound = parm
 
-            sensitivity = h5['/input/sensitivity']
+            paramSection = 'param_%03d' % idx
 
-            for idx, parm in enumerate(parms):
-                name, unit, comp, bound = parm
-                sens = sensitivity.create_group('param_%03d' % idx)
-        
-                util.set_value(sens, 'SENS_UNIT', 'i4', [unit,])
-    
-                util.set_value_enum(sens, 'SENS_NAME', [name,])
+            sensitivity[paramSection].sens_unit = [unit,]
+            sensitivity[paramSection].sens_name = [name,]
+            sensitivity[paramSection].sens_comp = [comp,]
+            sensitivity[paramSection].sens_reaction = [-1,]
+            sensitivity[paramSection].sens_boundphase = [bound,]
+            sensitivity[paramSection].sens_section = [-1,]
+            sensitivity[paramSection].sens_abstol = [1e-6,]
+            sensitivity[paramSection].sens_factor = [1.0,]
 
-                util.set_value(sens, 'SENS_COMP', 'i4', [comp,])
-                util.set_value(sens, 'SENS_REACTION', 'i4', [-1,])
-                util.set_value(sens, 'SENS_BOUNDPHASE', 'i4', [bound,])
-                util.set_value(sens, 'SENS_SECTION', 'i4', [-1,])
+        simulationSens.save()
+        experiment['simulationSens'] = simulationSens
 
-                util.set_value(sens, 'SENS_ABSTOL', 'f8', [1e-6,])
-                util.set_value(sens, 'SENS_FACTOR', 'f8', [1.0,])
 
 def search(gradCheck, offspring, toolbox):
     checkOffspring = (ind for ind in offspring if min(ind.fitness.values) > gradCheck)
@@ -141,7 +134,11 @@ def fitness_sens(individual, cache):
     #need
 
     #human scores
-    humanScores = numpy.array( [functools.reduce(operator.mul, scores, 1)**(1.0/len(scores)), min(scores), sum(scores)/len(scores), numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), -error] )
+    humanScores = numpy.array( [functools.reduce(operator.mul, scores, 1)**(1.0/len(scores)), 
+                                min(scores), 
+                                sum(scores)/len(scores), 
+                                numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), 
+                                -error] )
 
     #save
     keep_result = 1
@@ -243,62 +240,63 @@ def runExperimentSens(individual, experiment, settings, target, jac):
     template = Path(settings['resultsDirMisc'], "template_%s_sens.h5" % experiment['name'])
 
     handle, path = tempfile.mkstemp(suffix='.h5')
-    print("Temp path", path)
     os.close(handle)
-    util.log(template, path)
-    shutil.copy(bytes(template), path)
-    
-    #change file
-    with h5py.File(path, 'a') as h5:
-        cadetValues = evo.set_h5(individual, h5, evo.settings)
-        h5['/input/solver/NTHREADS'][()] = 1
+
+    simulation = Cadet(experiment['simulationSens'].root)
+    simulation.filename = path
+
+    simulation.root.input.solver.nthreads = 1
+    cadetValues = set_simulation(individual, simulation, evo.settings)
 
     def leave():
         os.remove(path)
         return None
 
     try:
-        subprocess.run([settings['CADETPath'], path], timeout = experiment['timeout'] * len(target['sensitivities']))
+        simulation.run(timeout = experiment['timeout'] * len(target['sensitivities']))
     except subprocess.TimeoutExpired:
         print("Simulation Timed Out")
         return leave()
 
     #read sim data
-    with h5py.File(path, 'r') as h5:
-        try:
-            #get the solution times
-            times = numpy.array(h5['/output/solution/SOLUTION_TIMES'].value)
-        except KeyError:
-            #sim must have failed
-            util.log(individual, "sim must have failed", path)
-            return leave()
+    simulation.load()
+    try:
+        #get the solution times
+        times = simulation.root.output.solution.solution_times
+    except KeyError:
+        #sim must have failed
+        util.log(individual, "sim must have failed", path)
+        return leave()
     util.log("Everything ran fine")
 
     #write out jacobian to jac
-    with h5py.File(path, 'r') as h5:
-        temp = []
-        for idx, parm in enumerate( target['sensitivities']):
-            name, unit, comp, bound = parm
-            #-1 means comp independent but the entry is still stored in comp 0
-            if comp == -1:
-                comp = 0
-            temp.append(h5['/output/sensitivity/param_%03d/unit_%03d/SENS_COLUMN_OUTLET_COMP_%03d' % (idx, unit, comp)][:])
-        temp = transform(temp, target, settings, cadetValues)
-        jacobian = numpy.array(temp)
-        jac.append(numpy.array(temp))
+    temp = []
+    sens = simulation.root.output.sensitivity
+    for idx, parm in enumerate( target['sensitivities']):
+        name, unit, comp, bound = parm
+        #-1 means comp independent but the entry is still stored in comp 0
+        if comp == -1:
+            comp = 0
 
-        temp = {}
-        temp['time'] = times
-        if isinstance(experiment['isotherm'], list):
-            temp['value'] = numpy.sum([numpy.array(h5[i]) for i in experiment['isotherm']],0)
-        else:
-            temp['value'] = numpy.array(h5[experiment['isotherm']])
-        temp['path'] = path
-        temp['scores'] = []
-        temp['error'] = sum((temp['value']-target[experiment['name']]['value'])**2)
-        temp['diff'] = temp['value']-target[experiment['name']]['value']
-        temp['cond'] = numpy.linalg.cond(jacobian, None)
-        temp['cadetValues'] = cadetValues
+        temp.append([sens["param_%03d" % idx]["unit_%03d" % unit]["sens_column_outlet_comp_%03d" % comp]])
+
+    temp = transform(temp, target, settings, cadetValues)
+    jacobian = numpy.array(temp)
+    jac.append(numpy.array(temp))
+
+    temp = {}
+    temp['time'] = times
+    if isinstance(experiment['isotherm'], list):
+        temp['value'] = numpy.sum([numpy.array(h5[i]) for i in experiment['isotherm']],0)
+    else:
+        temp['value'] = numpy.array(h5[experiment['isotherm']])
+    temp['path'] = path
+    temp['scores'] = []
+    temp['error'] = sum((temp['value']-target[experiment['name']]['value'])**2)
+    temp['diff'] = temp['value']-target[experiment['name']]['value']
+    temp['cond'] = numpy.linalg.cond(jacobian, None)
+    temp['cadetValues'] = cadetValues
+    temp['simulation'] = simulation
 
 
     for feature in experiment['features']:

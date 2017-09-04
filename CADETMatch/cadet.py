@@ -19,9 +19,6 @@ class Cadet():
     pp = pprint.PrettyPrinter(indent=4)
 
     def __init__(self, *data):
-        #if data is None:
-        #    data = {}
-        #self.root = Dict(data)
         self.root = Dict()
         for i in data:
             self.root.update(copy.deepcopy(i))
@@ -34,17 +31,8 @@ class Cadet():
         with h5py.File(self.filename, 'w') as h5file:
             recursively_save(h5file, '/', self.root)
 
-    def run(self):
-        start = time.time()
-        proc = subprocess.Popen([self.cadet_path, self.filename], bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = proc.communicate()
-        proc.wait()
-        elapsed = time.time() - start
-        print("CADET Output")
-        print(stdout)
-        print("CADET Errors")
-        print(stderr)
-        print("Simulation ran in %s seconds " % elapsed)
+    def run(self, timeout = None):
+        subprocess.run([self.cadet_path, self.filename], timeout = timeout)
 
     def __str__(self):
         temp = []
@@ -56,6 +44,7 @@ class Cadet():
         self.root.update(merge.root)
 
     def __getitem__(self, key):
+        key = key.lower()
         obj = self.root
         for i in key.split('/'):
             if i:
@@ -63,6 +52,7 @@ class Cadet():
         return obj
 
     def __setitem__(self, key, value):
+        key = key.lower()
         obj = self.root
         parts = key.split('/')
         for i in parts[:-1]:
@@ -74,8 +64,9 @@ def recursively_load( h5file, path):
 
     ans = {}
     for key, item in h5file[path].items():
+        key = key.lower()
         if isinstance(item, h5py._hl.dataset.Dataset):
-            ans[key.lower()] = item.value
+            ans[key] = item.value
         elif isinstance(item, h5py._hl.group.Group):
             ans[key] = recursively_load(h5file, path + key + '/')
     return ans 

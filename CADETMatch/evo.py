@@ -35,6 +35,7 @@ import tempfile
 import shutil
 
 import spea2
+from cadet import Cadet
 
 #parallelization
 from scoop import futures
@@ -43,8 +44,7 @@ import scipy.signal
 
 ERROR = {'scores': None,
          'path': None,
-         'time': None,
-         'value': None,
+         'simulation' : None,
          'error': None,
          'cadetValues':None}
 
@@ -68,7 +68,10 @@ def fitness(individual):
     #need
 
     #human scores
-    humanScores = numpy.array( [functools.reduce(operator.mul, scores, 1)**(1.0/len(scores)), min(scores), sum(scores)/len(scores), numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), -error] )
+    humanScores = numpy.array( [functools.reduce(operator.mul, scores, 1)**(1.0/len(scores)), 
+                                min(scores), sum(scores)/len(scores), 
+                                numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), 
+                                -error] )
 
     #best
     target['bestHumanScores'] = numpy.max(numpy.vstack([target['bestHumanScores'], humanScores]), 0)
@@ -95,7 +98,10 @@ def fitness(individual):
     path = Path(settings['resultsDirBase'], settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
-        writer.writerow([time.ctime(), save_name_base, 'EVO', 'NA'] + ["%.5g" % i for i in cadetValues] + ["%.5g" % i for i in scores] + list(humanScores)) 
+        writer.writerow([time.ctime(), save_name_base, 'EVO', 'NA'] + 
+                        ["%.5g" % i for i in cadetValues] + 
+                        ["%.5g" % i for i in scores] + 
+                        list(humanScores)) 
 
     #print('keep_result', keep_result)
     if keep_result:
@@ -114,24 +120,24 @@ def fitness(individual):
 def saveExperiments(save_name_base, settings,target, results):
     for experiment in settings['experiments']:
         experimentName = experiment['name']
-        src = results[experimentName]['path']
+
         dst = Path(settings['resultsDirEvo'], '%s_%s_EVO.h5' % (save_name_base, experimentName))
 
         if dst.is_file():  #File already exists don't try to write over it
             return False
         else:
-            shutil.copy(src, bytes(dst))
+            simulation = results[experimentName]['simulation']
+            simulation.filename = bytes(dst)
 
-            with h5py.File(dst, 'a') as h5:
-                scoreGroup = h5.create_group("score")
-
-                for (header, score) in zip(experiment['headers'], results[experimentName]['scores']):
-                    scoreGroup.create_dataset(header, data=numpy.array(score, 'f8'))
+            for (header, score) in zip(experiment['headers'], results[experimentName]['scores']):
+                simulation.root.score[header] = score
+            simulation.save()
     return True
 
 def plotExperiments(save_name_base, settings, target, results):
     for experiment in settings['experiments']:
         experimentName = experiment['name']
+        
         dst = Path(settings['resultsDirEvo'], '%s_%s_EVO.png' % (save_name_base, experimentName))
 
         numPlots = len(experiment['features'])
@@ -139,44 +145,45 @@ def plotExperiments(save_name_base, settings, target, results):
         exp_time = target[experimentName]['time']
         exp_value = target[experimentName]['value']
 
-        sim_time = results[experimentName]['time']
-        sim_value = results[experimentName]['value']
-
         fig = plt.figure(figsize=[10, numPlots*10])
 
         for idx,feature in enumerate(experiment['features']):
             graph = fig.add_subplot(numPlots, 1, idx+1)
-
+            
             featureName = feature['name']
             featureType = feature['type']
 
-            selected = target[experimentName][featureName]['selected']
+            feat = target[experimentName][featureName]
 
-            
+            selected = feat['selected']
+            exp_time = feat['time'][selected]
+            exp_value = feat['value'][selected]
+
+            sim_time, sim_value = util.get_times_values(results[experimentName]['simulation'],target[experimentName][featureName])
 
             if featureType in ('similarity', 'curve', 'breakthrough', 'dextrane'):
                 #sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=1e-6)
                 #exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=1e-6)
 
-                sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=util.smoothing_factor(sim_value[selected]))
-                exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=util.smoothing_factor(exp_value[selected]))
+                sim_spline = scipy.interpolate.UnivariateSpline(sim_time, sim_value, s=util.smoothing_factor(sim_value))
+                exp_spline = scipy.interpolate.UnivariateSpline(exp_time, exp_value, s=util.smoothing_factor(exp_value))
                 #graph.plot(sim_time[selected], sim_spline(sim_time[selected]), 'r--', label='Simulation')
                 #graph.plot(exp_time[selected], exp_spline(exp_time[selected]), 'g:', label='Experiment')
 
                 graph.plot(sim_time[selected], sim_value[selected], 'r--', label='Simulation')
                 graph.plot(exp_time[selected], exp_value[selected], 'g:', label='Experiment')
             elif featureType == 'derivative_similarity':
-                sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=util.smoothing_factor(sim_value[selected])).derivative(1)
-                exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=util.smoothing_factor(exp_value[selected])).derivative(1)
+                sim_spline = scipy.interpolate.UnivariateSpline(sim_time, sim_value, s=util.smoothing_factor(sim_value)).derivative(1)
+                exp_spline = scipy.interpolate.UnivariateSpline(exp_time, exp_value, s=util.smoothing_factor(exp_value)).derivative(1)
 
-                graph.plot(sim_time[selected], util.smoothing(sim_time[selected], sim_spline(sim_time[selected])), 'r--', label='Simulation')
-                graph.plot(exp_time[selected], util.smoothing(exp_time[selected], exp_spline(exp_time[selected])), 'g:', label='Experiment')
+                graph.plot(sim_time[selected], util.smoothing(sim_time, sim_spline(sim_time)), 'r--', label='Simulation')
+                graph.plot(exp_time[selected], util.smoothing(exp_time, exp_spline(exp_time)), 'g:', label='Experiment')
             graph.legend()
 
         plt.savefig(bytes(dst), dpi=100)
         plt.close()
 
-def set_h5(individual, h5, settings):
+def set_simulation(individual, simulation, settings):
     util.log("individual", individual)
 
     cadetValues = []
@@ -192,17 +199,17 @@ def set_h5(individual, h5, settings):
         elif transform == 'log':
             unit = location.split('/')[3]
 
-        NBOUND = h5['/input/model/%s/discretization/NBOUND' % unit][:]
+        NBOUND = simulation.root.input.model[unit].discretization.nbound
         boundOffset = numpy.cumsum(numpy.concatenate([[0.0], NBOUND]))
 
         if transform == 'keq':
             for bound in parameter['bound']:
                 position = boundOffset[comp] + bound
-                h5[location[0]][position] = math.exp(individual[idx])
-                h5[location[1]][position] = math.exp(individual[idx])/(math.exp(individual[idx+1]))
+                simulation[location[0].lower()][position] = math.exp(individual[idx])
+                simulation[location[1].lower()][position] = math.exp(individual[idx])/(math.exp(individual[idx+1]))
 
-                cadetValues.append(h5[location[0]][position])
-                cadetValues.append(h5[location[1]][position])
+                cadetValues.append(simulation[location[0]][position])
+                cadetValues.append(simulation[location[1]][position])
 
                 idx += 2
 
@@ -210,66 +217,56 @@ def set_h5(individual, h5, settings):
             for bound in parameter['bound']:
                 if comp == -1:
                     position = ()
+                    simulation[location.lower()] = math.exp(individual[idx])
+                    cadetValues.append(simulation[location])
                 else:
                     position = boundOffset[comp] + bound
-                h5[location][position] = math.exp(individual[idx])
-                cadetValues.append(h5[location][position])
+                    simulation[location.lower()][position] = math.exp(individual[idx])
+                    cadetValues.append(simulation[location][position])
                 idx += 1
     util.log("finished setting hdf5")
     return cadetValues
 
 def runExperiment(individual, experiment, settings, target):
-    template = Path(settings['resultsDirMisc'], "template_%s.h5" % experiment['name'])
-
     handle, path = tempfile.mkstemp(suffix='.h5')
     os.close(handle)
-    util.log(template, path)
-    shutil.copy(bytes(template), path)
-    
-    #change file
-    h5 = h5py.File(path, 'a')
-    cadetValues = set_h5(individual, h5, settings)
-    h5['/input/solver/NTHREADS'][()] = 1
-    h5.close()
+
+    simulation = Cadet(experiment['simulation'].root)
+    simulation.filename = path
+
+    simulation.root.input.solver.nthreads = 1
+    cadetValues = set_simulation(individual, simulation, settings)
+
+    simulation.save()
 
     def leave():
         os.remove(path)
         return None
 
     try:
-        subprocess.run([settings['CADETPath'], path], timeout = experiment['timeout'])
+        simulation.run(timeout = experiment['timeout'])
     except subprocess.TimeoutExpired:
         print("Simulation Timed Out")
         return leave()
 
-    #FIXME: Do this using with instead of explicit close
-
     #read sim data
-    h5 = h5py.File(path, 'r')
+    simulation.load()
     try:
         #get the solution times
-        times = numpy.array(h5['/output/solution/SOLUTION_TIMES'].value)
+        times = simulation.root.output.solution.solution_times
     except KeyError:
         #sim must have failed
         util.log(individual, "sim must have failed", path)
-        h5.close()
         return leave()
     util.log("Everything ran fine")
 
 
     temp = {}
-    temp['time'] = times
-
-    if isinstance(experiment['isotherm'], list):
-        temp['value'] = numpy.sum([numpy.array(h5[i]) for i in experiment['isotherm']],0)
-    else:
-        temp['value'] = numpy.array(h5[experiment['isotherm']])
+    temp['simulation'] = simulation
     temp['path'] = path
     temp['scores'] = []
-    temp['error'] = sum((temp['value']-target[experiment['name']]['value'])**2)
+    temp['error'] = 0.0
     temp['cadetValues'] = cadetValues
-
-    h5.close()
 
     for feature in experiment['features']:
         start = feature['start']
@@ -278,15 +275,17 @@ def runExperiment(individual, experiment, settings, target):
         featureName = feature['name']
 
         if featureType == 'similarity':
-            temp['scores'].extend(score.scoreSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName]))
+            scores, sse = score.scoreSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'derivative_similarity':
-            temp['scores'].extend(score.scoreDerivativeSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName]))
+            scores, sse = score.scoreDerivativeSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'curve':
-            temp['scores'].extend(score.scoreCurve(temp, target[experiment['name']], target[experiment['name']][featureName]))
+            scores, sse = score.scoreCurve(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'breakthrough':
-            temp['scores'].extend(score.scoreBreakthrough(temp, target[experiment['name']], target[experiment['name']][featureName]))
+            scores, sse = score.scoreBreakthrough(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'dextrane':
-            temp['scores'].extend(score.scoreDextrane(temp, target[experiment['name']], target[experiment['name']][featureName]))
+            scores, sse = score.scoreDextrane(temp, target[experiment['name']], target[experiment['name']][featureName])
+        temp['scores'].extend(scores)
+        temp['error'] += sse
 
     return temp
 
@@ -485,7 +484,7 @@ def createExperiment(experiment):
 
         #print("CV_time", CV_time)
 
-    if 'csv' in experiment:
+    if 'CSV' in experiment:
         data = numpy.genfromtxt(experiment['CSV'], delimiter=',')
 
         temp['time'] = data[:,0]
@@ -499,7 +498,7 @@ def createExperiment(experiment):
 
         temp[featureName] = {}
 
-        if 'csv' in feature:
+        if 'CSV' in feature:
             dataLocal = numpy.genfromtxt(feature['CSV'], delimiter=',')
             temp[featureName]['time'] = dataLocal[:,0]
             temp[featureName]['value'] = dataLocal[:,1]
@@ -512,9 +511,9 @@ def createExperiment(experiment):
         else:
             temp[featureName]['isotherm'] = experiment['isotherm']
 
-        temp[featureName]['selected'] = (temp[featureName] >= featureStart) & (temp[featureName] <= featureStop)
+        temp[featureName]['selected'] = (temp[featureName]['time'] >= featureStart) & (temp[featureName]['time'] <= featureStop)
             
-        selectedTimes = temp[featureName][temp[featureName]['selected']]
+        selectedTimes = temp[featureName]['time'][temp[featureName]['selected']]
         selectedValues = temp[featureName]['value'][temp[featureName]['selected']]
 
         if featureType == 'similarity':
@@ -551,7 +550,7 @@ def createExperiment(experiment):
             #print(max_time, values[max_index])
             
             temp[featureName]['origSelected'] = temp[featureName]['selected']
-            temp[featureName]['selected'] = temp[featureName]['selected'] & (temp[featureName] <= max_time)
+            temp[featureName]['selected'] = temp[featureName]['selected'] & (temp[featureName]['time'] <= max_time)
             temp[featureName]['max_time'] = max_time
             temp[featureName]['maxTimeFunction'] = score.time_function_decay(CV_time/10.0, max_time)
             
@@ -579,37 +578,38 @@ def setupTemplates(settings, target):
 
         template_path = Path(settings['resultsDirMisc'], "template_%s.h5" % name)
 
-        shutil.copy(HDF5,  bytes(template_path))
+        template = Cadet()
 
-        with h5py.File(template_path, 'a') as h5:
-            
-            #remove the existing solution times, we need to solve at the same time points we match against
-            try:
-                del h5['/input/solver/USER_SOLUTION_TIMES']
-            except KeyError:
-                pass
+        #load based on where the HDF5 file is
+        template.filename = HDF5
+        template.load()
 
-            #remove existing output
-            try:
-                del h5['/output']
-            except KeyError:
-                pass
+        #change to where we want the template created
+        template.filename = template_path
 
-            h5['/input/solver/USER_SOLUTION_TIMES'] = target[name]['time']
-            
-            #This is to fix a strange boundary case where the final time point doesn't always EXACTLY match the final time point of our data
-            h5['/input/solver/sections/SECTION_TIMES'][-1] = target[name]['time'][-1]
+        try:
+            del template.root.input.solver.user_solution_times
+        except KeyError:
+            pass
 
-            h5['/input/return/unit_001/WRITE_SOLUTION_PARTICLE'][...] = 0
-            h5['/input/return/unit_001/WRITE_SOLUTION_COLUMN_OUTLET'][...] = 1
-            h5['/input/return/unit_001/WRITE_SOLUTION_COLUMN_INLET'][...] = 1
-            h5['/input/solver/NTHREADS'][...] = 1
-            h5['/input/solver/time_integrator/INIT_STEP_SIZE'][...] = 0
-            h5['/input/solver/time_integrator/MAX_STEPS'][...] = 0
+        try:
+            del template.root.output
+        except KeyError:
+            pass
 
-            h5['/input/model/unit_001/discretization/NCOL'][...] = experiment['NCOL']
-            h5['/input/model/unit_001/discretization/NPAR'][...] = experiment['NPAR']
+        template.root.input.solver.user_solution_times = target[name]['time']
+        template.root.input.solver.section_times[-1] = target[name]['time'][-1]
+        template.root.input['return'].unit_001.write_solution_particle = 0
+        template.root.input['return'].unit_001.write_solution_column_inlet = 1
+        template.root.input['return'].unit_001.write_solution_column_outlet = 1
+        template.root.input['return'].unit_001.split_components_data = 0
+        template.root.solver.nthreads = 1
+        template.root.solver.time_integrator.init_step_size = 0
+        template.root.solver.time_integrator.max_steps = 0
 
+        template.save()
+
+        experiment['simulation'] = template
 
 #This will run when the module is imported so that each process has its own copy of this data
 settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox = setup(sys.argv[1])
