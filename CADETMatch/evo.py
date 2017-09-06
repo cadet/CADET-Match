@@ -281,9 +281,9 @@ def runExperiment(individual, experiment, settings, target):
         featureType = feature['type']
         featureName = feature['name']
 
-        if featureType == 'similarity':
+        if featureType in ('similarity', 'similarityDecay'):
             scores, sse = score.scoreSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
-        elif featureType == 'similarityCross':
+        elif featureType in ('similarityCross', 'similarityCrossDecay'):
             scores, sse = score.scoreSimilarityCrossCorrelate(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'derivative_similarity':
             scores, sse = score.scoreDerivativeSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
@@ -385,7 +385,7 @@ def genHeaders(settings):
         experimentName = experiment['name']
         experiment['headers'] = []
         for feature in experiment['features']:
-            if feature['type'] in ('similarity', 'similarityCross'):
+            if feature['type'] in ('similarity', 'similarityCross', 'similarityDecay', 'similarityCrossDecay'):
                 name = "%s_%s" % (experimentName, feature['name'])
                 temp = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
                 numGoals += 3
@@ -534,6 +534,11 @@ def createExperiment(experiment):
         if featureType in ('similarity', 'similarityCross'):
             temp[featureName]['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
             temp[featureName]['time_function'] = score.time_function(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType == 'similarityCross' else False)
+            temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1])
+
+        if featureType in ('similarityDecay', 'similarityCrossDecay'):
+            temp[featureName]['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
+            temp[featureName]['time_function'] = score.time_function_decay(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType == 'similarityCross' else False)
             temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1])
 
         if featureType == 'breakthrough':
