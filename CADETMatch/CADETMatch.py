@@ -12,7 +12,7 @@ def main():
     evo.createDirectories(evo.settings)
     evo.createCSV(evo.settings, evo.headers)
     evo.setupTemplates(evo.settings, evo.target)
-    grad.setupTemplates(evo.settings, evo.target)
+    #grad.setupTemplates(evo.settings, evo.target)
     evo.run(evo.settings, evo.toolbox)
 
 

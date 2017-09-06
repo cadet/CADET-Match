@@ -14,8 +14,6 @@ import copy
 
 class Cadet():
 
-    cadet_path = "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe"
-    #cadet_path = "C:/Users/kosh_000/cadet_build/CADET/MS_SMKL_RELEASE/bin/cadet-cli.exe"
     pp = pprint.PrettyPrinter(indent=4)
 
     def __init__(self, *data):

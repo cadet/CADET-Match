@@ -41,7 +41,7 @@ def setupTemplates(settings, target):
         template_path_sens = Path(settings['resultsDirMisc'], "template_%s_sens.h5" % name)
         simulationSens.filename = bytes(template_path_sens)
 
-        simulationSens.root.input.sensitivity.nsens = len(params)
+        simulationSens.root.input.sensitivity.nsens = len(parms)
         simulationSens.root.input.sensitivity.sens_method = 'ad1'
 
         sensitivity = simulationSens.root.input.sensitivity

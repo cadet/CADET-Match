@@ -161,23 +161,23 @@ def plotExperiments(save_name_base, settings, target, results):
 
             sim_time, sim_value = util.get_times_values(results[experimentName]['simulation'],target[experimentName][featureName])
 
-            if featureType in ('similarity', 'curve', 'breakthrough', 'dextrane'):
+            if featureType in ('similarity', 'curve', 'breakthrough', 'dextrane', 'similarityCross', 'breakthroughCross'):
                 #sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=1e-6)
                 #exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=1e-6)
 
-                sim_spline = scipy.interpolate.UnivariateSpline(sim_time, sim_value, s=util.smoothing_factor(sim_value))
-                exp_spline = scipy.interpolate.UnivariateSpline(exp_time, exp_value, s=util.smoothing_factor(exp_value))
+                #sim_spline = scipy.interpolate.UnivariateSpline(sim_time, sim_value, s=util.smoothing_factor(sim_value))
+                #exp_spline = scipy.interpolate.UnivariateSpline(exp_time, exp_value, s=util.smoothing_factor(exp_value))
                 #graph.plot(sim_time[selected], sim_spline(sim_time[selected]), 'r--', label='Simulation')
                 #graph.plot(exp_time[selected], exp_spline(exp_time[selected]), 'g:', label='Experiment')
 
-                graph.plot(sim_time[selected], sim_value[selected], 'r--', label='Simulation')
-                graph.plot(exp_time[selected], exp_value[selected], 'g:', label='Experiment')
+                graph.plot(sim_time, sim_value, 'r--', label='Simulation')
+                graph.plot(exp_time, exp_value, 'g:', label='Experiment')
             elif featureType == 'derivative_similarity':
                 sim_spline = scipy.interpolate.UnivariateSpline(sim_time, sim_value, s=util.smoothing_factor(sim_value)).derivative(1)
                 exp_spline = scipy.interpolate.UnivariateSpline(exp_time, exp_value, s=util.smoothing_factor(exp_value)).derivative(1)
 
-                graph.plot(sim_time[selected], util.smoothing(sim_time, sim_spline(sim_time)), 'r--', label='Simulation')
-                graph.plot(exp_time[selected], util.smoothing(exp_time, exp_spline(exp_time)), 'g:', label='Experiment')
+                graph.plot(sim_time, util.smoothing(sim_time, sim_spline(sim_time)), 'r--', label='Simulation')
+                graph.plot(exp_time, util.smoothing(exp_time, exp_spline(exp_time)), 'g:', label='Experiment')
             graph.legend()
 
         plt.savefig(bytes(dst), dpi=100)
@@ -200,7 +200,7 @@ def set_simulation(individual, simulation, settings):
             unit = location.split('/')[3]
 
         NBOUND = simulation.root.input.model[unit].discretization.nbound
-        boundOffset = numpy.cumsum(numpy.concatenate([[0.0], NBOUND]))
+        boundOffset = numpy.cumsum(numpy.concatenate([[0,], NBOUND]))
 
         if transform == 'keq':
             for bound in parameter['bound']:
@@ -230,6 +230,13 @@ def set_simulation(individual, simulation, settings):
 def runExperiment(individual, experiment, settings, target):
     handle, path = tempfile.mkstemp(suffix='.h5')
     os.close(handle)
+
+    if 'simulation' not in experiment:
+        templatePath = Path(settings['resultsDirMisc'], "template_%s.h5" % experiment['name'])
+        templateSim = Cadet()
+        templateSim.filename = templatePath
+        templateSim.load()
+        experiment['simulation'] = templateSim
 
     simulation = Cadet(experiment['simulation'].root)
     simulation.filename = path
@@ -276,12 +283,16 @@ def runExperiment(individual, experiment, settings, target):
 
         if featureType == 'similarity':
             scores, sse = score.scoreSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'similarityCross':
+            scores, sse = score.scoreSimilarityCrossCorrelate(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'derivative_similarity':
             scores, sse = score.scoreDerivativeSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'curve':
             scores, sse = score.scoreCurve(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'breakthrough':
             scores, sse = score.scoreBreakthrough(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'breakthroughCross':
+            scores, sse = score.scoreBreakthroughCross(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'dextrane':
             scores, sse = score.scoreDextrane(temp, target[experiment['name']], target[experiment['name']][featureName])
         temp['scores'].extend(scores)
@@ -293,6 +304,7 @@ def setup(settings_filename):
     "setup the parameter estimation"
     with open(settings_filename) as json_data:
         settings = json.load(json_data)
+        Cadet.cadet_path = settings['CADETPath']
         headers, numGoals = genHeaders(settings)
         target = createTarget(settings)
         MIN_VALUE, MAX_VALUE = buildMinMax(settings)
@@ -373,7 +385,7 @@ def genHeaders(settings):
         experimentName = experiment['name']
         experiment['headers'] = []
         for feature in experiment['features']:
-            if feature['type'] == 'similarity':
+            if feature['type'] in ('similarity', 'similarityCross'):
                 name = "%s_%s" % (experimentName, feature['name'])
                 temp = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
                 numGoals += 3
@@ -392,7 +404,10 @@ def genHeaders(settings):
                 name = "%s_%s" % (experimentName, feature['name'])
                 temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time_Start" % name, "%s_Time_Stop" % name]
                 numGoals += 4
-
+            elif feature['type'] == 'breakthroughCross':
+                name = "%s_%s" % (experimentName, feature['name'])
+                temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
+                numGoals += 3
             elif feature['type'] == 'dextrane':
                 #name = "%s_%s" % (experimentName, feature['name'])
                 #temp = ["%s_Front_Similarity" % name, "%s_High_Value" % name, "%s_High_Time" % name, "%s_Low_Value" % name, "%s_Low_Time" % name]
@@ -516,15 +531,20 @@ def createExperiment(experiment):
         selectedTimes = temp[featureName]['time'][temp[featureName]['selected']]
         selectedValues = temp[featureName]['value'][temp[featureName]['selected']]
 
-        if featureType == 'similarity':
+        if featureType in ('similarity', 'similarityCross'):
             temp[featureName]['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
-            temp[featureName]['time_function'] = score.time_function(CV_time, temp[featureName]['peak'][0])
+            temp[featureName]['time_function'] = score.time_function(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType == 'similarityCross' else False)
             temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1])
 
         if featureType == 'breakthrough':
             temp[featureName]['break'] = util.find_breakthrough(selectedTimes, selectedValues)
             temp[featureName]['time_function_start'] = score.time_function(CV_time, temp[featureName]['break'][0][0])
             temp[featureName]['time_function_stop'] = score.time_function(CV_time, temp[featureName]['break'][1][0])
+            temp[featureName]['value_function'] = score.value_function(temp[featureName]['break'][0][1])
+
+        if featureType == 'breakthroughCross':
+            temp[featureName]['break'] = util.find_breakthrough(selectedTimes, selectedValues)
+            temp[featureName]['time_function'] = score.time_function(CV_time, temp[featureName]['break'][0][0], diff_input=True)
             temp[featureName]['value_function'] = score.value_function(temp[featureName]['break'][0][1])
 
         if featureType == 'derivative_similarity':
