@@ -237,16 +237,24 @@ def plotExperimentsSens(save_name_base, settings, target, results):
         plt.close()
 
 def runExperimentSens(individual, experiment, settings, target, jac):
-    template = Path(settings['resultsDirMisc'], "template_%s_sens.h5" % experiment['name'])
-
     handle, path = tempfile.mkstemp(suffix='.h5')
     os.close(handle)
+
+    if 'simulationSens' not in experiment:
+        templatePath = Path(settings['resultsDirMisc'], "template_%s_sens.h5" % experiment['name'])
+        templateSim = Cadet()
+        templateSim.filename = templatePath
+        templateSim.load()
+        experiment['simulationSens'] = templateSim
+
 
     simulation = Cadet(experiment['simulationSens'].root)
     simulation.filename = path
 
     simulation.root.input.solver.nthreads = 1
     cadetValues = set_simulation(individual, simulation, evo.settings)
+
+    simulation.save()
 
     def leave():
         os.remove(path)
@@ -268,6 +276,18 @@ def runExperimentSens(individual, experiment, settings, target, jac):
         util.log(individual, "sim must have failed", path)
         return leave()
     util.log("Everything ran fine")
+
+    gradient_components = experiment['gradient']['components']
+    gradient_CSV = experiment['gradient']['CSV']
+    gradient_stop = experiment['gradient']['stop']
+    gradient_start = experiment['gradient']['start']
+
+    if len(gradiegradient_componentsnt_CSV) > 1 and len(gradient_CSV) == 1:
+        combine_components = True
+    else:
+        combine_components = False
+
+    selected = (times >= gradient_start) & (times <= gradient_stop)
 
     #write out jacobian to jac
     temp = []
@@ -292,12 +312,10 @@ def runExperimentSens(individual, experiment, settings, target, jac):
         temp['value'] = numpy.array(h5[experiment['isotherm']])
     temp['path'] = path
     temp['scores'] = []
-    temp['error'] = sum((temp['value']-target[experiment['name']]['value'])**2)
-    temp['diff'] = temp['value']-target[experiment['name']]['value']
+    temp['error'] = 0.0
     temp['cond'] = numpy.linalg.cond(jacobian, None)
     temp['cadetValues'] = cadetValues
     temp['simulation'] = simulation
-
 
     for feature in experiment['features']:
         start = feature['start']
@@ -305,16 +323,22 @@ def runExperimentSens(individual, experiment, settings, target, jac):
         featureType = feature['type']
         featureName = feature['name']
 
-        if featureType == 'similarity':
-            temp['scores'].extend(score.scoreSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName]))
+        if featureType in ('similarity', 'similarityDecay'):
+            scores, sse = score.scoreSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType in ('similarityCross', 'similarityCrossDecay'):
+            scores, sse = score.scoreSimilarityCrossCorrelate(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'derivative_similarity':
-            temp['scores'].extend(score.scoreDerivativeSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName]))
+            scores, sse = score.scoreDerivativeSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'curve':
-            temp['scores'].extend(score.scoreCurve(temp, target[experiment['name']], target[experiment['name']][featureName]))
+            scores, sse = score.scoreCurve(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'breakthrough':
-            temp['scores'].extend(score.scoreBreakthrough(temp, target[experiment['name']], target[experiment['name']][featureName]))
+            scores, sse = score.scoreBreakthrough(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'breakthroughCross':
+            scores, sse = score.scoreBreakthroughCross(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'dextrane':
-            temp['scores'].extend(score.scoreDextrane(temp, target[experiment['name']], target[experiment['name']][featureName]))
+            scores, sse = score.scoreDextrane(temp, target[experiment['name']], target[experiment['name']][featureName])
+        temp['scores'].extend(scores)
+        temp['error'] += sse
 
     return temp
 
