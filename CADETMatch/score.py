@@ -241,8 +241,8 @@ def scoreCurve(sim_data, experimental_data, feature):
 
     return [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0])], util.sse(sim_data_values, exp_data_values)
 
-def scoreDextrane(sim_data, experimental_data, feature):
-    "special score designed for dextrane. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
+def scoreDextran(sim_data, experimental_data, feature):
+    "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
     #print("feature", feature)
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['origSelected']

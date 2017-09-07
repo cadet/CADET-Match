@@ -161,7 +161,7 @@ def plotExperiments(save_name_base, settings, target, results):
 
             sim_time, sim_value = util.get_times_values(results[experimentName]['simulation'],target[experimentName][featureName])
 
-            if featureType in ('similarity', 'similarityDecay', 'curve', 'breakthrough', 'dextrane', 'similarityCross', 'similarityCrossDecay', 'breakthroughCross'):
+            if featureType in ('similarity', 'similarityDecay', 'curve', 'breakthrough', 'dextran', 'similarityCross', 'similarityCrossDecay', 'breakthroughCross'):
                 #sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=1e-6)
                 #exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=1e-6)
 
@@ -293,8 +293,8 @@ def runExperiment(individual, experiment, settings, target):
             scores, sse = score.scoreBreakthrough(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'breakthroughCross':
             scores, sse = score.scoreBreakthroughCross(temp, target[experiment['name']], target[experiment['name']][featureName])
-        elif featureType == 'dextrane':
-            scores, sse = score.scoreDextrane(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'dextran':
+            scores, sse = score.scoreDextran(temp, target[experiment['name']], target[experiment['name']][featureName])
         temp['scores'].extend(scores)
         temp['error'] += sse
 
@@ -408,7 +408,7 @@ def genHeaders(settings):
                 name = "%s_%s" % (experimentName, feature['name'])
                 temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
                 numGoals += 3
-            elif feature['type'] == 'dextrane':
+            elif feature['type'] == 'dextran':
                 #name = "%s_%s" % (experimentName, feature['name'])
                 #temp = ["%s_Front_Similarity" % name, "%s_High_Value" % name, "%s_High_Time" % name, "%s_Low_Value" % name, "%s_Low_Time" % name]
                 #numGoals += 5
@@ -565,7 +565,7 @@ def createExperiment(experiment):
             temp[featureName]['time_function_low'] = score.time_function(CV_time, low[0])
             temp[featureName]['value_function_low'] = score.value_function(low[1])
 
-        if featureType == "dextrane":
+        if featureType == "dextran":
             #change the stop point to be where the max positive slope is along the searched interval
             exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, selectedValues, s=util.smoothing_factor(selectedValues), k=1).derivative(1)
             values = exp_spline(selectedTimes)

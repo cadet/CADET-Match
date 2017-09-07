@@ -5,7 +5,7 @@ import util
 import numpy
 import array
 from pathlib import Path
-import grad
+#import grad
 import evo
 
 from deap import algorithms
@@ -98,14 +98,14 @@ s
         halloffame = cp["halloffame"]
         logbook = cp["logbook"]
         random.setstate(cp["rndstate"])
-        gradCheck = cp['gradCheck']
+        #gradCheck = cp['gradCheck']
 
     else:
         # Start a new evolution
         start_gen = 0    
 
         logbook = tools.Logbook()
-        gradCheck = settings['gradCheck']
+        #gradCheck = settings['gradCheck']
 
 
         # Evaluate the individuals with an invalid fitness
@@ -124,8 +124,10 @@ s
         if verbose:
             print(logbook.stream)
 
+        #cp = dict(population=population, generation=start_gen, halloffame=halloffame,
+        #    logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-            logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
+            logbook=logbook, rndstate=random.getstate())
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(cp, cp_file)
@@ -141,10 +143,10 @@ s
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
-        print("About to start gradient search")
-        gradCheck, newChildren = grad.search(gradCheck, offspring, toolbox)
-        print("Finished gradient search with new children", len(newChildren))
-        offspring.extend(newChildren)
+        #print("About to start gradient search")
+        #gradCheck, newChildren = grad.search(gradCheck, offspring, toolbox)
+        #print("Finished gradient search with new children", len(newChildren))
+        #offspring.extend(newChildren)
 
         avg, bestMin = util.averageFitness(offspring)
         print('avg', avg, 'best', bestMin)
@@ -163,8 +165,10 @@ s
         if verbose:
             print(logbook.stream)
 
+        #cp = dict(population=population, generation=gen, halloffame=halloffame,
+        #    logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
         cp = dict(population=population, generation=gen, halloffame=halloffame,
-            logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
+            logbook=logbook, rndstate=random.getstate())
 
         hof = Path(settings['resultsDirMisc'], 'hof')
         with hof.open('wb') as data:
