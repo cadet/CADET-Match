@@ -161,7 +161,7 @@ def plotExperiments(save_name_base, settings, target, results):
 
             sim_time, sim_value = util.get_times_values(results[experimentName]['simulation'],target[experimentName][featureName])
 
-            if featureType in ('similarity', 'curve', 'breakthrough', 'dextrane', 'similarityCross', 'breakthroughCross'):
+            if featureType in ('similarity', 'similarityDecay', 'curve', 'breakthrough', 'dextrane', 'similarityCross', 'similarityCrossDecay', 'breakthroughCross'):
                 #sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=1e-6)
                 #exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=1e-6)
 
@@ -538,7 +538,7 @@ def createExperiment(experiment):
 
         if featureType in ('similarityDecay', 'similarityCrossDecay'):
             temp[featureName]['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
-            temp[featureName]['time_function'] = score.time_function_decay(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType == 'similarityCross' else False)
+            temp[featureName]['time_function'] = score.time_function_decay(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType == 'similarityCrossDecay' else False)
             temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1])
 
         if featureType == 'breakthrough':
