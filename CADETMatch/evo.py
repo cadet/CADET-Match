@@ -142,15 +142,17 @@ def plotExperiments(save_name_base, settings, target, results):
         
         dst = Path(settings['resultsDirEvo'], '%s_%s_EVO.png' % (save_name_base, experimentName))
 
-        numPlots = len(experiment['features'])
+        numPlots = len(experiment['features']) + 1  #1 additional plot added as an overview for the simulation
 
         exp_time = target[experimentName]['time']
         exp_value = target[experimentName]['value']
 
         fig = plt.figure(figsize=[10, numPlots*10])
 
+        util.graph_simulation(results[experimentName]['simulation'], fig.add_subplot(numPlots, 1, 1))
+
         for idx,feature in enumerate(experiment['features']):
-            graph = fig.add_subplot(numPlots, 1, idx+1)
+            graph = fig.add_subplot(numPlots, 1, idx+1+1) #additional +1 added due to the overview plot
             
             featureName = feature['name']
             featureType = feature['type']

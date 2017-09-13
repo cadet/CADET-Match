@@ -7,6 +7,9 @@ from deap import tools
 import scipy.signal
 from scipy.spatial.distance import cdist
 
+saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
+                 b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
+
 def smoothing_factor(y):
     return max(y)/1000000.0
 
@@ -86,3 +89,39 @@ def smoothing(times, values):
         filter_length += 1
     return scipy.signal.savgol_filter(values, filter_length, 3)
     #return scipy.signal.hilbert(values)
+
+def graph_simulation(simulation, graph):
+    ncomp = simulation.root.input.model.unit_001.ncomp
+    isotherm = simulation.root.input.model.unit_001.adsorption_model
+
+    hasSalt = isotherm in saltIsotherms
+
+    solution_times = simulation.root.output.solution.solution_times
+
+    comps = []
+
+    for i in range(ncomp):
+        comps.append(simulation.root.output.solution.unit_001['solution_outlet_comp_%03d' % i])
+
+    if hasSalt:
+        graph.set_title("Output")
+        graph.plot(solution_times, comps[0], 'b-', label="Salt")
+        graph.set_xlabel('time (s)')
+        
+        # Make the y-axis label, ticks and tick labels match the line color.
+        graph.set_ylabel('mMol Salt', color='b')
+        graph.tick_params('y', colors='b')
+
+        colors = ['r', 'g', 'c', 'm', 'y', 'k']
+        axis2 = graph.twinx()
+        for idx, comp in enumerate(comps[1:]):
+            axis2.plot(solution_times, comp, '%s-' % colors[idx], label="P%s" % idx)
+        axis2.set_ylabel('mMol Protein', color='r')
+        axis2.tick_params('y', colors='r')
+
+
+        lines, labels = graph.get_legend_handles_labels()
+        lines2, labels2 = axis2.get_legend_handles_labels()
+        axis2.legend(lines + lines2, labels + labels2, loc=0)
+
+    
