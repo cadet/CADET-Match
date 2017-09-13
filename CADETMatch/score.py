@@ -82,7 +82,8 @@ def time_function(CV_time, peak_time, diff_input=False):
 
     return wrapper
 
-def value_function(peak_height):
+def value_function(peak_height, tolerance=1e-8):
+    #if the peak height is 0 or less than the tolerance it needs to be treated as a special case to prevent divide by zero problems
     x = numpy.array([0.0, 1.0])
     y = numpy.array([1.0, 0.01])
     
@@ -90,9 +91,17 @@ def value_function(peak_height):
 
     scale = 1.0/exponential(0.0, *args)
     
-    def wrapper(x):
-        diff = numpy.abs(x-peak_height)/numpy.abs(peak_height)
-        return exponential(diff, *args) * scale
+    if numpy.abs(peak_height) < tolerance:
+        def wrapper(x):
+            if numpy.abs(x) < tolerance:
+                return 1.0
+            else:
+                diff = numpy.abs(x-tolerance)/numpy.abs(tolerance)
+                return exponential(diff, *args) * scale
+    else:
+        def wrapper(x):
+            diff = numpy.abs(x-peak_height)/numpy.abs(peak_height)
+            return exponential(diff, *args) * scale
 
     return wrapper
 

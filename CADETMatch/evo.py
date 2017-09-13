@@ -508,10 +508,12 @@ def createExperiment(experiment):
     sim.filename = Path(experiment['HDF5'])
     sim.load()
 
+    abstol = sim.root.input.solver.time_integrator.abstol
+
     #CV needs to be based on superficial velocity not interstitial velocity
     length = sim.root.input.model.unit_001.col_length
 
-    veloctiy = sim.root.input.model.unit_001.velocity
+    velocity = sim.root.input.model.unit_001.velocity
     if velocity == {}:
         velocity = 1.0
 
@@ -539,7 +541,7 @@ def createExperiment(experiment):
     if area == 1 and abs(velocity) != 1:
         CV_time = length / velocity
     else:
-        CV_time = (area * colLength) / flow
+        CV_time = (area * length) / flow
 
     if 'CSV' in experiment:
         data = numpy.genfromtxt(experiment['CSV'], delimiter=',')
@@ -576,23 +578,23 @@ def createExperiment(experiment):
         if featureType in ('similarity', 'similarityCross'):
             temp[featureName]['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
             temp[featureName]['time_function'] = score.time_function(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType == 'similarityCross' else False)
-            temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1])
+            temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1], abstol)
 
         if featureType in ('similarityDecay', 'similarityCrossDecay'):
             temp[featureName]['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
             temp[featureName]['time_function'] = score.time_function_decay(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType == 'similarityCrossDecay' else False)
-            temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1])
+            temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1], abstol)
 
         if featureType == 'breakthrough':
             temp[featureName]['break'] = util.find_breakthrough(selectedTimes, selectedValues)
             temp[featureName]['time_function_start'] = score.time_function(CV_time, temp[featureName]['break'][0][0])
             temp[featureName]['time_function_stop'] = score.time_function(CV_time, temp[featureName]['break'][1][0])
-            temp[featureName]['value_function'] = score.value_function(temp[featureName]['break'][0][1])
+            temp[featureName]['value_function'] = score.value_function(temp[featureName]['break'][0][1], abstol)
 
         if featureType == 'breakthroughCross':
             temp[featureName]['break'] = util.find_breakthrough(selectedTimes, selectedValues)
             temp[featureName]['time_function'] = score.time_function(CV_time, temp[featureName]['break'][0][0], diff_input=True)
-            temp[featureName]['value_function'] = score.value_function(temp[featureName]['break'][0][1])
+            temp[featureName]['value_function'] = score.value_function(temp[featureName]['break'][0][1], abstol)
 
         if featureType == 'derivative_similarity':
             exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, selectedValues, s=util.smoothing_factor(selectedValues)).derivative(1)
@@ -603,9 +605,9 @@ def createExperiment(experiment):
             temp[featureName]['peak_low'] = low
 
             temp[featureName]['time_function_high'] = score.time_function(CV_time, high[0])
-            temp[featureName]['value_function_high'] = score.value_function(high[1])
+            temp[featureName]['value_function_high'] = score.value_function(high[1], abstol)
             temp[featureName]['time_function_low'] = score.time_function(CV_time, low[0])
-            temp[featureName]['value_function_low'] = score.value_function(low[1])
+            temp[featureName]['value_function_low'] = score.value_function(low[1], abstol)
 
         if featureType == "dextran":
             #change the stop point to be where the max positive slope is along the searched interval
@@ -634,7 +636,7 @@ def createExperiment(experiment):
                     start = data['Start'][sample]
                     stop = data['Stop'][sample]
                     value = data[component][sample]
-                    func = score.value_function(value)
+                    func = score.value_function(value, abstol)
 
                     funcs.append( (start, stop, int(component), value, func) )
             temp[featureName]['funcs'] = funcs
