@@ -3,6 +3,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 import numpy
+import pandas
 import util
 import score
 
@@ -46,7 +47,8 @@ ERROR = {'scores': None,
          'path': None,
          'simulation' : None,
          'error': None,
-         'cadetValues':None}
+         'cadetValues':None,
+         'cadetValuesKEQ': None}
 
 def fitness(individual):
     if not(util.feasible(individual)):
@@ -90,8 +92,8 @@ def fitness(individual):
     save_name_base = hashlib.md5(str(individual).encode('utf-8','ignore')).hexdigest()
 
     for result in results.values():
-        if result['cadetValues']:
-            cadetValues = result['cadetValues']
+        if result['cadetValuesKEQ']:
+            cadetValuesKEQ = result['cadetValuesKEQ']
             break
 
     #generate csv
@@ -99,7 +101,7 @@ def fitness(individual):
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
         writer.writerow([time.ctime(), save_name_base, 'EVO', 'NA'] + 
-                        ["%.5g" % i for i in cadetValues] + 
+                        ["%.5g" % i for i in cadetValuesKEQ] + 
                         ["%.5g" % i for i in scores] + 
                         list(humanScores)) 
 
@@ -178,6 +180,19 @@ def plotExperiments(save_name_base, settings, target, results):
 
                 graph.plot(sim_time, util.smoothing(sim_time, sim_spline(sim_time)), 'r--', label='Simulation')
                 graph.plot(exp_time, util.smoothing(exp_time, exp_spline(exp_time)), 'g:', label='Experiment')
+            elif featureType == 'fractionation':
+                graph_exp = results[experimentName]['graph_exp']
+                graph_sim = results[experimentName]['graph_sim']
+
+                colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+
+                for idx,(key,value) in enumerate(graph_sim.items()):
+                    (time, values) = zip(*value)
+                    graph.plot(time, values, '%s--' % colors[idx], label='Simulation Comp: %s' % key)
+
+                for idx,(key,value) in enumerate(graph_exp.items()):
+                    (time, values) = zip(*value)
+                    graph.plot(time, values, '%s:' % colors[idx], label='Experiment Comp: %s' % key)
             graph.legend()
 
         plt.savefig(bytes(dst), dpi=100)
@@ -187,6 +202,7 @@ def set_simulation(individual, simulation, settings):
     util.log("individual", individual)
 
     cadetValues = []
+    cadetValuesKEQ = []
 
     idx = 0
     for parameter in settings['parameters']:
@@ -211,6 +227,11 @@ def set_simulation(individual, simulation, settings):
                 cadetValues.append(simulation[location[0]][position])
                 cadetValues.append(simulation[location[1]][position])
 
+                cadetValuesKEQ.append(simulation[location[0]][position])
+                cadetValuesKEQ.append(simulation[location[1]][position])
+                cadetValuesKEQ.append(simulation[location[0]][position]/simulation[location[1]][position])
+
+
                 idx += 2
 
         elif transform == "log":
@@ -219,13 +240,15 @@ def set_simulation(individual, simulation, settings):
                     position = ()
                     simulation[location.lower()] = math.exp(individual[idx])
                     cadetValues.append(simulation[location])
+                    cadetValuesKEQ.append(simulation[location])
                 else:
                     position = boundOffset[comp] + bound
                     simulation[location.lower()][position] = math.exp(individual[idx])
                     cadetValues.append(simulation[location][position])
+                    cadetValuesKEQ.append(simulation[location][position])
                 idx += 1
     util.log("finished setting hdf5")
-    return cadetValues
+    return cadetValues, cadetValuesKEQ
 
 def runExperiment(individual, experiment, settings, target):
     handle, path = tempfile.mkstemp(suffix='.h5')
@@ -242,7 +265,7 @@ def runExperiment(individual, experiment, settings, target):
     simulation.filename = path
 
     simulation.root.input.solver.nthreads = 1
-    cadetValues = set_simulation(individual, simulation, settings)
+    cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings)
 
     simulation.save()
 
@@ -274,6 +297,7 @@ def runExperiment(individual, experiment, settings, target):
     temp['scores'] = []
     temp['error'] = 0.0
     temp['cadetValues'] = cadetValues
+    temp['cadetValuesKEQ'] = cadetValuesKEQ
 
     for feature in experiment['features']:
         start = feature['start']
@@ -295,6 +319,8 @@ def runExperiment(individual, experiment, settings, target):
             scores, sse = score.scoreBreakthroughCross(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'dextran':
             scores, sse = score.scoreDextran(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'fractionation':
+            scores, sse = score.scoreFractionation(temp, target[experiment['name']], target[experiment['name']][featureName])
         temp['scores'].extend(scores)
         temp['error'] += sse
 
@@ -375,6 +401,7 @@ def genHeaders(settings):
             for bound in parameter['bound']:
                 headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
                 headers.append("%s Comp:%s Bound:%s" % (nameKD, comp, bound))
+                headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
         elif parameter['transform'] == 'log':
             location = parameter['location']
             name = location.rsplit('/',1)[-1]
@@ -415,7 +442,21 @@ def genHeaders(settings):
                 name = "%s_%s" % (experimentName, feature['name'])
                 temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, "%s_Time" % name]
                 numGoals += 3
+            elif feature['type'] == 'fractionation':
+                data = pandas.read_csv(feature['csv'])
+                rows, cols = data.shape
+                #remove first two columns since those are the start and stop times
+                cols = cols - 2
 
+                total = rows * cols
+                data_headers = data.columns.values.tolist()
+
+                temp  = []
+                for sample in range(rows):
+                    for component in data_headers[2:]:
+                        temp.append('%s_%s_Sample_%s_Component_%s' % (experimentName, feature['name'], sample, component))
+
+                numGoals += len(temp)
             headers.extend(temp)
             experiment['headers'].extend(temp)
 
@@ -463,41 +504,42 @@ def createTarget(settings):
 def createExperiment(experiment):
     temp = {}
 
-    HDF5 = Path(experiment['HDF5'])
+    sim = Cadet()
+    sim.filename = Path(experiment['HDF5'])
+    sim.load()
 
-    with h5py.File(HDF5, 'r') as h5:
-        #CV needs to be based on superficial velocity not interstitial velocity
-        length = h5['/input/model/unit_001/COL_LENGTH'].value
+    #CV needs to be based on superficial velocity not interstitial velocity
+    length = sim.root.input.model.unit_001.col_length
 
-        try:
-            velocity = h5['/input/model/unit_001/VELOCITY'].value
-        except KeyError:
-            velocity = 1
+    veloctiy = sim.root.input.model.unit_001.velocity
+    if velocity == {}:
+        velocity = 1.0
 
-        try:
-            area = h5['/input/model/unit_001/CROSS_SECTION_AREA'].value
-        except KeyError:
-            area = 1
+    area = sim.root.input.model.uni_001.cross_section_area
+    if area == {}:
+        area = 1.0
 
-        colPorosity = h5['/input/model/unit_001/COL_POROSITY'].value
-        colLength = h5['/input/model/unit_001/COL_LENGTH'].value
+    porosity = sim.root.input.model.unit_001.col_porosity
+    if porosity == {}:
+        porosity = sim.root.input.model.unit_001.total_porosity
+    if porosity == {}:
+        porosity = 1.0
 
-        conn = h5['/input/model/connections/switch_000/CONNECTIONS'].value
-        conn = numpy.array(conn)
-        conn = numpy.reshape(conn, [-1, 5])
+    conn = sim.root.input.model.connections.switch_000.connections
 
-        #find all the entries that connect to the column
-        filter = conn[:,1] == 1
+    conn = numpy.array(conn)
+    conn = numpy.reshape(conn, [-1, 5])
 
-        #flow is the sum of all flow rates that connect to this column which is in the last column
-        flow = sum(conn[filter, -1])
+    #find all the entries that connect to the column
+    filter = conn[:,1] == 1
 
-        if area == 1 and abs(velocity) != 1:
-            CV_time = h5['/input/model/unit_001/COL_LENGTH'].value / h5['/input/model/unit_001/VELOCITY'].value
-        else:
-            CV_time = (area * colLength) / flow
+    #flow is the sum of all flow rates that connect to this column which is in the last column
+    flow = sum(conn[filter, -1])
 
-        #print("CV_time", CV_time)
+    if area == 1 and abs(velocity) != 1:
+        CV_time = length / velocity
+    else:
+        CV_time = (area * colLength) / flow
 
     if 'CSV' in experiment:
         data = numpy.genfromtxt(experiment['CSV'], delimiter=',')
@@ -578,6 +620,24 @@ def createExperiment(experiment):
             temp[featureName]['selected'] = temp[featureName]['selected'] & (temp[featureName]['time'] <= max_time)
             temp[featureName]['max_time'] = max_time
             temp[featureName]['maxTimeFunction'] = score.time_function_decay(CV_time/10.0, max_time)
+
+        if featureType == 'fractionation':
+            data = pandas.read_csv(feature['csv'])
+            rows, cols = data.shape
+
+            headers = data.columns.values.tolist()
+
+            funcs = []
+
+            for sample in range(rows):
+                for component in headers[2:]:
+                    start = data['Start'][sample]
+                    stop = data['Stop'][sample]
+                    value = data[component][sample]
+                    func = score.value_function(value)
+
+                    funcs.append( (start, stop, int(component), value, func) )
+            temp[featureName]['funcs'] = funcs
             
     return temp
 

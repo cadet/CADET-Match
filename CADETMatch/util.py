@@ -21,7 +21,7 @@ def get_times_values(simulation, target):
     times = simulation.root.output.solution.solution_times
 
     isotherm = target['isotherm']
-    
+
     if isinstance(isotherm, list):
         values = numpy.sum([simulation[i] for i in isotherm],0)
     else:
