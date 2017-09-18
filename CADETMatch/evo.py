@@ -176,12 +176,12 @@ def plotExperiments(save_name_base, settings, target, results):
 
                 graph.plot(sim_time, sim_value, 'r--', label='Simulation')
                 graph.plot(exp_time, exp_value, 'g:', label='Experiment')
-            elif featureType == 'derivative_similarity':
-                sim_spline = scipy.interpolate.UnivariateSpline(sim_time, sim_value, s=util.smoothing_factor(sim_value)).derivative(1)
-                exp_spline = scipy.interpolate.UnivariateSpline(exp_time, exp_value, s=util.smoothing_factor(exp_value)).derivative(1)
+            elif featureType == ('derivative_similarity', 'derivative_similarity_cross'):
+                sim_spline = scipy.interpolate.UnivariateSpline(sim_time, util.smoothing(sim_time, sim_value), s=util.smoothing_factor(sim_value)).derivative(1)
+                exp_spline = scipy.interpolate.UnivariateSpline(exp_time, util.smoothing(exp_time, exp_value), s=util.smoothing_factor(exp_value)).derivative(1)
 
-                graph.plot(sim_time, util.smoothing(sim_time, sim_spline(sim_time)), 'r--', label='Simulation')
-                graph.plot(exp_time, util.smoothing(exp_time, exp_spline(exp_time)), 'g:', label='Experiment')
+                graph.plot(sim_time, sim_spline(sim_time), 'r--', label='Simulation')
+                graph.plot(exp_time, exp_spline(exp_time), 'g:', label='Experiment')
             elif featureType == 'fractionation':
                 graph_exp = results[experimentName]['graph_exp']
                 graph_sim = results[experimentName]['graph_sim']
@@ -313,6 +313,8 @@ def runExperiment(individual, experiment, settings, target):
             scores, sse = score.scoreSimilarityCrossCorrelate(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'derivative_similarity':
             scores, sse = score.scoreDerivativeSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'derivative_similarity_cross':
+            scores, sse = score.scoreDerivativeSimilarityCross(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'curve':
             scores, sse = score.scoreCurve(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'breakthrough':
@@ -423,6 +425,11 @@ def genHeaders(settings):
                 name = "%s_%s" % (experimentName, feature['name'])
                 temp = ["%s_Derivative_Similarity" % name, "%s_High_Value" % name, "%s_High_Time" % name, "%s_Low_Value" % name, "%s_Low_Time" % name]
                 numGoals += 5
+
+            elif feature['type'] == 'derivative_similarity_cross':
+                name = "%s_%s" % (experimentName, feature['name'])
+                temp = ["%s_Derivative_Similarity_Cross" % name, "%s_Time" % name, "%s_High_Value" % name, "%s_Low_Value" % name]
+                numGoals += 4
 
             elif feature['type'] == 'curve':
                 name = "%s_%s" % (experimentName, feature['name'])
@@ -609,6 +616,18 @@ def createExperiment(experiment):
             temp[featureName]['time_function_high'] = score.time_function(CV_time, high[0])
             temp[featureName]['value_function_high'] = score.value_function(high[1], abstol)
             temp[featureName]['time_function_low'] = score.time_function(CV_time, low[0])
+            temp[featureName]['value_function_low'] = score.value_function(low[1], abstol)
+
+        if featureType == 'derivative_similarity_cross':
+            exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, util.smoothing(selectedTimes, selectedValues), s=util.smoothing_factor(selectedValues)).derivative(1)
+
+            [high, low] = util.find_peak(selectedTimes, util.smoothing(selectedTimes, exp_spline(selectedTimes)))
+
+            temp[featureName]['peak_high'] = high
+            temp[featureName]['peak_low'] = low
+
+            temp[featureName]['time_function'] = score.time_function(CV_time,high[0], diff_input = True)
+            temp[featureName]['value_function_high'] = score.value_function(high[1], abstol)
             temp[featureName]['value_function_low'] = score.value_function(low[1], abstol)
 
         if featureType == "dextran":

@@ -82,7 +82,7 @@ def averageFitness(offspring):
 
 def smoothing(times, values):
     #temporarily get rid of smoothing for debugging
-    return values
+    #return values
     #filter length must be odd, set to 10% of the feature size and then make it odd if necesary
     filter_length = int(.1 * len(values))
     if filter_length % 2 == 0:
