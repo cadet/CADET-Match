@@ -82,10 +82,10 @@ def time_function(CV_time, peak_time, diff_input=False):
 
     return wrapper
 
-def value_function(peak_height, tolerance=1e-8):
+def value_function(peak_height, tolerance=1e-8, bottom_score = 0.01):
     #if the peak height is 0 or less than the tolerance it needs to be treated as a special case to prevent divide by zero problems
     x = numpy.array([0.0, 1.0])
-    y = numpy.array([1.0, 0.01])
+    y = numpy.array([1.0, bottom_score])
     
     args = scipy.optimize.curve_fit(exponential, x, y, [1, -0.1])[0]
 
@@ -230,6 +230,8 @@ def scoreDerivativeSimilarity(sim_data, experimental_data, feature):
     sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
     exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
 
+    print(type(sim_spline), type(exp_spline))
+
     #spline_derivative_exp = scipy.interpolate.splev(exp_time_values, spline_exp, der=1)
     #spline_derivative_sim = scipy.interpolate.splev(exp_time_values, spline_sim, der=1)
 
@@ -249,8 +251,10 @@ def scoreDerivativeSimilarityCross(sim_data, experimental_data, feature):
     exp_data_values = experimental_data['value'][selected]
     exp_time_values = experimental_data['time'][selected]
 
-    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
-    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
+    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values)).derivative(1)
+    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values)).derivative(1)
+
+    print(type(sim_spline), type(exp_spline))
 
     exp_data_values = exp_spline(exp_time_values)
     sim_data_values = sim_spline(exp_time_values)
@@ -278,6 +282,42 @@ def scoreDerivativeSimilarityCross(sim_data, experimental_data, feature):
             feature['time_function'](diff_time),
             feature['value_function_high'](highs[1]),             
             feature['value_function_low'](lows[1]),], util.sse(sim_data_values, exp_data_values)
+
+def scoreDerivativeSimilarityCrossAlt(sim_data, experimental_data, feature):
+    "Order is Pearson, Value High, Time High, Value Low, Time Low"
+    sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
+    selected = feature['selected']
+
+    exp_data_values = experimental_data['value'][selected]
+    exp_time_values = experimental_data['time'][selected]
+
+    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values)).derivative(1)
+    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values)).derivative(1)
+
+    print(type(sim_spline), type(exp_spline))
+
+    exp_data_values = exp_spline(exp_time_values)
+    sim_data_values = sim_spline(exp_time_values)
+
+    corr = scipy.signal.correlate(sim_data_values, exp_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
+
+    index = numpy.argmax(corr)
+
+    score = corr[index]
+
+    endTime = exp_time_values[-1]
+
+    if index > len(exp_time_values):
+        simTime = exp_time_values[-(index - len(exp_time_values))]
+    elif index < len(exp_time_values):
+        simTime = exp_time_values[-(len(exp_time_values) - index)]
+    else:
+        simTime = endTime
+
+    diff_time = endTime - simTime
+    
+    return [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), 
+            feature['time_function'](diff_time),], util.sse(sim_data_values, exp_data_values)
 
 def scoreCurve(sim_data, experimental_data, feature):
     "Just Pearson score"
