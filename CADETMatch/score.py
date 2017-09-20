@@ -223,10 +223,14 @@ def scoreDerivativeSimilarity(sim_data, experimental_data, feature):
     exp_data_values = experimental_data['value'][selected]
     exp_time_values = experimental_data['time'][selected]
 
-    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
-    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
+    try:
+        sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
+        exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
+    except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
+        return [0.0, 0.0, 0.0, 0.0, 0.0], 1e6
 
-    print(type(sim_spline), type(exp_spline))
+    exp_data_values = exp_spline(exp_time_values)
+    sim_data_values = sim_spline(exp_time_values)
 
     [highs, lows] = util.find_peak(exp_time_values, sim_spline(exp_time_values))
 
@@ -236,6 +240,32 @@ def scoreDerivativeSimilarity(sim_data, experimental_data, feature):
             feature['value_function_low'](lows[1]), 
             feature['time_function_low'](lows[0]),], util.sse(sim_data_values, exp_data_values)
 
+def scoreDerivativeSimilarityHybrid(sim_data, experimental_data, feature):
+    "Order is Pearson, Value High, Time High, Value Low, Time Low"
+    sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
+    selected = feature['selected']
+
+    exp_data_values = experimental_data['value'][selected]
+    exp_time_values = experimental_data['time'][selected]
+
+    try:
+        sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
+        exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
+    except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
+        return [0.0, 0.0, 0.0, 0.0,], 1e6
+
+    exp_data_values = exp_spline(exp_time_values)
+    sim_data_values = sim_spline(exp_time_values)
+
+    score, diff_time = cross_correlate(exp_time_values, sim_data_values, exp_data_values)
+
+    [highs, lows] = util.find_peak(exp_time_values, sim_data_values)
+
+    return [pear_corr(scipy.stats.pearsonr(sim_spline(exp_time_values), exp_spline(exp_time_values))[0]),
+            feature['time_function'](diff_time),
+            feature['value_function_high'](highs[1]),             
+            feature['value_function_low'](lows[1]),], util.sse(sim_data_values, exp_data_values)
+
 def scoreDerivativeSimilarityCross(sim_data, experimental_data, feature):
     "Order is Pearson, Value High, Time High, Value Low, Time Low"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
@@ -244,10 +274,11 @@ def scoreDerivativeSimilarityCross(sim_data, experimental_data, feature):
     exp_data_values = experimental_data['value'][selected]
     exp_time_values = experimental_data['time'][selected]
 
-    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values)).derivative(1)
-    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values)).derivative(1)
-
-    print(type(sim_spline), type(exp_spline))
+    try:
+        sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
+        exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
+    except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
+        return [0.0, 0.0, 0.0, 0.0,], 1e6
 
     exp_data_values = exp_spline(exp_time_values)
     sim_data_values = sim_spline(exp_time_values)
@@ -269,10 +300,11 @@ def scoreDerivativeSimilarityCrossAlt(sim_data, experimental_data, feature):
     exp_data_values = experimental_data['value'][selected]
     exp_time_values = experimental_data['time'][selected]
 
-    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values)).derivative(1)
-    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values)).derivative(1)
-
-    print(type(sim_spline), type(exp_spline))
+    try:
+        sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
+        exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
+    except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
+        return [0.0, 0.0], 1e6
 
     exp_data_values = exp_spline(exp_time_values)
     sim_data_values = sim_spline(exp_time_values)
@@ -303,8 +335,11 @@ def scoreDextran(sim_data, experimental_data, feature):
 
     sim_data_values[sim_data_values < max(sim_data_values)/100.0] = 0
 
-    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, sim_data_values, s=util.smoothing_factor(sim_data_values))
-    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, exp_data_values, s=util.smoothing_factor(exp_data_values))
+    try:
+        sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
+        exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
+    except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
+        return [0.0, 0.0,], 1e6
 
     sim_spline_derivative = sim_spline.derivative(1)
     exp_spline_derivative = exp_spline.derivative(1)
