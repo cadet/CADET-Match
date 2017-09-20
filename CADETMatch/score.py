@@ -15,6 +15,25 @@ def exponential(x, a, b):
 def linear(x, a, b):
     return a*x+b
 
+def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
+    corr = scipy.signal.correlate(sim_data_values, exp_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
+
+    index = numpy.argmax(corr)
+
+    score = corr[index]
+
+    endTime = exp_time_values[-1]
+
+    if index > len(exp_time_values):
+        simTime = exp_time_values[-(index - len(exp_time_values))]
+    elif index < len(exp_time_values):
+        simTime = exp_time_values[-(len(exp_time_values) - index)]
+    else:
+        simTime = endTime
+
+    diff_time = endTime - simTime
+    return score, diff_time
+
 def time_function_decay(CV_time, peak_time, diff_input=False):
     x_exp = numpy.array([0, 10.0*CV_time])
     y_exp = numpy.array([1, 0.5])
@@ -123,9 +142,6 @@ def scoreBreakthrough(sim_data, experimental_data, feature):
 
     [start, stop] = util.find_breakthrough(exp_time_values, sim_data_values)
 
-    #sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, sim_data_values, s=util.smoothing_factor(sim_data_values))
-    #exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, exp_data_values, s=util.smoothing_factor(exp_data_values))
-
     temp = [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), 
             feature['value_function'](start[1]), 
             feature['time_function_start'](start[0]),
@@ -141,24 +157,7 @@ def scoreBreakthroughCross(sim_data, experimental_data, feature):
     exp_data_values = experimental_data['value'][selected]
     exp_time_values = experimental_data['time'][selected]
 
-    [start, stop] = util.find_breakthrough(exp_time_values, sim_data_values)
-
-    corr = scipy.signal.correlate(sim_data_values, exp_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
-
-    index = numpy.argmax(corr)
-
-    score = corr[index]
-
-    endTime = exp_time_values[-1]
-
-    if index > len(exp_time_values):
-        simTime = exp_time_values[-(index - len(exp_time_values))]
-    elif index < len(exp_time_values):
-        simTime = exp_time_values[-(len(exp_time_values) - index)]
-    else:
-        simTime = endTime
-
-    diff_time = endTime - simTime
+    score, diff_time = cross_correlate(exp_time_values, sim_data_values, exp_data_values)
 
     temp = [score, 
             feature['value_function'](start[1]), 
@@ -176,11 +175,27 @@ def scoreSimilarity(sim_data, experimental_data, feature):
     [high, low] = util.find_peak(exp_time_values, sim_data_values)
 
     time_high, value_high = high
-    
-    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, sim_data_values, s=util.smoothing_factor(sim_data_values))
-    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, exp_data_values, s=util.smoothing_factor(exp_data_values))
 
-    temp = [pear_corr(scipy.stats.pearsonr(sim_spline(exp_time_values), exp_spline(exp_time_values))[0]), feature['value_function'](value_high), feature['time_function'](time_high)]
+    temp = [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), feature['value_function'](value_high), feature['time_function'](time_high)]
+    return temp, util.sse(sim_data_values, exp_data_values)
+
+def scoreSimilarityHybrid(sim_data, experimental_data, feature):
+    "Order is Pearson, Value, Time"
+    sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
+    selected = feature['selected']
+
+    exp_data_values = experimental_data['value'][selected]
+    exp_time_values = experimental_data['time'][selected]
+
+    [high, low] = util.find_peak(exp_time_values, sim_data_values)
+
+    time_high, value_high = high
+
+    score, diff_time = cross_correlate(exp_time_values, sim_data_values, exp_data_values)
+    
+    temp = [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), 
+            feature['value_function'](value_high), 
+            feature['time_function'](diff_time)]
     return temp, util.sse(sim_data_values, exp_data_values)
 
 def scoreSimilarityCrossCorrelate(sim_data, experimental_data, feature):
@@ -191,23 +206,7 @@ def scoreSimilarityCrossCorrelate(sim_data, experimental_data, feature):
     exp_data_values = experimental_data['value'][selected]
     exp_time_values = experimental_data['time'][selected]
 
-    corr = scipy.signal.correlate(sim_data_values, exp_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
-
-    index = numpy.argmax(corr)
-
-    score = corr[index]
-
-    endTime = exp_time_values[-1]
-
-    if index > len(exp_time_values):
-        simTime = exp_time_values[-(index - len(exp_time_values))]
-    elif index < len(exp_time_values):
-        simTime = exp_time_values[-(len(exp_time_values) - index)]
-    else:
-        simTime = endTime
-
-    diff_time = endTime - simTime
-
+    score, diff_time = cross_correlate(exp_time_values, sim_data_values, exp_data_values)
 
     [high, low] = util.find_peak(exp_time_values, sim_data_values)
 
@@ -224,16 +223,10 @@ def scoreDerivativeSimilarity(sim_data, experimental_data, feature):
     exp_data_values = experimental_data['value'][selected]
     exp_time_values = experimental_data['time'][selected]
 
-    #spline_exp = scipy.interpolate.splrep(exp_time_values, util.smoothing(exp_time_values, exp_data_values))
-    #spline_sim = scipy.interpolate.splrep(exp_time_values, util.smoothing(exp_time_values, sim_data_values))
-
     sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
     exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
 
     print(type(sim_spline), type(exp_spline))
-
-    #spline_derivative_exp = scipy.interpolate.splev(exp_time_values, spline_exp, der=1)
-    #spline_derivative_sim = scipy.interpolate.splev(exp_time_values, spline_sim, der=1)
 
     [highs, lows] = util.find_peak(exp_time_values, sim_spline(exp_time_values))
 
@@ -259,22 +252,7 @@ def scoreDerivativeSimilarityCross(sim_data, experimental_data, feature):
     exp_data_values = exp_spline(exp_time_values)
     sim_data_values = sim_spline(exp_time_values)
 
-    corr = scipy.signal.correlate(sim_data_values, exp_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
-
-    index = numpy.argmax(corr)
-
-    score = corr[index]
-
-    endTime = exp_time_values[-1]
-
-    if index > len(exp_time_values):
-        simTime = exp_time_values[-(index - len(exp_time_values))]
-    elif index < len(exp_time_values):
-        simTime = exp_time_values[-(len(exp_time_values) - index)]
-    else:
-        simTime = endTime
-
-    diff_time = endTime - simTime
+    score, diff_time = cross_correlate(exp_time_values, sim_data_values, exp_data_values)
     
     [highs, lows] = util.find_peak(exp_time_values, sim_data_values)
 
@@ -299,22 +277,7 @@ def scoreDerivativeSimilarityCrossAlt(sim_data, experimental_data, feature):
     exp_data_values = exp_spline(exp_time_values)
     sim_data_values = sim_spline(exp_time_values)
 
-    corr = scipy.signal.correlate(sim_data_values, exp_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
-
-    index = numpy.argmax(corr)
-
-    score = corr[index]
-
-    endTime = exp_time_values[-1]
-
-    if index > len(exp_time_values):
-        simTime = exp_time_values[-(index - len(exp_time_values))]
-    elif index < len(exp_time_values):
-        simTime = exp_time_values[-(len(exp_time_values) - index)]
-    else:
-        simTime = endTime
-
-    diff_time = endTime - simTime
+    score, diff_time = cross_correlate(exp_time_values, sim_data_values, exp_data_values)
     
     return [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), 
             feature['time_function'](diff_time),], util.sse(sim_data_values, exp_data_values)

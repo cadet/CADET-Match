@@ -165,7 +165,7 @@ def plotExperiments(save_name_base, settings, target, results):
 
             sim_time, sim_value = util.get_times_values(results[experimentName]['simulation'],target[experimentName][featureName])
 
-            if featureType in ('similarity', 'similarityDecay', 'curve', 'breakthrough', 'dextran', 'similarityCross', 'similarityCrossDecay', 'breakthroughCross'):
+            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybridDecay','curve', 'breakthrough', 'dextran', 'similarityCross', 'similarityCrossDecay', 'breakthroughCross'):
                 #sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=1e-6)
                 #exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=1e-6)
 
@@ -309,6 +309,8 @@ def runExperiment(individual, experiment, settings, target):
 
         if featureType in ('similarity', 'similarityDecay'):
             scores, sse = score.scoreSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType in ('similarityHybrid', 'similarityHybridDecay'):
+            scores, sse = score.scoreSimilarityHybrid(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType in ('similarityCross', 'similarityCrossDecay'):
             scores, sse = score.scoreSimilarityCrossCorrelate(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'derivative_similarity':
@@ -327,6 +329,7 @@ def runExperiment(individual, experiment, settings, target):
             scores, sse = score.scoreDextran(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'fractionation':
             scores, sse = score.scoreFractionation(temp, target[experiment['name']], target[experiment['name']][featureName])
+        print(experiment['name'], featureName, scores, sse)
         temp['scores'].extend(scores)
         temp['error'] += sse
 
@@ -418,7 +421,7 @@ def genHeaders(settings):
         experimentName = experiment['name']
         experiment['headers'] = []
         for feature in experiment['features']:
-            if feature['type'] in ('similarity', 'similarityCross', 'similarityDecay', 'similarityCrossDecay'):
+            if feature['type'] in ('similarity', 'similarityCross', 'similarityHybrid', 'similarityDecay', 'similarityCrossDecay', 'similarityHybridDecay'):
                 name = "%s_%s" % (experimentName, feature['name'])
                 temp = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
                 numGoals += 3
@@ -591,14 +594,14 @@ def createExperiment(experiment):
         selectedTimes = temp[featureName]['time'][temp[featureName]['selected']]
         selectedValues = temp[featureName]['value'][temp[featureName]['selected']]
 
-        if featureType in ('similarity', 'similarityCross'):
+        if featureType in ('similarity', 'similarityCross', 'similarityHybrid'):
             temp[featureName]['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
-            temp[featureName]['time_function'] = score.time_function(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType == 'similarityCross' else False)
+            temp[featureName]['time_function'] = score.time_function(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType in ('similarityCross', 'similarityHybrid') else False)
             temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1], abstol)
 
-        if featureType in ('similarityDecay', 'similarityCrossDecay'):
+        if featureType in ('similarityDecay', 'similarityCrossDecay', 'similarityHybridDecay'):
             temp[featureName]['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
-            temp[featureName]['time_function'] = score.time_function_decay(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType == 'similarityCrossDecay' else False)
+            temp[featureName]['time_function'] = score.time_function_decay(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType in ('similarityCrossDecay', 'similarityHybridDecay') else False)
             temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1], abstol)
 
         if featureType == 'breakthrough':
