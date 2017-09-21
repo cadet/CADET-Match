@@ -410,7 +410,7 @@ def scoreFractionation(sim_data, experimental_data, feature):
         local_times = times[selected]
         local_values = simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component][selected]
 
-        sim_value = numpy.trapz(local_values, local_times) * flow * (stop - start)
+        sim_value = numpy.trapz(local_values, local_times) * flow
 
         exp_values.append(exp_value)
         sim_values.append(sim_value)

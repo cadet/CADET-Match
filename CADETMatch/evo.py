@@ -638,7 +638,7 @@ def createExperiment(experiment):
             temp[featureName]['peak_high'] = high
             temp[featureName]['peak_low'] = low
 
-            emp[featureName]['time_function'] = score.time_function(CV_time,high[0], diff_input = True)
+            temp[featureName]['time_function'] = score.time_function(CV_time,high[0], diff_input = True)
             temp[featureName]['value_function_high'] = score.value_function(high[1], abstol, 0.1)
             temp[featureName]['value_function_low'] = score.value_function(low[1], abstol, 0.1)
 
