@@ -326,7 +326,6 @@ def runExperiment(individual, experiment, settings, target):
             scores, sse = score.scoreDextran(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'fractionation':
             scores, sse = score.scoreFractionation(temp, target[experiment['name']], target[experiment['name']][featureName])
-        print(experiment['name'], featureName, scores, sse)
         temp['scores'].extend(scores)
         temp['error'] += sse
 
@@ -728,14 +727,14 @@ def setupTemplates(settings, target):
             pass
 
         template.root.input.solver.user_solution_times = target[name]['time']
-        template.root.input.solver.section_times[-1] = target[name]['time'][-1]
+        template.root.input.solver.sections.section_times[-1] = target[name]['time'][-1]
         template.root.input['return'].unit_001.write_solution_particle = 0
         template.root.input['return'].unit_001.write_solution_column_inlet = 1
         template.root.input['return'].unit_001.write_solution_column_outlet = 1
         template.root.input['return'].unit_001.split_components_data = 0
-        template.root.solver.nthreads = 1
-        template.root.solver.time_integrator.init_step_size = 0
-        template.root.solver.time_integrator.max_steps = 0
+        template.root.input.solver.nthreads = 1
+        template.root.input.solver.time_integrator.init_step_size = 0
+        template.root.input.solver.time_integrator.max_steps = 0
 
         template.save()
 

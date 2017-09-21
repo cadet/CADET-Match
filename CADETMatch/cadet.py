@@ -14,6 +14,9 @@ import copy
 
 class Cadet():
 
+    #cadet_path must be set in order for simulations to run
+    cadet_path = None
+
     pp = pprint.PrettyPrinter(indent=4)
 
     def __init__(self, *data):
@@ -87,26 +90,43 @@ def recursively_save( h5file, path, dic):
         #handle   int, float, string and ndarray of int32, int64, float64
         if isinstance(item, str):
             h5file[path + key.upper()] = numpy.array(item, dtype='S' + str(len(item)+1))
+        
         elif isinstance(item, int):
             h5file[path + key.upper()] = numpy.array(item, dtype=numpy.int32)
+        
         elif isinstance(item, float):
             h5file[path + key.upper()] = numpy.array(item, dtype=numpy.float64)
+        
         elif isinstance(item, numpy.ndarray) and item.dtype == numpy.float64:
             h5file[path + key.upper()] = item
+        
+        elif isinstance(item, numpy.ndarray) and item.dtype == numpy.float32:
+            h5file[path + key.upper()] = numpy.array(item, dtype=numpy.float64)
+        
         elif isinstance(item, numpy.ndarray) and item.dtype == numpy.int32:
             h5file[path + key.upper()] = item
+        
         elif isinstance(item, numpy.ndarray) and item.dtype == numpy.int64:
             h5file[path + key.upper()] = item.astype(numpy.int32)
+        
         elif isinstance(item, list) and all(isinstance(i, int) for i in item):
             h5file[path + key.upper()] = numpy.array(item, dtype=numpy.int32)
+        
         elif isinstance(item, list) and any(isinstance(i, float) for i in item):
             h5file[path + key.upper()] = numpy.array(item, dtype=numpy.float64)
+        
         elif isinstance(item, numpy.int32):
             h5file[path + key.upper()] = item
+        
         elif isinstance(item, numpy.float64):
             h5file[path + key.upper()] = item
+
+        elif isinstance(item, numpy.float32):
+            h5file[path + key.upper()] = numpy.array(item, dtype=numpy.float64)
+        
         elif isinstance(item, numpy.bytes_):
             h5file[path + key.upper()] = item
+        
         elif isinstance(item, bytes):
             h5file[path + key.upper()] = item
 
@@ -116,7 +136,8 @@ def recursively_save( h5file, path, dic):
         # other types cannot be saved and will result in an error
         else:
             #print(item)
-            raise ValueError('Cannot save %s type.' % type(item))
+            raise ValueError('Cannot save %s key with %s type.' % (key, type(item)))
+
 
 
 
