@@ -339,7 +339,7 @@ def scoreDextran(sim_data, experimental_data, feature):
         sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
         exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
     except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
-        return [0.0, 0.0,], 1e6
+        return [0.0, 0.0,0.0], 1e6
 
     sim_spline_derivative = sim_spline.derivative(1)
     exp_spline_derivative = exp_spline.derivative(1)
@@ -388,6 +388,31 @@ def scoreDextran(sim_data, experimental_data, feature):
         scoreDeriv = 0
 
     return [score, scoreDeriv, feature['maxTimeFunction'](time)], util.sse(sim_data_values, exp_data_values)
+
+def scoreDextranHybrid(sim_data, experimental_data, feature):
+    "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
+    #print("feature", feature)
+    sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
+    selected = feature['origSelected']
+    max_time = feature['max_time']
+
+    exp_time_values = experimental_data['time'][selected]
+    exp_data_values = experimental_data['value'][selected]
+
+    score, diff_time = cross_correlate(exp_time_values, sim_data_values, exp_data_values)
+
+    try:
+        sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
+        exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
+    except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
+        return [0.0, 0.0,], 1e6
+
+    exp_der_data_values = exp_spline(exp_time_values)
+    sim_der_data_values = sim_spline(exp_time_values)
+
+    return [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), 
+            pear_corr(scipy.stats.pearsonr(sim_der_data_values, exp_der_data_values)[0]), 
+            feature['offsetTimeFunction'](diff_time)], util.sse(sim_data_values, exp_data_values)
 
 
 def scoreFractionation(sim_data, experimental_data, feature):

@@ -165,7 +165,7 @@ def plotExperiments(save_name_base, settings, target, results):
 
             sim_time, sim_value = util.get_times_values(results[experimentName]['simulation'],target[experimentName][featureName])
 
-            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybridDecay','curve', 'breakthrough', 'dextran', 'similarityCross', 'similarityCrossDecay', 'breakthroughCross'):
+            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybridDecay','curve', 'breakthrough', 'dextran', 'dextranHybrid', 'similarityCross', 'similarityCrossDecay', 'breakthroughCross'):
                 graph.plot(sim_time, sim_value, 'r--', label='Simulation')
                 graph.plot(exp_time, exp_value, 'g:', label='Experiment')
             elif featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_cross', 'derivative_similarity_cross_alt'):
@@ -324,6 +324,8 @@ def runExperiment(individual, experiment, settings, target):
             scores, sse = score.scoreBreakthroughCross(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'dextran':
             scores, sse = score.scoreDextran(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'dextranHybrid':
+            scores, sse = score.scoreDextranHybrid(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'fractionation':
             scores, sse = score.scoreFractionation(temp, target[experiment['name']], target[experiment['name']][featureName])
         temp['scores'].extend(scores)
@@ -455,10 +457,7 @@ def genHeaders(settings):
                 name = "%s_%s" % (experimentName, feature['name'])
                 temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
                 numGoals += 3
-            elif feature['type'] == 'dextran':
-                #name = "%s_%s" % (experimentName, feature['name'])
-                #temp = ["%s_Front_Similarity" % name, "%s_High_Value" % name, "%s_High_Time" % name, "%s_Low_Value" % name, "%s_Low_Time" % name]
-                #numGoals += 5
+            elif feature['type'] in ('dextran', 'dextranHybrid'):
                 name = "%s_%s" % (experimentName, feature['name'])
                 temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, "%s_Time" % name]
                 numGoals += 3
@@ -663,7 +662,19 @@ def createExperiment(experiment):
             temp[featureName]['origSelected'] = temp[featureName]['selected']
             temp[featureName]['selected'] = temp[featureName]['selected'] & (temp[featureName]['time'] <= max_time)
             temp[featureName]['max_time'] = max_time
-            temp[featureName]['maxTimeFunction'] = score.time_function_decay(CV_time/10.0, max_time)
+            temp[featureName]['offsetTimeFunction'] = score.time_function_decay(CV_time/10.0, max_time)
+
+        if featureType == "dextranHybrid":
+            #change the stop point to be where the max positive slope is along the searched interval
+            exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, selectedValues, s=util.smoothing_factor(selectedValues), k=1).derivative(1)
+            values = exp_spline(selectedTimes)
+            max_index = numpy.argmax(values)
+            max_time = selectedTimes[max_index]
+            
+            temp[featureName]['origSelected'] = temp[featureName]['selected']
+            temp[featureName]['selected'] = temp[featureName]['selected'] & (temp[featureName]['time'] <= max_time)
+            temp[featureName]['max_time'] = max_time
+            temp[featureName]['offsetTimeFunction'] = score.time_function_decay(CV_time/10.0, max_time, diff_input=True)
 
         if featureType == 'fractionation':
             data = pandas.read_csv(feature['csv'])
