@@ -19,7 +19,7 @@ def find_extreme(seq):
     except ValueError:
         return [0,0]
 
-def get_times_values(simulation, target):
+def get_times_values(simulation, target, selected = None):
 
     times = simulation.root.output.solution.solution_times
 
@@ -29,8 +29,9 @@ def get_times_values(simulation, target):
         values = numpy.sum([simulation[i] for i in isotherm],0)
     else:
         values = simulation[isotherm]
-
-    selected = target['selected']
+    
+    if selected is None:
+        selected = target['selected']
 
     return times[selected], values[selected]
 
@@ -100,8 +101,18 @@ def graph_simulation(simulation, graph):
 
     comps = []
 
-    for i in range(ncomp):
-        comps.append(simulation.root.output.solution.unit_001['solution_outlet_comp_%03d' % i])
+    try:
+       simulation.root.output.solution.unit_001.solution_outlet_comp_000.shape
+       hasColumn = 0
+    except AttributeError:
+        hasColumn = 1
+
+    if hasColumn:
+        for i in range(ncomp):
+            comps.append(simulation.root.output.solution.unit_001['solution_column_outlet_comp_%03d' % i])
+    else:
+        for i in range(ncomp):
+            comps.append(simulation.root.output.solution.unit_001['solution_outlet_comp_%03d' % i])
 
     if hasSalt:
         graph.set_title("Output")
@@ -123,5 +134,17 @@ def graph_simulation(simulation, graph):
         lines, labels = graph.get_legend_handles_labels()
         lines2, labels2 = axis2.get_legend_handles_labels()
         axis2.legend(lines + lines2, labels + labels2, loc=0)
+    else:
+        graph.set_title("Output")
+        
+        colors = ['r', 'g', 'c', 'm', 'y', 'k']
+        for idx, comp in enumerate(comps):
+            graph.plot(solution_times, comp, '%s-' % colors[idx], label="P%s" % idx)
+        graph.set_ylabel('mMol Protein', color='r')
+        graph.tick_params('y', colors='r')
+        graph.set_xlabel('time (s)')
+
+        lines, labels = graph.get_legend_handles_labels()
+        graph.legend(lines, labels, loc=0)
 
     

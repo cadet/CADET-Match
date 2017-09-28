@@ -177,7 +177,7 @@ def plotExperiments(save_name_base, settings, target, results):
                     graph.plot(exp_time, exp_spline(exp_time), 'g:', label='Experiment')
                 except:
                     pass
-            elif featureType == 'fractionation':
+            elif featureType in ('fractionation', 'fractionationCombine'):
                 graph_exp = results[experimentName]['graph_exp']
                 graph_sim = results[experimentName]['graph_sim']
 
@@ -328,6 +328,8 @@ def runExperiment(individual, experiment, settings, target):
             scores, sse = score.scoreDextranHybrid(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'fractionation':
             scores, sse = score.scoreFractionation(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'fractionationCombine':
+            scores, sse = score.scoreFractionationCombine(temp, target[experiment['name']], target[experiment['name']][featureName])
         temp['scores'].extend(scores)
         temp['error'] += sse
 
@@ -476,6 +478,20 @@ def genHeaders(settings):
                         temp.append('%s_%s_Sample_%s_Component_%s' % (experimentName, feature['name'], sample, component))
 
                 numGoals += len(temp)
+            elif feature['type'] == 'fractionationCombine':
+                data = pandas.read_csv(feature['csv'])
+                rows, cols = data.shape
+                #remove first two columns since those are the start and stop times
+                cols = cols - 2
+
+                total = rows * cols
+                data_headers = data.columns.values.tolist()
+
+                temp  = []
+                for component in data_headers[2:]:
+                    temp.append('%s_%s_Component_%s' % (experimentName, feature['name'], component))
+                numGoals += len(temp)
+
             headers.extend(temp)
             experiment['headers'].extend(temp)
 
@@ -662,7 +678,7 @@ def createExperiment(experiment):
             temp[featureName]['origSelected'] = temp[featureName]['selected']
             temp[featureName]['selected'] = temp[featureName]['selected'] & (temp[featureName]['time'] <= max_time)
             temp[featureName]['max_time'] = max_time
-            temp[featureName]['offsetTimeFunction'] = score.time_function_decay(CV_time/10.0, max_time)
+            temp[featureName]['maxTimeFunction'] = score.time_function_decay(CV_time/10.0, max_time, diff_input=True)
 
         if featureType == "dextranHybrid":
             #change the stop point to be where the max positive slope is along the searched interval
@@ -680,6 +696,12 @@ def createExperiment(experiment):
             data = pandas.read_csv(feature['csv'])
             rows, cols = data.shape
 
+            flow = sim.root.input.model.connections.switch_000.connections[9]
+            smallestTime = min(data['Stop'] - data['Start'])
+            abstolFraction = flow * abstol * smallestTime
+
+            print('abstolFraction', abstolFraction)
+
             headers = data.columns.values.tolist()
 
             funcs = []
@@ -689,10 +711,36 @@ def createExperiment(experiment):
                     start = data['Start'][sample]
                     stop = data['Stop'][sample]
                     value = data[component][sample]
-                    func = score.value_function(value, abstol)
+                    func = score.value_function(value, abstolFraction)
 
                     funcs.append( (start, stop, int(component), value, func) )
             temp[featureName]['funcs'] = funcs
+
+        if featureType == 'fractionationCombine':
+            data = pandas.read_csv(feature['csv'])
+            rows, cols = data.shape
+
+            headers = data.columns.values.tolist()
+
+            flow = sim.root.input.model.connections.switch_000.connections[9]
+            smallestTime = min(data['Stop'] - data['Start'])
+            abstolFraction = flow * abstol * smallestTime
+
+            print('abstolFraction', abstolFraction)
+
+            funcs = []
+
+            for sample in range(rows):
+                for component in headers[2:]:
+                    start = data['Start'][sample]
+                    stop = data['Stop'][sample]
+                    value = data[component][sample]
+                    func = score.value_function(value, abstolFraction)
+
+                    funcs.append( (start, stop, int(component), value, func) )
+            temp[featureName]['funcs'] = funcs
+            temp[featureName]['components'] = [int(i) for i in headers[2:]]
+            temp[featureName]['samplesPerComponent'] = rows
             
     return temp
 

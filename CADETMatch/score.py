@@ -326,23 +326,22 @@ def scoreCurve(sim_data, experimental_data, feature):
 def scoreDextran(sim_data, experimental_data, feature):
     "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
     #print("feature", feature)
-    sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['origSelected']
     max_time = feature['max_time']
+
+    sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature, selected)
 
     exp_time_values = experimental_data['time'][selected]
     exp_data_values = experimental_data['value'][selected]
 
-    sim_data_values[sim_data_values < max(sim_data_values)/100.0] = 0
+
+    #sim_data_values[sim_data_values < max(sim_data_values)/100.0] = 0
 
     try:
-        sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
-        exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
+        sim_spline_derivative = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
+        exp_spline_derivative = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
     except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
         return [0.0, 0.0,0.0], 1e6
-
-    sim_spline_derivative = sim_spline.derivative(1)
-    exp_spline_derivative = exp_spline.derivative(1)
 
     expSelected = selected & (experimental_data['time'] <= max_time)
     expTime = experimental_data['time'][expSelected]
@@ -354,32 +353,36 @@ def scoreDextran(sim_data, experimental_data, feature):
     sim_max_time = exp_time_values[sim_max_index]
 
     simSelected = selected & (experimental_data['time'] <= sim_max_time)
-    simTime =  sim_data['time'][simSelected]
-    simValues = sim_data['value'][simSelected]
+
+    simTime, simValues = util.get_times_values(sim_data['simulation'], feature, simSelected)
+
     simDerivValues = sim_spline_derivative(simSelected)
 
     #this works the same way as matlab  xcorr(simValues, expValues, 'coeff')
 
-    simValues[simValues < max(simValues)/100.0] = 0
-    expValues[expValues < max(expValues)/100.0] = 0
+    #simValues[simValues < max(simValues)/100.0] = 0
+    #expValues[expValues < max(expValues)/100.0] = 0
 
-    corr = scipy.signal.correlate(simValues, expValues)/(numpy.linalg.norm(simValues) * numpy.linalg.norm(expValues))
-    corrDeriv = scipy.signal.correlate(simDerivValues, expDerivValues)/(numpy.linalg.norm(simDerivValues) * numpy.linalg.norm(expDerivValues))
+    score, diff_time = cross_correlate(expTime, simValues, expValues)
+    scoreDeriv, diff_time_deriv = cross_correlate(expTime, simDerivValues, expDerivValues)
 
-    index = numpy.argmax(corr)
+    #corr = scipy.signal.correlate(simValues, expValues)/(numpy.linalg.norm(simValues) * numpy.linalg.norm(expValues))
+    #corrDeriv = scipy.signal.correlate(simDerivValues, expDerivValues)/(numpy.linalg.norm(simDerivValues) * numpy.linalg.norm(expDerivValues))
 
-    score = corr[index]
-    time = exp_time_values[index]
+    #index = numpy.argmax(corr)
 
-    indexDeriv = numpy.argmax(corrDeriv)
-    scoreDeriv = corrDeriv[indexDeriv]
+    #score = corr[index]
+    #time = exp_time_values[index]
 
-    if numpy.isnan(score):
-        score = 0
-        time = 0
+    #indexDeriv = numpy.argmax(corrDeriv)
+    #scoreDeriv = corrDeriv[indexDeriv]
 
-    if numpy.isnan(scoreDeriv):
-        scoreDeriv = 0
+    #if numpy.isnan(score):
+    #    score = 0
+    #    time = 0
+
+    #if numpy.isnan(scoreDeriv):
+    #    scoreDeriv = 0
 
     if score < 0:
         score = 0
@@ -387,14 +390,13 @@ def scoreDextran(sim_data, experimental_data, feature):
     if scoreDeriv < 0:
         scoreDeriv = 0
 
-    return [score, scoreDeriv, feature['maxTimeFunction'](time)], util.sse(sim_data_values, exp_data_values)
+    return [score, scoreDeriv, feature['maxTimeFunction'](diff_time)], util.sse(sim_data_values, exp_data_values)
 
 def scoreDextranHybrid(sim_data, experimental_data, feature):
     "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
     #print("feature", feature)
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
-    selected = feature['origSelected']
-    max_time = feature['max_time']
+    selected = feature['selected']
 
     exp_time_values = experimental_data['time'][selected]
     exp_data_values = experimental_data['value'][selected]
@@ -404,8 +406,8 @@ def scoreDextranHybrid(sim_data, experimental_data, feature):
     try:
         sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
         exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
-    except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
-        return [0.0, 0.0,], 1e6
+    except:  #I know a bare exception is bad but it looks like the exception is not exposed inside UnivariateSpline
+        return [0.0, 0.0, 0.0], 1e6
 
     exp_der_data_values = exp_spline(exp_time_values)
     sim_der_data_values = sim_spline(exp_time_values)
@@ -459,3 +461,56 @@ def scoreFractionation(sim_data, experimental_data, feature):
     sim_data['graph_exp'] = graph_exp
     sim_data['graph_sim'] = graph_sim
     return scores, util.sse(numpy.array(sim_values), numpy.array(exp_values))
+
+def scoreFractionationCombine(sim_data, experimental_data, feature):
+    "Just Pearson score"
+    simulation = sim_data['simulation']
+    funcs = feature['funcs']
+    components = feature['components']
+    numComponents = len(components)
+    samplesPerComponent = feature['samplesPerComponent']
+    multiplier = 1.0/samplesPerComponent
+
+    times = simulation.root.output.solution.solution_times
+    flow = simulation.root.input.model.connections.switch_000.connections[9]
+
+    scores = {}
+    for comp in components:
+        scores[comp] = 0.0
+
+    sim_values = []
+    exp_values = []
+   
+    graph_sim = {}
+    graph_exp = {}
+    for (start, stop, component, exp_value, func) in funcs:
+        selected = (times >= start) & (times <= stop)
+
+        local_times = times[selected]
+        local_values = simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component][selected]
+
+        sim_value = numpy.trapz(local_values, local_times) * flow
+
+        exp_values.append(exp_value)
+        sim_values.append(sim_value)
+
+        scores[component] += func(sim_value) * multiplier
+
+        if component not in graph_sim:
+            graph_sim[component] = []
+            graph_exp[component] = []
+
+        time_center = (start + stop)/2.0
+        graph_sim[component].append( (time_center, sim_value) )
+        graph_exp[component].append( (time_center, exp_value) )
+
+    #sort lists
+    for key,value in graph_sim.items():
+        value.sort()
+    for key,value in graph_exp.items():
+        value.sort()
+
+    sim_data['graph_exp'] = graph_exp
+    sim_data['graph_sim'] = graph_sim
+    
+    return [scores[comp] for comp in components], util.sse(numpy.array(sim_values), numpy.array(exp_values))
