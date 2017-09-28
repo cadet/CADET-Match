@@ -36,6 +36,7 @@ import tempfile
 import shutil
 
 import spea2
+import nsga2
 from cadet import Cadet
 
 #parallelization
@@ -366,6 +367,8 @@ def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE):
     toolbox = base.Toolbox()
     if searchMethod == 'SPEA2':
         return spea2.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools)
+    if searchMethod == 'NSGA2':
+        return nsga2.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools)
 
 def buildMinMax(settings):
     "build the minimum and maximum parameter boundaries"
@@ -757,6 +760,8 @@ def run(settings, toolbox):
     searchMethod = settings.get('searchMethod', 'SPEA2')
     if searchMethod == 'SPEA2':
         spea2.run(settings, toolbox, tools, creator)
+    if searchMethod == 'NSGA2':
+        nsga2.run(settings, toolbox, tools, creator)
 
 def setupTemplates(settings, target):
     "setup all the experimental templates"
