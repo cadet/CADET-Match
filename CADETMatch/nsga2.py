@@ -19,6 +19,8 @@ def run(settings, toolbox, tools, creator):
     populationSize=parameters * settings['population']
     CXPB=settings['crossoverRate']
 
+    totalGenerations = parameters * settings['generations']
+
     checkpointFile = Path(settings['resultsDirMisc'], settings['checkpointFile'])
 
     if checkpointFile.exists():
@@ -40,12 +42,27 @@ def run(settings, toolbox, tools, creator):
         halloffame = tools.HallOfFame(1)
         logbook = tools.Logbook()
 
-        logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
-        
+        logbook.header = ['gen', 'nevals']
+   
+    # Evaluate the individuals with an invalid fitness
+    invalid_ind = [ind for ind in population if not ind.fitness.valid]
+    fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+    for ind, fit in zip(invalid_ind, fitnesses):
+        ind.fitness.values = fit    
+
+    # This is just to assign the crowding distance to the individuals
+    # no actual selection is done
+    population = toolbox.select(population, len(population)) 
+    
+    avg, bestMin = util.averageFitness(population)
+    print('avg', avg, 'best', bestMin)
+
+    logbook.record(gen=start_gen, evals=len(invalid_ind))
+
     # Begin the generational process
     for gen in range(start_gen, totalGenerations+1):
         # Vary the population
-        offspring = tools.selTournamentDCD(pop, len(pop))
+        offspring = tools.selTournamentDCD(population, len(population))
         offspring = [toolbox.clone(ind) for ind in offspring]
         
         for ind1, ind2 in zip(offspring[::2], offspring[1::2]):
@@ -62,10 +79,12 @@ def run(settings, toolbox, tools, creator):
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
+        avg, bestMin = util.averageFitness(offspring)
+        print('avg', avg, 'best', bestMin)
+
         # Select the next generation population
-        pop = toolbox.select(pop + offspring, populationSize)
-        record = stats.compile(pop)
-        logbook.record(gen=gen, evals=len(invalid_ind), **record)
+        population = toolbox.select(population + offspring, populationSize)
+        logbook.record(gen=gen, evals=len(invalid_ind))
 
         cp = dict(population=population, generation=gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate())
