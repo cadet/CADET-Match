@@ -7,6 +7,8 @@ from deap import tools
 import scipy.signal
 from scipy.spatial.distance import cdist
 
+from addict import Dict
+
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
 
@@ -101,11 +103,7 @@ def graph_simulation(simulation, graph):
 
     comps = []
 
-    try:
-       simulation.root.output.solution.unit_001.solution_outlet_comp_000.shape
-       hasColumn = 0
-    except AttributeError:
-        hasColumn = 1
+    hasColumn = isinstance(simulation.root.output.solution.unit_001.solution_outlet_comp_000, Dict)
 
     if hasColumn:
         for i in range(ncomp):

@@ -31,6 +31,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CADETMatch.py" />
+    <Compile Include="checkpoint_algorithms.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="evo.py">
       <SubType>Code</SubType>
     </Compile>
@@ -38,6 +41,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="nsga2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="nsga3_selection.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="peakdetect.py">
