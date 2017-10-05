@@ -16,7 +16,8 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>F:\AMS-024\Estimation\Dextrane\dextrane.json</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>-m scoop</InterpreterArguments>
+    <InterpreterArguments>
+    </InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,6 +42,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="nsga2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="nsga3.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="nsga3_selection.py">
