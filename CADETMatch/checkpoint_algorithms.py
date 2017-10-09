@@ -251,6 +251,9 @@ def eaMuPlusLambda(toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
+        avg, bestMin = util.averageFitness(offspring)
+        print('avg', avg, 'best', bestMin)
+
         # Update the hall of fame with the generated individuals
         if halloffame is not None:
             halloffame.update(offspring)
