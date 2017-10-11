@@ -273,7 +273,7 @@ def runExperiment(individual, experiment, settings, target):
         return None
 
     try:
-        simulation.run(timeout = experiment['timeout'])
+        simulation.run(timeout = float(experiment['timeout']))
     except subprocess.TimeoutExpired:
         print("Simulation Timed Out")
         return leave()
