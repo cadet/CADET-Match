@@ -41,7 +41,7 @@ def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, map_fun
     toolbox.register("individual_guess", util.initIndividual, creator.Individual)
 
     toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=20.0, low=MIN_VALUE, up=MAX_VALUE)
-    toolbox.register("mutate", tools.mutPolynomialBounded, eta=20.0, low=MIN_VALUE, up=MAX_VALUE, indpb=1.0/len(MIN_VALUE))
+    toolbox.register("mutate", util.mutPolynomialBoundedAdaptive, eta=10.0, low=MIN_VALUE, up=MAX_VALUE, indpb=1.0/len(MIN_VALUE))
 
     toolbox.register("select", nsga3_selection.sel_nsga_iii)
     toolbox.register("evaluate", fitness)
