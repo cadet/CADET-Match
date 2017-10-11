@@ -299,8 +299,8 @@ def runExperiment(individual, experiment, settings, target):
     temp['cadetValuesKEQ'] = cadetValuesKEQ
 
     for feature in experiment['features']:
-        start = feature['start']
-        stop = feature['stop']
+        start = float(feature['start'])
+        stop = float(feature['stop'])
         featureType = feature['type']
         featureName = feature['name']
 
@@ -593,8 +593,8 @@ def createExperiment(experiment):
     for feature in experiment['features']:
         featureName = feature['name']
         featureType = feature['type']
-        featureStart = feature['start']
-        featureStop = feature['stop']
+        featureStart = float(feature['start'])
+        featureStop = float(feature['stop'])
 
         temp[featureName] = {}
 
