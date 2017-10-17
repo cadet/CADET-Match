@@ -22,16 +22,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-class ConditionException(Exception):
-    pass
-
 class GradientException(Exception):
     pass
-
-
-def setupTemplates(settings, target):
-    pass
-
 
 def search(gradCheck, offspring, toolbox):
     checkOffspring = (ind for ind in offspring if min(ind.fitness.values) > gradCheck)
@@ -61,7 +53,6 @@ def search(gradCheck, offspring, toolbox):
     return gradCheck, temp
 
 def gradSearch(x):
-    cache = {}
     #x0 = scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache})
     #return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='lm', kwargs={'cache':cache}, ftol=1e-10, xtol=1e-10, gtol=1e-10)
     try:
@@ -71,16 +62,8 @@ def gradSearch(x):
         print("Gradient Failure")
         print(sys.exc_info()[0])
         return None
-    except ConditionException:
-        print("Condition Failure")
-        print(sys.exc_info()[0])
-        return None
 
-def jacobian(x, cache):
-    jac = numpy.concatenate(cache[tuple(x)], 1)
-    return jac.transpose()
-
-def fitness_sens(individual, cache):
+def fitness_sens(individual):
     if not(util.feasible(individual)):
         return [0.0] * evo.numGoals
     print("Gradient Running for ", individual)
@@ -89,9 +72,8 @@ def fitness_sens(individual, cache):
 
     results = {}
     diffs = []
-    cache[tuple(individual)] = []
     for experiment in evo.settings['experiments']:
-        result = runExperimentSens(individual, experiment, evo.settings, evo.target, cache[tuple(individual)])
+        result = runExperimentSens(individual, experiment, evo.settings, evo.target)
         if result is not None:
             results[experiment['name']] = result
             scores.extend(results[experiment['name']]['scores'])
@@ -138,51 +120,30 @@ def fitness_sens(individual, cache):
         if result['path']:
             os.remove(result['path'])
     
-    #cond = numpy.linalg.cond(jacobian(tuple(individual), cache))
-    #if cond > 1000:
-    #    raise ConditionException("Condition Number is %s. This location is poorly conditioned. Aborting gradient search" % cond)
-    
-    #return numpy.concatenate(diffs, 0)
     return -scores
 
 def saveExperimentsSens(save_name_base, settings,target, results):
-    for experiment in settings['experiments']:
-        experimentName = experiment['name']
-        src = results[experimentName]['path']
-        dst = Path(settings['resultsDirGrad'], '%s_%s_GRAD.h5' % (save_name_base, experimentName))
-
-        if dst.is_file():  #File already exists don't try to write over it
-            return False
-        else:
-            shutil.copy(src, bytes(dst))
-
-            with h5py.File(dst, 'a') as h5:
-                scoreGroup = h5.create_group("score")
-
-                for (header, score) in zip(experiment['headers'], results[experimentName]['scores']):
-                    scoreGroup.create_dataset(header, data=numpy.array(score, 'f8'))
-    return True
+    return util.saveExperiments(save_name_base, settings,target, results, settings['resultsDirGrad'], '%s_%s_GRAD.h5')
 
 def plotExperimentsSens(save_name_base, settings, target, results):
     util.plotExperiments(save_name_base, settings, target, results, settings['resultsDirGrad'], '%s_%s_GRAD.png')
 
-def runExperimentSens(individual, experiment, settings, target, jac):
+def runExperiment(individual, experiment, settings, target):
     handle, path = tempfile.mkstemp(suffix='.h5')
     os.close(handle)
 
     if 'simulationSens' not in experiment:
-        templatePath = Path(settings['resultsDirMisc'], "template_%s_sens.h5" % experiment['name'])
+        templatePath = Path(settings['resultsDirMisc'], "template_%s.h5" % experiment['name'])
         templateSim = Cadet()
         templateSim.filename = templatePath
         templateSim.load()
         experiment['simulationSens'] = templateSim
 
-
     simulation = Cadet(experiment['simulationSens'].root)
     simulation.filename = path
 
     simulation.root.input.solver.nthreads = 1
-    cadetValues = set_simulation(individual, simulation, evo.settings)
+    cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings)
 
     simulation.save()
 
@@ -191,7 +152,7 @@ def runExperimentSens(individual, experiment, settings, target, jac):
         return None
 
     try:
-        simulation.run(timeout = experiment['timeout'] * len(target['sensitivities']))
+        simulation.run(timeout = float(experiment['timeout']))
     except subprocess.TimeoutExpired:
         print("Simulation Timed Out")
         return leave()
@@ -207,87 +168,50 @@ def runExperimentSens(individual, experiment, settings, target, jac):
         return leave()
     util.log("Everything ran fine")
 
-    gradient_components = experiment['gradient']['components']
-    gradient_CSV = experiment['gradient']['CSV']
-    gradient_stop = experiment['gradient']['stop']
-    gradient_start = experiment['gradient']['start']
-
-    if len(gradiegradient_componentsnt_CSV) > 1 and len(gradient_CSV) == 1:
-        combine_components = True
-    else:
-        combine_components = False
-
-    selected = (times >= gradient_start) & (times <= gradient_stop)
-
-    #write out jacobian to jac
-    temp = []
-    sens = simulation.root.output.sensitivity
-    for idx, parm in enumerate( target['sensitivities']):
-        name, unit, comp, bound = parm
-        #-1 means comp independent but the entry is still stored in comp 0
-        if comp == -1:
-            comp = 0
-
-        temp.append([sens["param_%03d" % idx]["unit_%03d" % unit]["sens_column_outlet_comp_%03d" % comp]])
-
-    temp = transform(temp, target, settings, cadetValues)
-    jacobian = numpy.array(temp)
-    jac.append(numpy.array(temp))
 
     temp = {}
-    temp['time'] = times
-    if isinstance(experiment['isotherm'], list):
-        temp['value'] = numpy.sum([numpy.array(h5[i]) for i in experiment['isotherm']],0)
-    else:
-        temp['value'] = numpy.array(h5[experiment['isotherm']])
+    temp['simulation'] = simulation
     temp['path'] = path
     temp['scores'] = []
     temp['error'] = 0.0
-    temp['cond'] = numpy.linalg.cond(jacobian, None)
     temp['cadetValues'] = cadetValues
-    temp['simulation'] = simulation
+    temp['cadetValuesKEQ'] = cadetValuesKEQ
 
     for feature in experiment['features']:
-        start = feature['start']
-        stop = feature['stop']
+        start = float(feature['start'])
+        stop = float(feature['stop'])
         featureType = feature['type']
         featureName = feature['name']
 
         if featureType in ('similarity', 'similarityDecay'):
             scores, sse = score.scoreSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType in ('similarityHybrid', 'similarityHybridDecay'):
+            scores, sse = score.scoreSimilarityHybrid(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType in ('similarityCross', 'similarityCrossDecay'):
             scores, sse = score.scoreSimilarityCrossCorrelate(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'derivative_similarity':
             scores, sse = score.scoreDerivativeSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'derivative_similarity_cross':
+            scores, sse = score.scoreDerivativeSimilarityCross(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'derivative_similarity_cross_alt':
+            scores, sse = score.scoreDerivativeSimilarityCrossAlt(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'derivative_similarity_hybrid':
+            scores, sse = score.scoreDerivativeSimilarityHybrid(temp, target[experiment['name']], target[experiment['name']][featureName]) 
         elif featureType == 'curve':
             scores, sse = score.scoreCurve(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'breakthrough':
             scores, sse = score.scoreBreakthrough(temp, target[experiment['name']], target[experiment['name']][featureName])
         elif featureType == 'breakthroughCross':
             scores, sse = score.scoreBreakthroughCross(temp, target[experiment['name']], target[experiment['name']][featureName])
-        elif featureType == 'dextrane':
-            scores, sse = score.scoreDextrane(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'dextran':
+            scores, sse = score.scoreDextran(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'dextranHybrid':
+            scores, sse = score.scoreDextranHybrid(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'fractionation':
+            scores, sse = score.scoreFractionation(temp, target[experiment['name']], target[experiment['name']][featureName])
+        elif featureType == 'fractionationCombine':
+            scores, sse = score.scoreFractionationCombine(temp, target[experiment['name']], target[experiment['name']][featureName])
         temp['scores'].extend(scores)
         temp['error'] += sse
 
     return temp
-
-def transform(tempJac, target, settings, cadetValues):
-    jac = []
-
-    # (name, unit, comp, bound)
-    idx = 0
-    for parameter in settings['parameters']:
-        transform = parameter['transform']
-
-        if transform == 'keq':
-            for bound in parameter['bound']:
-                jac.append(tempJac[idx+1] * cadetValues[idx+1] + cadetValues[idx] * tempJac[idx])   
-                jac.append(-tempJac[idx+1] * cadetValues[idx+1])   
-                idx += 2
-
-        elif transform == "log":
-            for bound in parameter['bound']:
-                jac.append(tempJac[idx] * cadetValues[idx])
-                idx += 1
-    return jac

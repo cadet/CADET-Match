@@ -122,21 +122,7 @@ def fitness(individual):
     return scores
 
 def saveExperiments(save_name_base, settings,target, results):
-    for experiment in settings['experiments']:
-        experimentName = experiment['name']
-
-        dst = Path(settings['resultsDirEvo'], '%s_%s_EVO.h5' % (save_name_base, experimentName))
-
-        if dst.is_file():  #File already exists don't try to write over it
-            return False
-        else:
-            simulation = results[experimentName]['simulation']
-            simulation.filename = bytes(dst)
-
-            for (header, score) in zip(experiment['headers'], results[experimentName]['scores']):
-                simulation.root.score[header] = score
-            simulation.save()
-    return True
+    return util.saveExperiments(save_name_base, settings,target, results, settings['resultsDirEvo'], '%s_%s_EVO.h5')
 
 def plotExperiments(save_name_base, settings, target, results):
     util.plotExperiments(save_name_base, settings, target, results, settings['resultsDirEvo'], '%s_%s_EVO.png')

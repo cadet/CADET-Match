@@ -214,3 +214,20 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
 
         plt.savefig(bytes(dst), dpi=100)
         plt.close()
+
+def saveExperiments(save_name_base, settings,target, results, directory, file_pattern):
+    for experiment in settings['experiments']:
+        experimentName = experiment['name']
+
+        dst = Path(directory, file_pattern % (save_name_base, experimentName))
+
+        if dst.is_file():  #File already exists don't try to write over it
+            return False
+        else:
+            simulation = results[experimentName]['simulation']
+            simulation.filename = bytes(dst)
+
+            for (header, score) in zip(experiment['headers'], results[experimentName]['scores']):
+                simulation.root.score[header] = score
+            simulation.save()
+    return True
