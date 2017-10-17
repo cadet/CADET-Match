@@ -41,6 +41,9 @@
     <Compile Include="grad.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="gradFD.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="nsga2.py">
       <SubType>Code</SubType>
     </Compile>
