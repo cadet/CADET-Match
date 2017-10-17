@@ -157,6 +157,8 @@ def scoreBreakthroughCross(sim_data, experimental_data, feature):
     exp_data_values = experimental_data['value'][selected]
     exp_time_values = experimental_data['time'][selected]
 
+    [start, stop] = util.find_breakthrough(exp_time_values, sim_data_values)
+
     score, diff_time = cross_correlate(exp_time_values, sim_data_values, exp_data_values)
 
     temp = [score, 
