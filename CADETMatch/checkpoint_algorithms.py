@@ -74,7 +74,7 @@ s
         halloffame = cp["halloffame"]
         logbook = cp["logbook"]
         random.setstate(cp["rndstate"])
-        #gradCheck = cp['gradCheck']
+        gradCheck = cp['gradCheck']
 
     else:
         # Start a new evolution
@@ -141,10 +141,10 @@ s
         if verbose:
             print(logbook.stream)
 
-        #cp = dict(population=population, generation=gen, halloffame=halloffame,
-        #    logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
         cp = dict(population=population, generation=gen, halloffame=halloffame,
-            logbook=logbook, rndstate=random.getstate())
+            logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
+        #cp = dict(population=population, generation=gen, halloffame=halloffame,
+        #    logbook=logbook, rndstate=random.getstate())
 
         hof = Path(settings['resultsDirMisc'], 'hof')
         with hof.open('wb') as data:
@@ -211,7 +211,7 @@ def eaMuPlusLambda(toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
         halloffame = cp["halloffame"]
         logbook = cp["logbook"]
         random.setstate(cp["rndstate"])
-
+        gradCheck = cp['gradCheck']
     else:
         # Start a new evolution
 
@@ -220,6 +220,7 @@ def eaMuPlusLambda(toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
 
         halloffame = tools.HallOfFame(1)
         logbook = tools.Logbook()
+        gradCheck = settings['gradCheck']
 
         logbook.header = ['gen', 'nevals']
 
@@ -266,8 +267,11 @@ def eaMuPlusLambda(toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
         record = stats.compile(population) if stats is not None else {}
         logbook.record(gen=gen, nevals=len(invalid_ind))
 
-        cp = dict(population=population, generation=gen, halloffame=halloffame,
-            logbook=logbook, rndstate=random.getstate())
+        #cp = dict(population=population, generation=gen, halloffame=halloffame,
+        #    logbook=logbook, rndstate=random.getstate())
+
+        cp = dict(population=population, generation=start_gen, halloffame=halloffame,
+            logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
 
         hof = Path(settings['resultsDirMisc'], 'hof')
         with hof.open('wb') as data:

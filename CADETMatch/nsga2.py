@@ -32,6 +32,7 @@ def run(settings, toolbox, tools, creator):
         halloffame = cp["halloffame"]
         logbook = cp["logbook"]
         random.setstate(cp["rndstate"])
+        gradCheck = cp['gradCheck']
 
     else:
         # Start a new evolution
@@ -41,6 +42,7 @@ def run(settings, toolbox, tools, creator):
 
         halloffame = tools.HallOfFame(1)
         logbook = tools.Logbook()
+        gradCheck = settings['gradCheck']
 
         logbook.header = ['gen', 'nevals']
    
@@ -58,6 +60,14 @@ def run(settings, toolbox, tools, creator):
     print('avg', avg, 'best', bestMin)
 
     logbook.record(gen=start_gen, evals=len(invalid_ind))
+
+    cp = dict(population=population, generation=start_gen, halloffame=halloffame,
+        logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
+    #cp = dict(population=population, generation=start_gen, halloffame=halloffame,
+    #    logbook=logbook, rndstate=random.getstate())
+
+    with checkpointFile.open('wb')as cp_file:
+        pickle.dump(cp, cp_file)
 
     # Begin the generational process
     for gen in range(start_gen, totalGenerations+1):
@@ -86,8 +96,11 @@ def run(settings, toolbox, tools, creator):
         population = toolbox.select(population + offspring, populationSize)
         logbook.record(gen=gen, evals=len(invalid_ind))
 
-        cp = dict(population=population, generation=gen, halloffame=halloffame,
-            logbook=logbook, rndstate=random.getstate())
+        #cp = dict(population=population, generation=gen, halloffame=halloffame,
+        #    logbook=logbook, rndstate=random.getstate())
+
+        cp = dict(population=population, generation=start_gen, halloffame=halloffame,
+            logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
 
         hof = Path(settings['resultsDirMisc'], 'hof')
         with hof.open('wb') as data:
