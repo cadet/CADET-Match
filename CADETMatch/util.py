@@ -9,8 +9,13 @@ from scipy.spatial.distance import cdist
 import operator
 import functools
 from collections import Sequence
+from pathlib import Path
 
 from addict import Dict
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
@@ -169,7 +174,7 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
 
         fig = plt.figure(figsize=[10, numPlots*10])
 
-        util.graph_simulation(results[experimentName]['simulation'], fig.add_subplot(numPlots, 1, 1))
+        graph_simulation(results[experimentName]['simulation'], fig.add_subplot(numPlots, 1, 1))
 
         for idx,feature in enumerate(experiment['features']):
             graph = fig.add_subplot(numPlots, 1, idx+1+1) #additional +1 added due to the overview plot
@@ -183,15 +188,15 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
             exp_time = feat['time'][selected]
             exp_value = feat['value'][selected]
 
-            sim_time, sim_value = util.get_times_values(results[experimentName]['simulation'],target[experimentName][featureName])
+            sim_time, sim_value = get_times_values(results[experimentName]['simulation'],target[experimentName][featureName])
 
             if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybridDecay','curve', 'breakthrough', 'dextran', 'dextranHybrid', 'similarityCross', 'similarityCrossDecay', 'breakthroughCross'):
                 graph.plot(sim_time, sim_value, 'r--', label='Simulation')
                 graph.plot(exp_time, exp_value, 'g:', label='Experiment')
             elif featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_cross', 'derivative_similarity_cross_alt'):
                 try:
-                    sim_spline = scipy.interpolate.UnivariateSpline(sim_time, util.smoothing(sim_time, sim_value), s=util.smoothing_factor(sim_value)).derivative(1)
-                    exp_spline = scipy.interpolate.UnivariateSpline(exp_time, util.smoothing(exp_time, exp_value), s=util.smoothing_factor(exp_value)).derivative(1)
+                    sim_spline = scipy.interpolate.UnivariateSpline(sim_time, smoothing(sim_time, sim_value), s=smoothing_factor(sim_value)).derivative(1)
+                    exp_spline = scipy.interpolate.UnivariateSpline(exp_time, smoothing(exp_time, exp_value), s=smoothing_factor(exp_value)).derivative(1)
 
                     graph.plot(sim_time, sim_spline(sim_time), 'r--', label='Simulation')
                     graph.plot(exp_time, exp_spline(exp_time), 'g:', label='Experiment')
@@ -231,3 +236,55 @@ def saveExperiments(save_name_base, settings,target, results, directory, file_pa
                 simulation.root.score[header] = score
             simulation.save()
     return True
+
+def set_simulation(individual, simulation, settings):
+    log("individual", individual)
+
+    cadetValues = []
+    cadetValuesKEQ = []
+
+    idx = 0
+    for parameter in settings['parameters']:
+        location = parameter['location']
+        transform = parameter['transform']
+        comp = parameter['component']
+
+        if transform == 'keq':
+            unit = location[0].split('/')[3]
+        elif transform == 'log':
+            unit = location.split('/')[3]
+
+        NBOUND = simulation.root.input.model[unit].discretization.nbound
+        boundOffset = numpy.cumsum(numpy.concatenate([[0,], NBOUND]))
+
+        if transform == 'keq':
+            for bound in parameter['bound']:
+                position = boundOffset[comp] + bound
+                simulation[location[0].lower()][position] = math.exp(individual[idx])
+                simulation[location[1].lower()][position] = math.exp(individual[idx])/(math.exp(individual[idx+1]))
+
+                cadetValues.append(simulation[location[0]][position])
+                cadetValues.append(simulation[location[1]][position])
+
+                cadetValuesKEQ.append(simulation[location[0]][position])
+                cadetValuesKEQ.append(simulation[location[1]][position])
+                cadetValuesKEQ.append(simulation[location[0]][position]/simulation[location[1]][position])
+
+
+                idx += 2
+
+        elif transform == "log":
+            for bound in parameter['bound']:
+                if comp == -1:
+                    position = ()
+                    simulation[location.lower()] = math.exp(individual[idx])
+                    cadetValues.append(simulation[location])
+                    cadetValuesKEQ.append(simulation[location])
+                else:
+                    position = boundOffset[comp] + bound
+                    simulation[location.lower()][position] = math.exp(individual[idx])
+                    cadetValues.append(simulation[location][position])
+                    cadetValuesKEQ.append(simulation[location][position])
+                idx += 1
+    log("finished setting hdf5")
+    return cadetValues, cadetValuesKEQ

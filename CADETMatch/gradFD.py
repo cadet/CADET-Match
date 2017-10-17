@@ -56,7 +56,9 @@ def gradSearch(x):
     #x0 = scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache})
     #return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='lm', kwargs={'cache':cache}, ftol=1e-10, xtol=1e-10, gtol=1e-10)
     try:
-       return scipy.optimize.least_squares(fitness_sens, x, jac='3-point', method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE))
+       val = scipy.optimize.least_squares(fitness_sens, x, jac='3-point', method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE))
+       print(numpy.exp(val.x), val.jac)
+       return val
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
         print("Gradient Failure")
@@ -71,14 +73,12 @@ def fitness_sens(individual):
     error = 0.0
 
     results = {}
-    diffs = []
     for experiment in evo.settings['experiments']:
         result = runExperimentSens(individual, experiment, evo.settings, evo.target)
         if result is not None:
             results[experiment['name']] = result
             scores.extend(results[experiment['name']]['scores'])
             error += results[experiment['name']]['error']
-            diffs.append(result['diff'])
         else:
             raise GradientException("Gradient caused simulation failure, aborting")
 
@@ -120,7 +120,7 @@ def fitness_sens(individual):
         if result['path']:
             os.remove(result['path'])
     
-    return -scores
+    return [1.0 - score for score in scores]
 
 def saveExperimentsSens(save_name_base, settings,target, results):
     return util.saveExperiments(save_name_base, settings,target, results, settings['resultsDirGrad'], '%s_%s_GRAD.h5')
@@ -128,7 +128,7 @@ def saveExperimentsSens(save_name_base, settings,target, results):
 def plotExperimentsSens(save_name_base, settings, target, results):
     util.plotExperiments(save_name_base, settings, target, results, settings['resultsDirGrad'], '%s_%s_GRAD.png')
 
-def runExperiment(individual, experiment, settings, target):
+def runExperimentSens(individual, experiment, settings, target):
     handle, path = tempfile.mkstemp(suffix='.h5')
     os.close(handle)
 
@@ -143,7 +143,7 @@ def runExperiment(individual, experiment, settings, target):
     simulation.filename = path
 
     simulation.root.input.solver.nthreads = 1
-    cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings)
+    cadetValues, cadetValuesKEQ = util.set_simulation(individual, simulation, evo.settings)
 
     simulation.save()
 

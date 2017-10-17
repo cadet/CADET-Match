@@ -127,58 +127,6 @@ def saveExperiments(save_name_base, settings,target, results):
 def plotExperiments(save_name_base, settings, target, results):
     util.plotExperiments(save_name_base, settings, target, results, settings['resultsDirEvo'], '%s_%s_EVO.png')
 
-def set_simulation(individual, simulation, settings):
-    util.log("individual", individual)
-
-    cadetValues = []
-    cadetValuesKEQ = []
-
-    idx = 0
-    for parameter in settings['parameters']:
-        location = parameter['location']
-        transform = parameter['transform']
-        comp = parameter['component']
-
-        if transform == 'keq':
-            unit = location[0].split('/')[3]
-        elif transform == 'log':
-            unit = location.split('/')[3]
-
-        NBOUND = simulation.root.input.model[unit].discretization.nbound
-        boundOffset = numpy.cumsum(numpy.concatenate([[0,], NBOUND]))
-
-        if transform == 'keq':
-            for bound in parameter['bound']:
-                position = boundOffset[comp] + bound
-                simulation[location[0].lower()][position] = math.exp(individual[idx])
-                simulation[location[1].lower()][position] = math.exp(individual[idx])/(math.exp(individual[idx+1]))
-
-                cadetValues.append(simulation[location[0]][position])
-                cadetValues.append(simulation[location[1]][position])
-
-                cadetValuesKEQ.append(simulation[location[0]][position])
-                cadetValuesKEQ.append(simulation[location[1]][position])
-                cadetValuesKEQ.append(simulation[location[0]][position]/simulation[location[1]][position])
-
-
-                idx += 2
-
-        elif transform == "log":
-            for bound in parameter['bound']:
-                if comp == -1:
-                    position = ()
-                    simulation[location.lower()] = math.exp(individual[idx])
-                    cadetValues.append(simulation[location])
-                    cadetValuesKEQ.append(simulation[location])
-                else:
-                    position = boundOffset[comp] + bound
-                    simulation[location.lower()][position] = math.exp(individual[idx])
-                    cadetValues.append(simulation[location][position])
-                    cadetValuesKEQ.append(simulation[location][position])
-                idx += 1
-    util.log("finished setting hdf5")
-    return cadetValues, cadetValuesKEQ
-
 def runExperiment(individual, experiment, settings, target):
     handle, path = tempfile.mkstemp(suffix='.h5')
     os.close(handle)
@@ -194,7 +142,7 @@ def runExperiment(individual, experiment, settings, target):
     simulation.filename = path
 
     simulation.root.input.solver.nthreads = 1
-    cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings)
+    cadetValues, cadetValuesKEQ = util.set_simulation(individual, simulation, settings)
 
     simulation.save()
 

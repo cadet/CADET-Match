@@ -4,6 +4,7 @@ import random
 import numpy
 import util
 from deap import algorithms
+import gradFD
 
 def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
                     stats=None, halloffame=None, verbose=__debug__, tools=None):
@@ -80,7 +81,7 @@ s
         start_gen = 0    
 
         logbook = tools.Logbook()
-        #gradCheck = settings['gradCheck']
+        gradCheck = settings['gradCheck']
 
 
         # Evaluate the individuals with an invalid fitness
@@ -99,10 +100,10 @@ s
         if verbose:
             print(logbook.stream)
 
-        #cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-        #    logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-            logbook=logbook, rndstate=random.getstate())
+            logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
+        #cp = dict(population=population, generation=start_gen, halloffame=halloffame,
+        #    logbook=logbook, rndstate=random.getstate())
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(cp, cp_file)
@@ -118,10 +119,10 @@ s
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
-        #print("About to start gradient search")
-        #gradCheck, newChildren = grad.search(gradCheck, offspring, toolbox)
-        #print("Finished gradient search with new children", len(newChildren))
-        #offspring.extend(newChildren)
+        print("About to start gradient search")
+        gradCheck, newChildren = gradFD.search(gradCheck, offspring, toolbox)
+        print("Finished gradient search with new children", len(newChildren))
+        offspring.extend(newChildren)
 
         avg, bestMin = util.averageFitness(offspring)
         print('avg', avg, 'best', bestMin)
