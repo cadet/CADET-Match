@@ -155,3 +155,62 @@ def mutPolynomialBoundedAdaptive(individual, eta, low, up, indpb):
     prod = functools.reduce(operator.mul, scores, 1)**(1.0/len(scores))
     eta = eta + prod * 100
     return tools.mutPolynomialBounded(individual, eta, low, up, indpb)
+
+def plotExperiments(save_name_base, settings, target, results, directory, file_pattern):
+    for experiment in settings['experiments']:
+        experimentName = experiment['name']
+        
+        dst = Path(directory, file_pattern % (save_name_base, experimentName))
+
+        numPlots = len(experiment['features']) + 1  #1 additional plot added as an overview for the simulation
+
+        exp_time = target[experimentName]['time']
+        exp_value = target[experimentName]['value']
+
+        fig = plt.figure(figsize=[10, numPlots*10])
+
+        util.graph_simulation(results[experimentName]['simulation'], fig.add_subplot(numPlots, 1, 1))
+
+        for idx,feature in enumerate(experiment['features']):
+            graph = fig.add_subplot(numPlots, 1, idx+1+1) #additional +1 added due to the overview plot
+            
+            featureName = feature['name']
+            featureType = feature['type']
+
+            feat = target[experimentName][featureName]
+
+            selected = feat['selected']
+            exp_time = feat['time'][selected]
+            exp_value = feat['value'][selected]
+
+            sim_time, sim_value = util.get_times_values(results[experimentName]['simulation'],target[experimentName][featureName])
+
+            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybridDecay','curve', 'breakthrough', 'dextran', 'dextranHybrid', 'similarityCross', 'similarityCrossDecay', 'breakthroughCross'):
+                graph.plot(sim_time, sim_value, 'r--', label='Simulation')
+                graph.plot(exp_time, exp_value, 'g:', label='Experiment')
+            elif featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_cross', 'derivative_similarity_cross_alt'):
+                try:
+                    sim_spline = scipy.interpolate.UnivariateSpline(sim_time, util.smoothing(sim_time, sim_value), s=util.smoothing_factor(sim_value)).derivative(1)
+                    exp_spline = scipy.interpolate.UnivariateSpline(exp_time, util.smoothing(exp_time, exp_value), s=util.smoothing_factor(exp_value)).derivative(1)
+
+                    graph.plot(sim_time, sim_spline(sim_time), 'r--', label='Simulation')
+                    graph.plot(exp_time, exp_spline(exp_time), 'g:', label='Experiment')
+                except:
+                    pass
+            elif featureType in ('fractionation', 'fractionationCombine'):
+                graph_exp = results[experimentName]['graph_exp']
+                graph_sim = results[experimentName]['graph_sim']
+
+                colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+
+                for idx,(key,value) in enumerate(graph_sim.items()):
+                    (time, values) = zip(*value)
+                    graph.plot(time, values, '%s--' % colors[idx], label='Simulation Comp: %s' % key)
+
+                for idx,(key,value) in enumerate(graph_exp.items()):
+                    (time, values) = zip(*value)
+                    graph.plot(time, values, '%s:' % colors[idx], label='Experiment Comp: %s' % key)
+            graph.legend()
+
+        plt.savefig(bytes(dst), dpi=100)
+        plt.close()
