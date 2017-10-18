@@ -137,8 +137,8 @@ def scoreBreakthrough(sim_data, experimental_data, feature):
 
     selected = feature['selected']
 
-    exp_data_values = experimental_data['value'][selected]
-    exp_time_values = experimental_data['time'][selected]
+    exp_data_values = feature['value'][selected]
+    exp_time_values = feature['time'][selected]
 
     [start, stop] = util.find_breakthrough(exp_time_values, sim_data_values)
 
@@ -154,8 +154,8 @@ def scoreBreakthroughCross(sim_data, experimental_data, feature):
 
     selected = feature['selected']
 
-    exp_data_values = experimental_data['value'][selected]
-    exp_time_values = experimental_data['time'][selected]
+    exp_data_values = feature['value'][selected]
+    exp_time_values = feature['time'][selected]
 
     [start, stop] = util.find_breakthrough(exp_time_values, sim_data_values)
 
@@ -171,8 +171,8 @@ def scoreSimilarity(sim_data, experimental_data, feature):
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
 
-    exp_data_values = experimental_data['value'][selected]
-    exp_time_values = experimental_data['time'][selected]
+    exp_data_values = feature['value'][selected]
+    exp_time_values = feature['time'][selected]
 
     [high, low] = util.find_peak(exp_time_values, sim_data_values)
 
@@ -186,9 +186,9 @@ def scoreSimilarityHybrid(sim_data, experimental_data, feature):
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
 
-    exp_data_values = experimental_data['value'][selected]
-    exp_time_values = experimental_data['time'][selected]
-
+    exp_data_values = feature['value'][selected]
+    exp_time_values = feature['time'][selected]
+ 
     [high, low] = util.find_peak(exp_time_values, sim_data_values)
 
     time_high, value_high = high
@@ -205,8 +205,8 @@ def scoreSimilarityCrossCorrelate(sim_data, experimental_data, feature):
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
 
-    exp_data_values = experimental_data['value'][selected]
-    exp_time_values = experimental_data['time'][selected]
+    exp_data_values = feature['value'][selected]
+    exp_time_values = feature['time'][selected]
 
     score, diff_time = cross_correlate(exp_time_values, sim_data_values, exp_data_values)
 
@@ -222,8 +222,8 @@ def scoreDerivativeSimilarity(sim_data, experimental_data, feature):
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
 
-    exp_data_values = experimental_data['value'][selected]
-    exp_time_values = experimental_data['time'][selected]
+    exp_data_values = feature['value'][selected]
+    exp_time_values = feature['time'][selected]
 
     try:
         sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
@@ -247,8 +247,8 @@ def scoreDerivativeSimilarityHybrid(sim_data, experimental_data, feature):
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
 
-    exp_data_values = experimental_data['value'][selected]
-    exp_time_values = experimental_data['time'][selected]
+    exp_data_values = feature['value'][selected]
+    exp_time_values = feature['time'][selected]
 
     try:
         sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
@@ -273,8 +273,8 @@ def scoreDerivativeSimilarityCross(sim_data, experimental_data, feature):
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
 
-    exp_data_values = experimental_data['value'][selected]
-    exp_time_values = experimental_data['time'][selected]
+    exp_data_values = feature['value'][selected]
+    exp_time_values = feature['time'][selected]
 
     try:
         sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
@@ -299,8 +299,8 @@ def scoreDerivativeSimilarityCrossAlt(sim_data, experimental_data, feature):
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
 
-    exp_data_values = experimental_data['value'][selected]
-    exp_time_values = experimental_data['time'][selected]
+    exp_data_values = feature['value'][selected]
+    exp_time_values = feature['time'][selected]
 
     try:
         sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
@@ -321,7 +321,7 @@ def scoreCurve(sim_data, experimental_data, feature):
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
 
-    exp_data_values = experimental_data['value'][selected]
+    exp_data_values = feature['value'][selected]
 
     return [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0])], util.sse(sim_data_values, exp_data_values)
 
@@ -333,8 +333,8 @@ def scoreDextran(sim_data, experimental_data, feature):
 
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature, selected)
 
-    exp_time_values = experimental_data['time'][selected]
-    exp_data_values = experimental_data['value'][selected]
+    exp_time_values = feature['time'][selected]
+    exp_data_values = feature['value'][selected]
 
 
     #sim_data_values[sim_data_values < max(sim_data_values)/100.0] = 0
@@ -345,16 +345,16 @@ def scoreDextran(sim_data, experimental_data, feature):
     except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
         return [0.0, 0.0,0.0], 1e6
 
-    expSelected = selected & (experimental_data['time'] <= max_time)
-    expTime = experimental_data['time'][expSelected]
-    expValues = experimental_data['value'][expSelected]
+    expSelected = selected & (feature['time'] <= max_time)
+    expTime = feature['time'][expSelected]
+    expValues = feature['value'][expSelected]
     expDerivValues = exp_spline_derivative(expSelected)
 
     values = sim_spline_derivative(exp_time_values)
     sim_max_index = numpy.argmax(values)
     sim_max_time = exp_time_values[sim_max_index]
 
-    simSelected = selected & (experimental_data['time'] <= sim_max_time)
+    simSelected = selected & (feature['time'] <= sim_max_time)
 
     simTime, simValues = util.get_times_values(sim_data['simulation'], feature, simSelected)
 
@@ -400,8 +400,8 @@ def scoreDextranHybrid(sim_data, experimental_data, feature):
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
 
-    exp_time_values = experimental_data['time'][selected]
-    exp_data_values = experimental_data['value'][selected]
+    exp_time_values = feature['time'][selected]
+    exp_data_values = feature['value'][selected]
 
     score, diff_time = cross_correlate(exp_time_values, sim_data_values, exp_data_values)
 
