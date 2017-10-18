@@ -351,21 +351,24 @@ def createExperiment(experiment):
     abstol = sim.root.input.solver.time_integrator.abstol
 
     #CV needs to be based on superficial velocity not interstitial velocity
-    length = sim.root.input.model.unit_001.col_length
+    length = float(sim.root.input.model.unit_001.col_length)
 
     velocity = sim.root.input.model.unit_001.velocity
     if velocity == {}:
         velocity = 1.0
+    velocity = float(velocity)
 
     area = sim.root.input.model.uni_001.cross_section_area
     if area == {}:
         area = 1.0
+    area = float(area)
 
     porosity = sim.root.input.model.unit_001.col_porosity
     if porosity == {}:
         porosity = sim.root.input.model.unit_001.total_porosity
     if porosity == {}:
         porosity = 1.0
+    porosity = float(porosity)
 
     conn = sim.root.input.model.connections.switch_000.connections
 

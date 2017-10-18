@@ -38,7 +38,7 @@ def time_function_decay(CV_time, peak_time, diff_input=False):
     x_exp = numpy.array([0, 10.0*CV_time])
     y_exp = numpy.array([1, 0.5])
 
-    args_exp = scipy.optimize.curve_fit(exponential, x_exp, y_exp, [1, -0.1])[0]
+    args_exp = scipy.optimize.curve_fit(exponential, x_exp, y_exp, [1, -0.1], method='trf')[0]
 
     def wrapper(x):
 
@@ -73,8 +73,8 @@ def time_function(CV_time, peak_time, diff_input=False):
     x_lin = numpy.array([0, CV_time/2.0])
     y_lin = numpy.array([1, 0.97])
 
-    args_exp = scipy.optimize.curve_fit(exponential, x_exp, y_exp, [1, -0.1])[0]
-    args_lin = scipy.optimize.curve_fit(linear, x_lin, y_lin, [1, -0.1])[0]
+    args_exp = scipy.optimize.curve_fit(exponential, x_exp, y_exp, [1, -0.1], method='trf')[0]
+    args_lin = scipy.optimize.curve_fit(linear, x_lin, y_lin, [1, -0.1], method='trf')[0]
     
     #scale = 1.0/logistic(0.0, *args)
 
