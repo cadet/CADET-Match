@@ -101,15 +101,15 @@ def fitness_sens(individual):
     save_name_base = hashlib.md5(str(individual).encode('utf-8','ignore')).hexdigest()
 
     for result in results.values():
-        if result['cadetValues']:
-            cadetValues = result['cadetValues']
+        if result['cadetValuesKEQ']:
+            cadetValuesKEQ = result['cadetValuesKEQ']
             break
 
     #generate csv
     path = Path(evo.settings['resultsDirBase'], evo.settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
-        writer.writerow([time.ctime(), save_name_base, 'GRAD', ''] + ["%.5g" % i for i in cadetValues] + ["%.5g" % i for i in scores] + list(humanScores)) 
+        writer.writerow([time.ctime(), save_name_base, 'GRAD', ''] + ["%.5g" % i for i in cadetValuesKEQ] + ["%.5g" % i for i in scores] + list(humanScores)) 
 
     notDuplicate = saveExperimentsSens(save_name_base, evo.settings, evo.target, results)
     if notDuplicate:
