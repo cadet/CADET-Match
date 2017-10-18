@@ -288,3 +288,84 @@ def set_simulation(individual, simulation, settings):
                 idx += 1
     log("finished setting hdf5")
     return cadetValues, cadetValuesKEQ
+
+def runExperiment(individual, experiment, settings, target, template_sim, timeout):
+    handle, path = tempfile.mkstemp(suffix='.h5')
+    os.close(handle)
+
+    simulation = Cadet(template_sim.root)
+    simulation.filename = path
+
+    simulation.root.input.solver.nthreads = 1
+    cadetValues, cadetValuesKEQ = util.set_simulation(individual, simulation, settings)
+
+    simulation.save()
+
+    def leave():
+        os.remove(path)
+        return None
+
+    try:
+        simulation.run(timeout = timeout)
+    except subprocess.TimeoutExpired:
+        print("Simulation Timed Out")
+        return leave()
+
+    #read sim data
+    simulation.load()
+    try:
+        #get the solution times
+        times = simulation.root.output.solution.solution_times
+    except KeyError:
+        #sim must have failed
+        util.log(individual, "sim must have failed", path)
+        return leave()
+    util.log("Everything ran fine")
+
+
+    temp = {}
+    temp['simulation'] = simulation
+    temp['path'] = path
+    temp['scores'] = []
+    temp['error'] = 0.0
+    temp['cadetValues'] = cadetValues
+    temp['cadetValuesKEQ'] = cadetValuesKEQ
+
+    for feature in experiment['features']:
+        start = float(feature['start'])
+        stop = float(feature['stop'])
+        featureType = feature['type']
+        featureName = feature['name']
+
+        if featureType in ('similarity', 'similarityDecay'):
+            scores, sse = score.scoreSimilarity(temp, target[experiment['name']][featureName])
+        elif featureType in ('similarityHybrid', 'similarityHybridDecay'):
+            scores, sse = score.scoreSimilarityHybrid(temp, target[experiment['name']][featureName])
+        elif featureType in ('similarityCross', 'similarityCrossDecay'):
+            scores, sse = score.scoreSimilarityCrossCorrelate(temp, target[experiment['name']][featureName])
+        elif featureType == 'derivative_similarity':
+            scores, sse = score.scoreDerivativeSimilarity(temp, target[experiment['name']][featureName])
+        elif featureType == 'derivative_similarity_cross':
+            scores, sse = score.scoreDerivativeSimilarityCross(temp, target[experiment['name']][featureName])
+        elif featureType == 'derivative_similarity_cross_alt':
+            scores, sse = score.scoreDerivativeSimilarityCrossAlt(temp, target[experiment['name']][featureName])
+        elif featureType == 'derivative_similarity_hybrid':
+            scores, sse = score.scoreDerivativeSimilarityHybrid(temp, target[experiment['name']][featureName]) 
+        elif featureType == 'curve':
+            scores, sse = score.scoreCurve(temp, target[experiment['name']][featureName])
+        elif featureType == 'breakthrough':
+            scores, sse = score.scoreBreakthrough(temp, target[experiment['name']][featureName])
+        elif featureType == 'breakthroughCross':
+            scores, sse = score.scoreBreakthroughCross(temp, target[experiment['name']][featureName])
+        elif featureType == 'dextran':
+            scores, sse = score.scoreDextran(temp, target[experiment['name']][featureName])
+        elif featureType == 'dextranHybrid':
+            scores, sse = score.scoreDextranHybrid(temp, target[experiment['name']][featureName])
+        elif featureType == 'fractionation':
+            scores, sse = score.scoreFractionation(temp, target[experiment['name']][featureName])
+        elif featureType == 'fractionationCombine':
+            scores, sse = score.scoreFractionationCombine(temp, target[experiment['name']][featureName])
+        temp['scores'].extend(scores)
+        temp['error'] += sse
+
+    return temp

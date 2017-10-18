@@ -131,7 +131,7 @@ def pear_corr(cr):
         out = cr
     return out
 
-def scoreBreakthrough(sim_data, experimental_data, feature):
+def scoreBreakthrough(sim_data,  feature):
     "similarity, value, start stop"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
 
@@ -148,7 +148,7 @@ def scoreBreakthrough(sim_data, experimental_data, feature):
             feature['time_function_stop'](stop[0])]
     return temp, util.sse(sim_data_values, exp_data_values)
 
-def scoreBreakthroughCross(sim_data, experimental_data, feature):
+def scoreBreakthroughCross(sim_data,  feature):
     "similarity, value, start stop"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
 
@@ -166,7 +166,7 @@ def scoreBreakthroughCross(sim_data, experimental_data, feature):
             feature['time_function'](diff_time)]
     return temp, util.sse(sim_data_values, exp_data_values)
 
-def scoreSimilarity(sim_data, experimental_data, feature):
+def scoreSimilarity(sim_data,  feature):
     "Order is Pearson, Value, Time"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -181,7 +181,7 @@ def scoreSimilarity(sim_data, experimental_data, feature):
     temp = [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), feature['value_function'](value_high), feature['time_function'](time_high)]
     return temp, util.sse(sim_data_values, exp_data_values)
 
-def scoreSimilarityHybrid(sim_data, experimental_data, feature):
+def scoreSimilarityHybrid(sim_data,  feature):
     "Order is Pearson, Value, Time"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -200,7 +200,7 @@ def scoreSimilarityHybrid(sim_data, experimental_data, feature):
             feature['time_function'](diff_time)]
     return temp, util.sse(sim_data_values, exp_data_values)
 
-def scoreSimilarityCrossCorrelate(sim_data, experimental_data, feature):
+def scoreSimilarityCrossCorrelate(sim_data,  feature):
     "Order is Pearson, Value, Time"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -217,7 +217,7 @@ def scoreSimilarityCrossCorrelate(sim_data, experimental_data, feature):
     temp = [score, feature['value_function'](value_high), feature['time_function'](diff_time)]
     return temp, util.sse(sim_data_values, exp_data_values)
 
-def scoreDerivativeSimilarity(sim_data, experimental_data, feature):
+def scoreDerivativeSimilarity(sim_data,  feature):
     "Order is Pearson, Value High, Time High, Value Low, Time Low"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -242,7 +242,7 @@ def scoreDerivativeSimilarity(sim_data, experimental_data, feature):
             feature['value_function_low'](lows[1]), 
             feature['time_function_low'](lows[0]),], util.sse(sim_data_values, exp_data_values)
 
-def scoreDerivativeSimilarityHybrid(sim_data, experimental_data, feature):
+def scoreDerivativeSimilarityHybrid(sim_data,  feature):
     "Order is Pearson, Value High, Time High, Value Low, Time Low"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -268,7 +268,7 @@ def scoreDerivativeSimilarityHybrid(sim_data, experimental_data, feature):
             feature['value_function_high'](highs[1]),             
             feature['value_function_low'](lows[1]),], util.sse(sim_data_values, exp_data_values)
 
-def scoreDerivativeSimilarityCross(sim_data, experimental_data, feature):
+def scoreDerivativeSimilarityCross(sim_data,  feature):
     "Order is Pearson, Value High, Time High, Value Low, Time Low"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -294,7 +294,7 @@ def scoreDerivativeSimilarityCross(sim_data, experimental_data, feature):
             feature['value_function_high'](highs[1]),             
             feature['value_function_low'](lows[1]),], util.sse(sim_data_values, exp_data_values)
 
-def scoreDerivativeSimilarityCrossAlt(sim_data, experimental_data, feature):
+def scoreDerivativeSimilarityCrossAlt(sim_data,  feature):
     "Order is Pearson, Value High, Time High, Value Low, Time Low"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -316,7 +316,7 @@ def scoreDerivativeSimilarityCrossAlt(sim_data, experimental_data, feature):
     return [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), 
             feature['time_function'](diff_time),], util.sse(sim_data_values, exp_data_values)
 
-def scoreCurve(sim_data, experimental_data, feature):
+def scoreCurve(sim_data,  feature):
     "Just Pearson score"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -325,7 +325,7 @@ def scoreCurve(sim_data, experimental_data, feature):
 
     return [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0])], util.sse(sim_data_values, exp_data_values)
 
-def scoreDextran(sim_data, experimental_data, feature):
+def scoreDextran(sim_data,  feature):
     "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
     #print("feature", feature)
     selected = feature['origSelected']
@@ -394,7 +394,7 @@ def scoreDextran(sim_data, experimental_data, feature):
 
     return [score, scoreDeriv, feature['maxTimeFunction'](diff_time)], util.sse(sim_data_values, exp_data_values)
 
-def scoreDextranHybrid(sim_data, experimental_data, feature):
+def scoreDextranHybrid(sim_data,  feature):
     "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
     #print("feature", feature)
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
@@ -419,7 +419,7 @@ def scoreDextranHybrid(sim_data, experimental_data, feature):
             feature['offsetTimeFunction'](diff_time)], util.sse(sim_data_values, exp_data_values)
 
 
-def scoreFractionation(sim_data, experimental_data, feature):
+def scoreFractionation(sim_data,  feature):
     "Just Pearson score"
     simulation = sim_data['simulation']
     funcs = feature['funcs']
@@ -464,7 +464,7 @@ def scoreFractionation(sim_data, experimental_data, feature):
     sim_data['graph_sim'] = graph_sim
     return scores, util.sse(numpy.array(sim_values), numpy.array(exp_values))
 
-def scoreFractionationCombine(sim_data, experimental_data, feature):
+def scoreFractionationCombine(sim_data,  feature):
     "Just Pearson score"
     simulation = sim_data['simulation']
     funcs = feature['funcs']
