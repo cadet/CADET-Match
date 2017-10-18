@@ -32,7 +32,6 @@ from deap import creator
 from deap import tools
 
 import os
-import tempfile
 import shutil
 
 import spea2

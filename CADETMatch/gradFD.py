@@ -10,7 +10,6 @@ import functools
 import operator
 import hashlib
 import score
-import tempfile
 import os
 import subprocess
 import csv

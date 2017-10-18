@@ -16,6 +16,7 @@ from addict import Dict
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import tempfile
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
