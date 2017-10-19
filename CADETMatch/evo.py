@@ -53,7 +53,7 @@ ERROR = {'scores': None,
 
 def fitness(individual):
     if not(util.feasible(individual)):
-        return [0.0] * numGoals
+        return WORST
 
     scores = []
     error = 0.0
@@ -66,7 +66,7 @@ def fitness(individual):
             scores.extend(results[experiment['name']]['scores'])
             error += results[experiment['name']]['error']
         else:
-            return [0.0] * numGoals
+            return WORST
 
     #need
 
@@ -142,8 +142,8 @@ def setup(settings_filename):
     with settings_file.open() as json_data:
         settings = json.load(json_data)
         Cadet.cadet_path = settings['CADETPath']
-        headers, numGoals = genHeaders(settings)
-        target = createTarget(settings)
+        headers, numGoals, badScore = genHeaders(settings)
+        target = createTarget(settings, badScore)
         MIN_VALUE, MAX_VALUE = buildMinMax(settings)
         toolbox = setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE)
 
@@ -153,7 +153,7 @@ def setup(settings_filename):
         settings['resultsDirMisc'] = Path(settings['resultsDir']) / "misc"
         settings['resultsDirBase'] = Path(settings['resultsDir'])
         
-    return settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox
+    return settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox, badScore
 
 def createDirectories(settings):
     settings['resultsDirBase'].mkdir(parents=True, exist_ok=True)
@@ -208,6 +208,7 @@ def genHeaders(settings):
     headers = ['Time','Name', 'Method','Condition Number',]
 
     numGoals = 0
+    badScore = 0.0
 
     for parameter in settings['parameters']:
         comp = parameter['component']
@@ -304,27 +305,29 @@ def genHeaders(settings):
                 name = "%s_%s" % (experimentName, feature['name'])
                 temp = ["%s_SSE" % name]
                 numGoals += 1
+                badScore = -sys.float_info.max
 
             elif feature['type'] == 'LogSSE':
                 name = "%s_%s" % (experimentName, feature['name'])
                 temp = ["%s_LogSSE" % name]
                 numGoals += 1
+                badScore = -sys.float_info.max
 
             headers.extend(temp)
             experiment['headers'].extend(temp)
 
     headers.extend(['Product Root Score', 'Min Score', 'Mean Score', 'Norm', 'SSE'])
-    return headers, numGoals
+    return headers, numGoals, badScore
 
-def createTarget(settings):
+def createTarget(settings, badScore):
     target = {}
 
     for experiment in settings['experiments']:
         target[experiment["name"]] = createExperiment(experiment)
-    target['bestHumanScores'] = numpy.zeros(5)
+    target['bestHumanScores'] = numpy.ones(5) * badScore
 
     #SSE are negative so they sort correctly with better scores being less negative
-    target['bestHumanScores'][4] = -1e308;  
+    target['bestHumanScores'][4] = badScore;  
 
     #setup sensitivities
     parms = []
@@ -625,4 +628,6 @@ def setupTemplates(settings, target):
         experiment['simulation'] = template
 
 #This will run when the module is imported so that each process has its own copy of this data
-settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox = setup(sys.argv[1])
+settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox, badScore = setup(sys.argv[1])
+
+WORST = [badScore] * numGoals

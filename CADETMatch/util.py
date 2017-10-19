@@ -21,6 +21,7 @@ import os
 from cadet import Cadet
 import score
 import subprocess
+import sys
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
@@ -88,7 +89,7 @@ def log(*args):
 def averageFitness(offspring):
     total = 0.0
     number = 0.0
-    bestMin = 0.0
+    bestMin = -sys.float_info.max
 
     for i in offspring:
         total += sum(i.fitness.values)

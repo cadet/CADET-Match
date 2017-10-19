@@ -89,6 +89,11 @@ def run(settings, toolbox, tools, creator):
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
+        print("About to start gradient search")
+        gradCheck, newChildren = gradFD.search(gradCheck, offspring, toolbox)
+        print("Finished gradient search with new children", len(newChildren))
+        offspring.extend(newChildren)
+
         avg, bestMin = util.averageFitness(offspring)
         print('avg', avg, 'best', bestMin)
 
