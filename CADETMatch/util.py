@@ -17,6 +17,10 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import tempfile
+import os
+from cadet import Cadet
+import score
+import subprocess
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
@@ -103,8 +107,8 @@ def smoothing(times, values):
     #return scipy.signal.hilbert(values)
 
 def graph_simulation(simulation, graph):
-    ncomp = simulation.root.input.model.unit_001.ncomp
-    isotherm = simulation.root.input.model.unit_001.adsorption_model
+    ncomp = int(simulation.root.input.model.unit_001.ncomp)
+    isotherm = bytes(simulation.root.input.model.unit_001.adsorption_model)
 
     hasSalt = isotherm in saltIsotherms
 
@@ -298,7 +302,7 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     simulation.filename = path
 
     simulation.root.input.solver.nthreads = 1
-    cadetValues, cadetValuesKEQ = util.set_simulation(individual, simulation, settings)
+    cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings)
 
     simulation.save()
 
@@ -314,14 +318,19 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
 
     #read sim data
     simulation.load()
-    try:
-        #get the solution times
-        times = simulation.root.output.solution.solution_times
-    except KeyError:
-        #sim must have failed
-        util.log(individual, "sim must have failed", path)
+
+    simulationFailed = isinstance(simulation.root.output.solution.solution_times, Dict)
+    if simulationFailed:
+        log(individual, "sim must have failed", path)
         return leave()
-    util.log("Everything ran fine")
+    #try:
+    #    #get the solution times
+    #    times = simulation.root.output.solution.solution_times
+    #except KeyError:
+    #    #sim must have failed
+    #    log(individual, "sim must have failed", path)
+    #    return leave()
+    log("Everything ran fine")
 
 
     temp = {}

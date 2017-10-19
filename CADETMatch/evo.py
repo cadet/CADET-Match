@@ -138,7 +138,8 @@ def runExperiment(individual, experiment, settings, target):
 
 def setup(settings_filename):
     "setup the parameter estimation"
-    with open(settings_filename) as json_data:
+    settings_file = Path(settings_filename)
+    with settings_file.open() as json_data:
         settings = json.load(json_data)
         Cadet.cadet_path = settings['CADETPath']
         headers, numGoals = genHeaders(settings)
@@ -151,8 +152,7 @@ def setup(settings_filename):
         settings['resultsDirGrad'] = Path(settings['resultsDir']) / "grad"
         settings['resultsDirMisc'] = Path(settings['resultsDir']) / "misc"
         settings['resultsDirBase'] = Path(settings['resultsDir'])
-
-
+        
     return settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox
 
 def createDirectories(settings):
@@ -160,6 +160,9 @@ def createDirectories(settings):
     settings['resultsDirGrad'].mkdir(parents=True, exist_ok=True)
     settings['resultsDirMisc'].mkdir(parents=True, exist_ok=True)
     settings['resultsDirEvo'].mkdir(parents=True, exist_ok=True)
+
+    #copy simulation setting file to result base directory
+    shutil.copy(sys.argv[1], str(settings['resultsDirBase']))
 
 def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE):
     "setup the DEAP variables"
