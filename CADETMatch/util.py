@@ -323,13 +323,6 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     if simulationFailed:
         log(individual, "sim must have failed", path)
         return leave()
-    #try:
-    #    #get the solution times
-    #    times = simulation.root.output.solution.solution_times
-    #except KeyError:
-    #    #sim must have failed
-    #    log(individual, "sim must have failed", path)
-    #    return leave()
     log("Everything ran fine")
 
 
@@ -375,6 +368,10 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
             scores, sse = score.scoreFractionation(temp, target[experiment['name']][featureName])
         elif featureType == 'fractionationCombine':
             scores, sse = score.scoreFractionationCombine(temp, target[experiment['name']][featureName])
+        elif featureType == 'SSE':
+            scores, sse = score.scoreSSE(temp, target[experiment['name']][featureName])
+        elif featureType == 'LogSSE':
+            scores, sse = score.scoreLogSSE(temp, target[experiment['name']][featureName])
         temp['scores'].extend(scores)
         temp['error'] += sse
 
