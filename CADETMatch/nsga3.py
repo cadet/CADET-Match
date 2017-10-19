@@ -19,6 +19,8 @@ def run(settings, toolbox, tools, creator):
 
     totalGenerations = parameters * settings['generations']
 
+    hof = tools.ParetoFront()
+
     checkpoint_algorithms.eaMuPlusLambda(toolbox,
                               mu=populationSize, 
                               lambda_=populationSize, 
@@ -26,7 +28,8 @@ def run(settings, toolbox, tools, creator):
                               mutpb=settings['mutationRate'],
                               ngen=totalGenerations,
                               settings=settings,
-                              tools=tools)
+                              tools=tools,
+                              halloffame=hof)
 
 def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, map_function, creator, toolbox, base, tools):
     "setup the DEAP variables"

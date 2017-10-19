@@ -40,7 +40,7 @@ def run(settings, toolbox, tools, creator):
         population = toolbox.population(n=populationSize)
         start_gen = 0    
 
-        halloffame = tools.HallOfFame(1)
+        halloffame = tools.ParetoFront()
         logbook = tools.Logbook()
         gradCheck = settings['gradCheck']
 

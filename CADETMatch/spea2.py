@@ -21,7 +21,7 @@ def run(settings, toolbox, tools, creator):
 
     totalGenerations = parameters * settings['generations']
 
-    hof = tools.HallOfFame(1)
+    hof = tools.ParetoFront()
 
     checkpoint_algorithms.eaMuCommaLambda(pop, toolbox, mu=MU, lambda_=LAMBDA,
         cxpb=settings['crossoverRate'], mutpb=settings['mutationRate'], ngen=totalGenerations, settings=settings, halloffame=hof, tools=tools)

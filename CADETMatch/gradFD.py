@@ -52,11 +52,11 @@ def search(gradCheck, offspring, toolbox):
     return gradCheck, temp
 
 def gradSearch(x):
-    #x0 = scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache})
-    #return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='lm', kwargs={'cache':cache}, ftol=1e-10, xtol=1e-10, gtol=1e-10)
+    import time
     try:
-       val = scipy.optimize.least_squares(fitness_sens, x, jac='3-point', method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE))
-       print(numpy.exp(val.x), val.jac)
+       val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), gtol=1e-10, ftol=1e-10, xtol=1e-10)
+       fitness_sens(val.x, finished=1)
+       print(val.x, numpy.exp(val.x), val.jac)
        return val
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
@@ -64,10 +64,12 @@ def gradSearch(x):
         print(sys.exc_info()[0])
         return None
 
-def fitness_sens(individual):
+def fitness_sens_grad(individual, finished=0):
+    return fitness_sens(individual, finished)
+
+def fitness_sens(individual, finished=1):
     if not(util.feasible(individual)):
         return [0.0] * evo.numGoals
-    print("Gradient Running for ", individual)
     scores = []
     error = 0.0
 
@@ -83,36 +85,38 @@ def fitness_sens(individual):
 
     #need
 
-    #human scores
-    humanScores = numpy.array( [functools.reduce(operator.mul, scores, 1)**(1.0/len(scores)), 
-                                min(scores), 
-                                sum(scores)/len(scores), 
-                                numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), 
-                                -error] )
+    if finished:
 
-    #save
-    keep_result = 1
+        #human scores
+        humanScores = numpy.array( [functools.reduce(operator.mul, scores, 1)**(1.0/len(scores)), 
+                                    min(scores), 
+                                    sum(scores)/len(scores), 
+                                    numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), 
+                                    -error] )
+
+        #save
+        keep_result = 1
         
-    #flip sign of SSE for writing out to file
-    humanScores[-1] = -1 * humanScores[-1]
+        #flip sign of SSE for writing out to file
+        humanScores[-1] = -1 * humanScores[-1]
 
-    #generate save name
-    save_name_base = hashlib.md5(str(individual).encode('utf-8','ignore')).hexdigest()
+        #generate save name
+        save_name_base = hashlib.md5(str(individual).encode('utf-8','ignore')).hexdigest()
 
-    for result in results.values():
-        if result['cadetValuesKEQ']:
-            cadetValuesKEQ = result['cadetValuesKEQ']
-            break
+        for result in results.values():
+            if result['cadetValuesKEQ']:
+                cadetValuesKEQ = result['cadetValuesKEQ']
+                break
 
-    #generate csv
-    path = Path(evo.settings['resultsDirBase'], evo.settings['CSV'])
-    with path.open('a', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
-        writer.writerow([time.ctime(), save_name_base, 'GRAD', ''] + ["%.5g" % i for i in cadetValuesKEQ] + ["%.5g" % i for i in scores] + list(humanScores)) 
+        #generate csv
+        path = Path(evo.settings['resultsDirBase'], evo.settings['CSV'])
+        with path.open('a', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+            writer.writerow([time.ctime(), save_name_base, 'GRAD', ''] + ["%.5g" % i for i in cadetValuesKEQ] + ["%.5g" % i for i in scores] + list(humanScores)) 
 
-    notDuplicate = saveExperimentsSens(save_name_base, evo.settings, evo.target, results)
-    if notDuplicate:
-        plotExperimentsSens(save_name_base, evo.settings, evo.target, results)
+        notDuplicate = saveExperimentsSens(save_name_base, evo.settings, evo.target, results)
+        if notDuplicate:
+            plotExperimentsSens(save_name_base, evo.settings, evo.target, results)
 
     #cleanup
     for result in results.values():

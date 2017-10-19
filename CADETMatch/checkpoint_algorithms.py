@@ -102,8 +102,6 @@ s
 
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
-        #cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-        #    logbook=logbook, rndstate=random.getstate())
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(cp, cp_file)
@@ -143,8 +141,6 @@ s
 
         cp = dict(population=population, generation=gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
-        #cp = dict(population=population, generation=gen, halloffame=halloffame,
-        #    logbook=logbook, rndstate=random.getstate())
 
         hof = Path(settings['resultsDirMisc'], 'hof')
         with hof.open('wb') as data:
@@ -271,9 +267,6 @@ def eaMuPlusLambda(toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
         # Update the statistics with the new population
         record = stats.compile(population) if stats is not None else {}
         logbook.record(gen=gen, nevals=len(invalid_ind))
-
-        #cp = dict(population=population, generation=gen, halloffame=halloffame,
-        #    logbook=logbook, rndstate=random.getstate())
 
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
