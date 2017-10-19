@@ -153,7 +153,7 @@ def setup(settings_filename):
         settings['resultsDirMisc'] = Path(settings['resultsDir']) / "misc"
         settings['resultsDirBase'] = Path(settings['resultsDir'])
         
-    return settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolboxsat
+    return settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox
 
 def createDirectories(settings):
     settings['resultsDirBase'].mkdir(parents=True, exist_ok=True)
@@ -302,12 +302,12 @@ def genHeaders(settings):
 
             elif feature['type'] == 'SSE':
                 name = "%s_%s" % (experimentName, feature['name'])
-                temp = ["%_SSE" % name]
+                temp = ["%s_SSE" % name]
                 numGoals += 1
 
             elif feature['type'] == 'LogSSE':
                 name = "%s_%s" % (experimentName, feature['name'])
-                temp = ["%_LogSSE" % name]
+                temp = ["%s_LogSSE" % name]
                 numGoals += 1
 
             headers.extend(temp)
