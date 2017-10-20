@@ -580,11 +580,11 @@ def run(settings, toolbox):
     "run the parameter estimation"
     searchMethod = settings.get('searchMethod', 'SPEA2')
     if searchMethod == 'SPEA2':
-        spea2.run(settings, toolbox, tools, creator)
+        return spea2.run(settings, toolbox, tools, creator)
     if searchMethod == 'NSGA2':
-        nsga2.run(settings, toolbox, tools, creator)
+        return nsga2.run(settings, toolbox, tools, creator)
     if searchMethod == 'NSGA3':
-        nsga3.run(settings, toolbox, tools, creator)
+        return nsga3.run(settings, toolbox, tools, creator)
 
 def setupTemplates(settings, target):
     "setup all the experimental templates"

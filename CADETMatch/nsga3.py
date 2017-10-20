@@ -21,7 +21,7 @@ def run(settings, toolbox, tools, creator):
 
     hof = tools.ParetoFront()
 
-    checkpoint_algorithms.eaMuPlusLambda(toolbox,
+    return checkpoint_algorithms.eaMuPlusLambda(toolbox,
                               mu=populationSize, 
                               lambda_=populationSize, 
                               cxpb=CXPB, 

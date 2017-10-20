@@ -115,7 +115,8 @@ def run(settings, toolbox, tools, creator):
             pickle.dump(cp, cp_file)
 
         if avg > settings['stopAverage'] or bestMin > settings['stopBest']:
-            return
+            return halloffame
+    return halloffame
 
 def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, map_function, creator, toolbox, base, tools):
     "setup the DEAP variables"

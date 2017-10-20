@@ -68,7 +68,8 @@ def find_breakthrough(times, data):
 
 def generateIndividual(icls, size, imin, imax):
     while 1:
-        ind = icls(random.uniform(imin[idx], imax[idx]) for idx in range(size))
+        #ind = icls(random.uniform(imin[idx], imax[idx]) for idx in range(size))
+        ind = icls(numpy.random.uniform(imin, imax))
         if feasible(ind):
             return ind
 

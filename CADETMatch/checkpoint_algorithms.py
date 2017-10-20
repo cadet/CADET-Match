@@ -153,7 +153,8 @@ s
             pickle.dump(cp, cp_file)
 
         if avg > settings['stopAverage'] or bestMin > settings['stopBest']:
-            return
+            return halloffame
+    return halloffame
 
 
 def eaMuPlusLambda(toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
@@ -282,6 +283,5 @@ def eaMuPlusLambda(toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
             pickle.dump(cp, cp_file)
 
         if avg > settings['stopAverage'] or bestMin > settings['stopBest']:
-            return population, logbook
-
-    return population, logbook
+            return halloffame
+    return halloffame
