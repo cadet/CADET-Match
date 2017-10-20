@@ -93,6 +93,9 @@ s
         if halloffame is not None:
             halloffame.update(population)
 
+        avg, bestMin = util.averageFitness(population)
+        print('avg', avg, 'best', bestMin)
+
         logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
         record = stats.compile(population) if stats is not None else {}
@@ -124,9 +127,6 @@ s
         print("Finished gradient search with new children", len(newChildren))
         offspring.extend(newChildren)
 
-        avg, bestMin = util.averageFitness(offspring)
-        print('avg', avg, 'best', bestMin)
-
         # Update the hall of fame with the generated individuals
         if halloffame is not None:
             halloffame.update(offspring)
@@ -134,6 +134,9 @@ s
         # Select the next generation population
         population[:] = toolbox.select(offspring, mu)
 
+        avg, bestMin = util.averageFitness(population)
+        print('avg', avg, 'best', bestMin)
+        
         # Update the statistics with the new population
         record = stats.compile(population) if stats is not None else {}
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
@@ -259,15 +262,15 @@ def eaMuPlusLambda(toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
         print("Finished gradient search with new children", len(newChildren))
         offspring.extend(newChildren)
 
-        avg, bestMin = util.averageFitness(offspring)
-        print('avg', avg, 'best', bestMin)
-
         # Update the hall of fame with the generated individuals
         if halloffame is not None:
             halloffame.update(offspring)
 
         # Select the next generation population
         population[:] = toolbox.select(population + offspring, mu)
+
+        avg, bestMin = util.averageFitness(population)
+        print('avg', avg, 'best', bestMin)
 
         # Update the statistics with the new population
         record = stats.compile(population) if stats is not None else {}

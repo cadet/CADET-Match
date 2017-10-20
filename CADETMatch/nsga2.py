@@ -39,6 +39,11 @@ def run(settings, toolbox, tools, creator):
         # Start a new evolution
 
         population = toolbox.population(n=populationSize)
+
+        if "seeds" in settings:
+            seed_pop = [toolbox.individual_guess([f(v) for f, v in zip(settings['transform'], sublist)]) for sublist in settings['seeds']]
+            population.extend(seed_pop)
+
         start_gen = 0    
 
         halloffame = tools.ParetoFront()

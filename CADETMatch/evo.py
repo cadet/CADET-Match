@@ -144,8 +144,10 @@ def setup(settings_filename):
         Cadet.cadet_path = settings['CADETPath']
         headers, numGoals, badScore = genHeaders(settings)
         target = createTarget(settings, badScore)
-        MIN_VALUE, MAX_VALUE = buildMinMax(settings)
+        MIN_VALUE, MAX_VALUE, transform = buildMinMax(settings)
         toolbox = setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE)
+
+        settings['transform'] = transform
 
         #create used paths in settings, only the root process will make the directories later
         settings['resultsDirEvo'] = Path(settings['resultsDir']) / "evo"
@@ -179,6 +181,7 @@ def buildMinMax(settings):
     "build the minimum and maximum parameter boundaries"
     MIN_VALUE = []
     MAX_VALUE = []
+    transform_functions = []
 
     for parameter in settings['parameters']:
         transform = parameter['transform']
@@ -193,16 +196,19 @@ def buildMinMax(settings):
             minValues = [item for pair in zip(minKA, minKEQ) for item in pair]
             maxValues = [item for pair in zip(maxKA, maxKEQ) for item in pair]
 
+            transform_functions.extend([numpy.log for i in minValues])
+
             minValues = numpy.log(minValues)
             maxValues = numpy.log(maxValues)
 
         elif transform == 'log':
             minValues = numpy.log(parameter['min'])
             maxValues = numpy.log(parameter['max'])
+            transform_functions.append(numpy.log)
 
         MIN_VALUE.extend(minValues)
         MAX_VALUE.extend(maxValues)
-    return MIN_VALUE, MAX_VALUE
+    return MIN_VALUE, MAX_VALUE, transform_functions
 
 def genHeaders(settings):
     headers = ['Time','Name', 'Method','Condition Number',]

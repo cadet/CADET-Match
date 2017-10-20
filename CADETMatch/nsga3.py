@@ -19,6 +19,10 @@ def run(settings, toolbox, tools, creator):
 
     totalGenerations = parameters * settings['generations']
 
+    if "seeds" in settings:
+        seed_pop = [toolbox.individual_guess([f(v) for f, v in zip(settings['transform'], sublist)]) for sublist in settings['seeds']]
+        pop.extend(seed_pop)
+
     hof = tools.ParetoFront()
 
     return checkpoint_algorithms.eaMuPlusLambda(toolbox,

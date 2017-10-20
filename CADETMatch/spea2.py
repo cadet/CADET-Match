@@ -19,11 +19,18 @@ def run(settings, toolbox, tools, creator):
 
     pop = toolbox.population(n=LAMBDA)
 
+    if "seeds" in settings:
+        seed_pop = [toolbox.individual_guess([f(v) for f, v in zip(settings['transform'], sublist)]) for sublist in settings['seeds']]
+        pop.extend(seed_pop)
+
     totalGenerations = parameters * settings['generations']
 
     hof = tools.ParetoFront()
 
-    return checkpoint_algorithms.eaMuCommaLambda(pop, toolbox, mu=MU, lambda_=LAMBDA,
+    #return checkpoint_algorithms.eaMuCommaLambda(pop, toolbox, mu=MU, lambda_=LAMBDA,
+    #    cxpb=settings['crossoverRate'], mutpb=settings['mutationRate'], ngen=totalGenerations, settings=settings, halloffame=hof, tools=tools)
+
+    return checkpoint_algorithms.eaMuPlusLambda(pop, toolbox, mu=MU, lambda_=LAMBDA,
         cxpb=settings['crossoverRate'], mutpb=settings['mutationRate'], ngen=totalGenerations, settings=settings, halloffame=hof, tools=tools)
 
 def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, map_function, creator, toolbox, base, tools):
