@@ -197,7 +197,8 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
 
             sim_time, sim_value = get_times_values(results[experimentName]['simulation'],target[experimentName][featureName])
 
-            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybridDecay','curve', 'breakthrough', 'dextran', 'dextranHybrid', 'similarityCross', 'similarityCrossDecay', 'breakthroughCross'):
+            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybridDecay','curve', 'breakthrough', 'dextran', 'dextranHybrid', 
+                               'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE'):
                 graph.plot(sim_time, sim_value, 'r--', label='Simulation')
                 graph.plot(exp_time, exp_value, 'g:', label='Experiment')
             elif featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_cross', 'derivative_similarity_cross_alt'):
