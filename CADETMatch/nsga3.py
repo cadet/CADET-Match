@@ -19,7 +19,7 @@ def run(settings, toolbox, tools, creator):
 
     totalGenerations = parameters * settings['generations']
 
-    pop = toolbox.population(n=LAMBDA)
+    pop = toolbox.population(n=populationSize)
 
     if "seeds" in settings:
         seed_pop = [toolbox.individual_guess([f(v) for f, v in zip(settings['transform'], sublist)]) for sublist in settings['seeds']]
