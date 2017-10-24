@@ -157,15 +157,6 @@ def setup(settings_filename):
         
     return settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox, badScore
 
-def createDirectories(settings):
-    settings['resultsDirBase'].mkdir(parents=True, exist_ok=True)
-    settings['resultsDirGrad'].mkdir(parents=True, exist_ok=True)
-    settings['resultsDirMisc'].mkdir(parents=True, exist_ok=True)
-    settings['resultsDirEvo'].mkdir(parents=True, exist_ok=True)
-
-    #copy simulation setting file to result base directory
-    shutil.copy(sys.argv[1], str(settings['resultsDirBase']))
-
 def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, json_path):
     "setup the DEAP variables"
     searchMethod = settings.get('searchMethod', 'SPEA2')
@@ -573,14 +564,6 @@ def createExperiment(experiment):
             temp[featureName]['samplesPerComponent'] = rows
             
     return temp
-
-def createCSV(settings, headers):
-    path = Path(settings['resultsDirBase'], settings['CSV'])
-    if not path.exists():
-        with path.open('w', newline='') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
-            writer.writerow(headers)
-
 
 def run(settings, toolbox):
     "run the parameter estimation"
