@@ -7,10 +7,17 @@ import util
 import time
 import numpy
 
+#parallelization
+#from scoop import futures
+
+from cache import cache
+
+
 #due to how scoop works and the need to break things up into multiple processes it is hard to use class based systems
 #As a result most of the code is broken up into modules but is still based on pure functions
 
 def main():
+    cache.setup(sys.argv[1])
     evo.createDirectories(evo.settings)
     evo.createCSV(evo.settings, evo.headers)
     evo.setupTemplates(evo.settings, evo.target)

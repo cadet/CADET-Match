@@ -145,7 +145,7 @@ def setup(settings_filename):
         headers, numGoals, badScore = genHeaders(settings)
         target = createTarget(settings, badScore)
         MIN_VALUE, MAX_VALUE, transform = buildMinMax(settings)
-        toolbox = setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE)
+        toolbox = setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, sys.argv[1])
 
         settings['transform'] = transform
 
@@ -166,16 +166,16 @@ def createDirectories(settings):
     #copy simulation setting file to result base directory
     shutil.copy(sys.argv[1], str(settings['resultsDirBase']))
 
-def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE):
+def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, json_path):
     "setup the DEAP variables"
     searchMethod = settings.get('searchMethod', 'SPEA2')
     toolbox = base.Toolbox()
     if searchMethod == 'SPEA2':
-        return spea2.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools)
+        return spea2.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools, json_path)
     if searchMethod == 'NSGA2':
-        return nsga2.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools)
+        return nsga2.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools, json_path)
     if searchMethod == 'NSGA3':
-        return nsga3.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools)
+        return nsga3.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools, json_path)
 
 def buildMinMax(settings):
     "build the minimum and maximum parameter boundaries"

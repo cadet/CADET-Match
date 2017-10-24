@@ -16,7 +16,8 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>F:\CADET_ParameterEstimation\transport\grm\dextran\SPEA2_dextran.json</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>-m scoop</InterpreterArguments>
+    <InterpreterArguments>
+    </InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -27,6 +28,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="cache.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="cadet.py">
       <SubType>Code</SubType>
     </Compile>

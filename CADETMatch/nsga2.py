@@ -123,7 +123,7 @@ def run(settings, toolbox, tools, creator):
             return halloffame
     return halloffame
 
-def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, map_function, creator, toolbox, base, tools):
+def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, map_function, creator, toolbox, base, tools, json_path):
     "setup the DEAP variables"
 
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * numGoals)
