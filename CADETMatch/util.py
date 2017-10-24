@@ -22,6 +22,7 @@ from cadet import Cadet
 import score
 import subprocess
 import sys
+import json
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
@@ -379,3 +380,44 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         temp['error'] += sse
 
     return temp
+
+def copyCSVWithNoise(idx, center, noise):
+    "read the original json file and create a new set of simulation data and simulation file in a subdirectory with noise"
+    settings_file = Path(sys.argv[1])
+    with settings_file.open() as json_data:
+        settings = json.load(json_data)
+
+        baseDir = Path(settings['resultsDir']) / str(idx)
+        baseDir.mkdir(parents=True, exist_ok=True)
+
+        settings['resultsDir'] = str(baseDir)
+
+        #find CSV files
+        for experiment in settings['experiments']:
+            if 'CSV' in experiment:
+                data = numpy.genfromtxt(experiment['CSV'], delimiter=',')
+                addNoise(data, center, noise)
+                csv_path = Path(experiment['CSV'])
+                new_csv_path = baseDir / csv_path.name
+                numpy.savetxt(str(new_csv_path), data, delimiter=',')
+                experiment['CSV'] = str(new_csv_path)
+            for feature in experiment['features']:
+                if 'CSV' in feature:
+                    data = numpy.genfromtxt(feature['CSV'], delimiter=',')
+                    addNoise(data, center, noise)
+                    csv_path = Path(feature['CSV'])
+                    new_csv_path = baseDir / csv_path.name
+                    numpy.savetxt(str(new_csv_path), data, delimiter=',')
+                    feature['CSV'] = str(new_csv_path)
+
+        new_settings_file = baseDir / settings_file.name
+        with new_settings_file.open(mode="w") as json_data:
+            json.dump(settings, json_data)
+        return new_settings_file
+        
+
+def addNoise(array, center, noise):
+    "add noise to an array"
+    maxValue = numpy.max(array[:,1])
+    randomNoise = numpy.random.normal(center, noise*maxValue, len(array))
+    array[:,1] += randomNoise

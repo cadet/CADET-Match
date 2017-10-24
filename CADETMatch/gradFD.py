@@ -54,9 +54,10 @@ def search(gradCheck, offspring, toolbox):
 def gradSearch(x):
     import time
     try:
-       val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), gtol=1e-10, ftol=1e-10, xtol=1e-10)
+       val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), 
+           gtol=1e-14, ftol=1e-5, xtol=1e-14, diff_step=1e-7, x_scale="jac")
        scores = fitness_sens(val.x, finished=1)
-       print(val.x, numpy.exp(val.x), val.jac, scores)
+       print(val.x, numpy.exp(val.x), val.jac, scores, val.message)
        return val
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
