@@ -392,6 +392,8 @@ def copyCSVWithNoise(idx, center, noise):
 
         settings['resultsDir'] = str(baseDir)
 
+        del settings['bootstrap']
+
         #find CSV files
         for experiment in settings['experiments']:
             if 'CSV' in experiment:
