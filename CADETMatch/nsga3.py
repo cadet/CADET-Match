@@ -1,7 +1,6 @@
 
 import math
 import util
-import evo
 import checkpoint_algorithms
 import random
 import nsga3_selection

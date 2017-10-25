@@ -6,7 +6,6 @@ import numpy
 import array
 from pathlib import Path
 #import grad
-import evo
 import gradFD
 
 from deap import algorithms

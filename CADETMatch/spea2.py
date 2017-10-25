@@ -1,6 +1,5 @@
 import math
 import util
-import evo
 import checkpoint_algorithms
 import random
 
@@ -10,7 +9,7 @@ def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
 
-    parameters = len(evo.MIN_VALUE)
+    parameters = len(cache.MIN_VALUE)
 
     LAMBDA=parameters * cache.settings['population']
     MU = int(math.ceil(cache.settings['keep']*LAMBDA))
