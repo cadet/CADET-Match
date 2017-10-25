@@ -8,52 +8,49 @@ import nsga3_selection
 
 from deap import algorithms
 
-def run(settings, toolbox, tools, creator):
+def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
+    parameters = len(cache.MIN_VALUE)
 
-    parameters = len(evo.MIN_VALUE)
+    populationSize=parameters * cache.settings['population']
+    CXPB=cache.settings['crossoverRate']
 
-    populationSize=parameters * settings['population']
-    CXPB=settings['crossoverRate']
+    totalGenerations = parameters * cache.settings['generations']
 
-    totalGenerations = parameters * settings['generations']
+    pop = cache.toolbox.population(n=populationSize)
 
-    pop = toolbox.population(n=populationSize)
-
-    if "seeds" in settings:
-        seed_pop = [toolbox.individual_guess([f(v) for f, v in zip(settings['transform'], sublist)]) for sublist in settings['seeds']]
+    if "seeds" in cache.settings:
+        seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]
         pop.extend(seed_pop)
 
     hof = tools.ParetoFront()
 
-    return checkpoint_algorithms.eaMuPlusLambda(pop, toolbox,
+    return checkpoint_algorithms.eaMuPlusLambda(pop, cache.toolbox,
                               mu=populationSize, 
                               lambda_=populationSize, 
                               cxpb=CXPB, 
-                              mutpb=settings['mutationRate'],
+                              mutpb=cache.settings['mutationRate'],
                               ngen=totalGenerations,
-                              settings=settings,
+                              settings=cache.settings,
                               tools=tools,
                               halloffame=hof)
 
-def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, map_function, creator, toolbox, base, tools, json_path):
+def setupDEAP(cache, fitness, map_function, creator, base, tools):
     "setup the DEAP variables"
-
-    creator.create("FitnessMax", base.Fitness, weights=[1.0] * numGoals)
+    creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
     creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
 
-    toolbox.register("individual", util.generateIndividual, creator.Individual,
-        len(MIN_VALUE), MIN_VALUE, MAX_VALUE)
-    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+    cache.toolbox.register("individual", util.generateIndividual, creator.Individual,
+        len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE)
+    cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)
 
-    toolbox.register("individual_guess", util.initIndividual, creator.Individual)
+    cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual)
 
-    toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=20.0, low=MIN_VALUE, up=MAX_VALUE)
-    toolbox.register("mutate", util.mutPolynomialBoundedAdaptive, eta=10.0, low=MIN_VALUE, up=MAX_VALUE, indpb=1.0/len(MIN_VALUE))
+    cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
+    cache.toolbox.register("mutate", util.mutPolynomialBoundedAdaptive, eta=10.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
 
-    toolbox.register("select", nsga3_selection.sel_nsga_iii)
-    toolbox.register("evaluate", fitness)
+    cache.toolbox.register("select", tools.sel_nsga_iii)
+    cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
 
-    toolbox.register('map', map_function)
-    return toolbox
+    cache.toolbox.register('map', map_function)

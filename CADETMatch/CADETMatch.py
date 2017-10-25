@@ -11,11 +11,18 @@ import csv
 from cadet import Cadet
 from pathlib import Path
 
+from deap import creator
+from deap import tools
+from deap import base
+
 #parallelization
-#from scoop import futures
+from scoop import futures
 
 from cache import cache
 
+import spea2
+import nsga2
+import nsga3
 
 #due to how scoop works and the need to break things up into multiple processes it is hard to use class based systems
 #As a result most of the code is broken up into modules but is still based on pure functions
@@ -23,7 +30,7 @@ from cache import cache
 def main():
     setup(cache, sys.argv[1])
     #grad.setupTemplates(evo.settings, evo.target)
-    hof = evo.run(evo.settings, evo.toolbox)
+    hof = evo.run(cache)
 
     print("hall of fame")
     for i in hof:
@@ -58,6 +65,7 @@ def setup(cache, json_path):
     createDirectories(cache, json_path)
     createCSV(cache)
     setupTemplates(cache)
+    setupDeap(cache)
 
 def createDirectories(cache, json_path):
     cache.settings['resultsDirBase'].mkdir(parents=True, exist_ok=True)
@@ -115,6 +123,17 @@ def setupTemplates(cache):
         template.save()
 
         experiment['simulation'] = template
+
+def setupDeap(cache):
+    "setup the DEAP variables"
+    searchMethod = cache.settings.get('searchMethod', 'SPEA2')
+    cache.toolbox = base.Toolbox()
+    if searchMethod == 'SPEA2':
+        spea2.setupDEAP(cache, evo.fitness, futures.map, creator, base, tools)
+    if searchMethod == 'NSGA2':
+        nsga2.setupDEAP(cache, evo.fitness, futures.map, creator, base, tools)
+    if searchMethod == 'NSGA3':
+        nsga3.setupDEAP(cache, evo.fitness, futures.map, creator,  base, tools)
 
 if __name__ == "__main__":
     start = time.time()

@@ -27,7 +27,6 @@ from pathlib import Path
 
 from deap import algorithms
 from deap import base
-from deap import benchmarks
 from deap import creator
 from deap import tools
 
@@ -44,6 +43,8 @@ from scoop import futures
 
 import scipy.signal
 
+from cache import cache
+
 ERROR = {'scores': None,
          'path': None,
          'simulation' : None,
@@ -51,9 +52,12 @@ ERROR = {'scores': None,
          'cadetValues':None,
          'cadetValuesKEQ': None}
 
-def fitness(individual):
+def fitness(individual, json_path):
     if not(util.feasible(individual)):
         return WORST
+
+    if json_path != cache.json_path:
+        cache.setup(json_path)
 
     scores = []
     error = 0.0
@@ -565,15 +569,15 @@ def createExperiment(experiment):
             
     return temp
 
-def run(settings, toolbox):
+def run(cache):
     "run the parameter estimation"
-    searchMethod = settings.get('searchMethod', 'SPEA2')
+    searchMethod = cache.settings.get('searchMethod', 'SPEA2')
     if searchMethod == 'SPEA2':
-        return spea2.run(settings, toolbox, tools, creator)
+        return spea2.run(cache, tools, creator)
     if searchMethod == 'NSGA2':
-        return nsga2.run(settings, toolbox, tools, creator)
+        return nsga2.run(cache, tools, creator)
     if searchMethod == 'NSGA3':
-        return nsga3.run(settings, toolbox, tools, creator)
+        return nsga3.run(cache, tools, creator)
 
 def setupTemplates(settings, target):
     "setup all the experimental templates"
@@ -617,6 +621,6 @@ def setupTemplates(settings, target):
         experiment['simulation'] = template
 
 #This will run when the module is imported so that each process has its own copy of this data
-settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox, badScore = setup(sys.argv[1])
+#settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox, badScore = setup(sys.argv[1])
 
-WORST = [badScore] * numGoals
+#WORST = [badScore] * numGoals
