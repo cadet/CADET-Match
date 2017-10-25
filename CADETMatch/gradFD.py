@@ -24,9 +24,9 @@ import matplotlib.pyplot as plt
 class GradientException(Exception):
     pass
 
-def search(gradCheck, offspring, toolbox):
+def search(gradCheck, offspring, cache):
     checkOffspring = (ind for ind in offspring if min(ind.fitness.values) > gradCheck)
-    newOffspring = toolbox.map(gradSearch, checkOffspring)
+    newOffspring = cache.toolbox.map(gradSearch, checkOffspring)
 
     temp = []
     print("Running gradient check")
@@ -35,8 +35,8 @@ def search(gradCheck, offspring, toolbox):
         if i is None:
             failed.append(1)
         elif i.success:
-            a = toolbox.individual_guess(i.x)
-            fit = toolbox.evaluate(a)
+            a = cache.toolbox.individual_guess(i.x)
+            fit = cache.toolbox.evaluate(a)
             failed.append(0)
             a.fitness.values = fit
             print(i.x, fit)

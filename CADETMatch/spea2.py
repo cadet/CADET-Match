@@ -30,7 +30,7 @@ def run(cache, tools, creator):
     #    cxpb=settings['crossoverRate'], mutpb=settings['mutationRate'], ngen=totalGenerations, settings=settings, halloffame=hof, tools=tools)
 
     return checkpoint_algorithms.eaMuPlusLambda(pop, cache.toolbox, mu=MU, lambda_=LAMBDA,
-        cxpb=cache.settings['crossoverRate'], mutpb=cache.settings['mutationRate'], ngen=totalGenerations, settings=cache.settings, halloffame=hof, tools=tools)
+        cxpb=cache.settings['crossoverRate'], mutpb=cache.settings['mutationRate'], ngen=totalGenerations, settings=cache.settings, halloffame=hof, tools=tools, cache=cache)
 
 def setupDEAP(cache, fitness, map_function, creator, base, tools):
     "setup the DEAP variables"

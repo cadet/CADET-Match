@@ -63,8 +63,8 @@ def fitness(individual, json_path):
     error = 0.0
 
     results = {}
-    for experiment in settings['experiments']:
-        result = runExperiment(individual, experiment, settings, target)
+    for experiment in cache.settings['experiments']:
+        result = runExperiment(individual, experiment, cache.settings, cache.target)
         if result is not None:
             results[experiment['name']] = result
             scores.extend(results[experiment['name']]['scores'])
@@ -81,13 +81,13 @@ def fitness(individual, json_path):
                                 -error] )
 
     #best
-    target['bestHumanScores'] = numpy.max(numpy.vstack([target['bestHumanScores'], humanScores]), 0)
+    cache.target['bestHumanScores'] = numpy.max(numpy.vstack([cache.target['bestHumanScores'], humanScores]), 0)
 
     #save
-    keepTop = settings['keepTop']
+    keepTop = cache.settings['keepTop']
 
     keep_result = 0
-    if any(humanScores >= (keepTop * target['bestHumanScores'])):
+    if any(humanScores >= (keepTop * cache.target['bestHumanScores'])):
         keep_result = 1
         
     #flip sign of SSE for writing out to file
@@ -102,7 +102,7 @@ def fitness(individual, json_path):
             break
 
     #generate csv
-    path = Path(settings['resultsDirBase'], settings['CSV'])
+    path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
         writer.writerow([time.ctime(), save_name_base, 'EVO', 'NA'] + 
@@ -112,10 +112,10 @@ def fitness(individual, json_path):
 
     #print('keep_result', keep_result)
     if keep_result:
-        notDuplicate = saveExperiments(save_name_base, settings, target, results)
+        notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results)
         #print('notDuplicate', notDuplicate)
         if notDuplicate:
-            plotExperiments(save_name_base, settings, target, results)
+            plotExperiments(save_name_base, cache.settings, cache.target, results)
 
     #cleanup
     for result in results.values():

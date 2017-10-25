@@ -7,7 +7,7 @@ from deap import algorithms
 import gradFD
 
 def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
-                    stats=None, halloffame=None, verbose=__debug__, tools=None):
+                    stats=None, halloffame=None, verbose=__debug__, tools=None, cache=None):
     """from DEAP function but with checkpoiting"""
 
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
@@ -72,7 +72,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             ind.fitness.values = fit
 
         print("About to start gradient search")
-        gradCheck, newChildren = gradFD.search(gradCheck, offspring, toolbox)
+        gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
         print("Finished gradient search with new children", len(newChildren))
         offspring.extend(newChildren)
 
@@ -110,7 +110,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
 
 def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
-                   stats=None, halloffame=None, verbose=__debug__, tools=None):
+                   stats=None, halloffame=None, verbose=__debug__, tools=None, cache=None):
     """from DEAP function but with checkpoiting"""
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
@@ -174,7 +174,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             ind.fitness.values = fit
 
         print("About to start gradient search")
-        gradCheck, newChildren = gradFD.search(gradCheck, offspring, toolbox)
+        gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
         print("Finished gradient search with new children", len(newChildren))
         offspring.extend(newChildren)
 

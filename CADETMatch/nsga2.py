@@ -95,7 +95,7 @@ def run(cache, tools, creator):
             ind.fitness.values = fit
 
         print("About to start gradient search")
-        gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache.toolbox)
+        gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
         print("Finished gradient search with new children", len(newChildren))
         offspring.extend(newChildren)
 

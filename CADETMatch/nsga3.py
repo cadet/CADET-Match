@@ -33,7 +33,8 @@ def run(cache, tools, creator):
                               ngen=totalGenerations,
                               settings=cache.settings,
                               tools=tools,
-                              halloffame=hof)
+                              halloffame=hof,
+                              cache=cache)
 
 def setupDEAP(cache, fitness, map_function, creator, base, tools):
     "setup the DEAP variables"
