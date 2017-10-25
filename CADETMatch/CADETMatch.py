@@ -36,12 +36,12 @@ def main():
     for i in hof:
         print(i, type(i), i.fitness.values)
 
-    if "bootstrap" in evo.settings:
+    if "bootstrap" in cache.settings:
         temp = []
 
-        samples = int(evo.settings['bootstrap']['samples'])
-        center = float(evo.settings['bootstrap']['center'])
-        noise = float(evo.settings['bootstrap']['percentNoise'])/100.0
+        samples = int(cache.settings['bootstrap']['samples'])
+        center = float(cache.settings['bootstrap']['center'])
+        noise = float(cache.settings['bootstrap']['percentNoise'])/100.0
 
         for i in range(samples):
             #copy csv files to a new directory with noise added

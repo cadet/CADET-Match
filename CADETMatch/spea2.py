@@ -3,8 +3,6 @@ import util
 import checkpoint_algorithms
 import random
 
-from deap import algorithms
-
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()

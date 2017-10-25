@@ -53,11 +53,13 @@ ERROR = {'scores': None,
          'cadetValuesKEQ': None}
 
 def fitness(individual, json_path):
-    if not(util.feasible(individual)):
-        return WORST
-
     if json_path != cache.json_path:
         cache.setup(json_path)
+    
+    if not(util.feasible(individual)):
+        return cache.WORST
+
+    
 
     scores = []
     error = 0.0
@@ -70,7 +72,7 @@ def fitness(individual, json_path):
             scores.extend(results[experiment['name']]['scores'])
             error += results[experiment['name']]['error']
         else:
-            return WORST
+            return cache.WORST
 
     #need
 
@@ -139,224 +141,6 @@ def runExperiment(individual, experiment, settings, target):
         experiment['simulation'] = templateSim
 
     return util.runExperiment(individual, experiment, settings, target, experiment['simulation'], float(experiment['timeout']))
-
-def setup(settings_filename):
-    "setup the parameter estimation"
-    settings_file = Path(settings_filename)
-    with settings_file.open() as json_data:
-        settings = json.load(json_data)
-        Cadet.cadet_path = settings['CADETPath']
-        headers, numGoals, badScore = genHeaders(settings)
-        target = createTarget(settings, badScore)
-        MIN_VALUE, MAX_VALUE, transform = buildMinMax(settings)
-        toolbox = setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, sys.argv[1])
-
-        settings['transform'] = transform
-
-        #create used paths in settings, only the root process will make the directories later
-        settings['resultsDirEvo'] = Path(settings['resultsDir']) / "evo"
-        settings['resultsDirGrad'] = Path(settings['resultsDir']) / "grad"
-        settings['resultsDirMisc'] = Path(settings['resultsDir']) / "misc"
-        settings['resultsDirBase'] = Path(settings['resultsDir'])
-        
-    return settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox, badScore
-
-def setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, json_path):
-    "setup the DEAP variables"
-    searchMethod = settings.get('searchMethod', 'SPEA2')
-    toolbox = base.Toolbox()
-    if searchMethod == 'SPEA2':
-        return spea2.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools, json_path)
-    if searchMethod == 'NSGA2':
-        return nsga2.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools, json_path)
-    if searchMethod == 'NSGA3':
-        return nsga3.setupDEAP(numGoals, settings, target, MIN_VALUE, MAX_VALUE, fitness, futures.map, creator, toolbox, base, tools, json_path)
-
-def buildMinMax(settings):
-    "build the minimum and maximum parameter boundaries"
-    MIN_VALUE = []
-    MAX_VALUE = []
-    transform_functions = []
-
-    for parameter in settings['parameters']:
-        transform = parameter['transform']
-        location = parameter['location']
-
-        if transform == 'keq':
-            minKA = parameter['minKA']
-            maxKA = parameter['maxKA']
-            minKEQ = parameter['minKEQ']
-            maxKEQ = parameter['maxKEQ']
-
-            minValues = [item for pair in zip(minKA, minKEQ) for item in pair]
-            maxValues = [item for pair in zip(maxKA, maxKEQ) for item in pair]
-
-            transform_functions.extend([numpy.log for i in minValues])
-
-            minValues = numpy.log(minValues)
-            maxValues = numpy.log(maxValues)
-
-        elif transform == 'log':
-            minValues = numpy.log(parameter['min'])
-            maxValues = numpy.log(parameter['max'])
-            transform_functions.append(numpy.log)
-
-        MIN_VALUE.extend(minValues)
-        MAX_VALUE.extend(maxValues)
-    return MIN_VALUE, MAX_VALUE, transform_functions
-
-def genHeaders(settings):
-    headers = ['Time','Name', 'Method','Condition Number',]
-
-    numGoals = 0
-    badScore = 0.0
-
-    for parameter in settings['parameters']:
-        comp = parameter['component']
-        if parameter['transform'] == 'keq':
-            location = parameter['location']
-            nameKA = location[0].rsplit('/',1)[-1]
-            nameKD = location[1].rsplit('/',1)[-1]
-            for bound in parameter['bound']:
-                headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
-                headers.append("%s Comp:%s Bound:%s" % (nameKD, comp, bound))
-                headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
-        elif parameter['transform'] == 'log':
-            location = parameter['location']
-            name = location.rsplit('/',1)[-1]
-            for bound in parameter['bound']:
-                headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
-
-    for idx,experiment in enumerate(settings['experiments']):
-        experimentName = experiment['name']
-        experiment['headers'] = []
-        for feature in experiment['features']:
-            if feature['type'] in ('similarity', 'similarityCross', 'similarityHybrid', 'similarityDecay', 'similarityCrossDecay', 'similarityHybridDecay'):
-                name = "%s_%s" % (experimentName, feature['name'])
-                temp = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
-                numGoals += 3
-
-            elif feature['type'] == 'derivative_similarity':
-                name = "%s_%s" % (experimentName, feature['name'])
-                temp = ["%s_Derivative_Similarity" % name, "%s_High_Value" % name, "%s_High_Time" % name, "%s_Low_Value" % name, "%s_Low_Time" % name]
-                numGoals += 5
-
-            elif feature['type'] == 'derivative_similarity_hybrid':
-                name = "%s_%s" % (experimentName, feature['name'])
-                temp = ["%s_Derivative_Similarity_hybrid" % name, "%s_Time" % name, "%s_High_Value" % name, "%s_Low_Value" % name]
-                numGoals += 4
-
-            elif feature['type'] == 'derivative_similarity_cross':
-                name = "%s_%s" % (experimentName, feature['name'])
-                temp = ["%s_Derivative_Similarity_Cross" % name, "%s_Time" % name, "%s_High_Value" % name, "%s_Low_Value" % name]
-                numGoals += 4
-
-            elif feature['type'] == 'derivative_similarity_cross_alt':
-                name = "%s_%s" % (experimentName, feature['name'])
-                temp = ["%s_Derivative_Similarity_Cross_Alt" % name, "%s_Time" % name,]
-                numGoals += 2
-
-            elif feature['type'] == 'curve':
-                name = "%s_%s" % (experimentName, feature['name'])
-                temp  = ["%s_Similarity" % name]
-                numGoals += 1
-
-            elif feature['type'] == 'breakthrough':
-                name = "%s_%s" % (experimentName, feature['name'])
-                temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time_Start" % name, "%s_Time_Stop" % name]
-                numGoals += 4
-            elif feature['type'] == 'breakthroughCross':
-                name = "%s_%s" % (experimentName, feature['name'])
-                temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
-                numGoals += 3
-            elif feature['type'] in ('dextran', 'dextranHybrid'):
-                name = "%s_%s" % (experimentName, feature['name'])
-                temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, "%s_Time" % name]
-                numGoals += 3
-            elif feature['type'] == 'fractionation':
-                data = pandas.read_csv(feature['csv'])
-                rows, cols = data.shape
-                #remove first two columns since those are the start and stop times
-                cols = cols - 2
-
-                total = rows * cols
-                data_headers = data.columns.values.tolist()
-
-                temp  = []
-                for sample in range(rows):
-                    for component in data_headers[2:]:
-                        temp.append('%s_%s_Sample_%s_Component_%s' % (experimentName, feature['name'], sample, component))
-
-                numGoals += len(temp)
-            elif feature['type'] == 'fractionationCombine':
-                data = pandas.read_csv(feature['csv'])
-                rows, cols = data.shape
-                #remove first two columns since those are the start and stop times
-                cols = cols - 2
-
-                total = rows * cols
-                data_headers = data.columns.values.tolist()
-
-                temp  = []
-                for component in data_headers[2:]:
-                    temp.append('%s_%s_Component_%s' % (experimentName, feature['name'], component))
-                numGoals += len(temp)
-
-            elif feature['type'] == 'SSE':
-                name = "%s_%s" % (experimentName, feature['name'])
-                temp = ["%s_SSE" % name]
-                numGoals += 1
-                badScore = -sys.float_info.max
-
-            elif feature['type'] == 'LogSSE':
-                name = "%s_%s" % (experimentName, feature['name'])
-                temp = ["%s_LogSSE" % name]
-                numGoals += 1
-                badScore = -sys.float_info.max
-
-            headers.extend(temp)
-            experiment['headers'].extend(temp)
-
-    headers.extend(['Product Root Score', 'Min Score', 'Mean Score', 'Norm', 'SSE'])
-    return headers, numGoals, badScore
-
-def createTarget(settings, badScore):
-    target = {}
-
-    for experiment in settings['experiments']:
-        target[experiment["name"]] = createExperiment(experiment)
-    target['bestHumanScores'] = numpy.ones(5) * badScore
-
-    #SSE are negative so they sort correctly with better scores being less negative
-    target['bestHumanScores'][4] = badScore;  
-
-    #setup sensitivities
-    parms = []
-    for parameter in settings['parameters']:
-        comp = parameter['component']
-        transform = parameter['transform']
-
-        if transform == 'keq':
-            location = parameter['location']
-            nameKA = location[0].rsplit('/',1)[-1]
-            nameKD = location[1].rsplit('/',1)[-1]
-            unit = int(location[0].split('/')[3].replace('unit_', ''))
-
-            for bound in parameter['bound']:
-                parms.append((nameKA, unit, comp, bound))
-                parms.append((nameKD, unit, comp, bound))
-
-        elif transform == 'log':
-            location = parameter['location']
-            name = location.rsplit('/',1)[-1]
-            unit = int(location.split('/')[3].replace('unit_', ''))
-            for bound in parameter['bound']:
-                parms.append((name, unit, comp, bound))
-
-    target['sensitivities'] = parms
-
-
-    return target
 
 def createExperiment(experiment):
     temp = {}
@@ -578,49 +362,3 @@ def run(cache):
         return nsga2.run(cache, tools, creator)
     if searchMethod == 'NSGA3':
         return nsga3.run(cache, tools, creator)
-
-def setupTemplates(settings, target):
-    "setup all the experimental templates"
-    for experiment in settings['experiments']:
-        HDF5 = experiment['HDF5']
-        name = experiment['name']
-
-        template_path = Path(settings['resultsDirMisc'], "template_%s.h5" % name)
-
-        template = Cadet()
-
-        #load based on where the HDF5 file is
-        template.filename = HDF5
-        template.load()
-
-        #change to where we want the template created
-        template.filename = template_path
-
-        try:
-            del template.root.input.solver.user_solution_times
-        except KeyError:
-            pass
-
-        try:
-            del template.root.output
-        except KeyError:
-            pass
-
-        template.root.input.solver.user_solution_times = target[name]['time']
-        template.root.input.solver.sections.section_times[-1] = target[name]['time'][-1]
-        template.root.input['return'].unit_001.write_solution_particle = 0
-        template.root.input['return'].unit_001.write_solution_column_inlet = 1
-        template.root.input['return'].unit_001.write_solution_column_outlet = 1
-        template.root.input['return'].unit_001.split_components_data = 0
-        template.root.input.solver.nthreads = 1
-        template.root.input.solver.time_integrator.init_step_size = 0
-        template.root.input.solver.time_integrator.max_steps = 0
-
-        template.save()
-
-        experiment['simulation'] = template
-
-#This will run when the module is imported so that each process has its own copy of this data
-#settings, headers, numGoals, target, MIN_VALUE, MAX_VALUE, toolbox, badScore = setup(sys.argv[1])
-
-#WORST = [badScore] * numGoals

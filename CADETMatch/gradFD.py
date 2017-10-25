@@ -2,7 +2,6 @@ import shutil
 import h5py
 import util
 from pathlib import Path
-import evo
 import scipy.optimize
 import numpy
 import numpy.linalg
@@ -21,12 +20,14 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+from cache import cache
+
 class GradientException(Exception):
     pass
 
 def search(gradCheck, offspring, cache):
     checkOffspring = (ind for ind in offspring if min(ind.fitness.values) > gradCheck)
-    newOffspring = cache.toolbox.map(gradSearch, checkOffspring)
+    newOffspring = cache.toolbox.map(gradSearch, map(list, checkOffspring))
 
     temp = []
     print("Running gradient check")
@@ -52,9 +53,8 @@ def search(gradCheck, offspring, cache):
     return gradCheck, temp
 
 def gradSearch(x):
-    import time
     try:
-       val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), 
+       val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(cache.MIN_VALUE, cache.MAX_VALUE), 
            gtol=1e-14, ftol=1e-5, xtol=1e-14, diff_step=1e-7, x_scale="jac")
        scores = fitness_sens(val.x, finished=1)
        print(val.x, numpy.exp(val.x), val.jac, scores, val.message)
@@ -70,13 +70,13 @@ def fitness_sens_grad(individual, finished=0):
 
 def fitness_sens(individual, finished=1):
     if not(util.feasible(individual)):
-        return [0.0] * evo.numGoals
+        return [0.0] * cache.numGoals
     scores = []
     error = 0.0
 
     results = {}
-    for experiment in evo.settings['experiments']:
-        result = runExperimentSens(individual, experiment, evo.settings, evo.target)
+    for experiment in cache.settings['experiments']:
+        result = runExperimentSens(individual, experiment, cache.settings, cache.target)
         if result is not None:
             results[experiment['name']] = result
             scores.extend(results[experiment['name']]['scores'])
@@ -110,14 +110,14 @@ def fitness_sens(individual, finished=1):
                 break
 
         #generate csv
-        path = Path(evo.settings['resultsDirBase'], evo.settings['CSV'])
+        path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
         with path.open('a', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
             writer.writerow([time.ctime(), save_name_base, 'GRAD', ''] + ["%.5g" % i for i in cadetValuesKEQ] + ["%.5g" % i for i in scores] + list(humanScores)) 
 
-        notDuplicate = saveExperimentsSens(save_name_base, evo.settings, evo.target, results)
+        notDuplicate = saveExperimentsSens(save_name_base, cache.settings, cache.target, results)
         if notDuplicate:
-            plotExperimentsSens(save_name_base, evo.settings, evo.target, results)
+            plotExperimentsSens(save_name_base, cache.settings, cache.target, results)
 
     #cleanup
     for result in results.values():
