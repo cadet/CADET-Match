@@ -24,6 +24,8 @@ class Cache:
         self.badScore = None
         self.WORST = None
         self.json_path = None
+        self.adaptive = None
+        self.transform = None
 
     def setup(self, json_path):
         "setup the cache based on the json file being used"
@@ -170,6 +172,7 @@ class Cache:
 
     def setupTarget(self):
         self.target = {}
+        self.adaptive = True
 
         for experiment in self.settings['experiments']:
             self.target[experiment["name"]] = self.setupExperiment(experiment)
@@ -411,6 +414,9 @@ class Cache:
                 temp[featureName]['funcs'] = funcs
                 temp[featureName]['components'] = [int(i) for i in headers[2:]]
                 temp[featureName]['samplesPerComponent'] = rows
+
+            if featureType in ('SSE', 'LogSSE'):
+                self.adaptive = False
             
         return temp
 
