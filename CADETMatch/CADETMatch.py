@@ -76,7 +76,10 @@ def createDirectories(cache, json_path):
     cache.settings['resultsDirEvo'].mkdir(parents=True, exist_ok=True)
 
     #copy simulation setting file to result base directory
-    shutil.copy(json_path, str(cache.settings['resultsDirBase']))
+    try:
+        shutil.copy(str(json_path), str(cache.settings['resultsDirBase']))
+    except shutil.SameFileError:
+        pass
 
 def createCSV(cache):
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])

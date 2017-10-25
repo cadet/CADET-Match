@@ -57,9 +57,14 @@ def sse(data1, data2):
 
 def find_peak(times, data):
     "Return tuples of (times,data) for the peak we need"
-    [highs, lows] = peakdetect.peakdetect(data, times, 1)
+    #[highs, lows] = peakdetect.peakdetect(data, times, 1)
 
-    return find_extreme(highs), find_extreme(lows)
+    #return find_extreme(highs), find_extreme(lows)
+
+    minIdx = numpy.argmin(data)
+    maxIdx = numpy.argmax(data)
+
+    return (times[maxIdx], data[maxIdx]), (times[minIdx], data[minIdx])
 
 def find_breakthrough(times, data):
     "return tupe of time,value for the start breakthrough and end breakthrough"

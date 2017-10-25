@@ -9,6 +9,7 @@ import scipy
 import scipy.interpolate
 import pandas
 import util
+import sys
 
 import score
 
