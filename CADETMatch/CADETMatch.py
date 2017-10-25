@@ -49,14 +49,16 @@ def main():
             json_path = util.copyCSVWithNoise(i, center, noise)
             print(json_path)
 
+            setup(cache, json_path)
+
             #call setup on all processes with the new json file as an argument to reset them
             #util.updateScores(json_path)
 
-            #hof = evo.run(evo.settings, evo.toolbox)
-            #temp.extend([i.fitness.values for i in hof])
+            hof = evo.run(cache)
+            temp.extend([i.fitness.values for i in hof])
 
-        #temp = numpy.array(temp)
-        #print("cov", numpy.cov(temp), "data", temp)
+        temp = numpy.array(temp)
+        print("cov", numpy.cov(temp), "data", temp)
 
 def setup(cache, json_path):
     "run seutp for the current json_file"

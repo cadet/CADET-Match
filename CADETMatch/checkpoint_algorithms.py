@@ -137,9 +137,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
-        print("1 before map")
         fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
-        print("1 after map")
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
