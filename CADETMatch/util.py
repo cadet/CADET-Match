@@ -428,3 +428,8 @@ def addNoise(array, center, noise):
     maxValue = numpy.max(array[:,1])
     randomNoise = numpy.random.normal(center, noise*maxValue, len(array))
     array[:,1] += randomNoise
+
+def bestMinScore(hof):
+    "find the best score based on the minimum of the scores"
+    idxMax = numpy.argmax([min(i.fitness.values) for i in hof])
+    return hof[idxMax]

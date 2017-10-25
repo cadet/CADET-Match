@@ -55,10 +55,10 @@ def main():
             #util.updateScores(json_path)
 
             hof = evo.run(cache)
-            temp.extend([i.fitness.values for i in hof])
+            temp.append(util.bestMinScore(hof))
 
         temp = numpy.array(temp)
-        print("cov", numpy.cov(temp), "data", temp)
+        print("cov", numpy.cov(temp.transpose()), "data", temp, "det", numpy.linalg.det(numpy.cov(temp.transpose())))
 
 def setup(cache, json_path):
     "run seutp for the current json_file"
