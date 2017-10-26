@@ -54,7 +54,7 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
     else:
         cache.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
 
-    cache.toolbox.register("select", tools.sel_nsga_iii)
+    cache.toolbox.register("select", nsga3_selection.sel_nsga_iii)
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
 
     cache.toolbox.register('map', map_function)
