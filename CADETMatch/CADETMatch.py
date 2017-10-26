@@ -59,10 +59,12 @@ def main():
             temp.append(util.bestMinScore(hof))
 
             numpy_temp = numpy.array(temp)
-            print("in progress cov", numpy.cov(numpy_temp.transpose()), "data", numpy_temp, "det", numpy.linalg.det(numpy.cov(numpy_temp.transpose())))
+            cov = numpy.cov(numpy_temp.transpose())
+            print("in progress cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov))
 
         numpy_temp = numpy.array(temp)
-        print("final cov", numpy.cov(numpy_temp.transpose()), "data", numpy_temp, "det", numpy.linalg.det(numpy.cov(numpy_temp.transpose())))
+        cov = numpy.cov(numpy_temp.transpose())
+        print("final cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov))
 
 def setup(cache, json_path):
     "run seutp for the current json_file"
