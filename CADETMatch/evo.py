@@ -36,6 +36,7 @@ import shutil
 import spea2
 import nsga2
 import nsga3
+import multistart
 from cadet import Cadet
 
 #parallelization
@@ -151,3 +152,5 @@ def run(cache):
         return nsga2.run(cache, tools, creator)
     if searchMethod == 'NSGA3':
         return nsga3.run(cache, tools, creator)
+    if searchMethod == 'Multistart':
+        return multistart.run(cache, tools, creator)

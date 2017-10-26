@@ -25,8 +25,11 @@ from cache import cache
 class GradientException(Exception):
     pass
 
-def search(gradCheck, offspring, cache):
-    checkOffspring = (ind for ind in offspring if min(ind.fitness.values) > gradCheck)
+def search(gradCheck, offspring, cache, check_all=False):
+    if check_all:
+        checkOffspring = offspring
+    else:
+        checkOffspring = (ind for ind in offspring if min(ind.fitness.values) > gradCheck)
     newOffspring = cache.toolbox.map(gradSearch, map(list, checkOffspring))
 
     temp = []
