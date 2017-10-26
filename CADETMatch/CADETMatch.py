@@ -41,36 +41,41 @@ def main():
         temp = []
 
         samples = int(cache.settings['bootstrap']['samples'])
-        center = float(cache.settings['bootstrap']['center'])
-        noise = float(cache.settings['bootstrap']['percentNoise'])/100.0
 
-        bootstrap = cache.settings['resultsDirBase'] / "bootstrap_output"
+        if samples:
 
-        for i in range(samples):
-            #copy csv files to a new directory with noise added
-            #put a new json file in the directory that points to the new csv files
-            json_path = util.copyCSVWithNoise(i, center, noise)
-            print(json_path)
+            center = float(cache.settings['bootstrap']['center'])
+            noise = float(cache.settings['bootstrap']['percentNoise'])/100.0
 
-            setup(cache, json_path)
+            bootstrap = cache.settings['resultsDirBase'] / "bootstrap_output"
 
 
 
-            #call setup on all processes with the new json file as an argument to reset them
-            #util.updateScores(json_path)
+            for i in range(samples):
+                #copy csv files to a new directory with noise added
+                #put a new json file in the directory that points to the new csv files
+                json_path = util.copyCSVWithNoise(i, center, noise)
+                print(json_path)
 
-            hof = evo.run(cache)
-            temp.append(util.bestMinScore(hof))
+                setup(cache, json_path)
+
+
+
+                #call setup on all processes with the new json file as an argument to reset them
+                #util.updateScores(json_path)
+
+                hof = evo.run(cache)
+                temp.append(util.bestMinScore(hof))
+
+                numpy_temp = numpy.array(temp)
+                cov = numpy.cov(numpy_temp.transpose())
+                print("in progress cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov))
+                print("in progress cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov), file=bootstrap.open('w'), flush=True)
 
             numpy_temp = numpy.array(temp)
             cov = numpy.cov(numpy_temp.transpose())
-            print("in progress cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov))
-            print("in progress cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov), file=bootstrap.open('w'), flush=True)
-
-        numpy_temp = numpy.array(temp)
-        cov = numpy.cov(numpy_temp.transpose())
-        print("final cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov))
-        print("final cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov), file=bootstrap.open('w'), flush=True)
+            print("final cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov))
+            print("final cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov), file=bootstrap.open('w'), flush=True)
 
 def setup(cache, json_path):
     "run seutp for the current json_file"
