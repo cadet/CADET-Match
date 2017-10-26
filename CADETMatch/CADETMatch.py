@@ -65,12 +65,12 @@ def main():
             numpy_temp = numpy.array(temp)
             cov = numpy.cov(numpy_temp.transpose())
             print("in progress cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov))
-            print("in progress cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov), file=bootstrap.open('w'))
+            print("in progress cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov), file=bootstrap.open('w'), flush=True)
 
         numpy_temp = numpy.array(temp)
         cov = numpy.cov(numpy_temp.transpose())
         print("final cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov))
-        print("final cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov), file=bootstrap.open('w'))
+        print("final cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov), file=bootstrap.open('w'), flush=True)
 
 def setup(cache, json_path):
     "run seutp for the current json_file"
