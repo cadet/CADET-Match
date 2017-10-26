@@ -44,6 +44,8 @@ def main():
         center = float(cache.settings['bootstrap']['center'])
         noise = float(cache.settings['bootstrap']['percentNoise'])/100.0
 
+        bootstrap = cache.settings['resultsDirBase'] / "bootstrap_output"
+
         for i in range(samples):
             #copy csv files to a new directory with noise added
             #put a new json file in the directory that points to the new csv files
@@ -51,6 +53,8 @@ def main():
             print(json_path)
 
             setup(cache, json_path)
+
+
 
             #call setup on all processes with the new json file as an argument to reset them
             #util.updateScores(json_path)
@@ -61,10 +65,12 @@ def main():
             numpy_temp = numpy.array(temp)
             cov = numpy.cov(numpy_temp.transpose())
             print("in progress cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov))
+            print("in progress cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov), file=bootstrap.open('w'))
 
         numpy_temp = numpy.array(temp)
         cov = numpy.cov(numpy_temp.transpose())
         print("final cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov))
+        print("final cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov), file=bootstrap.open('w'))
 
 def setup(cache, json_path):
     "run seutp for the current json_file"
