@@ -52,6 +52,11 @@ class Cache:
         with settings_file.open() as json_data:
             self.settings = json.load(json_data)
 
+            self.settings['population'] = int(self.settings['population'])
+
+            if "bootstrap" in self.settings:
+                self.settings['bootstrap']['samples'] = int(self.settings['bootstrap']['samples'])
+
     def setupHeaders(self):
         self.headers = ['Time','Name', 'Method','Condition Number',]
 

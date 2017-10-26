@@ -310,7 +310,7 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     simulation = Cadet(template_sim.root)
     simulation.filename = path
 
-    simulation.root.input.solver.nthreads = 1
+    simulation.root.input.solver.nthreads = int(settings.get('nThreads',1))
     cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings)
 
     simulation.save()

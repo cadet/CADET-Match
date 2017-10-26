@@ -58,8 +58,11 @@ def main():
             hof = evo.run(cache)
             temp.append(util.bestMinScore(hof))
 
-        temp = numpy.array(temp)
-        print("cov", numpy.cov(temp.transpose()), "data", temp, "det", numpy.linalg.det(numpy.cov(temp.transpose())))
+            numpy_temp = numpy.array(temp)
+            print("in progress cov", numpy.cov(numpy_temp.transpose()), "data", numpy_temp, "det", numpy.linalg.det(numpy.cov(numpy_temp.transpose())))
+
+        numpy_temp = numpy.array(temp)
+        print("final cov", numpy.cov(numpy_temp.transpose()), "data", numpy_temp, "det", numpy.linalg.det(numpy.cov(numpy_temp.transpose())))
 
 def setup(cache, json_path):
     "run seutp for the current json_file"
