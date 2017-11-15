@@ -268,7 +268,11 @@ def set_simulation(individual, simulation, settings):
         elif transform == 'log':
             unit = location.split('/')[3]
 
-        NBOUND = simulation.root.input.model[unit].discretization.nbound
+        if simulation.root.input.model[unit].unit_type == b'CSTR':
+            NBOUND = simulation.root.input.model[unit].nbound
+        else:
+            NBOUND = simulation.root.input.model[unit].discretization.nbound
+
         boundOffset = numpy.cumsum(numpy.concatenate([[0,], NBOUND]))
 
         if transform == 'keq':
