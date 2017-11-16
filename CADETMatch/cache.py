@@ -188,6 +188,7 @@ class Cache:
 
         #setup sensitivities
         parms = []
+        sensitivityOk = 1
         for parameter in self.settings['parameters']:
             comp = parameter['component']
             transform = parameter['transform']
@@ -205,11 +206,19 @@ class Cache:
             elif transform == 'log':
                 location = parameter['location']
                 name = location.rsplit('/',1)[-1]
-                unit = int(location.split('/')[3].replace('unit_', ''))
+                try:
+                    unit = int(location.split('/')[3].replace('unit_', ''))
+                except ValueError:
+                    unit = ''
+                    sensitivityOk = 0
+
                 for bound in parameter['bound']:
                     parms.append((name, unit, comp, bound))
 
-        self.target['sensitivities'] = parms
+        if sensitivityOk:
+            self.target['sensitivities'] = parms
+        else:
+            self.target['sensitivities'] = []
 
     def setupExperiment(self, experiment):
         temp = {}
