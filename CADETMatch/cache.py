@@ -64,7 +64,10 @@ class Cache:
         self.badScore = 0.0
 
         for parameter in self.settings['parameters']:
-            comp = parameter['component']
+            try:
+                comp = parameter['component']
+            except KeyError:
+                comp = 'None'
             if parameter['transform'] == 'keq':
                 location = parameter['location']
                 nameKA = location[0].rsplit('/',1)[-1]
@@ -76,8 +79,10 @@ class Cache:
             elif parameter['transform'] == 'log':
                 location = parameter['location']
                 name = location.rsplit('/',1)[-1]
-                for bound in parameter['bound']:
+                for bound in parameter.get('bound', []):
                     self.headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
+                for idx in parameter.get('indexes', []):
+                    self.headers.append("%s Comp:%s Index:%s" % (name, comp, idx))
 
         for idx,experiment in enumerate(self.settings['experiments']):
             experimentName = experiment['name']
@@ -190,7 +195,12 @@ class Cache:
         parms = []
         sensitivityOk = 1
         for parameter in self.settings['parameters']:
-            comp = parameter['component']
+            try:
+                comp = parameter['component']
+            except KeyError:
+                sensitivityOk = 0
+                break
+
             transform = parameter['transform']
 
             if transform == 'keq':

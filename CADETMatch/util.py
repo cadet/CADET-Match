@@ -261,23 +261,31 @@ def set_simulation(individual, simulation, settings):
     for parameter in settings['parameters']:
         location = parameter['location']
         transform = parameter['transform']
-        comp = parameter['component']
+
+        try:
+            comp = parameter['component']
+            bound = parameter['bound']
+            indexes = []
+        except KeyError:
+            indexes = parameter['indexes']
+            bound = []
+
+        if bound:
+            if transform == 'keq':
+                unit = location[0].split('/')[3]
+            elif transform == 'log':
+                unit = location.split('/')[3]
+
+            if simulation.root.input.model[unit].unit_type == b'CSTR':
+                NBOUND = simulation.root.input.model[unit].nbound
+            else:
+                NBOUND = simulation.root.input.model[unit].discretization.nbound
+
+            boundOffset = numpy.cumsum(numpy.concatenate([[0,], NBOUND]))
 
         if transform == 'keq':
-            unit = location[0].split('/')[3]
-        elif transform == 'log':
-            unit = location.split('/')[3]
-
-        if simulation.root.input.model[unit].unit_type == b'CSTR':
-            NBOUND = simulation.root.input.model[unit].nbound
-        else:
-            NBOUND = simulation.root.input.model[unit].discretization.nbound
-
-        boundOffset = numpy.cumsum(numpy.concatenate([[0,], NBOUND]))
-
-        if transform == 'keq':
-            for bound in parameter['bound']:
-                position = boundOffset[comp] + bound
+            for bnd in bound:
+                position = boundOffset[comp] + bnd
                 simulation[location[0].lower()][position] = math.exp(individual[idx])
                 simulation[location[1].lower()][position] = math.exp(individual[idx])/(math.exp(individual[idx+1]))
 
@@ -288,22 +296,30 @@ def set_simulation(individual, simulation, settings):
                 cadetValuesKEQ.append(simulation[location[1]][position])
                 cadetValuesKEQ.append(simulation[location[0]][position]/simulation[location[1]][position])
 
-
                 idx += 2
 
         elif transform == "log":
-            for bound in parameter['bound']:
+            for bnd in bound:
                 if comp == -1:
                     position = ()
                     simulation[location.lower()] = math.exp(individual[idx])
                     cadetValues.append(simulation[location])
                     cadetValuesKEQ.append(simulation[location])
                 else:
-                    position = boundOffset[comp] + bound
+                    position = boundOffset[comp] + bnd
                     simulation[location.lower()][position] = math.exp(individual[idx])
                     cadetValues.append(simulation[location][position])
                     cadetValuesKEQ.append(simulation[location][position])
+
                 idx += 1
+
+            for index in indexes:
+                simulation[location.lower()][index] = math.exp(individual[idx])
+                cadetValues.append(simulation[location][index])
+                cadetValuesKEQ.append(simulation[location][index])
+
+                idx+=1
+
     log("finished setting hdf5")
     return cadetValues, cadetValuesKEQ
 
