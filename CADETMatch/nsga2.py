@@ -45,7 +45,7 @@ def run(cache, tools, creator):
 
         start_gen = 0    
 
-        halloffame = tools.ParetoFront()
+        halloffame = tools.ParetoFront(similar=util.similar)
         logbook = tools.Logbook()
         gradCheck = cache.settings['gradCheck']
 

@@ -29,7 +29,7 @@ def search(gradCheck, offspring, cache, check_all=False):
     if check_all:
         checkOffspring = offspring
     else:
-        checkOffspring = (ind for ind in offspring if min(ind.fitness.values) > gradCheck)
+        checkOffspring = (ind for ind in offspring if functools.reduce(operator.mul, ind.fitness.values, 1)**(1.0/len(ind.fitness.values)) > gradCheck)
     newOffspring = cache.toolbox.map(gradSearch, map(list, checkOffspring))
 
     temp = []

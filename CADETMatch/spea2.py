@@ -22,7 +22,7 @@ def run(cache, tools, creator):
 
     totalGenerations = parameters * cache.settings['generations']
 
-    hof = tools.ParetoFront()
+    hof = tools.ParetoFront(similar=util.similar)
 
     #return checkpoint_algorithms.eaMuCommaLambda(pop, toolbox, mu=MU, lambda_=LAMBDA,
     #    cxpb=settings['crossoverRate'], mutpb=settings['mutationRate'], ngen=totalGenerations, settings=settings, halloffame=hof, tools=tools)

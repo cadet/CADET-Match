@@ -455,3 +455,10 @@ def bestMinScore(hof):
     "find the best score based on the minimum of the scores"
     idxMax = numpy.argmax([min(i.fitness.values) for i in hof])
     return hof[idxMax]
+
+def similar(a,b):
+    "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
+    a = numpy.array(a)
+    b = numpy.array(b)
+    diff = numpy.abs((a-b)/a)
+    return numpy.all(diff < 1e-6)
