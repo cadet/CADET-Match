@@ -42,8 +42,8 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
         if halloffame is not None:
             halloffame.update(population)
 
-        avg, bestMin = util.averageFitness(population)
-        print('avg', avg, 'best', bestMin)
+        avg, bestMin, bestProd = util.averageFitness(population)
+        print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
 
         logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
@@ -83,8 +83,8 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
         # Select the next generation population
         population[:] = toolbox.select(offspring, mu)
 
-        avg, bestMin = util.averageFitness(population)
-        print('avg', avg, 'best', bestMin)
+        avg, bestMin, bestProd = util.averageFitness(population)
+        print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
         
         # Update the statistics with the new population
         record = stats.compile(population) if stats is not None else {}
@@ -144,8 +144,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
         if halloffame is not None:
             halloffame.update(population)
 
-        avg, bestMin = util.averageFitness(population)
-        print('avg', avg, 'best', bestMin)
+        avg, bestMin, bestProd = util.averageFitness(population)
+        print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
 
         logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
@@ -185,8 +185,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
         # Select the next generation population
         population[:] = toolbox.select(offspring + population, mu)
 
-        avg, bestMin = util.averageFitness(population)
-        print('avg', avg, 'best', bestMin)
+        avg, bestMin, bestProd = util.averageFitness(population)
+        print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
         
         # Update the statistics with the new population
         record = stats.compile(population) if stats is not None else {}

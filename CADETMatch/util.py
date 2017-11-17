@@ -97,12 +97,14 @@ def averageFitness(offspring):
     total = 0.0
     number = 0.0
     bestMin = -sys.float_info.max
+    bestProd = -sys.float_info.max
 
     for i in offspring:
         total += sum(i.fitness.values)
         number += len(i.fitness.values)
         bestMin = max(bestMin, min(i.fitness.values))
-    return total/number, bestMin
+        bestProd = max(bestProd, functools.reduce(operator.mul, i.fitness.values, 1)**(1.0/len(i.fitness.values)))
+    return total/number, bestMin, bestProd
 
 def smoothing(times, values):
     #temporarily get rid of smoothing for debugging
