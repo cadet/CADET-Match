@@ -47,7 +47,7 @@ def search(gradCheck, offspring, cache, check_all=False):
             temp.append(a)
     
     if temp:
-        avg, bestMin, bestProd = util.averageFitness(population)
+        avg, bestMin, bestProd = util.averageFitness(temp)
         print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
         if 0.9 * bestProd > gradCheck:
             gradCheck = 0.9 * bestProd
