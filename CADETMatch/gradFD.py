@@ -47,9 +47,10 @@ def search(gradCheck, offspring, cache, check_all=False):
             temp.append(a)
     
     if temp:
-        avg, bestMin = util.averageFitness(temp)
-        if 0.9 * bestMin > gradCheck:
-            gradCheck = 0.9 * bestMin
+        avg, bestMin, bestProd = util.averageFitness(population)
+        print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
+        if 0.9 * bestProd > gradCheck:
+            gradCheck = 0.9 * bestProd
         #if len(temp) > 0 or all(failed):
         #    gradCheck = (1-gradCheck)/2.0 + gradCheck
         print("Finished running on ", len(temp), " individuals new threshold", gradCheck)
