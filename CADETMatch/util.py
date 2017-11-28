@@ -1,7 +1,7 @@
-import peakdetect
 import random
 import math
 import numpy
+import pandas
 
 from deap import tools
 import scipy.signal
@@ -16,6 +16,7 @@ from addict import Dict
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import tempfile
 import os
 from cadet import Cadet
@@ -23,6 +24,7 @@ import score
 import subprocess
 import sys
 import json
+import itertools
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
@@ -462,3 +464,66 @@ def similar(a,b):
     b = numpy.array(b)
     diff = numpy.abs((a-b)/a)
     return numpy.all(diff < 1e-6)
+
+def gen_plots(directory, dataframe, parameter_indexes, scores_indexes):
+    comp_two = list(itertools.combinations(parameter_indexes, 2))
+    comp_one = list(itertools.combinations(parameter_indexes, 1))
+
+    #3d plots
+    for (c1, c2) in comp_two:
+        for score in scores_indexes:
+            plot_3d(directory, dataframe, c1, c2, score)
+
+
+    #2d plots
+    for (c1,) in comp_one:
+        for score in scores_indexes:
+            plot_2d(directory, dataframe, c1, score)
+
+def plot_3d(directory, dataframe, c1, c2, score):
+    headers = dataframe.columns.values.tolist()
+    print('3d', headers[c1], headers[c2], headers[score])
+
+    scores = dataframe.iloc[:,score]
+    scoreName = headers[score]
+    if headers[score] == 'SSE':
+        scores = numpy.log(scores)
+        scoreName = 'log(%s)' % headers[score]
+    
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    ax.scatter(numpy.log(dataframe.iloc[:,c1]), numpy.log(dataframe.iloc[:,c2]), scores)
+    ax.set_xlabel('log(%s)' % headers[c1])
+    ax.set_ylabel('log(%s)' % headers[c2])
+    ax.set_zlabel(scoreName)
+    filename = "%s_%s_%s.png" % (c1, c2, score)
+    plt.savefig(str(directory / filename), bbox_inches='tight')
+    plt.close()
+
+def plot_2d(directory, dataframe, c1, score):
+    headers = dataframe.columns.values.tolist()
+    print('2d', headers[c1], headers[score])
+
+    fig = plt.figure()
+
+    scores = dataframe.iloc[:,score]
+    scoreName = headers[score]
+    if headers[score] == 'SSE':
+        scores = numpy.log(scores)
+        scoreName = 'log(%s)' % headers[score]
+
+    plt.scatter(numpy.log(dataframe.iloc[:,c1]), scores)
+    plt.xlabel('log(%s)' % headers[c1])
+    plt.ylabel(scoreName)
+    filename = "%s_%s.png" % (c1, score)
+    plt.savefig(str(directory / filename), bbox_inches='tight')
+    plt.close()
+
+def space_plots(cache):
+    csv_path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
+    output = cache.settings['resultsDirSpace']
+
+    df = pandas.read_csv(str(csv_path))
+
+    gen_plots(output, df, cache.parameter_indexes, cache.score_indexes)
+    pass

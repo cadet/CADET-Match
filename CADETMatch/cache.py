@@ -26,6 +26,8 @@ class Cache:
         self.json_path = None
         self.adaptive = None
         self.transform = None
+        self.parameter_indexes = None
+        self.score_indexes = None
 
     def setup(self, json_path):
         "setup the cache based on the json file being used"
@@ -45,6 +47,7 @@ class Cache:
         self.settings['resultsDirEvo'] = Path(self.settings['resultsDir']) / "evo"
         self.settings['resultsDirGrad'] = Path(self.settings['resultsDir']) / "grad"
         self.settings['resultsDirMisc'] = Path(self.settings['resultsDir']) / "misc"
+        self.settings['resultsDirSpace'] = Path(self.settings['resultsDir']) / "space"
         self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
 
     def setupSettings(self):
@@ -62,7 +65,8 @@ class Cache:
 
         self.numGoals = 0
         self.badScore = 0.0
-
+        base = len(self.headers)
+        
         for parameter in self.settings['parameters']:
             try:
                 comp = parameter['component']
@@ -83,6 +87,9 @@ class Cache:
                     self.headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
                 for idx in parameter.get('indexes', []):
                     self.headers.append("%s Comp:%s Index:%s" % (name, comp, idx))
+
+        parameters = len(self.headers)
+        self.parameter_indexes = list(range(base, parameters))
 
         for idx,experiment in enumerate(self.settings['experiments']):
             experimentName = experiment['name']
@@ -177,8 +184,11 @@ class Cache:
 
                 self.headers.extend(temp)
                 experiment['headers'].extend(temp)
-
+                               
         self.headers.extend(['Product Root Score', 'Min Score', 'Mean Score', 'Norm', 'SSE'])
+
+        scores = len(self.headers)
+        self.score_indexes = list(range(parameters, scores))
 
     def setupTarget(self):
         self.target = {}

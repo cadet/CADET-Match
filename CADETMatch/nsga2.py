@@ -74,6 +74,8 @@ def run(cache, tools, creator):
     with checkpointFile.open('wb')as cp_file:
         pickle.dump(cp, cp_file)
 
+    util.space_plots(cache)
+
     # Begin the generational process
     for gen in range(start_gen, totalGenerations+1):
         # Vary the population
@@ -117,6 +119,8 @@ def run(cache, tools, creator):
             numpy.savetxt(data, numpy.array(halloffame))
         with checkpointFile.open('wb') as cp_file:
             pickle.dump(cp, cp_file)
+
+        util.space_plots(cache)
 
         if avg > cache.settings['stopAverage'] or bestMin > cache.settings['stopBest']:
             return halloffame
