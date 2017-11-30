@@ -148,6 +148,24 @@ def scoreBreakthrough(sim_data,  feature):
             feature['time_function_stop'](stop[0])]
     return temp, util.sse(sim_data_values, exp_data_values)
 
+def scoreBreakthroughHybrid(sim_data,  feature):
+    "similarity, value, start stop"
+    sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
+
+    selected = feature['selected']
+
+    exp_data_values = feature['value'][selected]
+    exp_time_values = feature['time'][selected]
+
+    [start, stop] = util.find_breakthrough(exp_time_values, sim_data_values)
+
+    score, diff_time = cross_correlate(exp_time_values, sim_data_values, exp_data_values)
+
+    temp = [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), 
+            feature['value_function'](start[1]), 
+            feature['time_function'](diff_time)]
+    return temp, util.sse(sim_data_values, exp_data_values)
+
 def scoreBreakthroughCross(sim_data,  feature):
     "similarity, value, start stop"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)

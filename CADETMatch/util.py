@@ -393,6 +393,8 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
             scores, sse = score.scoreBreakthrough(temp, target[experiment['name']][featureName])
         elif featureType == 'breakthroughCross':
             scores, sse = score.scoreBreakthroughCross(temp, target[experiment['name']][featureName])
+        elif featureType == 'breakthroughHybrid':
+            scores, sse = score.scoreBreakthroughHybrid(temp, target[experiment['name']][featureName])
         elif featureType == 'dextran':
             scores, sse = score.scoreDextran(temp, target[experiment['name']][featureName])
         elif featureType == 'dextranHybrid':
@@ -487,12 +489,12 @@ def plot_3d(directory, dataframe, c1, c2, score):
     scores = dataframe.iloc[:,score]
     scoreName = headers[score]
     if headers[score] == 'SSE':
-        scores = numpy.log(scores)
-        scoreName = 'log(%s)' % headers[score]
+        scores = -numpy.log(scores)
+        scoreName = '-log(%s)' % headers[score]
     
     fig = plt.figure()
     ax = Axes3D(fig)
-    ax.scatter(numpy.log(dataframe.iloc[:,c1]), numpy.log(dataframe.iloc[:,c2]), scores)
+    ax.scatter(numpy.log(dataframe.iloc[:,c1]), numpy.log(dataframe.iloc[:,c2]), scores, c=scores, cmap=plt.get_cmap('winter'))
     ax.set_xlabel('log(%s)' % headers[c1])
     ax.set_ylabel('log(%s)' % headers[c2])
     ax.set_zlabel(scoreName)
@@ -509,10 +511,10 @@ def plot_2d(directory, dataframe, c1, score):
     scores = dataframe.iloc[:,score]
     scoreName = headers[score]
     if headers[score] == 'SSE':
-        scores = numpy.log(scores)
-        scoreName = 'log(%s)' % headers[score]
+        scores = -numpy.log(scores)
+        scoreName = '-log(%s)' % headers[score]
 
-    plt.scatter(numpy.log(dataframe.iloc[:,c1]), scores)
+    plt.scatter(numpy.log(dataframe.iloc[:,c1]), scores, c=scores, cmap=plt.get_cmap('winter'))
     plt.xlabel('log(%s)' % headers[c1])
     plt.ylabel(scoreName)
     filename = "%s_%s.png" % (c1, score)

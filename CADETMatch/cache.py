@@ -130,7 +130,7 @@ class Cache:
                     temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time_Start" % name, "%s_Time_Stop" % name]
                     self.numGoals += 4
 
-                elif feature['type'] == 'breakthroughCross':
+                elif feature['type'] in ('breakthroughCross', 'breakthroughHybrid'):
                     name = "%s_%s" % (experimentName, feature['name'])
                     temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
                     self.numGoals += 3
@@ -333,7 +333,7 @@ class Cache:
                 temp[featureName]['time_function_stop'] = score.time_function(CV_time, temp[featureName]['break'][1][0])
                 temp[featureName]['value_function'] = score.value_function(temp[featureName]['break'][0][1], abstol)
 
-            if featureType == 'breakthroughCross':
+            if featureType in ('breakthroughCross', 'breakthroughHybrid'):
                 temp[featureName]['break'] = util.find_breakthrough(selectedTimes, selectedValues)
                 temp[featureName]['time_function'] = score.time_function(CV_time, temp[featureName]['break'][0][0], diff_input=True)
                 temp[featureName]['value_function'] = score.value_function(temp[featureName]['break'][0][1], abstol)
