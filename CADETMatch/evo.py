@@ -78,7 +78,7 @@ def fitness(individual, json_path):
     #need
 
     #human scores
-    humanScores = numpy.array( [functools.reduce(operator.mul, scores, 1)**(1.0/len(scores)), 
+    humanScores = numpy.array( [util.product_score(scores), 
                                 min(scores), sum(scores)/len(scores), 
                                 numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), 
                                 -error] )

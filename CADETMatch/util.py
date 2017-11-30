@@ -95,6 +95,13 @@ def log(*args):
     if print_log:
         print(args)
 
+def product_score(values):
+    values = numpy.array(values)
+    if numpy.all(values >= 0.0):
+        return numpy.prod(values)**(1.0/len(values))
+    else:
+        return -numpy.prod(numpy.abs(values))**(1.0/len(values))
+
 def averageFitness(offspring):
     total = 0.0
     number = 0.0
@@ -105,7 +112,7 @@ def averageFitness(offspring):
         total += sum(i.fitness.values)
         number += len(i.fitness.values)
         bestMin = max(bestMin, min(i.fitness.values))
-        bestProd = max(bestProd, functools.reduce(operator.mul, i.fitness.values, 1)**(1.0/len(i.fitness.values)))
+        bestProd = max(bestProd, product_score(i.fitness.values))
     return total/number, bestMin, bestProd
 
 def smoothing(times, values):
@@ -174,7 +181,7 @@ def graph_simulation(simulation, graph):
 def mutPolynomialBoundedAdaptive(individual, eta, low, up, indpb):
     """Adaptive eta for mutPolynomialBounded"""
     scores = individual.fitness.values
-    prod = functools.reduce(operator.mul, scores, 1)**(1.0/len(scores))
+    prod = product_score(scores)
     eta = eta + prod * 100
     return tools.mutPolynomialBounded(individual, eta, low, up, indpb)
 
