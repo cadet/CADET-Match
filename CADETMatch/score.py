@@ -24,11 +24,15 @@ def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
 
     endTime = exp_time_values[-1]
 
-    if index > len(exp_time_values):
-        simTime = exp_time_values[-(index - len(exp_time_values))]
-    elif index < len(exp_time_values):
-        simTime = exp_time_values[-(len(exp_time_values) - index)]
-    else:
+    try:
+        if index > len(exp_time_values):
+            simTime = exp_time_values[-(index - len(exp_time_values))]
+        elif index < len(exp_time_values):
+            simTime = exp_time_values[-(len(exp_time_values) - index)]
+        else:
+            simTime = endTime
+    except IndexError:
+        #This means the curve has to be moved outside of the time range and so just set it to the end of the range
         simTime = endTime
 
     diff_time = endTime - simTime
