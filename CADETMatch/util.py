@@ -26,6 +26,8 @@ import sys
 import json
 import itertools
 
+from scoop import futures
+
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
 
@@ -474,22 +476,26 @@ def similar(a,b):
     diff = numpy.abs((a-b)/a)
     return numpy.all(diff < 1e-6)
 
-def gen_plots(directory, dataframe, parameter_indexes, scores_indexes):
+def gen_plots(directory_path, csv_path, parameter_indexes, scores_indexes):
     comp_two = list(itertools.combinations(parameter_indexes, 2))
     comp_one = list(itertools.combinations(parameter_indexes, 1))
 
     #3d plots
-    for (c1, c2) in comp_two:
-        for score in scores_indexes:
-            plot_3d(directory, dataframe, c1, c2, score)
-
-
+    prod = list(itertools.product(comp_two, scores_indexes))
+    seq = [(directory_path, csv_path, i[0][0], i[0][1], i[1]) for i in prod]
+    list(futures.map(plot_3d, seq))
+    
     #2d plots
-    for (c1,) in comp_one:
-        for score in scores_indexes:
-            plot_2d(directory, dataframe, c1, score)
+    prod = list(itertools.product(comp_one, scores_indexes))
+    seq = [(directory_path, csv_path, i[0][0], i[1]) for i in prod]
+    list(futures.map(plot_2d, seq))
 
-def plot_3d(directory, dataframe, c1, c2, score):
+
+def plot_3d(arg):
+    directory_path, csv_path, c1, c2, score = arg
+    dataframe = pandas.read_csv(csv_path)
+    directory = Path(directory_path)
+
     headers = dataframe.columns.values.tolist()
     print('3d', headers[c1], headers[c2], headers[score])
 
@@ -509,7 +515,10 @@ def plot_3d(directory, dataframe, c1, c2, score):
     plt.savefig(str(directory / filename), bbox_inches='tight')
     plt.close()
 
-def plot_2d(directory, dataframe, c1, score):
+def plot_2d(arg):
+    directory_path, csv_path, c1, score = arg
+    dataframe = pandas.read_csv(csv_path)
+    directory = Path(directory_path)
     headers = dataframe.columns.values.tolist()
     print('2d', headers[c1], headers[score])
 
@@ -531,8 +540,5 @@ def plot_2d(directory, dataframe, c1, score):
 def space_plots(cache):
     csv_path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     output = cache.settings['resultsDirSpace']
-
-    df = pandas.read_csv(str(csv_path))
-
-    gen_plots(output, df, cache.parameter_indexes, cache.score_indexes)
-    pass
+    
+    gen_plots(str(output), str(csv_path), cache.parameter_indexes, cache.score_indexes)
