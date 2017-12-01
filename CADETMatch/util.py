@@ -497,7 +497,7 @@ def plot_3d(arg):
     directory = Path(directory_path)
 
     headers = dataframe.columns.values.tolist()
-    print('3d', headers[c1], headers[c2], headers[score])
+    #print('3d', headers[c1], headers[c2], headers[score])
 
     scores = dataframe.iloc[:,score]
     scoreName = headers[score]
@@ -520,7 +520,7 @@ def plot_2d(arg):
     dataframe = pandas.read_csv(csv_path)
     directory = Path(directory_path)
     headers = dataframe.columns.values.tolist()
-    print('2d', headers[c1], headers[score])
+    #print('2d', headers[c1], headers[score])
 
     fig = plt.figure()
 
