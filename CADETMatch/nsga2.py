@@ -53,7 +53,7 @@ def run(cache, tools, creator):
    
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
-    fitnesses = cache.toolbox.map(cache.toolbox.evaluate, invalid_ind)
+    fitnesses = cache.toolbox.map(cache.toolbox.evaluate, map(list, invalid_ind))
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit    
 
@@ -61,8 +61,8 @@ def run(cache, tools, creator):
     # no actual selection is done
     population = cache.toolbox.select(population, len(population)) 
     
-    avg, bestMin = util.averageFitness(population)
-    print('avg', avg, 'best', bestMin)
+    avg, bestMin, bestProd = util.averageFitness(population)
+    print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
 
     logbook.record(gen=start_gen, evals=len(invalid_ind))
 
@@ -92,7 +92,7 @@ def run(cache, tools, creator):
         
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = cache.toolbox.map(cache.toolbox.evaluate, invalid_ind)
+        fitnesses = cache.toolbox.map(cache.toolbox.evaluate, map(list, invalid_ind))
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
@@ -101,8 +101,8 @@ def run(cache, tools, creator):
         print("Finished gradient search with new children", len(newChildren))
         offspring.extend(newChildren)
 
-        avg, bestMin = util.averageFitness(offspring)
-        print('avg', avg, 'best', bestMin)
+        avg, bestMin, bestProd = util.averageFitness(offspring)
+        print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
 
         # Select the next generation population
         population = cache.toolbox.select(population + offspring, populationSize)

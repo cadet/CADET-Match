@@ -89,7 +89,7 @@ def fitness_sens(individual, finished=1):
             raise GradientException("Gradient caused simulation failure, aborting")
 
     #need
-
+    humanScores = None
     if finished:
 
         #human scores
