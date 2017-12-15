@@ -77,11 +77,15 @@ def fitness(individual, json_path):
 
     #need
 
+    scores = util.RoundToSigFigs(scores, 4)
+
     #human scores
     humanScores = numpy.array( [util.product_score(scores), 
                                 min(scores), sum(scores)/len(scores), 
                                 numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), 
                                 -error] )
+
+    humanScores = util.RoundToSigFigs(humanScores, 4)
 
     #best
     cache.target['bestHumanScores'] = numpy.max(numpy.vstack([cache.target['bestHumanScores'], humanScores]), 0)

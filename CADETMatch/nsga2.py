@@ -81,7 +81,7 @@ def run(cache, tools, creator):
         # Vary the population
         offspring = tools.selTournamentDCD(population, len(population))
         offspring = [cache.toolbox.clone(ind) for ind in offspring]
-        
+                
         for ind1, ind2 in zip(offspring[::2], offspring[1::2]):
             if random.random() <= CXPB:
                 cache.toolbox.mate(ind1, ind2)
@@ -89,6 +89,8 @@ def run(cache, tools, creator):
             cache.toolbox.mutate(ind1)
             cache.toolbox.mutate(ind2)
             del ind1.fitness.values, ind2.fitness.values
+
+        offspring = util.RoundOffspring(offspring)
         
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]

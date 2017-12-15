@@ -31,6 +31,11 @@ from scoop import futures
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
 
+import decimal as decim
+decim.getcontext().prec = 64
+__logBase10of2_decim = decim.Decimal(2).log10()
+__logBase10of2 = float(__logBase10of2_decim)
+
 def smoothing_factor(y):
     return max(y)/1000000.0
 
@@ -79,12 +84,12 @@ def find_breakthrough(times, data):
 def generateIndividual(icls, size, imin, imax):
     while 1:
         #ind = icls(random.uniform(imin[idx], imax[idx]) for idx in range(size))
-        ind = icls(numpy.random.uniform(imin, imax))
+        ind = icls(RoundOffspring(numpy.random.uniform(imin, imax)))
         if feasible(ind):
             return ind
 
 def initIndividual(icls, content):
-    return icls(content)
+    return icls(RoundOffspring(content))
 
 def feasible(individual):
     "evaluate if this individual is feasible"
@@ -542,3 +547,62 @@ def space_plots(cache):
     output = cache.settings['resultsDirSpace']
     
     gen_plots(str(output), str(csv_path), cache.parameter_indexes, cache.score_indexes)
+
+def RoundOffspring(offspring):
+    for child in offspring:
+        temp = RoundToSigFigs(child,4)
+        if all(child == temp):
+            pass
+        else:
+            for idx,i in enumerate(temp):
+                child[idx] = i
+            del child.fitness.values
+    return offspring
+
+def RoundToSigFigs( x, sigfigs ):
+    """
+    Rounds the value(s) in x to the number of significant figures in sigfigs.
+    Return value has the same type as x.
+    Restrictions:
+    sigfigs must be an integer type and store a positive value.
+    x must be a real value or an array like object containing only real values.
+    """
+    if not ( type(sigfigs) is int or type(sigfigs) is long or
+             isinstance(sigfigs, numpy.integer) ):
+        raise TypeError( "RoundToSigFigs: sigfigs must be an integer." )
+
+    if sigfigs <= 0:
+        raise ValueError( "RoundtoSigFigs: sigfigs must be positive." )
+    
+    if not numpy.all(numpy.isreal( x )):
+        raise TypeError( "RoundToSigFigs: all x must be real." )
+
+    matrixflag = False
+    if isinstance(x, numpy.matrix): #Convert matrices to arrays
+        matrixflag = True
+        x = numpy.asarray(x)
+    
+    xsgn = numpy.sign(x)
+    absx = xsgn * x
+    mantissas, binaryExponents = numpy.frexp( absx )
+    
+    decimalExponents = __logBase10of2 * binaryExponents
+    omags = numpy.floor(decimalExponents)
+
+    mantissas *= 10.0**(decimalExponents - omags)
+    
+    if type(mantissas) is float or isinstance(mantissas, numpy.floating):
+        if mantissas < 1.0:
+            mantissas *= 10.0
+            omags -= 1.0
+            
+    else: #elif np.all(np.isreal( mantissas )):
+        fixmsk = mantissas < 1.0
+        mantissas[fixmsk] *= 10.0
+        omags[fixmsk] -= 1.0
+
+    result = xsgn * numpy.around( mantissas, decimals=sigfigs - 1 ) * 10.0**omags
+    if matrixflag:
+        result = numpy.matrix(result, copy=False)
+    
+    return result
