@@ -84,12 +84,12 @@ def find_breakthrough(times, data):
 def generateIndividual(icls, size, imin, imax):
     while 1:
         #ind = icls(random.uniform(imin[idx], imax[idx]) for idx in range(size))
-        ind = icls(RoundOffspring(numpy.random.uniform(imin, imax)))
+        ind = icls(RoundToSigFigs(numpy.random.uniform(imin, imax),4))
         if feasible(ind):
             return ind
 
 def initIndividual(icls, content):
-    return icls(RoundOffspring(content))
+    return icls(RoundToSigFigs(content,4))
 
 def feasible(individual):
     "evaluate if this individual is feasible"
