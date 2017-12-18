@@ -170,6 +170,20 @@ class Cache:
                         temp.append('%s_%s_Component_%s' % (experimentName, feature['name'], component))
                     self.numGoals += len(temp)
 
+                elif feature['type'] == 'fractionationMeanVariance':
+                    data = pandas.read_csv(feature['csv'])
+                    rows, cols = data.shape
+
+                    data_headers = data.columns.values.tolist()
+
+                    temp  = []
+                    for component in data_headers[2:]:
+                        temp.append('%s_%s_Component_%s_time_mean' % (experimentName, feature['name'], component))
+                        temp.append('%s_%s_Component_%s_time_var' % (experimentName, feature['name'], component))
+                        temp.append('%s_%s_Component_%s_value_mean' % (experimentName, feature['name'], component))
+                        temp.append('%s_%s_Component_%s_value_var' % (experimentName, feature['name'], component))
+                    self.numGoals += len(temp)
+
                 elif feature['type'] == 'SSE':
                     name = "%s_%s" % (experimentName, feature['name'])
                     temp = ["%s_SSE" % name]
@@ -445,6 +459,40 @@ class Cache:
                         func = score.value_function(value, abstolFraction)
 
                         funcs.append( (start, stop, int(component), value, func) )
+                temp[featureName]['funcs'] = funcs
+                temp[featureName]['components'] = [int(i) for i in headers[2:]]
+                temp[featureName]['samplesPerComponent'] = rows
+
+            if featureType == 'fractionationMeanVariance':
+                data = pandas.read_csv(feature['csv'])
+                rows, cols = data.shape
+
+                headers = data.columns.values.tolist()
+
+                start = numpy.array(data.iloc[:,0])
+                stop = numpy.array(data.iloc[:,1])
+
+                time_center = (start + stop)/2.0
+
+                flow = sim.root.input.model.connections.switch_000.connections[9]
+                smallestTime = min(data['Stop'] - data['Start'])
+                abstolFraction = flow * abstol * smallestTime
+
+                funcs = []
+
+                for idx, component in enumerate(headers[2:], 2):
+                    value = numpy.array(data.iloc[:,idx])
+
+                    mean_time, variance_time, mean_value, variance_value = util.fracStat(time_center, value)
+
+                    func_mean_time = score.time_function(CV_time, mean_time, diff_input = False)
+                    func_variance_time = score.value_function(variance_time)
+
+                    func_mean_value = score.value_function(mean_value, abstolFraction)
+                    func_variance_value = score.value_function(variance_value, abstolFraction/1e5)
+
+                    funcs.append( (start, stop, int(component), value, func_mean_time, func_variance_time, func_mean_value, func_variance_value) )
+
                 temp[featureName]['funcs'] = funcs
                 temp[featureName]['components'] = [int(i) for i in headers[2:]]
                 temp[featureName]['samplesPerComponent'] = rows

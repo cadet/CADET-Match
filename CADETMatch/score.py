@@ -557,3 +557,44 @@ def scoreFractionationCombine(sim_data,  feature):
     sim_data['graph_sim'] = graph_sim
     
     return [scores[comp] for comp in components], util.sse(numpy.array(sim_values), numpy.array(exp_values))
+
+def scoreFracMeanVariance(sim_data,  feature):
+    simulation = sim_data['simulation']
+    funcs = feature['funcs']
+    components = feature['components']
+    numComponents = len(components)
+    samplesPerComponent = feature['samplesPerComponent']
+    multiplier = 1.0/samplesPerComponent
+
+    times = simulation.root.output.solution.solution_times
+    flow = simulation.root.input.model.connections.switch_000.connections[9]
+
+    scores = []
+
+    sim_values_sse = []
+    exp_values_sse = []
+   
+    graph_sim = {}
+    graph_exp = {}
+    for (start, stop, component, values, func_mean_time, func_variance_time, func_mean_value, func_variance_value) in funcs:
+        time_center = (start + stop)/2.0
+                
+        sim_values = util.fractionate(start, stop, times, simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component]) * flow
+       
+        mean_sim_time, variance_sim_time, mean_sim_value, variance_sim_value =  util.fracStat(time_center, sim_values)
+
+        exp_values_sse.extend(values)
+        sim_values_sse.extend(sim_values)
+
+        scores.append(func_mean_time(mean_sim_time))
+        scores.append(func_variance_time(variance_sim_time))
+        scores.append(func_mean_value(mean_sim_value))
+        scores.append(func_variance_value(variance_sim_value))
+
+        graph_sim[component] = list(zip(time_center, sim_values))
+        graph_exp[component] = list(zip(time_center, values))
+
+    sim_data['graph_exp'] = graph_exp
+    sim_data['graph_sim'] = graph_sim
+
+    return scores, util.sse(numpy.array(sim_values_sse), numpy.array(exp_values_sse))

@@ -234,7 +234,7 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
                     graph.plot(exp_time, exp_spline(exp_time), 'g:', label='Experiment')
                 except:
                     pass
-            elif featureType in ('fractionation', 'fractionationCombine'):
+            elif featureType in ('fractionation', 'fractionationCombine', 'fractionationMeanVariance'):
                 graph_exp = results[experimentName]['graph_exp']
                 graph_sim = results[experimentName]['graph_sim']
 
@@ -417,6 +417,8 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
             scores, sse = score.scoreFractionation(temp, target[experiment['name']][featureName])
         elif featureType == 'fractionationCombine':
             scores, sse = score.scoreFractionationCombine(temp, target[experiment['name']][featureName])
+        elif featureType == 'fractionationMeanVariance':
+            scores, sse = score.scoreFracMeanVariance(temp, target[experiment['name']][featureName])
         elif featureType == 'SSE':
             scores, sse = score.scoreSSE(temp, target[experiment['name']][featureName])
         elif featureType == 'LogSSE':
@@ -606,3 +608,22 @@ def RoundToSigFigs( x, sigfigs ):
         result = numpy.matrix(result, copy=False)
     
     return result
+
+def fracStat(time_center, value):
+    mean_time = numpy.sum(time_center*value)/numpy.sum(value)
+    variance_time = numpy.sum( (time_center - mean_time)**2 * value )/numpy.sum(value)
+
+    mean_value = numpy.sum(time_center*value)/numpy.sum(time_center)
+    variance_value = numpy.sum( (value - mean_value)**2 * time_center )/numpy.sum(time_center)
+
+    return mean_time, variance_time, mean_value, variance_value
+
+def fractionate(start_seq, stop_seq, times, values):
+    temp = []
+    for (start,stop) in zip(start_seq, stop_seq):
+        selected = (times >= start) & (times <= stop)
+        local_times = times[selected]
+        local_values = values[selected]
+
+        temp.append(numpy.trapz(local_values, local_times))
+    return numpy.array(temp)
