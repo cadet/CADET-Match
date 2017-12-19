@@ -115,6 +115,7 @@ def value_function(peak_height, tolerance=1e-8, bottom_score = 0.01):
     scale = 1.0/exponential(0.0, *args)
     
     if numpy.abs(peak_height) < tolerance:
+        print("peak height less than tolerance", tolerance, peak_height)
         def wrapper(x):
             if numpy.abs(x) < tolerance:
                 return 1.0

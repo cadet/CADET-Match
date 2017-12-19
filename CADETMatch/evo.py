@@ -37,6 +37,7 @@ import spea2
 import nsga2
 import nsga3
 import multistart
+import scoretest
 from cadet import Cadet
 
 #parallelization
@@ -158,3 +159,5 @@ def run(cache):
         return nsga3.run(cache, tools, creator)
     if searchMethod == 'Multistart':
         return multistart.run(cache, tools, creator)
+    if searchMethod == 'ScoreTest':
+        return scoretest.run(cache, tools, creator)
