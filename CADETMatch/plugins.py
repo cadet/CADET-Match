@@ -39,3 +39,9 @@ def get_files(path):
 
 def get_plugin_names(directory):
     return [get_plugin_attribute(path, 'name') for path in get_files(os.path.join(plugins, directory, '*.py'))]
+
+def get_plugins(directory):
+    temp = {}
+    for path in get_files(os.path.join(plugins, directory, '*.py')):
+        temp[get_plugin_attribute(path, 'name')] = load_plugin(path)
+    return temp

@@ -68,7 +68,13 @@
     <Compile Include="score.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scoretest.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="spea2.py">
@@ -91,6 +97,10 @@
     <Content Include="sma.json" />
     <Content Include="smabreak.json" />
     <Content Include="smabreak2.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="search\" />
+    <Folder Include="scores\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
