@@ -152,16 +152,17 @@ def setupDeap(cache):
     "setup the DEAP variables"
     searchMethod = cache.settings.get('searchMethod', 'SPEA2')
     cache.toolbox = base.Toolbox()
-    if searchMethod == 'SPEA2':
-        spea2.setupDEAP(cache, evo.fitness, futures.map, creator, base, tools)
-    if searchMethod == 'NSGA2':
-        nsga2.setupDEAP(cache, evo.fitness, futures.map, creator, base, tools)
-    if searchMethod == 'NSGA3':
-        nsga3.setupDEAP(cache, evo.fitness, futures.map, creator,  base, tools)
-    if searchMethod == 'Multistart':
-        multistart.setupDEAP(cache, evo.fitness, futures.map, creator,  base, tools)
-    if searchMethod == 'ScoreTest':
-        scoretest.setupDEAP(cache, evo.fitness, futures.map, creator,  base, tools)
+    cache.search[searchMethod].setupDEAP(cache, evo.fitness, futures.map, creator, base, tools)
+    #if searchMethod == 'SPEA2':
+    #    spea2.setupDEAP(cache, evo.fitness, futures.map, creator, base, tools)
+    #if searchMethod == 'NSGA2':
+    #    nsga2.setupDEAP(cache, evo.fitness, futures.map, creator, base, tools)
+    #if searchMethod == 'NSGA3':
+    #    nsga3.setupDEAP(cache, evo.fitness, futures.map, creator,  base, tools)
+    #if searchMethod == 'Multistart':
+    #    multistart.setupDEAP(cache, evo.fitness, futures.map, creator,  base, tools)
+    #if searchMethod == 'ScoreTest':
+    #    scoretest.setupDEAP(cache, evo.fitness, futures.map, creator,  base, tools)
 
 if __name__ == "__main__":
     start = time.time()

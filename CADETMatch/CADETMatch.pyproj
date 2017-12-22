@@ -47,19 +47,7 @@
     <Compile Include="gradFD.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="multistart.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="nsga2.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="nsga3.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="nsga3_selection.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="peakdetect.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="plugins.py">
@@ -71,16 +59,22 @@
     <Compile Include="scores\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scoretest.py">
+    <Compile Include="search\multistart.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\nsga2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\nsga3.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\scoretest.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\spea2.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="spea2.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="util.py">
@@ -91,15 +85,7 @@
     <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="amgen.json" />
-    <Content Include="langmuir.json" />
-    <Content Include="langmuir_2comp.json" />
-    <Content Include="langmuir2.json" />
-    <Content Include="mssma.json" />
     <Content Include="README.txt" />
-    <Content Include="sma.json" />
-    <Content Include="smabreak.json" />
-    <Content Include="smabreak2.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="search\" />

@@ -3,26 +3,29 @@ import util
 import gradFD
 import random
 
+name = "Multistart"
+
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
 
-    pop = cache.toolbox.population(n=0)
+    parameters = len(cache.MIN_VALUE)
+
+    LAMBDA=parameters * cache.settings['population']
+
+    pop = cache.toolbox.population(n=LAMBDA)
 
     if "seeds" in cache.settings:
-        print(cache.settings['seeds'])
         seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]
         pop.extend(seed_pop)
-        print(pop)
 
     hof = tools.ParetoFront(similar=util.similar)
 
-    invalid_ind = [ind for ind in pop if not ind.fitness.valid]
-    fitnesses = cache.toolbox.map(cache.toolbox.evaluate, map(list, invalid_ind))
-    for ind, fit in zip(invalid_ind, fitnesses):
-        ind.fitness.values = fit
+    gradCheck = cache.badScore
 
-    hof.update(pop)
+    gradCheck, newChildren = gradFD.search(gradCheck, pop, cache, check_all=True)
+
+    hof.update(newChildren)
 
     return hof
 
@@ -40,3 +43,4 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
 
     cache.toolbox.register('map', map_function)
+

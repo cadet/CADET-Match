@@ -7,6 +7,8 @@ import nsga3_selection
 
 from deap import algorithms
 
+name = "NSGA3"
+
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()

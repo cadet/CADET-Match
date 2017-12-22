@@ -151,13 +151,14 @@ def runExperiment(individual, experiment, settings, target):
 def run(cache):
     "run the parameter estimation"
     searchMethod = cache.settings.get('searchMethod', 'SPEA2')
-    if searchMethod == 'SPEA2':
-        return spea2.run(cache, tools, creator)
-    if searchMethod == 'NSGA2':
-        return nsga2.run(cache, tools, creator)
-    if searchMethod == 'NSGA3':
-        return nsga3.run(cache, tools, creator)
-    if searchMethod == 'Multistart':
-        return multistart.run(cache, tools, creator)
-    if searchMethod == 'ScoreTest':
-        return scoretest.run(cache, tools, creator)
+    cache.search[searchMethod].run(cache, tools, creator)
+    #if searchMethod == 'SPEA2':
+    #    return spea2.run(cache, tools, creator)
+    #if searchMethod == 'NSGA2':
+    #    return nsga2.run(cache, tools, creator)
+    #if searchMethod == 'NSGA3':
+    #    return nsga3.run(cache, tools, creator)
+    #if searchMethod == 'Multistart':
+    #    return multistart.run(cache, tools, creator)
+    #if searchMethod == 'ScoreTest':
+    #    return scoretest.run(cache, tools, creator)

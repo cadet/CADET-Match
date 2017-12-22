@@ -10,6 +10,8 @@ import gradFD
 
 from deap import algorithms
 
+name = "NSGA2"
+
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
