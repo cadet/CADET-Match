@@ -33,11 +33,6 @@ from deap import tools
 import os
 import shutil
 
-import spea2
-import nsga2
-import nsga3
-import multistart
-import scoretest
 from cadet import Cadet
 
 #parallelization
@@ -152,13 +147,3 @@ def run(cache):
     "run the parameter estimation"
     searchMethod = cache.settings.get('searchMethod', 'SPEA2')
     cache.search[searchMethod].run(cache, tools, creator)
-    #if searchMethod == 'SPEA2':
-    #    return spea2.run(cache, tools, creator)
-    #if searchMethod == 'NSGA2':
-    #    return nsga2.run(cache, tools, creator)
-    #if searchMethod == 'NSGA3':
-    #    return nsga3.run(cache, tools, creator)
-    #if searchMethod == 'Multistart':
-    #    return multistart.run(cache, tools, creator)
-    #if searchMethod == 'ScoreTest':
-    #    return scoretest.run(cache, tools, creator)
