@@ -16,6 +16,8 @@ import plugins
 
 class Cache:
     def __init__(self):
+        self.scores = plugins.get_plugins('scores')
+        self.search = plugins.get_plugins('search')
         self.settings = None
         self.headers = None
         self.numGoals = None
@@ -29,8 +31,7 @@ class Cache:
         self.transform = None
         self.parameter_indexes = None
         self.score_indexes = None
-        self.scores = plugins.get_plugins('plugins/scores')
-        self.search = plugins.get_plugins('plugins/search')
+        
 
     def setup(self, json_path):
         "setup the cache based on the json file being used"
