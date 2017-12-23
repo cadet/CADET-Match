@@ -20,7 +20,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from cache import cache
+#from cache import cache
 
 class GradientException(Exception):
     pass

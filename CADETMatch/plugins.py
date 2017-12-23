@@ -11,6 +11,7 @@ def load_plugin(path):
     module = '.'.join(path.relative_to(base).parts).replace('.py', '')
     spec = importlib.util.spec_from_file_location(module, path)
     foo = importlib.util.module_from_spec(spec)
+    print(module)
     spec.loader.exec_module(foo)
     return foo
 
@@ -56,5 +57,6 @@ def get_plugins(directory):
     plugins = base / directory
     temp = {}
     for path in get_files(plugins):
+        print(path)
         temp[get_plugin_attribute(path, 'name')] = load_plugin(path)
     return temp
