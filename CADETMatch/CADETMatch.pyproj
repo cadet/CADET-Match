@@ -59,6 +59,12 @@
     <Compile Include="scores\breakthrough.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\breakthroughCross.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\breakthroughHybrid.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\similarity.py">
       <SubType>Code</SubType>
     </Compile>

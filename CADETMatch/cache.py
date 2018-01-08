@@ -128,11 +128,6 @@ class Cache:
                     temp  = ["%s_Similarity" % name]
                     self.numGoals += 1
 
-                elif feature['type'] in ('breakthroughCross', 'breakthroughHybrid'):
-                    name = "%s_%s" % (experimentName, feature['name'])
-                    temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
-                    self.numGoals += 3
-
                 elif feature['type'] in ('dextran', 'dextranHybrid'):
                     name = "%s_%s" % (experimentName, feature['name'])
                     temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, "%s_Time" % name]
@@ -331,11 +326,6 @@ class Cache:
 
             if featureType in self.scores:
                 temp[featureName].update(self.scores[featureType].setup(feature, selectedTimes, selectedValues, CV_time, abstol))
-
-            if featureType in ('breakthroughCross', 'breakthroughHybrid'):
-                temp[featureName]['break'] = util.find_breakthrough(selectedTimes, selectedValues)
-                temp[featureName]['time_function'] = score.time_function(CV_time, temp[featureName]['break'][0][0], diff_input=True)
-                temp[featureName]['value_function'] = score.value_function(temp[featureName]['break'][0][1], abstol)
 
             if featureType == 'derivative_similarity':
                 exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, util.smoothing(selectedTimes, selectedValues), s=util.smoothing_factor(selectedValues)).derivative(1)
