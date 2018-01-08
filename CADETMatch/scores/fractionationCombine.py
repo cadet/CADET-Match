@@ -4,17 +4,24 @@ import scipy.stats
 import numpy
 import pandas
 
-name = "fractionation"
+name = "fractionationCombine"
 
 def run(sim_data,  feature):
     "similarity, value, start stop"
     simulation = sim_data['simulation']
     funcs = feature['funcs']
+    components = feature['components']
+    numComponents = len(components)
+    samplesPerComponent = feature['samplesPerComponent']
+    multiplier = 1.0/samplesPerComponent
 
     times = simulation.root.output.solution.solution_times
     flow = simulation.root.input.model.connections.switch_000.connections[9]
 
-    scores = []
+    scores = {}
+    for comp in components:
+        scores[comp] = 0.0
+
     sim_values = []
     exp_values = []
    
@@ -30,7 +37,8 @@ def run(sim_data,  feature):
 
         exp_values.append(exp_value)
         sim_values.append(sim_value)
-        scores.append(func(sim_value))
+
+        scores[component] += func(sim_value) * multiplier
 
         if component not in graph_sim:
             graph_sim[component] = []
@@ -40,7 +48,6 @@ def run(sim_data,  feature):
         graph_sim[component].append( (time_center, sim_value) )
         graph_exp[component].append( (time_center, exp_value) )
 
-
     #sort lists
     for key,value in graph_sim.items():
         value.sort()
@@ -49,18 +56,21 @@ def run(sim_data,  feature):
 
     sim_data['graph_exp'] = graph_exp
     sim_data['graph_sim'] = graph_sim
-    return scores, util.sse(numpy.array(sim_values), numpy.array(exp_values))
+    
+    return [scores[comp] for comp in components], util.sse(numpy.array(sim_values), numpy.array(exp_values))
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     data = pandas.read_csv(feature['csv'])
     rows, cols = data.shape
 
+    headers = data.columns.values.tolist()
+
     flow = sim.root.input.model.connections.switch_000.connections[9]
     smallestTime = min(data['Stop'] - data['Start'])
     abstolFraction = flow * abstol * smallestTime
 
-    headers = data.columns.values.tolist()
+    print('abstolFraction', abstolFraction)
 
     funcs = []
 
@@ -73,6 +83,8 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
 
             funcs.append( (start, stop, int(component), value, func) )
     temp['funcs'] = funcs
+    temp['components'] = [int(i) for i in headers[2:]]
+    temp['samplesPerComponent'] = rows
     return temp
 
 def headers(experimentName, feature):
@@ -85,8 +97,7 @@ def headers(experimentName, feature):
     data_headers = data.columns.values.tolist()
 
     temp  = []
-    for sample in range(rows):
-        for component in data_headers[2:]:
-            temp.append('%s_%s_Sample_%s_Component_%s' % (experimentName, feature['name'], sample, component))
+    for component in data_headers[2:]:
+        temp.append('%s_%s_Component_%s' % (experimentName, feature['name'], component))
     return temp
 

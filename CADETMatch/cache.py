@@ -128,20 +128,6 @@ class Cache:
                     temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, "%s_Time" % name]
                     self.numGoals += 3
 
-                elif feature['type'] == 'fractionationCombine':
-                    data = pandas.read_csv(feature['csv'])
-                    rows, cols = data.shape
-                    #remove first two columns since those are the start and stop times
-                    cols = cols - 2
-
-                    total = rows * cols
-                    data_headers = data.columns.values.tolist()
-
-                    temp  = []
-                    for component in data_headers[2:]:
-                        temp.append('%s_%s_Component_%s' % (experimentName, feature['name'], component))
-                    self.numGoals += len(temp)
-
                 elif feature['type'] == 'fractionationMeanVariance':
                     data = pandas.read_csv(feature['csv'])
                     rows, cols = data.shape
@@ -366,32 +352,6 @@ class Cache:
                 temp[featureName]['selected'] = temp[featureName]['selected'] & (temp[featureName]['time'] <= max_time)
                 temp[featureName]['max_time'] = max_time
                 temp[featureName]['offsetTimeFunction'] = score.time_function_decay(CV_time/10.0, max_time, diff_input=True)
-
-            if featureType == 'fractionationCombine':
-                data = pandas.read_csv(feature['csv'])
-                rows, cols = data.shape
-
-                headers = data.columns.values.tolist()
-
-                flow = sim.root.input.model.connections.switch_000.connections[9]
-                smallestTime = min(data['Stop'] - data['Start'])
-                abstolFraction = flow * abstol * smallestTime
-
-                print('abstolFraction', abstolFraction)
-
-                funcs = []
-
-                for sample in range(rows):
-                    for component in headers[2:]:
-                        start = data['Start'][sample]
-                        stop = data['Stop'][sample]
-                        value = data[component][sample]
-                        func = score.value_function(value, abstolFraction)
-
-                        funcs.append( (start, stop, int(component), value, func) )
-                temp[featureName]['funcs'] = funcs
-                temp[featureName]['components'] = [int(i) for i in headers[2:]]
-                temp[featureName]['samplesPerComponent'] = rows
 
             if featureType == 'fractionationMeanVariance':
                 data = pandas.read_csv(feature['csv'])
