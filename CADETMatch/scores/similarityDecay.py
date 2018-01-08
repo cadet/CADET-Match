@@ -19,7 +19,7 @@ def run(sim_data,  feature):
     temp = [score.pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), feature['value_function'](value_high), feature['time_function'](time_high)]
     return temp, util.sse(sim_data_values, exp_data_values)
 
-def setup(feature, selectedTimes, selectedValues, CV_time, abstol):
+def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     temp['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
     temp['time_function'] = score.time_function_decay(CV_time, temp['peak'][0], diff_input = False)

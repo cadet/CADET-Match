@@ -13,7 +13,7 @@ def run(sim_data,  feature):
 
     return [score.pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0])], util.sse(sim_data_values, exp_data_values)
 
-def setup(feature, selectedTimes, selectedValues, CV_time, abstol):
+def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     return {}
 
 def headers(experimentName, feature):

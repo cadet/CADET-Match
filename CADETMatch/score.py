@@ -357,51 +357,6 @@ def scoreLogSSE(sim_data, feature):
 
     return [-numpy.log(util.sse(sim_data_values, exp_data_values)),], util.sse(sim_data_values, exp_data_values)
 
-def scoreFractionation(sim_data,  feature):
-    "Just Pearson score"
-    simulation = sim_data['simulation']
-    funcs = feature['funcs']
-
-    times = simulation.root.output.solution.solution_times
-    flow = simulation.root.input.model.connections.switch_000.connections[9]
-
-    scores = []
-    sim_values = []
-    exp_values = []
-   
-    graph_sim = {}
-    graph_exp = {}
-    for (start, stop, component, exp_value, func) in funcs:
-        selected = (times >= start) & (times <= stop)
-
-        local_times = times[selected]
-        local_values = simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component][selected]
-
-        sim_value = numpy.trapz(local_values, local_times) * flow
-
-        exp_values.append(exp_value)
-        sim_values.append(sim_value)
-        scores.append(func(sim_value))
-
-        if component not in graph_sim:
-            graph_sim[component] = []
-            graph_exp[component] = []
-
-        time_center = (start + stop)/2.0
-        graph_sim[component].append( (time_center, sim_value) )
-        graph_exp[component].append( (time_center, exp_value) )
-
-
-    #sort lists
-    for key,value in graph_sim.items():
-        value.sort()
-    for key,value in graph_exp.items():
-        value.sort()
-
-    sim_data['graph_exp'] = graph_exp
-    sim_data['graph_sim'] = graph_sim
-    return scores, util.sse(numpy.array(sim_values), numpy.array(exp_values))
-
 def scoreFractionationCombine(sim_data,  feature):
     "Just Pearson score"
     simulation = sim_data['simulation']

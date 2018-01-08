@@ -21,7 +21,7 @@ def run(sim_data,  feature):
             feature['time_function_stop'](stop[0])]
     return temp, util.sse(sim_data_values, exp_data_values)
 
-def setup(feature, selectedTimes, selectedValues, CV_time, abstol):
+def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     temp['break'] = util.find_breakthrough(selectedTimes, selectedValues)
     temp['time_function_start'] = score.time_function(CV_time, temp['break'][0][0])

@@ -21,7 +21,7 @@ def run(sim_data,  feature):
     temp = [score_corr, feature['value_function'](value_high), feature['time_function'](diff_time)]
     return temp, util.sse(sim_data_values, exp_data_values)
 
-def setup(feature, selectedTimes, selectedValues, CV_time, abstol):
+def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     temp['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
     temp['time_function'] = score.time_function(CV_time, temp['peak'][0], diff_input = False)

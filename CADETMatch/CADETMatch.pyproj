@@ -68,6 +68,9 @@
     <Compile Include="scores\curve.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\fractionation.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\similarity.py">
       <SubType>Code</SubType>
     </Compile>
