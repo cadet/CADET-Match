@@ -11,7 +11,7 @@ def run(cache, tools, creator):
 
     parameters = len(cache.MIN_VALUE)
 
-    LAMBDA=parameters * cache.settings['population']
+    LAMBDA = parameters * cache.settings['population']
     MU = int(math.ceil(cache.settings['keep']*LAMBDA))
     if MU < 2:
         MU = 2

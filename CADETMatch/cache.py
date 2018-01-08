@@ -15,7 +15,7 @@ class Cache:
         self.settings = None
         self.headers = None
         self.numGoals = None
-        self.target= None
+        self.target = None
         self.MIN_VALUE = None
         self.MAX_VALUE = None
         self.badScore = None
@@ -25,18 +25,17 @@ class Cache:
         self.transform = None
         self.parameter_indexes = None
         self.score_indexes = None
-        
 
     def setup(self, json_path):
         "setup the cache based on the json file being used"
         self.json_path = json_path
         self.setupSettings()
         Cadet.cadet_path = self.settings['CADETPath']
-        
+
         self.setupHeaders()
         self.setupTarget()
         self.setupMinMax()
-        
+
         self.WORST = [self.badScore] * self.numGoals
 
         self.settings['transform'] = self.transform
@@ -72,15 +71,15 @@ class Cache:
                 comp = 'None'
             if parameter['transform'] == 'keq':
                 location = parameter['location']
-                nameKA = location[0].rsplit('/',1)[-1]
-                nameKD = location[1].rsplit('/',1)[-1]
+                nameKA = location[0].rsplit('/', 1)[-1]
+                nameKD = location[1].rsplit('/', 1)[-1]
                 for bound in parameter['bound']:
                     self.headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
                     self.headers.append("%s Comp:%s Bound:%s" % (nameKD, comp, bound))
                     self.headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
             elif parameter['transform'] == 'log':
                 location = parameter['location']
-                name = location.rsplit('/',1)[-1]
+                name = location.rsplit('/', 1)[-1]
                 for bound in parameter.get('bound', []):
                     self.headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
                 for idx in parameter.get('indexes', []):
@@ -89,7 +88,7 @@ class Cache:
         parameters = len(self.headers)
         self.parameter_indexes = list(range(base, parameters))
 
-        for idx,experiment in enumerate(self.settings['experiments']):
+        for idx, experiment in enumerate(self.settings['experiments']):
             experimentName = experiment['name']
             experiment['headers'] = []
             for feature in experiment['features']:
@@ -131,8 +130,8 @@ class Cache:
 
             if transform == 'keq':
                 location = parameter['location']
-                nameKA = location[0].rsplit('/',1)[-1]
-                nameKD = location[1].rsplit('/',1)[-1]
+                nameKA = location[0].rsplit('/', 1)[-1]
+                nameKD = location[1].rsplit('/', 1)[-1]
                 unit = int(location[0].split('/')[3].replace('unit_', ''))
 
                 for bound in parameter['bound']:
@@ -141,7 +140,7 @@ class Cache:
 
             elif transform == 'log':
                 location = parameter['location']
-                name = location.rsplit('/',1)[-1]
+                name = location.rsplit('/', 1)[-1]
                 try:
                     unit = int(location.split('/')[3].replace('unit_', ''))
                 except ValueError:
@@ -191,7 +190,7 @@ class Cache:
         conn = numpy.reshape(conn, [-1, 5])
 
         #find all the entries that connect to the column
-        filter = conn[:,1] == 1
+        filter = conn[:, 1] == 1
 
         #flow is the sum of all flow rates that connect to this column which is in the last column
         flow = sum(conn[filter, -1])
@@ -204,8 +203,8 @@ class Cache:
         if 'CSV' in experiment:
             data = numpy.genfromtxt(experiment['CSV'], delimiter=',')
 
-            temp['time'] = data[:,0]
-            temp['value'] = data[:,1]
+            temp['time'] = data[:, 0]
+            temp['value'] = data[:, 1]
 
         for feature in experiment['features']:
             featureName = feature['name']
@@ -217,11 +216,11 @@ class Cache:
 
             if 'CSV' in feature:
                 dataLocal = numpy.genfromtxt(feature['CSV'], delimiter=',')
-                temp[featureName]['time'] = dataLocal[:,0]
-                temp[featureName]['value'] = dataLocal[:,1]
+                temp[featureName]['time'] = dataLocal[:, 0]
+                temp[featureName]['value'] = dataLocal[:, 1]
             else:
-                temp[featureName]['time'] = data[:,0]
-                temp[featureName]['value'] = data[:,1]
+                temp[featureName]['time'] = data[:, 0]
+                temp[featureName]['value'] = data[:, 1]
 
             if 'isotherm' in feature:
                 temp[featureName]['isotherm'] = feature['isotherm']

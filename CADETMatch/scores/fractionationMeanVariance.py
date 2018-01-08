@@ -7,7 +7,7 @@ name = "fractionationMeanVariance"
 adaptive = True
 badScore = 0
 
-def run(sim_data,  feature):
+def run(sim_data, feature):
     simulation = sim_data['simulation']
     funcs = feature['funcs']
     components = feature['components']
@@ -55,8 +55,8 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
 
     headers = data.columns.values.tolist()
 
-    start = numpy.array(data.iloc[:,0])
-    stop = numpy.array(data.iloc[:,1])
+    start = numpy.array(data.iloc[:, 0])
+    stop = numpy.array(data.iloc[:, 1])
 
     time_center = (start + stop)/2.0
 
@@ -67,7 +67,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     funcs = []
 
     for idx, component in enumerate(headers[2:], 2):
-        value = numpy.array(data.iloc[:,idx])
+        value = numpy.array(data.iloc[:, idx])
 
         mean_time, variance_time, mean_value, variance_value = util.fracStat(time_center, value)
 
@@ -90,12 +90,10 @@ def headers(experimentName, feature):
 
     data_headers = data.columns.values.tolist()
 
-    temp  = []
+    temp = []
     for component in data_headers[2:]:
         temp.append('%s_%s_Component_%s_time_mean' % (experimentName, feature['name'], component))
         temp.append('%s_%s_Component_%s_time_var' % (experimentName, feature['name'], component))
         temp.append('%s_%s_Component_%s_value_mean' % (experimentName, feature['name'], component))
         temp.append('%s_%s_Component_%s_value_var' % (experimentName, feature['name'], component))
     return temp
-
-

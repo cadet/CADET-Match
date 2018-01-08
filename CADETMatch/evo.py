@@ -76,7 +76,7 @@ def fitness(individual, json_path):
     humanScores[-1] = -1 * humanScores[-1]
 
     #generate save name
-    save_name_base = hashlib.md5(str(individual).encode('utf-8','ignore')).hexdigest()
+    save_name_base = hashlib.md5(str(individual).encode('utf-8', 'ignore')).hexdigest()
 
     for result in results.values():
         if result['cadetValuesKEQ']:
@@ -106,8 +106,8 @@ def fitness(individual, json_path):
             
     return scores
 
-def saveExperiments(save_name_base, settings,target, results):
-    return util.saveExperiments(save_name_base, settings,target, results, settings['resultsDirEvo'], '%s_%s_EVO.h5')
+def saveExperiments(save_name_base, settings, target, results):
+    return util.saveExperiments(save_name_base, settings, target, results, settings['resultsDirEvo'], '%s_%s_EVO.h5')
 
 def plotExperiments(save_name_base, settings, target, results):
     util.plotExperiments(save_name_base, settings, target, results, settings['resultsDirEvo'], '%s_%s_EVO.png')

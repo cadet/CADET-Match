@@ -7,7 +7,7 @@ name = "dextranHybrid"
 adaptive = True
 badScore = 0
 
-def run(sim_data,  feature):
+def run(sim_data, feature):
     "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -48,5 +48,3 @@ def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
     temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, "%s_Time" % name]
     return temp
-
-

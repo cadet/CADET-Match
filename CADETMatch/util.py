@@ -38,7 +38,7 @@ def find_extreme(seq):
     try:
         return max(seq, key=lambda x: abs(x[1]))
     except ValueError:
-        return [0,0]
+        return [0, 0]
 
 def get_times_values(simulation, target, selected = None):
 
@@ -47,7 +47,7 @@ def get_times_values(simulation, target, selected = None):
     isotherm = target['isotherm']
 
     if isinstance(isotherm, list):
-        values = numpy.sum([simulation[i] for i in isotherm],0)
+        values = numpy.sum([simulation[i] for i in isotherm], 0)
     else:
         values = simulation[isotherm]
     
@@ -79,12 +79,12 @@ def find_breakthrough(times, data):
 def generateIndividual(icls, size, imin, imax):
     while 1:
         #ind = icls(random.uniform(imin[idx], imax[idx]) for idx in range(size))
-        ind = icls(RoundToSigFigs(numpy.random.uniform(imin, imax),8))
+        ind = icls(RoundToSigFigs(numpy.random.uniform(imin, imax), 8))
         if feasible(ind):
             return ind
 
 def initIndividual(icls, content):
-    return icls(RoundToSigFigs(content,8))
+    return icls(RoundToSigFigs(content, 8))
 
 def feasible(individual):
     "evaluate if this individual is feasible"
@@ -202,7 +202,7 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
 
         graph_simulation(results[experimentName]['simulation'], fig.add_subplot(numPlots, 1, 1))
 
-        for idx,feature in enumerate(experiment['features']):
+        for idx, feature in enumerate(experiment['features']):
             graph = fig.add_subplot(numPlots, 1, idx+1+1) #additional +1 added due to the overview plot
             
             featureName = feature['name']
@@ -214,9 +214,9 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
             exp_time = feat['time'][selected]
             exp_value = feat['value'][selected]
 
-            sim_time, sim_value = get_times_values(results[experimentName]['simulation'],target[experimentName][featureName])
+            sim_time, sim_value = get_times_values(results[experimentName]['simulation'], target[experimentName][featureName])
 
-            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybridDecay','curve', 'breakthrough', 'dextran', 'dextranHybrid', 
+            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybridDecay', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 
                                'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid'):
                 graph.plot(sim_time, sim_value, 'r--', label='Simulation')
                 graph.plot(exp_time, exp_value, 'g:', label='Experiment')
@@ -235,11 +235,11 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
 
                 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
-                for idx,(key,value) in enumerate(graph_sim.items()):
+                for idx, (key, value) in enumerate(graph_sim.items()):
                     (time, values) = zip(*value)
                     graph.plot(time, values, '%s--' % colors[idx], label='Simulation Comp: %s' % key)
 
-                for idx,(key,value) in enumerate(graph_exp.items()):
+                for idx, (key, value) in enumerate(graph_exp.items()):
                     (time, values) = zip(*value)
                     graph.plot(time, values, '%s:' % colors[idx], label='Experiment Comp: %s' % key)
             graph.legend()
@@ -247,7 +247,7 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
         plt.savefig(bytes(dst), dpi=100)
         plt.close()
 
-def saveExperiments(save_name_base, settings,target, results, directory, file_pattern):
+def saveExperiments(save_name_base, settings, target, results, directory, file_pattern):
     for experiment in settings['experiments']:
         experimentName = experiment['name']
 
@@ -331,7 +331,7 @@ def set_simulation(individual, simulation, settings):
                 cadetValues.append(simulation[location][index])
                 cadetValuesKEQ.append(simulation[location][index])
 
-                idx+=1
+                idx += 1
 
     log("finished setting hdf5")
     return cadetValues, cadetValuesKEQ
@@ -343,7 +343,7 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     simulation = Cadet(template_sim.root)
     simulation.filename = path
 
-    simulation.root.input.solver.nthreads = int(settings.get('nThreads',1))
+    simulation.root.input.solver.nthreads = int(settings.get('nThreads', 1))
     cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings)
 
     simulation.save()
@@ -383,7 +383,7 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         featureName = feature['name']
 
         if featureType in cache.scores:
-            scores, sse = cache.scores[featureType].run(temp,  target[experiment['name']][featureName])
+            scores, sse = cache.scores[featureType].run(temp, target[experiment['name']][featureName])
  
         temp['scores'].extend(scores)
         temp['error'] += sse
@@ -429,16 +429,16 @@ def copyCSVWithNoise(idx, center, noise):
 
 def addNoise(array, center, noise):
     "add noise to an array"
-    maxValue = numpy.max(array[:,1])
+    maxValue = numpy.max(array[:, 1])
     randomNoise = numpy.random.normal(center, noise*maxValue, len(array))
-    array[:,1] += randomNoise
+    array[:, 1] += randomNoise
 
 def bestMinScore(hof):
     "find the best score based on the minimum of the scores"
     idxMax = numpy.argmax([min(i.fitness.values) for i in hof])
     return hof[idxMax]
 
-def similar(a,b):
+def similar(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
     a = numpy.array(a)
     b = numpy.array(b)
@@ -468,7 +468,7 @@ def plot_3d(arg):
     headers = dataframe.columns.values.tolist()
     #print('3d', headers[c1], headers[c2], headers[score])
 
-    scores = dataframe.iloc[:,score]
+    scores = dataframe.iloc[:, score]
     scoreName = headers[score]
     if headers[score] == 'SSE':
         scores = -numpy.log(scores)
@@ -476,7 +476,7 @@ def plot_3d(arg):
     
     fig = plt.figure()
     ax = Axes3D(fig)
-    ax.scatter(numpy.log(dataframe.iloc[:,c1]), numpy.log(dataframe.iloc[:,c2]), scores, c=scores, cmap=plt.get_cmap('winter'))
+    ax.scatter(numpy.log(dataframe.iloc[:, c1]), numpy.log(dataframe.iloc[:, c2]), scores, c=scores, cmap=plt.get_cmap('winter'))
     ax.set_xlabel('log(%s)' % headers[c1])
     ax.set_ylabel('log(%s)' % headers[c2])
     ax.set_zlabel(scoreName)
@@ -493,13 +493,13 @@ def plot_2d(arg):
 
     fig = plt.figure()
 
-    scores = dataframe.iloc[:,score]
+    scores = dataframe.iloc[:, score]
     scoreName = headers[score]
     if headers[score] == 'SSE':
         scores = -numpy.log(scores)
         scoreName = '-log(%s)' % headers[score]
 
-    plt.scatter(numpy.log(dataframe.iloc[:,c1]), scores, c=scores, cmap=plt.get_cmap('winter'))
+    plt.scatter(numpy.log(dataframe.iloc[:, c1]), scores, c=scores, cmap=plt.get_cmap('winter'))
     plt.xlabel('log(%s)' % headers[c1])
     plt.ylabel(scoreName)
     filename = "%s_%s.png" % (c1, score)
@@ -514,11 +514,11 @@ def space_plots(cache):
 
 def RoundOffspring(offspring):
     for child in offspring:
-        temp = RoundToSigFigs(child,4)
+        temp = RoundToSigFigs(child, 4)
         if all(child == temp):
             pass
         else:
-            for idx,i in enumerate(temp):
+            for idx, i in enumerate(temp):
                 child[idx] = i
             del child.fitness.values
     return offspring
@@ -582,7 +582,7 @@ def fracStat(time_center, value):
 
 def fractionate(start_seq, stop_seq, times, values):
     temp = []
-    for (start,stop) in zip(start_seq, stop_seq):
+    for (start, stop) in zip(start_seq, stop_seq):
         selected = (times >= start) & (times <= stop)
         local_times = times[selected]
         local_values = values[selected]

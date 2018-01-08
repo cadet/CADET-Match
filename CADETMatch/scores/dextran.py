@@ -7,7 +7,7 @@ name = "dextran"
 adaptive = True
 badScore = 0
 
-def run(sim_data,  feature):
+def run(sim_data, feature):
     "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
     selected = feature['origSelected']
     max_time = feature['max_time']
@@ -21,7 +21,7 @@ def run(sim_data,  feature):
         sim_spline_derivative = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
         exp_spline_derivative = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
     except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
-        return [0.0, 0.0,0.0], 1e6
+        return [0.0, 0.0, 0.0], 1e6
 
     expSelected = selected & (feature['time'] <= max_time)
     expTime = feature['time'][expSelected]
@@ -67,4 +67,3 @@ def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
     temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, "%s_Time" % name]
     return temp
-

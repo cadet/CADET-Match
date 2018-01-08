@@ -7,7 +7,7 @@ name = "derivative_similarity_cross"
 adaptive = True
 badScore = 0
 
-def run(sim_data,  feature):
+def run(sim_data, feature):
     "Order is Pearson, Value High, Time High, Value Low, Time Low"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -42,7 +42,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['peak_high'] = high
     temp['peak_low'] = low
 
-    temp['time_function'] = score.time_function(CV_time,high[0], diff_input = True)
+    temp['time_function'] = score.time_function(CV_time, high[0], diff_input = True)
     temp['value_function_high'] = score.value_function(high[1], abstol, 0.1)
     temp['value_function_low'] = score.value_function(low[1], abstol, 0.1)
     return temp
@@ -51,4 +51,3 @@ def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
     temp = ["%s_Derivative_Similarity_Cross" % name, "%s_Time" % name, "%s_High_Value" % name, "%s_Low_Value" % name]
     return temp
-

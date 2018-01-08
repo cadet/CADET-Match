@@ -19,7 +19,8 @@
 #    by Luis Marti (IC/UFF) http://lmarti.com
 
 from __future__ import division # making it work with Python 2.x
-import copy,random
+import copy
+import random
 import numpy as np
 from deap import tools
 
@@ -60,7 +61,7 @@ def find_ideal_point(individuals):
 
 def find_extreme_points(individuals):
     'Finds the individuals with extreme values for each objective function.'
-    return [sorted(individuals, key=lambda ind:ind.fitness.wvalues[o] * -1)[-1]
+    return [sorted(individuals, key=lambda ind: ind.fitness.wvalues[o] * -1)[-1]
             for o in range(len(individuals[0].fitness.values))]
 
 def construct_hyperplane(individuals, extreme_points):
@@ -79,7 +80,7 @@ def construct_hyperplane(individuals, extreme_points):
     else:
         b = np.ones(num_objs)
         A = [point.fitness.values for point in extreme_points]
-        x = np.linalg.solve(A,b)
+        x = np.linalg.solve(A, b)
         intercepts = 1/x
     return intercepts
 
@@ -116,10 +117,10 @@ def associate(individuals, reference_points):
     for ind in individuals:
         rp_dists = [(rp, perpendicular_distance(ind.fitness.normalized_values, rp))
                     for rp in reference_points]
-        best_rp, best_dist = sorted(rp_dists, key=lambda rpd:rpd[1])[0]
+        best_rp, best_dist = sorted(rp_dists, key=lambda rpd: rpd[1])[0]
         ind.reference_point = best_rp
         ind.ref_point_distance = best_dist
-        best_rp.associations_count +=1 # update de niche number
+        best_rp.associations_count += 1 # update de niche number
         best_rp.associations += [ind]
 
 def niching_select(individuals, k):
@@ -171,14 +172,14 @@ def sel_nsga_iii(individuals, k):
     '''
     assert len(individuals) >= k
 
-    if len(individuals)==k:
+    if len(individuals) == k:
         return individuals
 
     # Algorithm 1 steps 4--8
     fronts = tools.sortLogNondominated(individuals, len(individuals))
 
     limit = 0
-    res =[]
+    res = []
     for f, front in enumerate(fronts):
         res += front
         if len(res) > k:

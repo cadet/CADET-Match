@@ -145,7 +145,7 @@ def fitness_sens(individual, cache):
     humanScores[-1] = -1 * humanScores[-1]
 
     #generate save name
-    save_name_base = hashlib.md5(str(individual).encode('utf-8','ignore')).hexdigest()
+    save_name_base = hashlib.md5(str(individual).encode('utf-8', 'ignore')).hexdigest()
 
     for result in results.values():
         if result['cadetValues']:
@@ -173,7 +173,7 @@ def fitness_sens(individual, cache):
     
     return numpy.concatenate(diffs, 0)
 
-def saveExperimentsSens(save_name_base, settings,target, results):
+def saveExperimentsSens(save_name_base, settings, target, results):
     for experiment in settings['experiments']:
         experimentName = experiment['name']
         src = results[experimentName]['path']
@@ -206,7 +206,7 @@ def plotExperimentsSens(save_name_base, settings, target, results):
 
         fig = plt.figure(figsize=[10, numPlots*10])
 
-        for idx,feature in enumerate(experiment['features']):
+        for idx, feature in enumerate(experiment['features']):
             graph = fig.add_subplot(numPlots, 1, idx+1)
 
             featureName = feature['name']
@@ -305,7 +305,7 @@ def runExperimentSens(individual, experiment, settings, target, jac):
     temp = {}
     temp['time'] = times
     if isinstance(experiment['isotherm'], list):
-        temp['value'] = numpy.sum([numpy.array(h5[i]) for i in experiment['isotherm']],0)
+        temp['value'] = numpy.sum([numpy.array(h5[i]) for i in experiment['isotherm']], 0)
     else:
         temp['value'] = numpy.array(h5[experiment['isotherm']])
     temp['path'] = path

@@ -10,7 +10,7 @@ def run(cache, tools, creator):
 
     parameters = len(cache.MIN_VALUE)
 
-    LAMBDA=parameters * cache.settings['population']
+    LAMBDA = parameters * cache.settings['population']
 
     pop = cache.toolbox.population(n=LAMBDA)
 
@@ -42,4 +42,3 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
 
     cache.toolbox.register('map', map_function)
-

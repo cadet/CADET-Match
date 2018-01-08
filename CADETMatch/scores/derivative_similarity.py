@@ -7,7 +7,7 @@ name = "derivative_similarity"
 adaptive = True
 badScore = 0
 
-def run(sim_data,  feature):
+def run(sim_data, feature):
     "Order is Pearson, Value High, Time High, Value Low, Time Low"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -51,4 +51,3 @@ def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
     temp = ["%s_Derivative_Similarity" % name, "%s_High_Value" % name, "%s_High_Time" % name, "%s_Low_Value" % name, "%s_Low_Time" % name]
     return temp
-

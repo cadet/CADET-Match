@@ -6,7 +6,7 @@ name = "breakthrough"
 adaptive = True
 badScore = 0
 
-def run(sim_data,  feature):
+def run(sim_data, feature):
     "similarity, value, start stop"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
 

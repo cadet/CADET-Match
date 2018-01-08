@@ -96,7 +96,7 @@ def fitness_sens(individual, finished=1):
         humanScores[-1] = -1 * humanScores[-1]
 
         #generate save name
-        save_name_base = hashlib.md5(str(individual).encode('utf-8','ignore')).hexdigest()
+        save_name_base = hashlib.md5(str(individual).encode('utf-8', 'ignore')).hexdigest()
 
         for result in results.values():
             if result['cadetValuesKEQ']:
@@ -120,8 +120,8 @@ def fitness_sens(individual, finished=1):
     
     return [1.0 - score for score in scores]
 
-def saveExperimentsSens(save_name_base, settings,target, results):
-    return util.saveExperiments(save_name_base, settings,target, results, settings['resultsDirGrad'], '%s_%s_GRAD.h5')
+def saveExperimentsSens(save_name_base, settings, target, results):
+    return util.saveExperiments(save_name_base, settings, target, results, settings['resultsDirGrad'], '%s_%s_GRAD.h5')
 
 def plotExperimentsSens(save_name_base, settings, target, results):
     util.plotExperiments(save_name_base, settings, target, results, settings['resultsDirGrad'], '%s_%s_GRAD.png')

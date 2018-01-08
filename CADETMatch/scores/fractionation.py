@@ -7,7 +7,7 @@ name = "fractionation"
 adaptive = True
 badScore = 0
 
-def run(sim_data,  feature):
+def run(sim_data, feature):
     "similarity, value, start stop"
     simulation = sim_data['simulation']
     funcs = feature['funcs']
@@ -43,9 +43,9 @@ def run(sim_data,  feature):
 
 
     #sort lists
-    for key,value in graph_sim.items():
+    for key, value in graph_sim.items():
         value.sort()
-    for key,value in graph_exp.items():
+    for key, value in graph_exp.items():
         value.sort()
 
     sim_data['graph_exp'] = graph_exp
@@ -85,9 +85,8 @@ def headers(experimentName, feature):
     total = rows * cols
     data_headers = data.columns.values.tolist()
 
-    temp  = []
+    temp = []
     for sample in range(rows):
         for component in data_headers[2:]:
             temp.append('%s_%s_Sample_%s_Component_%s' % (experimentName, feature['name'], sample, component))
     return temp
-

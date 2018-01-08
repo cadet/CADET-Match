@@ -5,7 +5,7 @@ name = "SSE"
 adaptive = False
 badScore = -sys.float_info.max
 
-def run(sim_data,  feature):
+def run(sim_data, feature):
     "sum square error score, this score is NOT composable with other scores, use negative so score is maximized like other scores"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -22,4 +22,3 @@ def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
     temp = ["%s_SSE" % name]
     return temp
-

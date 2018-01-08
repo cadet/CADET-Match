@@ -5,7 +5,7 @@ name = "similarityCrossDecay"
 adaptive = True
 badScore = 0
 
-def run(sim_data,  feature):
+def run(sim_data, feature):
     "similarity, value, start stop"
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     selected = feature['selected']
@@ -33,7 +33,3 @@ def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
     temp = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
     return temp
-
-
-
-

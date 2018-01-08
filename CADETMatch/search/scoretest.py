@@ -40,4 +40,3 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
 
     cache.toolbox.register('map', map_function)
-
