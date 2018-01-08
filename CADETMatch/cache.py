@@ -99,7 +99,11 @@ class Cache:
             experimentName = experiment['name']
             experiment['headers'] = []
             for feature in experiment['features']:
-                if feature['type'] in ('similarity', 'similarityCross', 'similarityHybrid', 'similarityDecay', 'similarityCrossDecay', 'similarityHybridDecay'):
+                if feature['type'] in self.scores:
+                    temp = self.scores[feature['type']].headers(experimentName, feature)
+                    self.numGoals += len(temp)
+
+                elif feature['type'] in ('similarity', 'similarityCross', 'similarityHybrid', 'similarityDecay', 'similarityCrossDecay', 'similarityHybridDecay'):
                     name = "%s_%s" % (experimentName, feature['name'])
                     temp = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
                     self.numGoals += 3
@@ -129,10 +133,10 @@ class Cache:
                     temp  = ["%s_Similarity" % name]
                     self.numGoals += 1
 
-                elif feature['type'] == 'breakthrough':
-                    name = "%s_%s" % (experimentName, feature['name'])
-                    temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time_Start" % name, "%s_Time_Stop" % name]
-                    self.numGoals += 4
+                #elif feature['type'] == 'breakthrough':
+                    #name = "%s_%s" % (experimentName, feature['name'])
+                    #temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time_Start" % name, "%s_Time_Stop" % name]
+                    #self.numGoals += 4
 
                 elif feature['type'] in ('breakthroughCross', 'breakthroughHybrid'):
                     name = "%s_%s" % (experimentName, feature['name'])
@@ -334,6 +338,9 @@ class Cache:
             
             selectedTimes = temp[featureName]['time'][temp[featureName]['selected']]
             selectedValues = temp[featureName]['value'][temp[featureName]['selected']]
+
+            if featureType in self.scores:
+                temp[featureName].update(self.scores[featureType].setup(feature, selectedTimes, selectedValues, CV_time, abstol))
 
             if featureType in ('similarity', 'similarityCross', 'similarityHybrid'):
                 temp[featureName]['peak'] = util.find_peak(selectedTimes, selectedValues)[0]

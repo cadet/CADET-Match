@@ -63,7 +63,7 @@ def fitness(individual, json_path):
 
     results = {}
     for experiment in cache.settings['experiments']:
-        result = runExperiment(individual, experiment, cache.settings, cache.target)
+        result = runExperiment(individual, experiment, cache.settings, cache.target, cache)
         if result is not None:
             results[experiment['name']] = result
             scores.extend(results[experiment['name']]['scores'])
@@ -133,7 +133,7 @@ def saveExperiments(save_name_base, settings,target, results):
 def plotExperiments(save_name_base, settings, target, results):
     util.plotExperiments(save_name_base, settings, target, results, settings['resultsDirEvo'], '%s_%s_EVO.png')
 
-def runExperiment(individual, experiment, settings, target):
+def runExperiment(individual, experiment, settings, target, cache):
     if 'simulation' not in experiment:
         templatePath = Path(settings['resultsDirMisc'], "template_%s.h5" % experiment['name'])
         templateSim = Cadet()
@@ -141,7 +141,7 @@ def runExperiment(individual, experiment, settings, target):
         templateSim.load()
         experiment['simulation'] = templateSim
 
-    return util.runExperiment(individual, experiment, settings, target, experiment['simulation'], float(experiment['timeout']))
+    return util.runExperiment(individual, experiment, settings, target, experiment['simulation'], float(experiment['timeout']), cache)
 
 def run(cache):
     "run the parameter estimation"

@@ -341,7 +341,7 @@ def set_simulation(individual, simulation, settings):
     log("finished setting hdf5")
     return cadetValues, cadetValuesKEQ
 
-def runExperiment(individual, experiment, settings, target, template_sim, timeout):
+def runExperiment(individual, experiment, settings, target, template_sim, timeout, cache):
     handle, path = tempfile.mkstemp(suffix='.h5')
     os.close(handle)
 
@@ -387,7 +387,10 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         featureType = feature['type']
         featureName = feature['name']
 
-        if featureType in ('similarity', 'similarityDecay'):
+        if featureType in cache.scores:
+            scores, sse = cache.scores[featureType].run(temp,  target[experiment['name']][featureName])
+
+        elif featureType in ('similarity', 'similarityDecay'):
             scores, sse = score.scoreSimilarity(temp, target[experiment['name']][featureName])
         elif featureType in ('similarityHybrid', 'similarityHybridDecay'):
             scores, sse = score.scoreSimilarityHybrid(temp, target[experiment['name']][featureName])
