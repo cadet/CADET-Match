@@ -406,8 +406,6 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
             scores, sse = score.scoreDextran(temp, target[experiment['name']][featureName])
         elif featureType == 'dextranHybrid':
             scores, sse = score.scoreDextranHybrid(temp, target[experiment['name']][featureName])
-        elif featureType == 'fractionationMeanVariance':
-            scores, sse = score.scoreFracMeanVariance(temp, target[experiment['name']][featureName])
         elif featureType == 'SSE':
             scores, sse = score.scoreSSE(temp, target[experiment['name']][featureName])
         elif featureType == 'LogSSE':

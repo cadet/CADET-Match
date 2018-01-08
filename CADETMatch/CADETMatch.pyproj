@@ -74,6 +74,9 @@
     <Compile Include="scores\fractionationCombine.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\fractionationMeanVariance.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\similarity.py">
       <SubType>Code</SubType>
     </Compile>
