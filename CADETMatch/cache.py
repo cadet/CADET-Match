@@ -123,11 +123,6 @@ class Cache:
                     temp = ["%s_Derivative_Similarity_Cross_Alt" % name, "%s_Time" % name,]
                     self.numGoals += 2
 
-                elif feature['type'] == 'curve':
-                    name = "%s_%s" % (experimentName, feature['name'])
-                    temp  = ["%s_Similarity" % name]
-                    self.numGoals += 1
-
                 elif feature['type'] in ('dextran', 'dextranHybrid'):
                     name = "%s_%s" % (experimentName, feature['name'])
                     temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, "%s_Time" % name]
