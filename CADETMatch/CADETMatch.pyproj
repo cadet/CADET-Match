@@ -68,6 +68,12 @@
     <Compile Include="scores\curve.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\dextran.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\dextranHybrid.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\fractionation.py">
       <SubType>Code</SubType>
     </Compile>

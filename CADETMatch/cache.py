@@ -124,11 +124,6 @@ class Cache:
                     temp = ["%s_Derivative_Similarity_Cross_Alt" % name, "%s_Time" % name,]
                     self.numGoals += 2
 
-                elif feature['type'] in ('dextran', 'dextranHybrid'):
-                    name = "%s_%s" % (experimentName, feature['name'])
-                    temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, "%s_Time" % name]
-                    self.numGoals += 3
-
                 self.headers.extend(temp)
                 experiment['headers'].extend(temp)
                                
@@ -302,32 +297,6 @@ class Cache:
                 temp[featureName]['peak_low'] = low
 
                 temp[featureName]['time_function'] = score.time_function(CV_time,high[0], diff_input = True)
-
-            if featureType == "dextran":
-                #change the stop point to be where the max positive slope is along the searched interval
-                exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, selectedValues, s=util.smoothing_factor(selectedValues), k=1).derivative(1)
-                values = exp_spline(selectedTimes)
-                #print([i for i in zip(selectedTimes, values)])
-                max_index = numpy.argmax(values)
-                max_time = selectedTimes[max_index]
-                #print(max_time, values[max_index])
-            
-                temp[featureName]['origSelected'] = temp[featureName]['selected']
-                temp[featureName]['selected'] = temp[featureName]['selected'] & (temp[featureName]['time'] <= max_time)
-                temp[featureName]['max_time'] = max_time
-                temp[featureName]['maxTimeFunction'] = score.time_function_decay(CV_time/10.0, max_time, diff_input=True)
-
-            if featureType == "dextranHybrid":
-                #change the stop point to be where the max positive slope is along the searched interval
-                exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, selectedValues, s=util.smoothing_factor(selectedValues), k=1).derivative(1)
-                values = exp_spline(selectedTimes)
-                max_index = numpy.argmax(values)
-                max_time = selectedTimes[max_index]
-            
-                temp[featureName]['origSelected'] = temp[featureName]['selected']
-                temp[featureName]['selected'] = temp[featureName]['selected'] & (temp[featureName]['time'] <= max_time)
-                temp[featureName]['max_time'] = max_time
-                temp[featureName]['offsetTimeFunction'] = score.time_function_decay(CV_time/10.0, max_time, diff_input=True)
             
         return temp
 

@@ -398,14 +398,6 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
             scores, sse = score.scoreDerivativeSimilarityCrossAlt(temp, target[experiment['name']][featureName])
         elif featureType == 'derivative_similarity_hybrid':
             scores, sse = score.scoreDerivativeSimilarityHybrid(temp, target[experiment['name']][featureName]) 
-        elif featureType == 'breakthroughCross':
-            scores, sse = score.scoreBreakthroughCross(temp, target[experiment['name']][featureName])
-        elif featureType == 'breakthroughHybrid':
-            scores, sse = score.scoreBreakthroughHybrid(temp, target[experiment['name']][featureName])
-        elif featureType == 'dextran':
-            scores, sse = score.scoreDextran(temp, target[experiment['name']][featureName])
-        elif featureType == 'dextranHybrid':
-            scores, sse = score.scoreDextranHybrid(temp, target[experiment['name']][featureName])
         temp['scores'].extend(scores)
         temp['error'] += sse
 
