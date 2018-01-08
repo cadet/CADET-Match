@@ -103,11 +103,6 @@ class Cache:
                     temp = self.scores[feature['type']].headers(experimentName, feature)
                     self.numGoals += len(temp)
 
-                elif feature['type'] in ('similarity', 'similarityCross', 'similarityHybrid', 'similarityDecay', 'similarityCrossDecay', 'similarityHybridDecay'):
-                    name = "%s_%s" % (experimentName, feature['name'])
-                    temp = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
-                    self.numGoals += 3
-
                 elif feature['type'] == 'derivative_similarity':
                     name = "%s_%s" % (experimentName, feature['name'])
                     temp = ["%s_Derivative_Similarity" % name, "%s_High_Value" % name, "%s_High_Time" % name, "%s_Low_Value" % name, "%s_Low_Time" % name]
@@ -132,11 +127,6 @@ class Cache:
                     name = "%s_%s" % (experimentName, feature['name'])
                     temp  = ["%s_Similarity" % name]
                     self.numGoals += 1
-
-                #elif feature['type'] == 'breakthrough':
-                    #name = "%s_%s" % (experimentName, feature['name'])
-                    #temp  = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time_Start" % name, "%s_Time_Stop" % name]
-                    #self.numGoals += 4
 
                 elif feature['type'] in ('breakthroughCross', 'breakthroughHybrid'):
                     name = "%s_%s" % (experimentName, feature['name'])
@@ -341,22 +331,6 @@ class Cache:
 
             if featureType in self.scores:
                 temp[featureName].update(self.scores[featureType].setup(feature, selectedTimes, selectedValues, CV_time, abstol))
-
-            if featureType in ('similarity', 'similarityCross', 'similarityHybrid'):
-                temp[featureName]['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
-                temp[featureName]['time_function'] = score.time_function(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType in ('similarityCross', 'similarityHybrid') else False)
-                temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1], abstol)
-
-            if featureType in ('similarityDecay', 'similarityCrossDecay', 'similarityHybridDecay'):
-                temp[featureName]['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
-                temp[featureName]['time_function'] = score.time_function_decay(CV_time, temp[featureName]['peak'][0], diff_input = True if featureType in ('similarityCrossDecay', 'similarityHybridDecay') else False)
-                temp[featureName]['value_function'] = score.value_function(temp[featureName]['peak'][1], abstol)
-
-            if featureType == 'breakthrough':
-                temp[featureName]['break'] = util.find_breakthrough(selectedTimes, selectedValues)
-                temp[featureName]['time_function_start'] = score.time_function(CV_time, temp[featureName]['break'][0][0])
-                temp[featureName]['time_function_stop'] = score.time_function(CV_time, temp[featureName]['break'][1][0])
-                temp[featureName]['value_function'] = score.value_function(temp[featureName]['break'][0][1], abstol)
 
             if featureType in ('breakthroughCross', 'breakthroughHybrid'):
                 temp[featureName]['break'] = util.find_breakthrough(selectedTimes, selectedValues)

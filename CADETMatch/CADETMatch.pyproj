@@ -59,7 +59,22 @@
     <Compile Include="scores\breakthrough.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\similarity.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\similarityCross.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\similarityCrossDecay.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\similarityDecay.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\similarityHybrid.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\similarityHybridDecay.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\__init__.py">

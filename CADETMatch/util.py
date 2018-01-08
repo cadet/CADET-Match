@@ -390,12 +390,6 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         if featureType in cache.scores:
             scores, sse = cache.scores[featureType].run(temp,  target[experiment['name']][featureName])
 
-        elif featureType in ('similarity', 'similarityDecay'):
-            scores, sse = score.scoreSimilarity(temp, target[experiment['name']][featureName])
-        elif featureType in ('similarityHybrid', 'similarityHybridDecay'):
-            scores, sse = score.scoreSimilarityHybrid(temp, target[experiment['name']][featureName])
-        elif featureType in ('similarityCross', 'similarityCrossDecay'):
-            scores, sse = score.scoreSimilarityCrossCorrelate(temp, target[experiment['name']][featureName])
         elif featureType == 'derivative_similarity':
             scores, sse = score.scoreDerivativeSimilarity(temp, target[experiment['name']][featureName])
         elif featureType == 'derivative_similarity_cross':
@@ -406,8 +400,6 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
             scores, sse = score.scoreDerivativeSimilarityHybrid(temp, target[experiment['name']][featureName]) 
         elif featureType == 'curve':
             scores, sse = score.scoreCurve(temp, target[experiment['name']][featureName])
-        elif featureType == 'breakthrough':
-            scores, sse = score.scoreBreakthrough(temp, target[experiment['name']][featureName])
         elif featureType == 'breakthroughCross':
             scores, sse = score.scoreBreakthroughCross(temp, target[experiment['name']][featureName])
         elif featureType == 'breakthroughHybrid':
