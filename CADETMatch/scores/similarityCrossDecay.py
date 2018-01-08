@@ -1,6 +1,5 @@
 import util
 import score
-import scipy.stats
 
 name = "similarityCrossDecay"
 adaptive = True

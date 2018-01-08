@@ -1,27 +1,9 @@
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
 import numpy
-import pandas
 import util
-import score
 
-import functools
-import subprocess
-import json
 import csv
-import h5py
-import operator
 import hashlib
 import time
-import sys
-import pickle
-
-import scipy.interpolate
-import math
-import array
-import random
 
 from pathlib import Path
 
@@ -31,14 +13,11 @@ from deap import creator
 from deap import tools
 
 import os
-import shutil
 
 from cadet import Cadet
 
 #parallelization
 from scoop import futures
-
-import scipy.signal
 
 from cache import cache
 
@@ -146,4 +125,4 @@ def runExperiment(individual, experiment, settings, target, cache):
 def run(cache):
     "run the parameter estimation"
     searchMethod = cache.settings.get('searchMethod', 'SPEA2')
-    cache.search[searchMethod].run(cache, tools, creator)
+    return cache.search[searchMethod].run(cache, tools, creator)

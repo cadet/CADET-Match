@@ -1,24 +1,14 @@
-import shutil
-import h5py
 import util
 from pathlib import Path
 import scipy.optimize
 import numpy
 import numpy.linalg
-import functools
-import operator
 import hashlib
-import score
 import os
-import subprocess
 import csv
 import time
 import sys
 from cadet import Cadet
-
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 #from cache import cache
 
@@ -58,11 +48,11 @@ def search(gradCheck, offspring, cache, check_all=False):
 
 def gradSearch(x):
     try:
-       val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(cache.MIN_VALUE, cache.MAX_VALUE), 
-           gtol=1e-14, ftol=1e-5, xtol=1e-14, diff_step=1e-7, x_scale="jac")
-       scores = fitness_sens(val.x, finished=1)
-       print(val.x, numpy.exp(val.x), val.jac, scores, val.message)
-       return val
+        val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(cache.MIN_VALUE, cache.MAX_VALUE), 
+            gtol=1e-14, ftol=1e-5, xtol=1e-14, diff_step=1e-7, x_scale="jac")
+        scores = fitness_sens(val.x, finished=1)
+        print(val.x, numpy.exp(val.x), val.jac, scores, val.message)
+        return val
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
         print("Gradient Failure")

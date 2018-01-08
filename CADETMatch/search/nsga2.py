@@ -1,9 +1,7 @@
 import random
-import math
 import pickle
 import util
 import numpy
-import array
 from pathlib import Path
 #import grad
 import gradFD

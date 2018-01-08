@@ -5,13 +5,7 @@ import json
 from cadet import Cadet
 
 import numpy
-import scipy
-import scipy.interpolate
-import pandas
-import util
-import sys
 
-import score
 import plugins
 
 class Cache:
@@ -65,7 +59,7 @@ class Cache:
                 self.settings['bootstrap']['samples'] = int(self.settings['bootstrap']['samples'])
 
     def setupHeaders(self):
-        self.headers = ['Time','Name', 'Method','Condition Number',]
+        self.headers = ['Time', 'Name', 'Method', 'Condition Number',]
 
         self.numGoals = 0
         self.badScore = 0.0

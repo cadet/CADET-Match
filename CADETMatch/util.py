@@ -1,4 +1,3 @@
-import random
 import math
 import numpy
 import pandas
@@ -6,9 +5,6 @@ import pandas
 from deap import tools
 import scipy.signal
 from scipy.spatial.distance import cdist
-import operator
-import functools
-from collections import Sequence
 from pathlib import Path
 
 from addict import Dict
@@ -20,7 +16,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import tempfile
 import os
 from cadet import Cadet
-import score
 import subprocess
 import sys
 import json

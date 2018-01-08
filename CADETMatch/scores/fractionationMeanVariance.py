@@ -1,6 +1,5 @@
 import util
 import score
-import scipy.stats
 import numpy
 import pandas
 
@@ -31,7 +30,7 @@ def run(sim_data,  feature):
                 
         sim_values = util.fractionate(start, stop, times, simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component]) * flow
        
-        mean_sim_time, variance_sim_time, mean_sim_value, variance_sim_value =  util.fracStat(time_center, sim_values)
+        mean_sim_time, variance_sim_time, mean_sim_value, variance_sim_value = util.fracStat(time_center, sim_values)
 
         exp_values_sse.extend(values)
         sim_values_sse.extend(sim_values)

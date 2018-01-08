@@ -1,6 +1,4 @@
 import util
-import score
-import scipy.stats
 import sys
 import numpy
 

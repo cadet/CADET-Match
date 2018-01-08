@@ -6,8 +6,6 @@ import evo
 import scipy.optimize
 import numpy
 import numpy.linalg
-import functools
-import operator
 import hashlib
 import score
 import tempfile
@@ -96,7 +94,7 @@ def gradSearch(x):
     #x0 = scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache})
     #return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='lm', kwargs={'cache':cache}, ftol=1e-10, xtol=1e-10, gtol=1e-10)
     try:
-       return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache}, x_scale='jac')
+        return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache}, x_scale='jac')
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
         print("Gradient Failure")

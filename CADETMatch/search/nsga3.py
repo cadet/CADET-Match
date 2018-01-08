@@ -1,5 +1,3 @@
-
-import math
 import util
 import checkpoint_algorithms
 import random

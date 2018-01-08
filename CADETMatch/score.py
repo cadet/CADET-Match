@@ -4,7 +4,6 @@ import scipy.optimize
 import scipy.interpolate
 import scipy.signal
 import numpy.linalg
-import util
 
 def logistic(x, a, b):
     return  1.0-1.0/(1.0+numpy.exp(a*(x-b)))

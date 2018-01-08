@@ -5,11 +5,9 @@
 from addict import Dict
 
 import h5py
-import types
 import numpy
 import subprocess
 import pprint
-import time
 import copy
 
 class Cadet():
