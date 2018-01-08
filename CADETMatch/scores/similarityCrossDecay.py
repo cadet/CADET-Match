@@ -3,6 +3,8 @@ import score
 import scipy.stats
 
 name = "similarityCrossDecay"
+adaptive = True
+badScore = 0
 
 def run(sim_data,  feature):
     "similarity, value, start stop"

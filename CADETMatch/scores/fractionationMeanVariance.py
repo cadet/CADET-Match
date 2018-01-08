@@ -5,6 +5,8 @@ import numpy
 import pandas
 
 name = "fractionationMeanVariance"
+adaptive = True
+badScore = 0
 
 def run(sim_data,  feature):
     simulation = sim_data['simulation']

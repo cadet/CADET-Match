@@ -102,6 +102,7 @@ class Cache:
                 if feature['type'] in self.scores:
                     temp = self.scores[feature['type']].headers(experimentName, feature)
                     self.numGoals += len(temp)
+                    self.badScore = self.scores[feature['type']].badScore
 
                 elif feature['type'] == 'derivative_similarity':
                     name = "%s_%s" % (experimentName, feature['name'])
@@ -127,18 +128,6 @@ class Cache:
                     name = "%s_%s" % (experimentName, feature['name'])
                     temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, "%s_Time" % name]
                     self.numGoals += 3
-
-                elif feature['type'] == 'SSE':
-                    name = "%s_%s" % (experimentName, feature['name'])
-                    temp = ["%s_SSE" % name]
-                    self.numGoals += 1
-                    self.badScore = -sys.float_info.max
-
-                elif feature['type'] == 'LogSSE':
-                    name = "%s_%s" % (experimentName, feature['name'])
-                    temp = ["%s_LogSSE" % name]
-                    self.numGoals += 1
-                    self.badScore = -sys.float_info.max
 
                 self.headers.extend(temp)
                 experiment['headers'].extend(temp)
@@ -277,6 +266,7 @@ class Cache:
 
             if featureType in self.scores:
                 temp[featureName].update(self.scores[featureType].setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol))
+                self.adaptive = self.scores[featureType].adaptive
 
             if featureType == 'derivative_similarity':
                 exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, util.smoothing(selectedTimes, selectedValues), s=util.smoothing_factor(selectedValues)).derivative(1)
@@ -338,9 +328,6 @@ class Cache:
                 temp[featureName]['selected'] = temp[featureName]['selected'] & (temp[featureName]['time'] <= max_time)
                 temp[featureName]['max_time'] = max_time
                 temp[featureName]['offsetTimeFunction'] = score.time_function_decay(CV_time/10.0, max_time, diff_input=True)
-
-            if featureType in ('SSE', 'LogSSE'):
-                self.adaptive = False
             
         return temp
 

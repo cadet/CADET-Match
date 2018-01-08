@@ -5,6 +5,8 @@ import numpy
 import pandas
 
 name = "fractionationCombine"
+adaptive = True
+badScore = 0
 
 def run(sim_data,  feature):
     "similarity, value, start stop"
