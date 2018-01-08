@@ -7,7 +7,7 @@ base = Path(__file__).parent
 
 def load_plugin(path):
     module = '.'.join(path.relative_to(base).parts).replace('.py', '')
-    spec = importlib.util.spec_from_file_location(module, path)
+    spec = importlib.util.spec_from_file_location(module, str(path))
     foo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(foo)
     return foo
