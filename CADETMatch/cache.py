@@ -104,26 +104,6 @@ class Cache:
                     self.numGoals += len(temp)
                     self.badScore = self.scores[feature['type']].badScore
 
-                elif feature['type'] == 'derivative_similarity':
-                    name = "%s_%s" % (experimentName, feature['name'])
-                    temp = ["%s_Derivative_Similarity" % name, "%s_High_Value" % name, "%s_High_Time" % name, "%s_Low_Value" % name, "%s_Low_Time" % name]
-                    self.numGoals += 5
-
-                elif feature['type'] == 'derivative_similarity_hybrid':
-                    name = "%s_%s" % (experimentName, feature['name'])
-                    temp = ["%s_Derivative_Similarity_hybrid" % name, "%s_Time" % name, "%s_High_Value" % name, "%s_Low_Value" % name]
-                    self.numGoals += 4
-
-                elif feature['type'] == 'derivative_similarity_cross':
-                    name = "%s_%s" % (experimentName, feature['name'])
-                    temp = ["%s_Derivative_Similarity_Cross" % name, "%s_Time" % name, "%s_High_Value" % name, "%s_Low_Value" % name]
-                    self.numGoals += 4
-
-                elif feature['type'] == 'derivative_similarity_cross_alt':
-                    name = "%s_%s" % (experimentName, feature['name'])
-                    temp = ["%s_Derivative_Similarity_Cross_Alt" % name, "%s_Time" % name,]
-                    self.numGoals += 2
-
                 self.headers.extend(temp)
                 experiment['headers'].extend(temp)
                                
@@ -262,41 +242,6 @@ class Cache:
             if featureType in self.scores:
                 temp[featureName].update(self.scores[featureType].setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol))
                 self.adaptive = self.scores[featureType].adaptive
-
-            if featureType == 'derivative_similarity':
-                exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, util.smoothing(selectedTimes, selectedValues), s=util.smoothing_factor(selectedValues)).derivative(1)
-
-                [high, low] = util.find_peak(selectedTimes, exp_spline(selectedTimes))
-
-                temp[featureName]['peak_high'] = high
-                temp[featureName]['peak_low'] = low
-
-                temp[featureName]['time_function_high'] = score.time_function(CV_time, high[0])
-                temp[featureName]['value_function_high'] = score.value_function(high[1], abstol, 0.1)
-                temp[featureName]['time_function_low'] = score.time_function(CV_time, low[0])
-                temp[featureName]['value_function_low'] = score.value_function(low[1], abstol, 0.1)
-
-            if featureType in ('derivative_similarity_hybrid', 'derivative_similarity_cross'):
-                exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, util.smoothing(selectedTimes, selectedValues), s=util.smoothing_factor(selectedValues)).derivative(1)
-
-                [high, low] = util.find_peak(selectedTimes, exp_spline(selectedTimes))
-
-                temp[featureName]['peak_high'] = high
-                temp[featureName]['peak_low'] = low
-
-                temp[featureName]['time_function'] = score.time_function(CV_time,high[0], diff_input = True)
-                temp[featureName]['value_function_high'] = score.value_function(high[1], abstol, 0.1)
-                temp[featureName]['value_function_low'] = score.value_function(low[1], abstol, 0.1)
-
-            if featureType == 'derivative_similarity_cross_alt':
-                exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, util.smoothing(selectedTimes, selectedValues), s=util.smoothing_factor(selectedValues)).derivative(1)
-
-                [high, low] = util.find_peak(selectedTimes, exp_spline(selectedTimes))
-
-                temp[featureName]['peak_high'] = high
-                temp[featureName]['peak_low'] = low
-
-                temp[featureName]['time_function'] = score.time_function(CV_time,high[0], diff_input = True)
             
         return temp
 

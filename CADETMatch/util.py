@@ -389,15 +389,7 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
 
         if featureType in cache.scores:
             scores, sse = cache.scores[featureType].run(temp,  target[experiment['name']][featureName])
-
-        elif featureType == 'derivative_similarity':
-            scores, sse = score.scoreDerivativeSimilarity(temp, target[experiment['name']][featureName])
-        elif featureType == 'derivative_similarity_cross':
-            scores, sse = score.scoreDerivativeSimilarityCross(temp, target[experiment['name']][featureName])
-        elif featureType == 'derivative_similarity_cross_alt':
-            scores, sse = score.scoreDerivativeSimilarityCrossAlt(temp, target[experiment['name']][featureName])
-        elif featureType == 'derivative_similarity_hybrid':
-            scores, sse = score.scoreDerivativeSimilarityHybrid(temp, target[experiment['name']][featureName]) 
+ 
         temp['scores'].extend(scores)
         temp['error'] += sse
 

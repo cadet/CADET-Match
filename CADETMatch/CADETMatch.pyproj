@@ -68,6 +68,15 @@
     <Compile Include="scores\curve.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\derivative_similarity.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\derivative_similarity_cross.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\derivative_similarity_hybrid.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\dextran.py">
       <SubType>Code</SubType>
     </Compile>
