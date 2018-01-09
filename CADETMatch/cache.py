@@ -172,7 +172,7 @@ class Cache:
             velocity = 1.0
         velocity = float(velocity)
 
-        area = sim.root.input.model.uni_001.cross_section_area
+        area = sim.root.input.model.unit_001.cross_section_area
         if area == {}:
             area = 1.0
         area = float(area)
