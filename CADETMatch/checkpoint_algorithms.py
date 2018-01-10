@@ -168,7 +168,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
 
-        print('hof', halloffame)
+        #print('hof', halloffame)
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(cp, cp_file)
@@ -213,7 +213,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
         cp = dict(population=population, generation=gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
 
-        print('hof', halloffame)
+        #print('hof', halloffame)
 
         hof = Path(settings['resultsDirMisc'], 'hof')
         with hof.open('wb') as data:

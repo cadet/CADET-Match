@@ -23,6 +23,7 @@ import json
 import itertools
 import time
 import csv
+import psutil
 
 from scoop import futures
 
@@ -611,6 +612,7 @@ def fractionate(start_seq, stop_seq, times, values):
     return numpy.array(temp)
 
 def writeProgress(cache, generation, population, halloffame, average_score, minimum_score, product_score, sim_start, generation_start):
+    cpu_time = psutil.Process().cpu_times()
     now = time.time()
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
@@ -625,7 +627,8 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
                          minimum_score,
                          product_score,
                          now - sim_start,
-                         now - generation_start])
+                         now - generation_start,
+                         cpu_time.user + cpu_time.system])
 
 def metaCSV(cache):
     repeat = int(cache.settings['repeat'])
@@ -633,6 +636,7 @@ def metaCSV(cache):
     generations = []
     timeToComplete = []
     timePerGeneration = []
+    totalCPUTime = []
     paretoFront = []
     hypervolume = []
     avergeScore = []
@@ -666,6 +670,7 @@ def metaCSV(cache):
         avergeScore.append(data['Average Score'].iloc[-1])
         minimumScore.append(data['Minimum Score'].iloc[-1])
         productScore.append(data['Product Score'].iloc[-1])
+        totalCPUTime.append(data['Total CPU Time'].iloc[-1])
 
 
     meta_progress = base_dir / "meta_progress.csv"
@@ -680,7 +685,8 @@ def metaCSV(cache):
                          'Hypervolume', 'Hypervolume STDDEV',
                          'Average Score', 'Average Score STDDEV',
                          'Minimum Score', 'Minimum Score STDDEV',
-                         'Product Score', 'Product Score STDDEV'])
+                         'Product Score', 'Product Score STDDEV',
+                         'Total CPU Time', 'Total CPU Time STDDEV'])
 
         writer.writerow([population, dimensionIn, dimensionOut, searchMethod,
                          numpy.mean(generations), numpy.std(generations),
@@ -690,4 +696,5 @@ def metaCSV(cache):
                          numpy.mean(hypervolume), numpy.std(hypervolume),
                          numpy.mean(avergeScore), numpy.std(avergeScore),
                          numpy.mean(minimumScore), numpy.std(minimumScore),
-                         numpy.mean(productScore), numpy.std(productScore),])
+                         numpy.mean(productScore), numpy.std(productScore),
+                         numpy.mean(totalCPUTime), numpy.std(totalCPUTime),])

@@ -91,7 +91,7 @@ def setup(cache, json_path):
 
     createDirectories(cache, json_path)
     createCSV(cache)
-    createProdgressCSV(cache)
+    createProgressCSV(cache)
     setupTemplates(cache)
     setupDeap(cache)
 
@@ -115,7 +115,7 @@ def createCSV(cache):
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
             writer.writerow(cache.headers)
 
-def createProdgressCSV(cache):
+def createProgressCSV(cache):
     path = Path(cache.settings['resultsDirBase'], "progress.csv")
     cache.progress_path = path
     if not path.exists():
