@@ -3,6 +3,7 @@ import numpy
 import pandas
 
 from deap import tools
+from deap.benchmarks.tools import hypervolume
 import scipy.signal
 from scipy.spatial.distance import cdist
 from pathlib import Path
@@ -20,6 +21,8 @@ import subprocess
 import sys
 import json
 import itertools
+import time
+import csv
 
 from scoop import futures
 
@@ -390,6 +393,23 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
 
     return temp
 
+def repeatSimulation(idx):
+    "read the original json file and copy it to a subdirectory for each repeat and change where the target data is written"
+    settings_file = Path(sys.argv[1])
+    with settings_file.open() as json_data:
+        settings = json.load(json_data)
+
+        baseDir = Path(settings['resultsDir']) / str(idx)
+        baseDir.mkdir(parents=True, exist_ok=True)
+
+        settings['resultsDirOriginal'] = settings['resultsDir']
+        settings['resultsDir'] = str(baseDir)
+
+        new_settings_file = baseDir / settings_file.name
+        with new_settings_file.open(mode="w") as json_data:
+            json.dump(settings, json_data)
+        return new_settings_file
+
 def copyCSVWithNoise(idx, center, noise):
     "read the original json file and create a new set of simulation data and simulation file in a subdirectory with noise"
     settings_file = Path(sys.argv[1])
@@ -589,3 +609,85 @@ def fractionate(start_seq, stop_seq, times, values):
 
         temp.append(numpy.trapz(local_values, local_times))
     return numpy.array(temp)
+
+def writeProgress(cache, generation, population, halloffame, average_score, minimum_score, product_score, sim_start, generation_start):
+    now = time.time()
+    with cache.progress_path.open('a', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+        writer.writerow([generation,
+                         len(population),
+                         len(cache.MIN_VALUE),
+                         cache.numGoals,
+                         cache.settings.get('searchMethod', 'SPEA2'),
+                         len(halloffame),
+                         hypervolume(halloffame, cache.WORST),
+                         average_score,
+                         minimum_score,
+                         product_score,
+                         now - sim_start,
+                         now - generation_start])
+
+def metaCSV(cache):
+    repeat = int(cache.settings['repeat'])
+
+    generations = []
+    timeToComplete = []
+    timePerGeneration = []
+    paretoFront = []
+    hypervolume = []
+    avergeScore = []
+    minimumScore = []
+    productScore = []
+    population = None
+    dimensionIn = None
+    dimensionOut = None
+    searchMethod = None
+
+    #read base progress csv and append each score
+    base_dir = Path(cache.settings['resultsDirOriginal'])
+    paths = [base_dir / "progress.csv",]
+    for idx in range(repeat):
+        paths.append(base_dir / str(idx) / "progress.csv")
+
+    for idx, path in enumerate(paths):
+        data = pandas.read_csv(path)
+
+        if idx == 0:
+            population = data['Population'].iloc[-1]
+            dimensionIn = data['Dimension In'].iloc[-1]
+            dimensionOut= data['Dimension Out'].iloc[-1]
+            searchMethod = data['Search Method'].iloc[-1] 
+
+        generations.append(data['Generation'].iloc[-1])
+        timeToComplete.append(data['Elapsed Time'].iloc[-1])
+        timePerGeneration.append(numpy.mean(data['Generation Time']))
+        paretoFront.append(data['Pareto Front'].iloc[-1])
+        hypervolume.append(data['Hypervolume'].iloc[-1])
+        avergeScore.append(data['Average Score'].iloc[-1])
+        minimumScore.append(data['Minimum Score'].iloc[-1])
+        productScore.append(data['Product Score'].iloc[-1])
+
+
+    meta_progress = base_dir / "meta_progress.csv"
+    with meta_progress.open('w', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+
+        writer.writerow(['Population', 'Dimension In', 'Dimension Out', 'Search Method',
+                         'Generation', 'Generation STDDEV',
+                         'Elapsed Time', 'Elapsed Time STDDEV',
+                         'Generation Time', 'Geneation Time STDDEV',
+                         'Pareto Front', 'Paret Front STDDEV',
+                         'Hypervolume', 'Hypervolume STDDEV',
+                         'Average Score', 'Average Score STDDEV',
+                         'Minimum Score', 'Minimum Score STDDEV',
+                         'Product Score', 'Product Score STDDEV'])
+
+        writer.writerow([population, dimensionIn, dimensionOut, searchMethod,
+                         numpy.mean(generations), numpy.std(generations),
+                         numpy.mean(timeToComplete), numpy.std(timeToComplete),
+                         numpy.mean(timePerGeneration), numpy.std(timePerGeneration),
+                         numpy.mean(paretoFront), numpy.std(paretoFront),
+                         numpy.mean(hypervolume), numpy.std(hypervolume),
+                         numpy.mean(avergeScore), numpy.std(avergeScore),
+                         numpy.mean(minimumScore), numpy.std(minimumScore),
+                         numpy.mean(productScore), numpy.std(productScore),])

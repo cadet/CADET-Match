@@ -5,6 +5,8 @@ import numpy
 import util
 from deap import algorithms
 import gradFD
+from deap.benchmarks.tools import hypervolume
+import time
 
 def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
                     stats=None, halloffame=None, verbose=__debug__, tools=None, cache=None):
@@ -13,6 +15,8 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
     checkpointFile = Path(settings['resultsDirMisc'], settings['checkpointFile'])
+
+    sim_start = generation_start = time.time()
 
     if checkpointFile.exists():
         with checkpointFile.open('rb') as cp_file:
@@ -43,7 +47,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             halloffame.update(population)
 
         avg, bestMin, bestProd = util.averageFitness(population)
-        print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
+        util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
 
         logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
@@ -55,7 +59,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
 
-        print('hof', halloffame)
+        #print('hof', halloffame)
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(cp, cp_file)
@@ -63,6 +67,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
     # Begin the generational process
     for gen in range(start_gen, ngen+1):
+        generation_start = time.time()
         # Vary the population
         offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
         offspring = util.RoundOffspring(offspring)
@@ -85,8 +90,8 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
         # Select the next generation population
         population[:] = toolbox.select(offspring, mu)
 
-        avg, bestMin, bestProd = util.averageFitness(population)
-        print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
+        avg, bestMin, bestProd = util.averageFitness(offspring)
+        util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
         
         # Update the statistics with the new population
         record = stats.compile(population) if stats is not None else {}
@@ -98,7 +103,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
         cp = dict(population=population, generation=gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
 
-        print('hof', halloffame)
+        #print('hof', halloffame)
 
         hof = Path(settings['resultsDirMisc'], 'hof')
         with hof.open('wb') as data:
@@ -119,6 +124,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
     checkpointFile = Path(settings['resultsDirMisc'], settings['checkpointFile'])
+
+    sim_start = generation_start = time.time()
 
     if checkpointFile.exists():
         with checkpointFile.open('rb') as cp_file:
@@ -149,7 +156,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             halloffame.update(population)
 
         avg, bestMin, bestProd = util.averageFitness(population)
-        print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
+        util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
 
         logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
@@ -170,6 +177,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
     # Begin the generational process
     for gen in range(start_gen, ngen+1):
+        generation_start = time.time()
         # Vary the population
         offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
         offspring = util.RoundOffspring(offspring)
@@ -192,8 +200,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
         # Select the next generation population
         population[:] = toolbox.select(offspring + population, mu)
 
-        avg, bestMin, bestProd = util.averageFitness(population)
-        print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
+        avg, bestMin, bestProd = util.averageFitness(offspring)
+        util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
         
         # Update the statistics with the new population
         record = stats.compile(population) if stats is not None else {}

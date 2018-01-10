@@ -32,6 +32,19 @@ def main():
     for i in hof:
         print(i, type(i), i.fitness.values)
 
+    if "repeat" in cache.settings:
+        repeat = int(cache.settings['repeat'])
+
+        for i in range(repeat):
+            json_path = util.repeatSimulation(i)
+            print(json_path)
+
+            setup(cache, json_path)
+
+            hof = evo.run(cache)
+        
+        util.metaCSV(cache)
+
     if "bootstrap" in cache.settings:
         temp = []
 
@@ -78,6 +91,7 @@ def setup(cache, json_path):
 
     createDirectories(cache, json_path)
     createCSV(cache)
+    createProdgressCSV(cache)
     setupTemplates(cache)
     setupDeap(cache)
 
@@ -100,6 +114,14 @@ def createCSV(cache):
         with path.open('w', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
             writer.writerow(cache.headers)
+
+def createProdgressCSV(cache):
+    path = Path(cache.settings['resultsDirBase'], "progress.csv")
+    cache.progress_path = path
+    if not path.exists():
+        with path.open('w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+            writer.writerow(cache.progress_headers)
 
 def setupTemplates(cache):
     "setup all the experimental templates"
