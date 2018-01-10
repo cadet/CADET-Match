@@ -542,7 +542,17 @@ def RoundOffspring(offspring):
             for idx, i in enumerate(temp):
                 child[idx] = i
             del child.fitness.values
-    return offspring
+
+    #make offspring unique
+    unique = set()
+    new_offspring = []
+    for child in offspring:
+        key = tuple(child)
+        if key not in unique:
+            new_offspring.append(child)
+            unique.add(key)
+
+    return new_offspring
 
 def RoundToSigFigs( x, sigfigs ):
     """
