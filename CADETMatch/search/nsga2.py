@@ -90,7 +90,7 @@ def run(cache, tools, creator):
             cache.toolbox.mutate(ind2)
             del ind1.fitness.values, ind2.fitness.values
 
-        offspring = util.RoundOffspring(offspring)
+        offspring = util.RoundOffspring(cache, offspring)
         
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]

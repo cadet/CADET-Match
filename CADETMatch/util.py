@@ -81,11 +81,11 @@ def find_breakthrough(times, data):
     return (selected_times[0], max(data)), (selected_times[-1], max(data))
 
 def generateIndividual(icls, size, imin, imax):
-    while 1:
-        #ind = icls(random.uniform(imin[idx], imax[idx]) for idx in range(size))
-        ind = icls(RoundToSigFigs(numpy.random.uniform(imin, imax), 8))
-        if feasible(ind):
-            return ind
+    #while 1:
+    #ind = icls(random.uniform(imin[idx], imax[idx]) for idx in range(size))
+    return icls(RoundToSigFigs(numpy.random.uniform(imin, imax), 8))
+    #  if feasible(ind):
+    #       return ind
 
 def initIndividual(icls, content):
     return icls(RoundToSigFigs(content, 8))
@@ -533,7 +533,7 @@ def space_plots(cache):
     
     gen_plots(str(output), str(csv_path), cache.parameter_indexes, cache.score_indexes)
 
-def RoundOffspring(offspring):
+def RoundOffspring(cache, offspring):
     for child in offspring:
         temp = RoundToSigFigs(child, 4)
         if all(child == temp):
@@ -547,6 +547,14 @@ def RoundOffspring(offspring):
     unique = set()
     new_offspring = []
     for child in offspring:
+        key = tuple(child)
+        if key not in unique:
+            new_offspring.append(child)
+            unique.add(key)
+
+    #population size needs to remain the same so add more children randomly if we have removed duplicates
+    while len(new_offspring) < len(offspring):
+        child = cache.toolbox.individual()
         key = tuple(child)
         if key not in unique:
             new_offspring.append(child)

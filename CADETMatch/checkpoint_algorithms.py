@@ -53,13 +53,9 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
         record = stats.compile(population) if stats is not None else {}
         logbook.record(gen=0, nevals=len(invalid_ind), **record)
-        if verbose:
-            print(logbook.stream)
 
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
-
-        #print('hof', halloffame)
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(cp, cp_file)
@@ -70,7 +66,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
         generation_start = time.time()
         # Vary the population
         offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
-        offspring = util.RoundOffspring(offspring)
+        offspring = util.RoundOffspring(cache, offspring)
 
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -78,9 +74,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
-        print("About to start gradient search")
         gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
-        print("Finished gradient search with new children", len(newChildren))
         offspring.extend(newChildren)
 
         # Update the hall of fame with the generated individuals
@@ -97,13 +91,8 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
         record = stats.compile(population) if stats is not None else {}
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
-        if verbose:
-            print(logbook.stream)
-
         cp = dict(population=population, generation=gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
-
-        #print('hof', halloffame)
 
         hof = Path(settings['resultsDirMisc'], 'hof')
         with hof.open('wb') as data:
@@ -162,13 +151,9 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
         record = stats.compile(population) if stats is not None else {}
         logbook.record(gen=0, nevals=len(invalid_ind), **record)
-        if verbose:
-            print(logbook.stream)
 
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
-
-        #print('hof', halloffame)
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(cp, cp_file)
@@ -180,7 +165,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
         generation_start = time.time()
         # Vary the population
         offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
-        offspring = util.RoundOffspring(offspring)
+        offspring = util.RoundOffspring(cache, offspring)
 
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -188,9 +173,13 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
-        print("About to start gradient search")
+        # Combination of varOr and RoundOffSpring invalidates some members of the population, not sure why yet
+        invalid_ind = [ind for ind in population if not ind.fitness.valid]
+        fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
+        for ind, fit in zip(invalid_ind, fitnesses):
+            ind.fitness.values = fit
+
         gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
-        print("Finished gradient search with new children", len(newChildren))
         offspring.extend(newChildren)
 
         # Update the hall of fame with the generated individuals
@@ -207,13 +196,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
         record = stats.compile(population) if stats is not None else {}
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
-        if verbose:
-            print(logbook.stream)
-
         cp = dict(population=population, generation=gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
-
-        #print('hof', halloffame)
 
         hof = Path(settings['resultsDirMisc'], 'hof')
         with hof.open('wb') as data:
