@@ -67,7 +67,6 @@ def search(gradCheck, offspring, toolbox):
     newOffspring = toolbox.map(gradSearch, checkOffspring)
 
     temp = []
-    print("Running gradient check")
     failed = []
     for i in newOffspring:
         if i is None:

@@ -23,7 +23,6 @@ def search(gradCheck, offspring, cache, check_all=False):
     newOffspring = cache.toolbox.map(gradSearch, map(list, checkOffspring))
 
     temp = []
-    print("Running gradient check")
     failed = []
     for i in newOffspring:
         if i is None:

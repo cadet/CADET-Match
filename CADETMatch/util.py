@@ -3,7 +3,6 @@ import numpy
 import pandas
 
 from deap import tools
-from deap.benchmarks.tools import hypervolume
 import scipy.signal
 from scipy.spatial.distance import cdist
 from pathlib import Path
@@ -24,6 +23,7 @@ import itertools
 import time
 import csv
 import psutil
+import pygmo
 
 from scoop import futures
 
@@ -634,13 +634,27 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
     now = time.time()
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+
+        fpras = pygmo.bf_fpras(eps=1e-2, delta=1e-2)
+        fitness = 1 - numpy.array([i.fitness.values for i in halloffame])
+        hv = pygmo.hypervolume(fitness)
+        worst = 1 - numpy.array(cache.WORST)
+        hyper = hv.compute(worst, hv_algo=fpras)
+        #ref = hv.refpoint(worst, offset = 0.0)
+
+        print("Generation: ", generation, 
+              "\tAverage Score: ", average_score, 
+              "\tMinimum Score: ", minimum_score, 
+              "\tProduct Score: ", product_score,
+              "\tHypervolume: ", hyper)
+
         writer.writerow([generation,
                          len(population),
                          len(cache.MIN_VALUE),
                          cache.numGoals,
                          cache.settings.get('searchMethod', 'SPEA2'),
                          len(halloffame),
-                         hypervolume(halloffame, cache.WORST),
+                         hyper,
                          average_score,
                          minimum_score,
                          product_score,
