@@ -25,6 +25,7 @@ class Cache:
         self.transform = None
         self.parameter_indexes = None
         self.score_indexes = None
+        self.score_headers = None
         # 'Hypervolume pygmo', 
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Hypervolume', 'Average Score', 'Minimum Score', 'Product Score',
@@ -94,6 +95,8 @@ class Cache:
         parameters = len(self.headers)
         self.parameter_indexes = list(range(base, parameters))
 
+        self.score_headers = []
+
         for idx, experiment in enumerate(self.settings['experiments']):
             experimentName = experiment['name']
             experiment['headers'] = []
@@ -103,9 +106,11 @@ class Cache:
                     self.numGoals += len(temp)
                     self.badScore = self.scores[feature['type']].badScore
 
-                self.headers.extend(temp)
+                self.score_headers.extend(temp)
                 experiment['headers'].extend(temp)
-                               
+
+        self.headers.extend(self.score_headers)                      
+        
         self.headers.extend(['Product Root Score', 'Min Score', 'Mean Score', 'Norm', 'SSE'])
 
         scores = len(self.headers)

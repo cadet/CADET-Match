@@ -632,6 +632,9 @@ def fractionate(start_seq, stop_seq, times, values):
 def writeProgress(cache, generation, population, halloffame, average_score, minimum_score, product_score, sim_start, generation_start):
     cpu_time = psutil.Process().cpu_times()
     now = time.time()
+
+    data = numpy.array([i.fitness.values for i in halloffame])
+
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
 
@@ -647,8 +650,6 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
               "\tMinimum Score: ", minimum_score, 
               "\tProduct Score: ", product_score,
               "\tHypervolume: ", hyper)
-
-        data = numpy.array([i.fitness.values for i in halloffame])
 
         row, col = data.shape
         data_mean = numpy.mean(data, 1)
@@ -676,9 +677,9 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
                          now - sim_start,
                          now - generation_start,
                          cpu_time.user + cpu_time.system])
-    graphProgress(cache)
+    graphProgress(cache, data)
 
-def graphProgress(cache):
+def graphProgress(cache, data):
     df = pandas.read_csv(str(cache.progress_path))
 
     output = cache.settings['resultsDirProgress']
@@ -689,12 +690,28 @@ def graphProgress(cache):
 
     for i in x:
         for j in y:
-            ax = df.plot(i,j)
+            ax = df.plot(i,j, ylim=(0,1))
             filename = "%s vs %s.png" % (i,j)
             file_path = output / filename
             figure = ax.get_figure()
             figure.savefig(str(file_path))
             plt.close(figure)
+
+    row, col = data.shape
+    x_tick = numpy.array(range(col))
+    x = numpy.repeat(x_tick, row, 0)
+    x.shape = data.shape
+
+    plt.scatter(x, data)
+    headers = [i.replace('_', ' ') for i in cache.score_headers]
+    plt.xticks(x_tick, headers, rotation=90)
+
+    file_path = output / "scores.png"
+    plt.savefig(bytes(file_path), bbox_inches='tight')
+    plt.close()
+
+
+
             
 
 def metaCSV(cache):
