@@ -18,6 +18,10 @@ def run(cache, tools, creator):
     parameters = len(cache.MIN_VALUE)
 
     populationSize = parameters * cache.settings['population']
+
+    #populationSize has to be a multiple of 4 so increase to the next multiple of 4
+    populationSize += (-populationSize % 4)
+
     CXPB = cache.settings['crossoverRate']
 
     totalGenerations = parameters * cache.settings['generations']
