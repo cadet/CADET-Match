@@ -133,6 +133,9 @@
     <Compile Include="search\spea2.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="search\spea2a.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="search\__init__.py">
       <SubType>Code</SubType>
     </Compile>
