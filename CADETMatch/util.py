@@ -648,6 +648,18 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
               "\tProduct Score: ", product_score,
               "\tHypervolume: ", hyper)
 
+        data = numpy.array([i.fitness.values for i in halloffame])
+
+        row, col = data.shape
+        data_mean = numpy.mean(data, 1)
+        data_mean_mean = numpy.mean(data_mean)
+
+        data_min = numpy.min(data, 1)
+        data_min_mean = numpy.mean(data_min)
+
+        data_prod = numpy.power(numpy.prod(data, 1), 1.0/col)
+        data_prod_mean = numpy.mean(data_prod)
+ 
         writer.writerow([generation,
                          len(population),
                          len(cache.MIN_VALUE),
@@ -658,6 +670,9 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
                          average_score,
                          minimum_score,
                          product_score,
+                         data_mean_mean,
+                         data_min_mean,
+                         data_prod_mean,
                          now - sim_start,
                          now - generation_start,
                          cpu_time.user + cpu_time.system])
@@ -674,6 +689,9 @@ def metaCSV(cache):
     avergeScore = []
     minimumScore = []
     productScore = []
+    paretoAverageScore = []
+    paretoMinimumScore = []
+    paretoProductScore = []
     population = None
     dimensionIn = None
     dimensionOut = None
@@ -703,8 +721,11 @@ def metaCSV(cache):
         minimumScore.append(data['Minimum Score'].iloc[-1])
         productScore.append(data['Product Score'].iloc[-1])
         totalCPUTime.append(data['Total CPU Time'].iloc[-1])
+        paretoAverageScore = [data['Pareto Mean Average Score'].iloc[-1]]
+        paretoMinimumScore = [data['Pareto Mean Minimum Score'].iloc[-1]]
+        paretoProductScore = [data['Pareto Mean Product Score'].iloc[-1]]
 
-
+        
     meta_progress = base_dir / "meta_progress.csv"
     with meta_progress.open('w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
@@ -718,6 +739,9 @@ def metaCSV(cache):
                          'Average Score', 'Average Score STDDEV',
                          'Minimum Score', 'Minimum Score STDDEV',
                          'Product Score', 'Product Score STDDEV',
+                         'Pareto Mean Average Score', 'Pareto Mean Average Score STDDEV',
+                         'Pareto Mean Minimum Score', 'Pareto Mean Minimum Score STDDEV',
+                         'Pareto Mean Product Score', 'Pareto Mean Product Score STDDEV',
                          'Total CPU Time', 'Total CPU Time STDDEV'])
 
         writer.writerow([population, dimensionIn, dimensionOut, searchMethod,
@@ -729,4 +753,7 @@ def metaCSV(cache):
                          numpy.mean(avergeScore), numpy.std(avergeScore),
                          numpy.mean(minimumScore), numpy.std(minimumScore),
                          numpy.mean(productScore), numpy.std(productScore),
+                         numpy.mean(paretoAverageScore), numpy.std(paretoAverageScore),
+                         numpy.mean(paretoMinimumScore), numpy.std(paretoMinimumScore),
+                         numpy.mean(paretoProductScore), numpy.std(paretoProductScore),
                          numpy.mean(totalCPUTime), numpy.std(totalCPUTime),])

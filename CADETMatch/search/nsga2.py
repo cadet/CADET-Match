@@ -5,6 +5,7 @@ import numpy
 from pathlib import Path
 #import grad
 import gradFD
+import time
 
 from deap import algorithms
 
@@ -50,19 +51,24 @@ def run(cache, tools, creator):
         gradCheck = cache.settings['gradCheck']
 
         logbook.header = ['gen', 'nevals']
+
+    sim_start = generation_start = time.time()
    
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
     fitnesses = cache.toolbox.map(cache.toolbox.evaluate, map(list, invalid_ind))
     for ind, fit in zip(invalid_ind, fitnesses):
-        ind.fitness.values = fit    
+        ind.fitness.values = fit
+        
+    if halloffame is not None:
+        halloffame.update(population)
 
     # This is just to assign the crowding distance to the individuals
     # no actual selection is done
     population = cache.toolbox.select(population, len(population)) 
     
     avg, bestMin, bestProd = util.averageFitness(population)
-    print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
+    util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
 
     logbook.record(gen=start_gen, evals=len(invalid_ind))
 
@@ -78,6 +84,7 @@ def run(cache, tools, creator):
 
     # Begin the generational process
     for gen in range(start_gen, totalGenerations+1):
+        generation_start = time.time()
         # Vary the population
         offspring = tools.selTournamentDCD(population, len(population))
         offspring = [cache.toolbox.clone(ind) for ind in offspring]
@@ -98,20 +105,18 @@ def run(cache, tools, creator):
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
-        print("About to start gradient search")
         gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
-        print("Finished gradient search with new children", len(newChildren))
         offspring.extend(newChildren)
 
+        if halloffame is not None:
+            halloffame.update(offspring)
+        
         avg, bestMin, bestProd = util.averageFitness(offspring)
-        print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
+        util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
 
         # Select the next generation population
         population = cache.toolbox.select(population + offspring, populationSize)
         logbook.record(gen=gen, evals=len(invalid_ind))
-
-        #cp = dict(population=population, generation=gen, halloffame=halloffame,
-        #    logbook=logbook, rndstate=random.getstate())
 
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
             logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
