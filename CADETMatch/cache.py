@@ -50,6 +50,7 @@ class Cache:
         self.settings['resultsDirGrad'] = Path(self.settings['resultsDir']) / "grad"
         self.settings['resultsDirMisc'] = Path(self.settings['resultsDir']) / "misc"
         self.settings['resultsDirSpace'] = Path(self.settings['resultsDir']) / "space"
+        self.settings['resultsDirProgress'] = Path(self.settings['resultsDir']) / "progress"
         self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
 
     def setupSettings(self):

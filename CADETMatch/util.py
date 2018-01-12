@@ -676,6 +676,26 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
                          now - sim_start,
                          now - generation_start,
                          cpu_time.user + cpu_time.system])
+    graphProgress(cache)
+
+def graphProgress(cache):
+    df = pandas.read_csv(str(cache.progress_path))
+
+    output = cache.settings['resultsDirProgress']
+
+    x = ['Generation', 'Total CPU Time']
+    y = ['Hypervolume', 'Average Score', 'Minimum Score', 'Product Score',
+                                 'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score']
+
+    for i in x:
+        for j in y:
+            ax = df.plot(i,j)
+            filename = "%s vs %s.png" % (i,j)
+            file_path = output / filename
+            figure = ax.get_figure()
+            figure.savefig(str(file_path))
+            plt.close(figure)
+            
 
 def metaCSV(cache):
     repeat = int(cache.settings['repeat'])
