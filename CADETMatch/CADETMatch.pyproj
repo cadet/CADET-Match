@@ -64,6 +64,9 @@
     <Compile Include="scores\breakthroughHybrid.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\breakthroughHybrid2.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\curve.py">
       <SubType>Code</SubType>
     </Compile>
@@ -74,6 +77,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\derivative_similarity_hybrid.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\derivative_similarity_hybrid2.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\dextran.py">
@@ -112,7 +118,13 @@
     <Compile Include="scores\similarityHybrid.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\similarityHybrid2.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\similarityHybridDecay.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\similarityHybridDecay2.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\sse.py">

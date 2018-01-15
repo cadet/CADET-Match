@@ -25,7 +25,7 @@ def run(sim_data, feature):
    
     graph_sim = {}
     graph_exp = {}
-    for (start, stop, component, values, func_mean_time, func_variance_time, funk_skew_time, func_mean_value, func_variance_value, func_skew_value) in funcs:
+    for (start, stop, component, values, func_mean_time, func_variance_time, func_skew_time, func_mean_value, func_variance_value, func_skew_value) in funcs:
         time_center = (start + stop)/2.0
                 
         sim_values = util.fractionate(start, stop, times, simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component]) * flow

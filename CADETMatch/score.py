@@ -15,7 +15,7 @@ def linear(x, a, b):
     return a*x+b
 
 def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
-    corr = scipy.signal.correlate(sim_data_values, exp_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
+    corr = scipy.signal.correlate(exp_data_values, sim_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
 
     index = numpy.argmax(corr)
 
@@ -23,19 +23,32 @@ def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
 
     endTime = exp_time_values[-1]
 
-    try:
-        if index > len(exp_time_values):
-            simTime = exp_time_values[-(index - len(exp_time_values))]
-        elif index < len(exp_time_values):
-            simTime = exp_time_values[-(len(exp_time_values) - index)]
-        else:
-            simTime = endTime
-    except IndexError:
-        #This means the curve has to be moved outside of the time range and so just set it to the end of the range
-        simTime = endTime
+    startIndex = -numpy.abs(len(exp_time_values) - index)
+    startTime = exp_time_values[startIndex]
+    diff_time = endTime - startTime
 
-    diff_time = endTime - simTime
     return score, diff_time
+
+def pearson(exp_time_values, sim_data_values, exp_data_values):
+    corr = scipy.signal.correlate(exp_data_values, sim_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
+
+    index = numpy.argmax(corr)
+
+    score = corr[index]
+
+    endTime = exp_time_values[-1]
+
+    startIndex = -numpy.abs(len(exp_time_values) - index)
+    startTime = exp_time_values[startIndex]
+    diff_time = endTime - startTime
+    diff_index = len(exp_time_values) - index - 1
+
+    sim_data_values_copy = numpy.copy(sim_data_values)
+    sim_data_values_copy = numpy.roll(sim_data_values_copy, -diff_index)
+
+    pear = scipy.stats.pearsonr(exp_data_values, sim_data_values)
+
+    return pear_corr(pear[0]), diff_time
 
 def time_function_decay(CV_time, peak_time, diff_input=False):
     x_exp = numpy.array([0, 10.0*CV_time])
