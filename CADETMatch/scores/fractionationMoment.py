@@ -3,7 +3,7 @@ import score
 import numpy
 import pandas
 
-name = "fractionationMeanVariance"
+name = "fractionationMoment"
 adaptive = True
 badScore = 0
 
@@ -25,7 +25,7 @@ def run(sim_data, feature):
    
     graph_sim = {}
     graph_exp = {}
-    for (start, stop, component, values, func_mean_time, func_variance_time, func_mean_value, func_variance_value) in funcs:
+    for (start, stop, component, values, func_mean_time, func_variance_time, funk_skew_time, func_mean_value, func_variance_value, func_skew_value) in funcs:
         time_center = (start + stop)/2.0
                 
         sim_values = util.fractionate(start, stop, times, simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component]) * flow
@@ -37,8 +37,10 @@ def run(sim_data, feature):
 
         scores.append(func_mean_time(mean_sim_time))
         scores.append(func_variance_time(variance_sim_time))
+        scores.append(func_skew_time(skew_sim_time))
         scores.append(func_mean_value(mean_sim_value))
         scores.append(func_variance_value(variance_sim_value))
+        scores.append(func_skew_value(skew_sim_value))
 
         graph_sim[component] = list(zip(time_center, sim_values))
         graph_exp[component] = list(zip(time_center, values))
@@ -73,11 +75,15 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
 
         func_mean_time = score.time_function(CV_time, mean_time, diff_input = False)
         func_variance_time = score.value_function(variance_time)
+        func_skew_time = score.value_function(skew_time)
 
         func_mean_value = score.value_function(mean_value, abstolFraction)
         func_variance_value = score.value_function(variance_value, abstolFraction/1e5)
+        func_skew_value = score.value_function(skew_value, abstolFraction/1e5)
 
-        funcs.append( (start, stop, int(component), value, func_mean_time, func_variance_time, func_mean_value, func_variance_value) )
+        funcs.append( (start, stop, int(component), value, 
+                       func_mean_time, func_variance_time, func_skew_time, 
+                       func_mean_value, func_variance_value, func_skew_value) )
 
     temp['funcs'] = funcs
     temp['components'] = [int(i) for i in headers[2:]]
@@ -94,6 +100,9 @@ def headers(experimentName, feature):
     for component in data_headers[2:]:
         temp.append('%s_%s_Component_%s_time_mean' % (experimentName, feature['name'], component))
         temp.append('%s_%s_Component_%s_time_var' % (experimentName, feature['name'], component))
+        temp.append('%s_%s_Component_%s_time_skew' % (experimentName, feature['name'], component))
         temp.append('%s_%s_Component_%s_value_mean' % (experimentName, feature['name'], component))
         temp.append('%s_%s_Component_%s_value_var' % (experimentName, feature['name'], component))
+        temp.append('%s_%s_Component_%s_value_skew' % (experimentName, feature['name'], component))
     return temp
+

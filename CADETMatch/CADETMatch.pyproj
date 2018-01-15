@@ -91,6 +91,9 @@
     <Compile Include="scores\fractionationMeanVariance.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\fractionationMoment.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\logsse.py">
       <SubType>Code</SubType>
     </Compile>

@@ -613,11 +613,13 @@ def RoundToSigFigs( x, sigfigs ):
 def fracStat(time_center, value):
     mean_time = numpy.sum(time_center*value)/numpy.sum(value)
     variance_time = numpy.sum( (time_center - mean_time)**2 * value )/numpy.sum(value)
+    skew_time = numpy.sum( (time_center - mean_time)**3 * value )/numpy.sum(value)
 
     mean_value = numpy.sum(time_center*value)/numpy.sum(time_center)
     variance_value = numpy.sum( (value - mean_value)**2 * time_center )/numpy.sum(time_center)
+    skew_value = numpy.sum( (value - mean_value)**3 * time_center )/numpy.sum(time_center)
 
-    return mean_time, variance_time, mean_value, variance_value
+    return mean_time, variance_time, skew_time, mean_value, variance_value, skew_value
 
 def fractionate(start_seq, stop_seq, times, values):
     temp = []
