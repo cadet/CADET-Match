@@ -233,7 +233,7 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
                     graph.plot(exp_time, exp_spline(exp_time), 'g:', label='Experiment')
                 except:
                     pass
-            elif featureType in ('fractionation', 'fractionationCombine', 'fractionationMeanVariance'):
+            elif featureType in ('fractionation', 'fractionationCombine', 'fractionationMeanVariance', 'fractionationMoment', 'fractionationSlide'):
                 graph_exp = results[experimentName]['graph_exp']
                 graph_sim = results[experimentName]['graph_sim']
 
