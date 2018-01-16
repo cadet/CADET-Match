@@ -69,7 +69,7 @@ def run(sim_data, feature):
     graph_exp = {}
 
     searchIndexStart, searchIndexStop = searchRange(times, start, stop, CV_time)
-    print("searchIndexStart\t", searchIndexStart, "\tsearchIndexStop\t", searchIndexStop)
+    #print("searchIndexStart\t", searchIndexStart, "\tsearchIndexStop\t", searchIndexStop)
 
     for component, value_func in funcs:
         exp_values = numpy.array(data[str(component)])
