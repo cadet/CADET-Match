@@ -14,9 +14,9 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\CADET_ParameterEstimation\transport\grm\dextran\SPEA2_dextran.json"</CommandLineArguments>
+    <CommandLineArguments>"F:\CADET_ParameterEstimation\adsorption\grm\linear\SPEA2_fraction.json"</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
+    <InterpreterArguments>-m scoop -n 4</InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -98,6 +98,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\fractionationMoment.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\fractionationSlide.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\logsse.py">
