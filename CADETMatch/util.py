@@ -23,7 +23,6 @@ import itertools
 import time
 import csv
 import psutil
-import pygmo
 
 from scoop import futures
 
@@ -640,18 +639,10 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
 
-        fpras = pygmo.bf_fpras(eps=1e-2, delta=1e-2)
-        fitness = 1 - numpy.array([i.fitness.values for i in halloffame])
-        hv = pygmo.hypervolume(fitness)
-        worst = 1 - numpy.array(cache.WORST)
-        hyper = hv.compute(worst, hv_algo=fpras)
-        #ref = hv.refpoint(worst, offset = 0.0)
-
         print("Generation: ", generation, 
               "\tAverage Score: ", average_score, 
               "\tMinimum Score: ", minimum_score, 
-              "\tProduct Score: ", product_score,
-              "\tHypervolume: ", hyper)
+              "\tProduct Score: ", product_score)
 
         row, col = data.shape
         data_mean = numpy.mean(data, 1)
@@ -669,7 +660,6 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
                          cache.numGoals,
                          cache.settings.get('searchMethod', 'SPEA2'),
                          len(halloffame),
-                         hyper,
                          average_score,
                          minimum_score,
                          product_score,
@@ -687,8 +677,8 @@ def graphProgress(cache, data):
     output = cache.settings['resultsDirProgress']
 
     x = ['Generation', 'Total CPU Time']
-    y = ['Hypervolume', 'Average Score', 'Minimum Score', 'Product Score',
-                                 'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score']
+    y = ['Average Score', 'Minimum Score', 'Product Score',
+         'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score']
 
     for i in x:
         for j in y:
@@ -724,7 +714,6 @@ def metaCSV(cache):
     timePerGeneration = []
     totalCPUTime = []
     paretoFront = []
-    hypervolume = []
     avergeScore = []
     minimumScore = []
     productScore = []
@@ -755,7 +744,6 @@ def metaCSV(cache):
         timeToComplete.append(data['Elapsed Time'].iloc[-1])
         timePerGeneration.append(numpy.mean(data['Generation Time']))
         paretoFront.append(data['Pareto Front'].iloc[-1])
-        hypervolume.append(data['Hypervolume'].iloc[-1])
         avergeScore.append(data['Average Score'].iloc[-1])
         minimumScore.append(data['Minimum Score'].iloc[-1])
         productScore.append(data['Product Score'].iloc[-1])
@@ -774,7 +762,6 @@ def metaCSV(cache):
                          'Elapsed Time', 'Elapsed Time STDDEV',
                          'Generation Time', 'Geneation Time STDDEV',
                          'Pareto Front', 'Paret Front STDDEV',
-                         'Hypervolume', 'Hypervolume STDDEV',
                          'Average Score', 'Average Score STDDEV',
                          'Minimum Score', 'Minimum Score STDDEV',
                          'Product Score', 'Product Score STDDEV',
@@ -788,7 +775,6 @@ def metaCSV(cache):
                          numpy.mean(timeToComplete), numpy.std(timeToComplete),
                          numpy.mean(timePerGeneration), numpy.std(timePerGeneration),
                          numpy.mean(paretoFront), numpy.std(paretoFront),
-                         numpy.mean(hypervolume), numpy.std(hypervolume),
                          numpy.mean(avergeScore), numpy.std(avergeScore),
                          numpy.mean(minimumScore), numpy.std(minimumScore),
                          numpy.mean(productScore), numpy.std(productScore),
