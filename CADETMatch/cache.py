@@ -26,7 +26,6 @@ class Cache:
         self.parameter_indexes = None
         self.score_indexes = None
         self.score_headers = None
-        # 'Hypervolume pygmo', 
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
                                  'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score',

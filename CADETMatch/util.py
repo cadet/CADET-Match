@@ -9,9 +9,11 @@ from pathlib import Path
 
 from addict import Dict
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+#matplotlib OO interface
+from matplotlib import figure
+from matplotlib import cm
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
 from mpl_toolkits.mplot3d import Axes3D
 import tempfile
 import os
@@ -201,7 +203,8 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
         exp_time = target[experimentName]['time']
         exp_value = target[experimentName]['value']
 
-        fig = plt.figure(figsize=[10, numPlots*10])
+        fig = figure.Figure(figsize=[10, numPlots*10])
+        FigureCanvas(fig)
 
         graph_simulation(results[experimentName]['simulation'], fig.add_subplot(numPlots, 1, 1))
 
@@ -247,8 +250,7 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
                     graph.plot(time, values, '%s:' % colors[idx], label='Experiment Comp: %s' % key)
             graph.legend()
 
-        plt.savefig(bytes(dst), dpi=100)
-        plt.close()
+        fig.savefig(bytes(dst), dpi=100)
 
 def saveExperiments(save_name_base, settings, target, results, directory, file_pattern):
     for experiment in settings['experiments']:
@@ -494,15 +496,15 @@ def plot_3d(arg):
         scores = -numpy.log(scores)
         scoreName = '-log(%s)' % headers[score]
     
-    fig = plt.figure()
+    fig = figure.Figure()
+    FigureCanvas(fig)
     ax = Axes3D(fig)
-    ax.scatter(numpy.log(dataframe.iloc[:, c1]), numpy.log(dataframe.iloc[:, c2]), scores, c=scores, cmap=plt.get_cmap('winter'))
+    ax.scatter(numpy.log(dataframe.iloc[:, c1]), numpy.log(dataframe.iloc[:, c2]), scores, c=scores, cmap=cm.get_cmap('winter'))
     ax.set_xlabel('log(%s)' % headers[c1])
     ax.set_ylabel('log(%s)' % headers[c2])
     ax.set_zlabel(scoreName)
     filename = "%s_%s_%s.png" % (c1, c2, score)
-    plt.savefig(str(directory / filename), bbox_inches='tight')
-    plt.close()
+    fig.savefig(str(directory / filename), bbox_inches='tight')
 
 def plot_2d(arg):
     directory_path, csv_path, c1, score = arg
@@ -511,7 +513,8 @@ def plot_2d(arg):
     headers = dataframe.columns.values.tolist()
     #print('2d', headers[c1], headers[score])
 
-    fig = plt.figure()
+    fig = figure.Figure()
+    FigureCanvas(fig)
 
     scores = dataframe.iloc[:, score]
     scoreName = headers[score]
@@ -519,12 +522,12 @@ def plot_2d(arg):
         scores = -numpy.log(scores)
         scoreName = '-log(%s)' % headers[score]
 
-    plt.scatter(numpy.log(dataframe.iloc[:, c1]), scores, c=scores, cmap=plt.get_cmap('winter'))
-    plt.xlabel('log(%s)' % headers[c1])
-    plt.ylabel(scoreName)
+    graph = fig.add_subplot(1, 1, 1)
+    graph.scatter(numpy.log(dataframe.iloc[:, c1]), scores, c=scores, cmap=cm.get_cmap('winter'))
+    graph.set_xlabel('log(%s)' % headers[c1])
+    graph.set_ylabel(scoreName)
     filename = "%s_%s.png" % (c1, score)
-    plt.savefig(str(directory / filename), bbox_inches='tight')
-    plt.close()
+    fig.savefig(str(directory / filename), bbox_inches='tight')
 
 def space_plots(cache):
     csv_path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
@@ -682,29 +685,38 @@ def graphProgress(cache, data):
 
     for i in x:
         for j in y:
-            ax = df.plot(i,j, ylim=(0,1))
+            fig = figure.Figure()
+            FigureCanvas(fig)
+
+            graph = fig.add_subplot(1, 1, 1)
+
+            graph.plot(df[i],df[j])
+            graph.set_ylim((0,1))
+            graph.set_title('%s vs %s' % (i,j))
+            graph.set_xlabel(i)
+            graph.set_ylabel(j)
+
             filename = "%s vs %s.png" % (i,j)
             file_path = output / filename
-            figure = ax.get_figure()
-            figure.savefig(str(file_path))
-            plt.close(figure)
+            fig.savefig(str(file_path))
 
     row, col = data.shape
     x_tick = numpy.array(range(col))
     x = numpy.repeat(x_tick, row, 0)
     x.shape = data.shape
 
-    plt.scatter(x, data)
+    fig = figure.Figure()
+    FigureCanvas(fig)
+    graph = fig.add_subplot(1, 1, 1)
+
+    graph.scatter(x, data)
     headers = [i.replace('_', ' ') for i in cache.score_headers]
-    plt.xticks(x_tick, headers, rotation=90)
+    graph.set_xticks(x_tick)
+    graph.tick_params(labelrotation = 90)
+    graph.set_xticklabels(headers)
 
     file_path = output / "scores.png"
-    plt.savefig(bytes(file_path), bbox_inches='tight')
-    plt.close()
-
-
-
-            
+    fig.savefig(bytes(file_path), bbox_inches='tight')
 
 def metaCSV(cache):
     repeat = int(cache.settings['repeat'])

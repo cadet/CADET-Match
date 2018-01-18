@@ -5,7 +5,6 @@ import numpy
 import util
 from deap import algorithms
 import gradFD
-from deap.benchmarks.tools import hypervolume
 import time
 
 def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
@@ -162,6 +161,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
     # Begin the generational process
     for gen in range(start_gen, ngen+1):
+
         generation_start = time.time()
         # Vary the population
         offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
