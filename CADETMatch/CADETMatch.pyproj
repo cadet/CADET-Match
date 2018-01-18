@@ -16,8 +16,7 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>"F:\CADET_ParameterEstimation\adsorption\grm\linear\SPEA2_fraction.json"</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>
-    </InterpreterArguments>
+    <InterpreterArguments>-m scoop -n 10</InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>

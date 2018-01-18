@@ -68,6 +68,7 @@ class Cache:
 
         self.numGoals = 0
         self.badScore = 0.0
+
         base = len(self.headers)
         
         for parameter in self.settings['parameters']:

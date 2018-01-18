@@ -169,7 +169,7 @@ def setupDeap(cache):
     "setup the DEAP variables"
     searchMethod = cache.settings.get('searchMethod', 'SPEA2')
     cache.toolbox = base.Toolbox()
-    cache.search[searchMethod].setupDEAP(cache, evo.fitness, futures.map, creator, base, tools)
+    cache.search[searchMethod].setupDEAP(cache, evo.fitness, futures.map_as_completed, creator, base, tools)
 
 if __name__ == "__main__":
     start = time.time()

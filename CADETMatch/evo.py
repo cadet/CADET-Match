@@ -1,7 +1,7 @@
 import numpy
 import util
 
-import csv
+#import csv
 import hashlib
 import time
 
@@ -33,9 +33,7 @@ def fitness(individual, json_path):
         cache.setup(json_path)
     
     if not(util.feasible(individual)):
-        return cache.WORST
-
-    
+        return cache.WORST, []
 
     scores = []
     error = 0.0
@@ -48,7 +46,7 @@ def fitness(individual, json_path):
             scores.extend(results[experiment['name']]['scores'])
             error += results[experiment['name']]['error']
         else:
-            return cache.WORST
+            return cache.WORST, []
 
     #need
 
@@ -84,13 +82,7 @@ def fitness(individual, json_path):
             break
 
     #generate csv
-    path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
-    with path.open('a', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
-        writer.writerow([time.ctime(), save_name_base, 'EVO', 'NA'] + 
-                        ["%.5g" % i for i in cadetValuesKEQ] + 
-                        ["%.5g" % i for i in scores] + 
-                        list(humanScores)) 
+    csv_record = [time.ctime(), save_name_base, 'EVO', 'NA'] + ["%.5g" % i for i in cadetValuesKEQ] + ["%.5g" % i for i in scores] + list(humanScores)
 
     #print('keep_result', keep_result)
     if keep_result:
@@ -104,7 +96,7 @@ def fitness(individual, json_path):
         if result['path']:
             os.remove(result['path'])
             
-    return scores
+    return scores, csv_record
 
 def saveExperiments(save_name_base, settings, target, results):
     return util.saveExperiments(save_name_base, settings, target, results, settings['resultsDirEvo'], '%s_%s_EVO.h5')

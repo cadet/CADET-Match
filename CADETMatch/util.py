@@ -204,7 +204,7 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
         exp_value = target[experimentName]['value']
 
         fig = figure.Figure(figsize=[10, numPlots*10])
-        FigureCanvas(fig)
+        canvas = FigureCanvas(fig)
 
         graph_simulation(results[experimentName]['simulation'], fig.add_subplot(numPlots, 1, 1))
 
@@ -251,6 +251,8 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
             graph.legend()
 
         fig.savefig(bytes(dst), dpi=100)
+        fig.clear()
+        del fig, canvas
 
 def saveExperiments(save_name_base, settings, target, results, directory, file_pattern):
     for experiment in settings['experiments']:
@@ -497,7 +499,7 @@ def plot_3d(arg):
         scoreName = '-log(%s)' % headers[score]
     
     fig = figure.Figure()
-    FigureCanvas(fig)
+    canvas = FigureCanvas(fig)
     ax = Axes3D(fig)
     ax.scatter(numpy.log(dataframe.iloc[:, c1]), numpy.log(dataframe.iloc[:, c2]), scores, c=scores, cmap=cm.get_cmap('winter'))
     ax.set_xlabel('log(%s)' % headers[c1])
@@ -505,6 +507,8 @@ def plot_3d(arg):
     ax.set_zlabel(scoreName)
     filename = "%s_%s_%s.png" % (c1, c2, score)
     fig.savefig(str(directory / filename), bbox_inches='tight')
+    fig.clear()
+    del fig, canvas
 
 def plot_2d(arg):
     directory_path, csv_path, c1, score = arg
@@ -514,7 +518,7 @@ def plot_2d(arg):
     #print('2d', headers[c1], headers[score])
 
     fig = figure.Figure()
-    FigureCanvas(fig)
+    canvas = FigureCanvas(fig)
 
     scores = dataframe.iloc[:, score]
     scoreName = headers[score]
@@ -528,6 +532,8 @@ def plot_2d(arg):
     graph.set_ylabel(scoreName)
     filename = "%s_%s.png" % (c1, score)
     fig.savefig(str(directory / filename), bbox_inches='tight')
+    fig.clear()
+    del fig, canvas
 
 def space_plots(cache):
     csv_path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
@@ -686,7 +692,7 @@ def graphProgress(cache, data):
     for i in x:
         for j in y:
             fig = figure.Figure()
-            FigureCanvas(fig)
+            canvas = FigureCanvas(fig)
 
             graph = fig.add_subplot(1, 1, 1)
 
@@ -699,6 +705,8 @@ def graphProgress(cache, data):
             filename = "%s vs %s.png" % (i,j)
             file_path = output / filename
             fig.savefig(str(file_path))
+            fig.clear()
+            del fig, canvas
 
     row, col = data.shape
     x_tick = numpy.array(range(col))
@@ -706,7 +714,7 @@ def graphProgress(cache, data):
     x.shape = data.shape
 
     fig = figure.Figure()
-    FigureCanvas(fig)
+    canvas = FigureCanvas(fig)
     graph = fig.add_subplot(1, 1, 1)
 
     graph.scatter(x, data)
@@ -717,6 +725,8 @@ def graphProgress(cache, data):
 
     file_path = output / "scores.png"
     fig.savefig(bytes(file_path), bbox_inches='tight')
+    fig.clear()
+    del fig, canvas
 
 def metaCSV(cache):
     repeat = int(cache.settings['repeat'])
