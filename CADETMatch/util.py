@@ -804,3 +804,13 @@ def metaCSV(cache):
                          numpy.mean(paretoMinimumScore), numpy.std(paretoMinimumScore),
                          numpy.mean(paretoProductScore), numpy.std(paretoProductScore),
                          numpy.mean(totalCPUTime), numpy.std(totalCPUTime),])
+
+def eval_population(toolbox, invalid_ind, writer, csvfile):
+    fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
+    for ind, result in zip(invalid_ind, fitnesses):
+        fit, csv_line = result
+        ind.fitness.values = fit
+
+        if csv_line:
+            writer.writerow(csv_line)
+            csvfile.flush()

@@ -64,11 +64,7 @@ def run(cache, tools, creator):
    
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
-        fitnesses = cache.toolbox.map(cache.toolbox.evaluate, map(list, invalid_ind))
-        for ind, result in zip(invalid_ind, fitnesses):
-            fit, csv_line = result
-            ind.fitness.values = fit
-            writer.writerow(csv_line)
+        eval_population(cache.toolbox, invalid_ind, writer, csvfile)
         
         if halloffame is not None:
             halloffame.update(population)
@@ -111,12 +107,7 @@ def run(cache, tools, creator):
         
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            fitnesses = cache.toolbox.map(cache.toolbox.evaluate, map(list, invalid_ind))
-            for ind, result in zip(invalid_ind, fitnesses):
-                fit, csv_line = result
-                ind.fitness.values = fit
-                writer.writerow(csv_line)
-                csvfile.flush()
+            eval_population(toolbox, invalid_ind, writer, csvfile)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
