@@ -16,10 +16,6 @@ import time
 import sys
 from cadet import Cadet
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
 class ConditionException(Exception):
     pass
 
@@ -191,47 +187,7 @@ def saveExperimentsSens(save_name_base, settings, target, results):
     return True
 
 def plotExperimentsSens(save_name_base, settings, target, results):
-    for experiment in settings['experiments']:
-        experimentName = experiment['name']
-        dst = Path(settings['resultsDirGrad'], '%s_%s_GRAD.png' % (save_name_base, experimentName))
-
-        numPlots = len(experiment['features'])
-
-        exp_time = target[experimentName]['time']
-        exp_value = target[experimentName]['value']
-
-        sim_time = results[experimentName]['time']
-        sim_value = results[experimentName]['value']
-
-        fig = plt.figure(figsize=[10, numPlots*10])
-
-        for idx, feature in enumerate(experiment['features']):
-            graph = fig.add_subplot(numPlots, 1, idx+1)
-
-            featureName = feature['name']
-            featureType = feature['type']
-
-            selected = target[experimentName][featureName]['selected']
-
-            
-
-            if featureType in ('similarity', 'curve', 'breakthrough', 'dextrane'):
-                #sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=1e-6)
-                #exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=1e-6)
-                sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=util.smoothing_factor(sim_value[selected]))
-                exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=util.smoothing_factor(exp_value[selected]))
-                graph.plot(sim_time[selected], sim_spline(sim_time[selected]), 'r--', label='Simulation')
-                graph.plot(exp_time[selected], exp_spline(exp_time[selected]), 'g:', label='Experiment')
-            elif featureType == 'derivative_similarity':
-                sim_spline = scipy.interpolate.UnivariateSpline(sim_time[selected], sim_value[selected], s=util.smoothing_factor(sim_value[selected])).derivative(1)
-                exp_spline = scipy.interpolate.UnivariateSpline(exp_time[selected], exp_value[selected], s=util.smoothing_factor(exp_value[selected])).derivative(1)
-
-                graph.plot(sim_time[selected], util.smoothing(sim_time[selected], sim_spline(sim_time[selected])), 'r--', label='Simulation')
-                graph.plot(exp_time[selected], util.smoothing(exp_time[selected], exp_spline(exp_time[selected])), 'g:', label='Experiment')
-            graph.legend()
-
-        plt.savefig(bytes(dst), dpi=100)
-        plt.close()
+    util.plotExperiments(save_name_base, settings, target, results, settings['resultsDirGrad'], '%s_%s_GRAD.png')
 
 def runExperimentSens(individual, experiment, settings, target, jac):
     handle, path = tempfile.mkstemp(suffix='.h5')
