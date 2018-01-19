@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<ProfilingTarget xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ProjectTarget>
+    <TargetProject>0067cb6f-0de6-4dd6-8086-20ea899a691d</TargetProject>
+    <FriendlyName>CADETMatch</FriendlyName>
+  </ProjectTarget>
+</ProfilingTarget>

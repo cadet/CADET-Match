@@ -83,6 +83,9 @@ def fitness(individual, json_path):
 
     #generate csv
     csv_record = [time.ctime(), save_name_base, 'EVO', 'NA'] + ["%.5g" % i for i in cadetValuesKEQ] + ["%.5g" % i for i in scores] + list(humanScores)
+    csv_record = tuple(csv_record)
+
+    scores = tuple(scores)
 
     #print('keep_result', keep_result)
     if keep_result:
