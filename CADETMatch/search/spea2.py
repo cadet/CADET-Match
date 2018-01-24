@@ -4,7 +4,7 @@ import checkpoint_algorithms
 import random
 
 import numpy
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import pdist, squareform
 
 import deap.tools.emo
 
@@ -67,7 +67,6 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
 # Strength Pareto         (SPEA-II)  #
 ######################################
 
-#@profile
 def selSPEA2(individuals, k):
     """Apply SPEA-II selection operator on the *individuals*. Usually, the
     size of *individuals* will be larger than *n* because any individual
@@ -133,46 +132,51 @@ def selSPEA2(individuals, k):
         sorted_indices = [[0] * N for i in range(N)]
         
         vec_fitness = numpy.array([individuals[i].fitness.values for i in chosen_indices])
-        vec_distances = cdist(vec_fitness, vec_fitness, 'sqeuclidean')
+        vec_distances = squareform(pdist(vec_fitness, 'sqeuclidean'))
         numpy.fill_diagonal(vec_distances, -1)
         distances = vec_distances
 
         sorted_indices = numpy.argsort(distances, 1)
 
-        size = N
-        to_remove = []
-        while size > k:
-            # Search for minimal distance
-            min_pos = 0
-            for i in range(1, N):
-                for j in range(1, size):
-                    dist_i_sorted_j = distances[i,sorted_indices[i,j]]
-                    dist_min_sorted_j = distances[min_pos,sorted_indices[min_pos,j]]
+        to_remove = trim_individuals(k, N, distances, sorted_indices)
 
-                    if dist_i_sorted_j < dist_min_sorted_j:
-                        min_pos = i
-                        break
-                    elif dist_i_sorted_j > dist_min_sorted_j:
-                        break
-            
-            distances[:,min_pos] = float("inf")
-            distances[min_pos,:] = float("inf")
-
-            #This part is still expensive but I don't know a better way to do it yet.
-            #Essentially all remaining time in this function is in this section
-            #It may even make sense to do this in C++ later since it is trivially parallel
-            for i in range(N):
-                for j in range(1, size - 1):
-                    if sorted_indices[i,j] == min_pos:
-                        sorted_indices[i,j:size - 1] = sorted_indices[i,j + 1:size]
-                        sorted_indices[i,j:size] = min_pos
-                        break
-            
-            # Remove corresponding individual from chosen_indices
-            to_remove.append(min_pos)
-            size -= 1
         #print("To remove = ", to_remove)
         for index in reversed(sorted(to_remove)):
             del chosen_indices[index]
     
     return [individuals[i] for i in chosen_indices]
+
+def trim_individuals(k, N, distances, sorted_indices):
+    size = N
+    to_remove = []
+    while size > k:
+        # Search for minimal distance
+        min_pos = 0
+        for i in range(1, N):
+            for j in range(1, size):
+                dist_i_sorted_j = distances[i,sorted_indices[i,j]]
+                dist_min_sorted_j = distances[min_pos,sorted_indices[min_pos,j]]
+
+                if dist_i_sorted_j < dist_min_sorted_j:
+                    min_pos = i
+                    break
+                elif dist_i_sorted_j > dist_min_sorted_j:
+                    break
+            
+        distances[:,min_pos] = numpy.inf
+        distances[min_pos,:] = numpy.inf
+
+        #This part is still expensive but I don't know a better way to do it yet.
+        #Essentially all remaining time in this function is in this section
+        #It may even make sense to do this in C++ later since it is trivially parallel
+        for i in range(N):
+            for j in range(1, size - 1):
+                if sorted_indices[i,j] == min_pos:
+                    sorted_indices[i,j:size - 1] = sorted_indices[i,j + 1:size]
+                    sorted_indices[i,j:size] = min_pos
+                    break
+            
+        # Remove corresponding individual from chosen_indices
+        to_remove.append(min_pos)
+        size -= 1
+    return to_remove

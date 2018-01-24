@@ -39,7 +39,7 @@ decim.getcontext().prec = 64
 __logBase10of2_decim = decim.Decimal(2).log10()
 __logBase10of2 = float(__logBase10of2_decim)
 
-disableAllGraphs = False
+disableAllGraphs = True
 
 def smoothing_factor(y):
     return max(y)/1000000.0

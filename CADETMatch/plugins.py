@@ -1,5 +1,6 @@
 import importlib
 import importlib.util
+import sys
 
 from pathlib import Path
 
@@ -10,6 +11,7 @@ def load_plugin(path):
     spec = importlib.util.spec_from_file_location(module, str(path))
     foo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(foo)
+    sys.modules[foo.__name__] = foo
     return foo
 
 def get_files(dir):
