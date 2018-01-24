@@ -4,4 +4,9 @@
     <TargetProject>0067cb6f-0de6-4dd6-8086-20ea899a691d</TargetProject>
     <FriendlyName>CADETMatch</FriendlyName>
   </ProjectTarget>
+  <Reports>
+    <Report>
+      <Filename>C:\Users\kosh_000\AppData\Local\Temp\CADETMatch1_20180119.vsp</Filename>
+    </Report>
+  </Reports>
 </ProfilingTarget>

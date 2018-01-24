@@ -30,8 +30,6 @@ class Cache:
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
                                  'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score',
                                  'Elapsed Time', 'Generation Time', 'Total CPU Time']
-        import sys
-        print(sys.modules.keys())
 
     def setup(self, json_path):
         "setup the cache based on the json file being used"

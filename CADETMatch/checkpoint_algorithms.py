@@ -112,6 +112,10 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
     """from DEAP function but with checkpoiting"""
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
+    #import search.spea2
+    #from line_profiler import LineProfiler
+    #profile = LineProfiler(search.spea2.selSPEA2)
+
     checkpointFile = Path(settings['resultsDirMisc'], settings['checkpointFile'])
 
     sim_start = generation_start = time.time()
@@ -187,6 +191,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             # Select the next generation population
             population[:] = toolbox.select(offspring + population, mu)
+            #population[:] = search.spea2.selSPEA2(offspring + population, mu)
 
             avg, bestMin, bestProd = util.averageFitness(offspring)
             util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
@@ -208,4 +213,5 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             if avg > settings['stopAverage'] or bestMin > settings['stopBest']:
                 return halloffame
+        #profile.print_stats()
         return halloffame

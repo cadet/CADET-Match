@@ -10,6 +10,8 @@ from pathlib import Path
 from addict import Dict
 
 #matplotlib OO interface
+import matplotlib
+matplotlib.use('agg')
 from matplotlib import figure
 from matplotlib import cm
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -27,6 +29,7 @@ import csv
 import psutil
 
 from scoop import futures
+import gc
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
@@ -35,6 +38,8 @@ import decimal as decim
 decim.getcontext().prec = 64
 __logBase10of2_decim = decim.Decimal(2).log10()
 __logBase10of2 = float(__logBase10of2_decim)
+
+disableAllGraphs = False
 
 def smoothing_factor(y):
     return max(y)/1000000.0
@@ -193,6 +198,8 @@ def mutPolynomialBoundedAdaptive(individual, eta, low, up, indpb):
     return tools.mutPolynomialBounded(individual, eta, low, up, indpb)
 
 def plotExperiments(save_name_base, settings, target, results, directory, file_pattern):
+    if disableAllGraphs:
+        return
     for experiment in settings['experiments']:
         experimentName = experiment['name']
         
@@ -250,9 +257,10 @@ def plotExperiments(save_name_base, settings, target, results, directory, file_p
                     graph.plot(time, values, '%s:' % colors[idx], label='Experiment Comp: %s' % key)
             graph.legend()
 
-        fig.savefig(bytes(dst), dpi=100)
+        fig.savefig(bytes(dst))
         fig.clear()
         del fig, canvas
+        gc.collect()
 
 def saveExperiments(save_name_base, settings, target, results, directory, file_pattern):
     for experiment in settings['experiments']:
@@ -470,6 +478,8 @@ def similar(a, b):
     return numpy.all(diff < 1e-6)
 
 def gen_plots(directory_path, csv_path, parameter_indexes, scores_indexes):
+    if disableAllGraphs:
+        return
     comp_two = list(itertools.combinations(parameter_indexes, 2))
     comp_one = list(itertools.combinations(parameter_indexes, 1))
 
@@ -492,23 +502,48 @@ def plot_3d(arg):
     headers = dataframe.columns.values.tolist()
     #print('3d', headers[c1], headers[c2], headers[score])
 
-    scores = dataframe.iloc[:, score]
+    scores = numpy.array(dataframe.iloc[:, score])
     scoreName = headers[score]
     if headers[score] == 'SSE':
         scores = -numpy.log(scores)
         scoreName = '-log(%s)' % headers[score]
     
+    x = numpy.array(dataframe.iloc[:, c1])
+    y = numpy.array(dataframe.iloc[:, c2])
+
+    test_plot_3d(numpy.log(x),
+                 numpy.log(y),
+                 scores,
+                 headers[c1],
+                 headers[c2],
+                 scoreName,
+                 directory,
+                 "%s_%s_%s.png" % (c1, c2, score))
+
+    #fig = figure.Figure()
+    #canvas = FigureCanvas(fig)
+    #ax = fig.add_subplot(111, projection='3d')
+    #ax.scatter(numpy.log(x), numpy.log(y), scores, c=scores, cmap=cm.get_cmap('winter'))
+    #ax.set_xlabel('log(%s)' % headers[c1])
+    #ax.set_ylabel('log(%s)' % headers[c2])
+    #ax.set_zlabel(scoreName)
+    #filename = "%s_%s_%s.png" % (c1, c2, score)
+    #fig.savefig(str(directory / filename), bbox_inches='tight')
+    
+    #fig.clear()
+    #ax.clear()
+    #del fig, canvas
+    #gc.collect()
+
+def test_plot_3d(x,y,z, x_label, y_label, z_label, directory, filename):
     fig = figure.Figure()
     canvas = FigureCanvas(fig)
-    ax = Axes3D(fig)
-    ax.scatter(numpy.log(dataframe.iloc[:, c1]), numpy.log(dataframe.iloc[:, c2]), scores, c=scores, cmap=cm.get_cmap('winter'))
-    ax.set_xlabel('log(%s)' % headers[c1])
-    ax.set_ylabel('log(%s)' % headers[c2])
-    ax.set_zlabel(scoreName)
-    filename = "%s_%s_%s.png" % (c1, c2, score)
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(x, y, z) #, c=z, cmap=cm.get_cmap('winter'))
+    ax.set_xlabel('log(%s)' % x_label)
+    ax.set_ylabel('log(%s)' % y_label)
+    ax.set_zlabel(z_label)
     fig.savefig(str(directory / filename), bbox_inches='tight')
-    fig.clear()
-    del fig, canvas
 
 def plot_2d(arg):
     directory_path, csv_path, c1, score = arg
@@ -517,15 +552,14 @@ def plot_2d(arg):
     headers = dataframe.columns.values.tolist()
     #print('2d', headers[c1], headers[score])
 
-    fig = figure.Figure()
-    canvas = FigureCanvas(fig)
-
     scores = dataframe.iloc[:, score]
     scoreName = headers[score]
     if headers[score] == 'SSE':
         scores = -numpy.log(scores)
         scoreName = '-log(%s)' % headers[score]
 
+    fig = figure.Figure()
+    canvas = FigureCanvas(fig)
     graph = fig.add_subplot(1, 1, 1)
     graph.scatter(numpy.log(dataframe.iloc[:, c1]), scores, c=scores, cmap=cm.get_cmap('winter'))
     graph.set_xlabel('log(%s)' % headers[c1])
@@ -534,6 +568,7 @@ def plot_2d(arg):
     fig.savefig(str(directory / filename), bbox_inches='tight')
     fig.clear()
     del fig, canvas
+    gc.collect()
 
 def space_plots(cache):
     csv_path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
@@ -681,6 +716,8 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
     graphProgress(cache, data)
 
 def graphProgress(cache, data):
+    if disableAllGraphs:
+        return
     df = pandas.read_csv(str(cache.progress_path))
 
     output = cache.settings['resultsDirProgress']
@@ -727,6 +764,7 @@ def graphProgress(cache, data):
     fig.savefig(bytes(file_path), bbox_inches='tight')
     fig.clear()
     del fig, canvas
+    gc.collect()
 
 def metaCSV(cache):
     repeat = int(cache.settings['repeat'])

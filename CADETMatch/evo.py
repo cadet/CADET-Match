@@ -16,10 +16,9 @@ import os
 
 from cadet import Cadet
 
-#parallelization
-from scoop import futures
-
 from cache import cache
+
+import copy
 
 ERROR = {'scores': None,
          'path': None,
@@ -34,6 +33,8 @@ def fitness(individual, json_path):
     
     if not(util.feasible(individual)):
         return cache.WORST, []
+
+    #return numpy.random.uniform(cache.WORST, [1] * len(cache.WORST)), [0.5 for i in range(60)]
 
     scores = []
     error = 0.0
@@ -69,7 +70,7 @@ def fitness(individual, json_path):
     keep_result = 0
     if any(humanScores >= (keepTop * cache.target['bestHumanScores'])):
         keep_result = 1
-        
+
     #flip sign of SSE for writing out to file
     humanScores[-1] = -1 * humanScores[-1]
 
@@ -82,10 +83,17 @@ def fitness(individual, json_path):
             break
 
     #generate csv
-    csv_record = [time.ctime(), save_name_base, 'EVO', 'NA'] + ["%.5g" % i for i in cadetValuesKEQ] + ["%.5g" % i for i in scores] + list(humanScores)
-    csv_record = tuple(csv_record)
+    #csv_record = [time.ctime(), save_name_base, 'EVO', 'NA'] + ["%.5g" % i for i in cadetValuesKEQ] + ["%.5g" % i for i in scores] + list(humanScores)
+    csv_record = []
+    csv_record.extend([time.ctime(), save_name_base, 'EVO', 'NA'])
+    csv_record.extend(["%.5g" % i for i in cadetValuesKEQ])
+    csv_record.extend(["%.5g" % i for i in scores])
+    csv_record.extend(["%.5g" % i for i in humanScores])
 
-    scores = tuple(scores)
+    #csv_record = ["%.5g" % i for i in cadetValuesKEQ] + ["%.5g" % i for i in scores] + ["%.5g" % i for i in range(4)]
+    #csv_record = tuple(csv_record)
+
+    #scores = tuple(scores)
 
     #print('keep_result', keep_result)
     if keep_result:
@@ -98,8 +106,11 @@ def fitness(individual, json_path):
     for result in results.values():
         if result['path']:
             os.remove(result['path'])
-            
+
+    #return numpy.random.uniform(cache.WORST, [1] * len(cache.WORST)), []
+       
     return scores, csv_record
+    #return scores, csv_record
 
 def saveExperiments(save_name_base, settings, target, results):
     return util.saveExperiments(save_name_base, settings, target, results, settings['resultsDirEvo'], '%s_%s_EVO.h5')
