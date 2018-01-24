@@ -495,6 +495,8 @@ def gen_plots(directory_path, csv_path, parameter_indexes, scores_indexes):
 
 
 def plot_3d(arg):
+    "This leaks memory and should be disabled for now"
+    return None
     directory_path, csv_path, c1, c2, score = arg
     dataframe = pandas.read_csv(csv_path)
     directory = Path(directory_path)
