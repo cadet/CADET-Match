@@ -24,6 +24,9 @@ import random
 import numpy as np
 from deap import tools
 
+#def profile(fn):
+#    return fn
+
 class ReferencePoint(list):
     '''A reference point exists in objective space an has a set of individuals
     associated to it.'''
@@ -116,6 +119,12 @@ def perpendicular_distance(direction, point):
     return np.sqrt(d)
 
 @profile
+def perpendicular_distances(direction, points):
+    t = np.dot(points,direction)/np.linalg.norm(direction)**2
+    d = np.linalg.norm(points - np.outer(t, direction), axis=1)
+    return d
+
+@profile
 def associate(individuals, reference_points):
     '''Associates individuals to reference points and calculates niche number.
     Corresponds to Algorithm 3 of Deb & Jain (2014).'''
@@ -123,9 +132,11 @@ def associate(individuals, reference_points):
     num_objs = len(individuals[0].fitness.values)
 
     for ind in individuals:
-        rp_dists = [(rp, perpendicular_distance(ind.fitness.normalized_values, rp))
-                    for rp in reference_points]
-        best_rp, best_dist = sorted(rp_dists, key=lambda rpd: rpd[1])[0]
+        dists = perpendicular_distances(ind.fitness.normalized_values, reference_points)
+        best_idx = np.argmin(dists)
+        best_rp = reference_points[best_idx]
+        best_dist = dists[best_idx]
+
         ind.reference_point = best_rp
         ind.ref_point_distance = best_dist
         best_rp.associations_count += 1 # update de niche number
@@ -151,14 +162,20 @@ def niching_select(individuals, k):
 
     res = []
     while len(res) < k:
-        min_assoc_rp = min(reference_points, key=lambda rp: rp.associations_count)
-        min_assoc_rps = [rp for rp in reference_points if rp.associations_count == min_assoc_rp.associations_count]
-        chosen_rp = min_assoc_rps[random.randint(0, len(min_assoc_rps)-1)]
+        #This can still be made more efficient by updating the associations count when it changes during iteration
+        #instead of rebuilding the system. Right now this takes no time at all anymore when profiling
+        #unless it takes more time in higher dimensions or larger problems there is no point in further
+        #optimization here
 
-        #print('Rps',min_assoc_rp.associations_count, chosen_rp.associations_count, len(min_assoc_rps))
+        rp_associations_count = np.fromiter((rp.associations_count for rp in reference_points), int, len(reference_points))
+
+        min_assoc_rp = np.min(rp_associations_count[np.nonzero(rp_associations_count)])
+
+        idxs = np.where(rp_associations_count == min_assoc_rp)
+
+        chosen_rp = reference_points[random.choice(idxs[0])]
 
         associated_inds = chosen_rp.associations
-
         if chosen_rp.associations:
             if chosen_rp.associations_count == 0:
                 sel = min(chosen_rp.associations, key=lambda ind: ind.ref_point_distance)

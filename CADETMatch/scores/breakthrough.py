@@ -17,7 +17,7 @@ def run(sim_data, feature):
 
     [start, stop] = util.find_breakthrough(exp_time_values, sim_data_values)
 
-    temp = [pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), 
+    temp = [score.pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), 
             feature['value_function'](start[1]), 
             feature['time_function_start'](start[0]),
             feature['time_function_stop'](stop[0])]
