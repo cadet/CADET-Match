@@ -24,9 +24,6 @@ import random
 import numpy as np
 from deap import tools
 
-#def profile(fn):
-#    return fn
-
 class ReferencePoint(list):
     '''A reference point exists in objective space an has a set of individuals
     associated to it.'''
@@ -35,11 +32,12 @@ class ReferencePoint(list):
         self.associations_count = 0
         self.associations = []
 
-@profile
 def generate_reference_points(num_objs, num_divisions_per_obj=4):
     '''Generates reference points for NSGA-III selection. This code is based on
     `jMetal NSGA-III implementation <https://github.com/jMetal/jMetal>`_.
     '''
+    #This entire function needs to be completely recoded, in high dimensions in it is major time sink
+    # 287/622s. This should probably be done once and stored instead of regenerated at every iteration
     def gen_refs_recursive(work_point, num_objs, left, total, depth):
         if depth == num_objs - 1:
             work_point[depth] = left/total
@@ -54,7 +52,6 @@ def generate_reference_points(num_objs, num_divisions_per_obj=4):
     return gen_refs_recursive([0]*num_objs, num_objs, num_objs*num_divisions_per_obj,
                               num_objs*num_divisions_per_obj, 0)
 
-@profile
 def find_ideal_point(individuals):
     'Finds the ideal point from a set individuals.'
     current_ideal = [np.infty] * len(individuals[0].fitness.values)
@@ -64,13 +61,11 @@ def find_ideal_point(individuals):
                                    np.multiply(ind.fitness.wvalues, -1))
     return current_ideal
 
-@profile
 def find_extreme_points(individuals):
     'Finds the individuals with extreme values for each objective function.'
     return [sorted(individuals, key=lambda ind: ind.fitness.wvalues[o] * -1)[-1]
             for o in range(len(individuals[0].fitness.values))]
 
-@profile
 def construct_hyperplane(individuals, extreme_points):
     'Calculates the axis intersects for a set of individuals and its extremes.'
     def has_duplicate_individuals(individuals):
@@ -91,7 +86,6 @@ def construct_hyperplane(individuals, extreme_points):
         intercepts = 1/x
     return intercepts
 
-@profile
 def normalize_objective(individual, m, intercepts, ideal_point, epsilon=1e-20):
     'Normalizes an objective.'
     # Numeric trick present in JMetal implementation.
@@ -100,7 +94,6 @@ def normalize_objective(individual, m, intercepts, ideal_point, epsilon=1e-20):
     else:
         return individual.fitness.values[m] / epsilon
 
-@profile
 def normalize_objectives(individuals, intercepts, ideal_point):
     '''Normalizes individuals using the hyperplane defined by the intercepts as
     reference. Corresponds to Algorithm 2 of Deb & Jain (2014).'''
@@ -112,19 +105,18 @@ def normalize_objectives(individuals, intercepts, ideal_point):
                                                                   for m in range(num_objs)])
     return individuals
 
-@profile
 def perpendicular_distance(direction, point):
     k = np.dot(direction, point) / np.sum(np.power(direction, 2))
     d = np.sum(np.power(np.subtract(np.multiply(direction, [k] * len(direction)), point) , 2))
     return np.sqrt(d)
 
-@profile
 def perpendicular_distances(direction, points):
+    #This function is also slow but I am not sure what else to do with it
+    #Need to test with numpy connected to MKL
     t = np.dot(points,direction)/np.linalg.norm(direction)**2
     d = np.linalg.norm(points - np.outer(t, direction), axis=1)
     return d
 
-@profile
 def associate(individuals, reference_points):
     '''Associates individuals to reference points and calculates niche number.
     Corresponds to Algorithm 3 of Deb & Jain (2014).'''
@@ -142,7 +134,6 @@ def associate(individuals, reference_points):
         best_rp.associations_count += 1 # update de niche number
         best_rp.associations += [ind]
 
-@profile
 def niching_select(individuals, k):
     '''Secondary niched selection based on reference points. Corresponds to
     steps 13-17 of Algorithm 1 and to Algorithm 4.'''
@@ -157,6 +148,15 @@ def niching_select(individuals, k):
     normalize_objectives(individuals, intercepts, ideal_point)
 
     reference_points = generate_reference_points(len(individuals[0].fitness.values))
+    print(len(reference_points))
+
+    ref = np.array(reference_points)
+    print(ref.shape)
+
+    print(set(ref[:,0]))
+    print(set(ref[:,1]))
+    print(set(ref[:,2]))
+    print(set(ref[:,3]))
 
     associate(individuals, reference_points)
 
@@ -189,7 +189,6 @@ def niching_select(individuals, k):
             reference_points.remove(chosen_rp)
     return res
 
-@profile
 def sel_nsga_iii(individuals, k):
     '''Implements NSGA-III selection as described in
     Deb, K., & Jain, H. (2014). An Evolutionary Many-Objective Optimization
