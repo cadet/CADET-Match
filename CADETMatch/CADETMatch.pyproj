@@ -155,6 +155,9 @@
     <Compile Include="search\spea2a.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="search\theta_nsga3.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="search\__init__.py">
       <SubType>Code</SubType>
     </Compile>
