@@ -850,16 +850,18 @@ def metaCSV(cache):
 def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
     fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
     start = time.time()
-    hallOfFameBefore = set(map(tuple, halloffame.items))
+    removeFront = set()
     for ind, result in zip(invalid_ind, fitnesses):
         fit, csv_line, results = result
-        print(results)
         ind.fitness.values = fit
 
         if csv_line:
             writer.writerow(csv_line)
-            updateParetoFront(halloffame, [ind])
-            processResults(ind, cache, results)
+            onFront, remove  = updateParetoFront(halloffame, ind)
+            removeFront.update(remove)
+            if onFront:
+                processResults(ind, cache, results)
+            cleanupProcess(results)
         
         #Flush at most every 60 seconds
         if time.time() - start > 60:    
@@ -868,7 +870,8 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
     #flush before returning
     csvfile.flush()
 
-    hallOfFameAfter = set(map(tuple, halloffame.items))
+    #print("Current front", len(halloffame))
+    cleanupFront(cache, removeFront)
 
 def updateParetoFront(halloffame, offspring):
     #which items where added
@@ -876,57 +879,39 @@ def updateParetoFront(halloffame, offspring):
     #need set for before and after
     start = time.time()
     before = set(map(tuple, halloffame.items))
-    halloffame.update(offspring)
+    halloffame.update([offspring,])
     after = set(map(tuple, halloffame.items))
-    print("Update took", time.time() - start)
-    print("Pareto front increased by", len(after) - len(before))
-    print("Pareto front members added", after - before)
-    print("Pareto front members removed", before - after)
+    #print("Update took", time.time() - start)
+    #print("Pareto front increased by", len(after) - len(before))
+    #print("Pareto front members added", after - before)
+    #print("Pareto front members removed", before - after)
+
+    return tuple(offspring) in after, before - after
 
 def processResults(individual, cache, results):
-    scores = []
-    error = 0.0
-    for exp in results.values():
-        scores.extend(exp['scores'])
-        error += exp['error']
-
-    scores = RoundToSigFigs(scores, 4)
-
-    #human scores
-    humanScores = numpy.array( [product_score(scores), 
-                                min(scores), sum(scores)/len(scores), 
-                                numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), 
-                                -error] )
-
-    humanScores = RoundToSigFigs(humanScores, 4)
-
-    #best
-    cache.target['bestHumanScores'] = numpy.max(numpy.vstack([cache.target['bestHumanScores'], humanScores]), 0)
-
-    #save
-    keepTop = cache.settings['keepTop']
-
-    keep_result = 0
-    if any(humanScores >= (keepTop * cache.target['bestHumanScores'])):
-        keep_result = 1
-
-    #flip sign of SSE for writing out to file
-    humanScores[-1] = -1 * humanScores[-1]
-
     #generate save name
-    save_name_base = hashlib.md5(str(individual).encode('utf-8', 'ignore')).hexdigest()
+    save_name_base = hashlib.md5(str(list(individual)).encode('utf-8', 'ignore')).hexdigest()
+
+    individual.save_name_base = save_name_base
 
     for result in results.values():
         if result['cadetValuesKEQ']:
             cadetValuesKEQ = result['cadetValuesKEQ']
             break
 
-    if keep_result:
-        notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirEvo'], '%s_%s_EVO.h5')
-        if notDuplicate:
-            plotExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirEvo'], '%s_%s_EVO.png')
-
+    notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirEvo'], '%s_%s_EVO.h5')
+    if notDuplicate:
+        plotExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirEvo'], '%s_%s_EVO.png')
+    
+def cleanupProcess(results):
     #cleanup
     for result in results.values():
         if result['path']:
             os.remove(result['path'])
+
+def cleanupFront(cache, remove):
+    directory = Path(cache.settings['resultsDirEvo'])
+    for ind in remove:
+        save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
+        for path in directory.glob('%s*' % save_name_base):
+            path.unlink()
