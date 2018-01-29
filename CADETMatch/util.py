@@ -685,11 +685,6 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
 
-        print("Generation: ", generation, 
-              "\tAverage Score: ", average_score, 
-              "\tMinimum Score: ", minimum_score, 
-              "\tProduct Score: ", product_score)
-
         row, col = data.shape
         data_mean = numpy.mean(data, 1)
         data_mean_mean = numpy.mean(data_mean)
@@ -700,6 +695,11 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
         data_prod = numpy.power(numpy.prod(data, 1), 1.0/col)
         data_prod_mean = numpy.mean(data_prod)
  
+        print("Generation: ", generation, 
+              "\tAverage Score: ", data_mean_mean, 
+              "\tMinimum Score: ", data_min_mean, 
+              "\tProduct Score: ", data_prod_mean)
+        
         writer.writerow([generation,
                          len(population),
                          len(cache.MIN_VALUE),

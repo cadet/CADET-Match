@@ -212,7 +212,5 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             util.space_plots(cache)
 
             if avg > settings['stopAverage'] or bestMin > settings['stopBest']:
-                profile.print_stats()
                 return halloffame
-        profile.print_stats()
         return halloffame

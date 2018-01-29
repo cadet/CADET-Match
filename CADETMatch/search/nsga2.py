@@ -6,6 +6,7 @@ from pathlib import Path
 #import grad
 import gradFD
 import time
+import csv
 
 from deap import algorithms
 
@@ -107,7 +108,7 @@ def run(cache, tools, creator):
         
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            util.eval_population(toolbox, invalid_ind, writer, csvfile)
+            util.eval_population(cache.toolbox, invalid_ind, writer, csvfile)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
