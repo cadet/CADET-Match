@@ -83,22 +83,14 @@ def fitness(individual, json_path):
             break
 
     #generate csv
-    #csv_record = [time.ctime(), save_name_base, 'EVO', 'NA'] + ["%.5g" % i for i in cadetValuesKEQ] + ["%.5g" % i for i in scores] + list(humanScores)
     csv_record = []
     csv_record.extend([time.ctime(), save_name_base, 'EVO', 'NA'])
     csv_record.extend(["%.5g" % i for i in cadetValuesKEQ])
     csv_record.extend(["%.5g" % i for i in scores])
     csv_record.extend(["%.5g" % i for i in humanScores])
 
-    #csv_record = ["%.5g" % i for i in cadetValuesKEQ] + ["%.5g" % i for i in scores] + ["%.5g" % i for i in range(4)]
-    #csv_record = tuple(csv_record)
-
-    #scores = tuple(scores)
-
-    #print('keep_result', keep_result)
     if keep_result:
         notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results)
-        #print('notDuplicate', notDuplicate)
         if notDuplicate:
             plotExperiments(save_name_base, cache.settings, cache.target, results)
 
@@ -106,11 +98,8 @@ def fitness(individual, json_path):
     for result in results.values():
         if result['path']:
             os.remove(result['path'])
-
-    #return numpy.random.uniform(cache.WORST, [1] * len(cache.WORST)), []
        
-    return scores, csv_record
-    #return scores, csv_record
+    return scores, csv_record, results
 
 def saveExperiments(save_name_base, settings, target, results):
     return util.saveExperiments(save_name_base, settings, target, results, settings['resultsDirEvo'], '%s_%s_EVO.h5')

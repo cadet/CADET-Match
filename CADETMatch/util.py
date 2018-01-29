@@ -848,8 +848,10 @@ def metaCSV(cache):
 def eval_population(toolbox, invalid_ind, writer, csvfile, halloffame):
     fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
     start = time.time()
+    hallOfFameBefore = set(map(tuple, halloffame.items))
     for ind, result in zip(invalid_ind, fitnesses):
-        fit, csv_line = result
+        fit, csv_line, results = result
+        print(results)
         ind.fitness.values = fit
 
         if csv_line:
@@ -862,6 +864,8 @@ def eval_population(toolbox, invalid_ind, writer, csvfile, halloffame):
     
     #flush before returning
     csvfile.flush()
+
+    hallOfFameAfter = set(map(tuple, halloffame.items))
 
 def updateParetoFront(halloffame, offspring):
     #which items where added
