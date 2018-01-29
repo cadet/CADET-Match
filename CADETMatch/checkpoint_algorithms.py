@@ -43,10 +43,10 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            util.eval_population(toolbox, invalid_ind, writer, csvfile)
+            util.eval_population(toolbox, invalid_ind, writer, csvfile, halloffame)
 
-            if halloffame is not None:
-                halloffame.update(population)
+            #if halloffame is not None:
+            #    util.updateParetoFront(halloffame, population)
 
             avg, bestMin, bestProd = util.averageFitness(population)
             util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
@@ -72,14 +72,14 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            util.eval_population(toolbox, invalid_ind, writer, csvfile)
+            util.eval_population(toolbox, invalid_ind, writer, csvfile, halloffame)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
 
             # Update the hall of fame with the generated individuals
-            if halloffame is not None:
-                halloffame.update(offspring)
+            #if halloffame is not None:
+            #    util.updateParetoFront(halloffame, offspring)
 
             # Select the next generation population
             population[:] = toolbox.select(offspring, mu)
@@ -145,10 +145,10 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            util.eval_population(toolbox, invalid_ind, writer, csvfile)
+            util.eval_population(toolbox, invalid_ind, writer, csvfile, halloffame)
 
-            if halloffame is not None:
-                halloffame.update(population)
+            #if halloffame is not None:
+            #    util.updateParetoFront(halloffame, population)
 
             avg, bestMin, bestProd = util.averageFitness(population)
             util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
@@ -176,18 +176,18 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            util.eval_population(toolbox, invalid_ind, writer, csvfile)
+            util.eval_population(toolbox, invalid_ind, writer, csvfile, halloffame)
 
             # Combination of varOr and RoundOffSpring invalidates some members of the population, not sure why yet
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            util.eval_population(toolbox, invalid_ind, writer, csvfile)
+            util.eval_population(toolbox, invalid_ind, writer, csvfile, halloffame)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
 
             # Update the hall of fame with the generated individuals
-            if halloffame is not None:
-                halloffame.update(offspring)
+            #if halloffame is not None:
+            #    util.updateParetoFront(halloffame, offspring)
 
             # Select the next generation population
             population[:] = toolbox.select(offspring + population, mu)

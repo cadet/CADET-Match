@@ -845,12 +845,33 @@ def metaCSV(cache):
                          numpy.mean(paretoProductScore), numpy.std(paretoProductScore),
                          numpy.mean(totalCPUTime), numpy.std(totalCPUTime),])
 
-def eval_population(toolbox, invalid_ind, writer, csvfile):
+def eval_population(toolbox, invalid_ind, writer, csvfile, halloffame):
     fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
+    start = time.time()
     for ind, result in zip(invalid_ind, fitnesses):
         fit, csv_line = result
         ind.fitness.values = fit
 
         if csv_line:
             writer.writerow(csv_line)
+            updateParetoFront(halloffame, [ind])
+        
+        #Flush at most every 60 seconds
+        if time.time() - start > 60:    
             csvfile.flush()
+    
+    #flush before returning
+    csvfile.flush()
+
+def updateParetoFront(halloffame, offspring):
+    #which items where added
+    #which items where removed
+    #need set for before and after
+    start = time.time()
+    before = set(map(tuple, halloffame.items))
+    halloffame.update(offspring)
+    after = set(map(tuple, halloffame.items))
+    print("Update took", time.time() - start)
+    print("Pareto front increased by", len(after) - len(before))
+    print("Pareto front members added", after - before)
+    print("Pareto front members removed", before - after)

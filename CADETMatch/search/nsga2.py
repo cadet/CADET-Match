@@ -65,10 +65,10 @@ def run(cache, tools, creator):
    
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
-        util.eval_population(cache.toolbox, invalid_ind, writer, csvfile)
+        util.eval_population(cache.toolbox, invalid_ind, writer, csvfile, halloffame)
         
-        if halloffame is not None:
-            halloffame.update(population)
+        #if halloffame is not None:
+        #    util.updateParetoFront(halloffame, population)
 
         # This is just to assign the crowding distance to the individuals
         # no actual selection is done
@@ -108,13 +108,13 @@ def run(cache, tools, creator):
         
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            util.eval_population(cache.toolbox, invalid_ind, writer, csvfile)
+            util.eval_population(cache.toolbox, invalid_ind, writer, csvfile, halloffame)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
 
-            if halloffame is not None:
-                halloffame.update(offspring)
+            #if halloffame is not None:
+            #    util.updateParetoFront(halloffame, offspring)
         
             avg, bestMin, bestProd = util.averageFitness(offspring)
             util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
