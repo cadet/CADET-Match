@@ -62,14 +62,14 @@ def fitness(individual, json_path):
     humanScores = util.RoundToSigFigs(humanScores, 4)
 
     #best
-    cache.target['bestHumanScores'] = numpy.max(numpy.vstack([cache.target['bestHumanScores'], humanScores]), 0)
+    #cache.target['bestHumanScores'] = numpy.max(numpy.vstack([cache.target['bestHumanScores'], humanScores]), 0)
 
     #save
-    keepTop = cache.settings['keepTop']
+    #keepTop = cache.settings['keepTop']
 
-    keep_result = 0
-    if any(humanScores >= (keepTop * cache.target['bestHumanScores'])):
-        keep_result = 1
+    #keep_result = 0
+    #if any(humanScores >= (keepTop * cache.target['bestHumanScores'])):
+    #    keep_result = 1
 
     #flip sign of SSE for writing out to file
     humanScores[-1] = -1 * humanScores[-1]
@@ -89,15 +89,15 @@ def fitness(individual, json_path):
     csv_record.extend(["%.5g" % i for i in scores])
     csv_record.extend(["%.5g" % i for i in humanScores])
 
-    if keep_result:
-        notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results)
-        if notDuplicate:
-            plotExperiments(save_name_base, cache.settings, cache.target, results)
+    #if keep_result:
+    #    notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results)
+    #    if notDuplicate:
+    #        plotExperiments(save_name_base, cache.settings, cache.target, results)
 
     #cleanup
-    for result in results.values():
-        if result['path']:
-            os.remove(result['path'])
+    #for result in results.values():
+    #    if result['path']:
+    #        os.remove(result['path'])
        
     return scores, csv_record, results
 

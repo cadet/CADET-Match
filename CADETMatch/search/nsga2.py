@@ -65,7 +65,7 @@ def run(cache, tools, creator):
    
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
-        util.eval_population(cache.toolbox, invalid_ind, writer, csvfile, halloffame)
+        util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
         
         #if halloffame is not None:
         #    util.updateParetoFront(halloffame, population)
@@ -108,7 +108,7 @@ def run(cache, tools, creator):
         
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            util.eval_population(cache.toolbox, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)

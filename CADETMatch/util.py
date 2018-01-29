@@ -2,6 +2,8 @@ import math
 import numpy
 import pandas
 
+import hashlib
+
 from deap import tools
 import scipy.signal
 from scipy.spatial.distance import cdist
@@ -845,7 +847,7 @@ def metaCSV(cache):
                          numpy.mean(paretoProductScore), numpy.std(paretoProductScore),
                          numpy.mean(totalCPUTime), numpy.std(totalCPUTime),])
 
-def eval_population(toolbox, invalid_ind, writer, csvfile, halloffame):
+def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
     fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
     start = time.time()
     hallOfFameBefore = set(map(tuple, halloffame.items))
@@ -857,6 +859,7 @@ def eval_population(toolbox, invalid_ind, writer, csvfile, halloffame):
         if csv_line:
             writer.writerow(csv_line)
             updateParetoFront(halloffame, [ind])
+            processResults(ind, cache, results)
         
         #Flush at most every 60 seconds
         if time.time() - start > 60:    
@@ -879,3 +882,51 @@ def updateParetoFront(halloffame, offspring):
     print("Pareto front increased by", len(after) - len(before))
     print("Pareto front members added", after - before)
     print("Pareto front members removed", before - after)
+
+def processResults(individual, cache, results):
+    scores = []
+    error = 0.0
+    for exp in results.values():
+        scores.extend(exp['scores'])
+        error += exp['error']
+
+    scores = RoundToSigFigs(scores, 4)
+
+    #human scores
+    humanScores = numpy.array( [product_score(scores), 
+                                min(scores), sum(scores)/len(scores), 
+                                numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), 
+                                -error] )
+
+    humanScores = RoundToSigFigs(humanScores, 4)
+
+    #best
+    cache.target['bestHumanScores'] = numpy.max(numpy.vstack([cache.target['bestHumanScores'], humanScores]), 0)
+
+    #save
+    keepTop = cache.settings['keepTop']
+
+    keep_result = 0
+    if any(humanScores >= (keepTop * cache.target['bestHumanScores'])):
+        keep_result = 1
+
+    #flip sign of SSE for writing out to file
+    humanScores[-1] = -1 * humanScores[-1]
+
+    #generate save name
+    save_name_base = hashlib.md5(str(individual).encode('utf-8', 'ignore')).hexdigest()
+
+    for result in results.values():
+        if result['cadetValuesKEQ']:
+            cadetValuesKEQ = result['cadetValuesKEQ']
+            break
+
+    if keep_result:
+        notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirEvo'], '%s_%s_EVO.h5')
+        if notDuplicate:
+            plotExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirEvo'], '%s_%s_EVO.png')
+
+    #cleanup
+    for result in results.values():
+        if result['path']:
+            os.remove(result['path'])

@@ -43,7 +43,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            util.eval_population(toolbox, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
 
             #if halloffame is not None:
             #    util.updateParetoFront(halloffame, population)
@@ -72,7 +72,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            util.eval_population(toolbox, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
@@ -145,7 +145,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            util.eval_population(toolbox, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
 
             #if halloffame is not None:
             #    util.updateParetoFront(halloffame, population)
@@ -176,11 +176,11 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            util.eval_population(toolbox, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
 
             # Combination of varOr and RoundOffSpring invalidates some members of the population, not sure why yet
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            util.eval_population(toolbox, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
