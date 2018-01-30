@@ -59,7 +59,6 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             with checkpointFile.open('wb')as cp_file:
                 pickle.dump(cp, cp_file)
-            util.space_plots(cache)
 
         # Begin the generational process
         for gen in range(start_gen, ngen+1):
@@ -98,8 +97,6 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
                 numpy.savetxt(data, numpy.array(halloffame))
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
-
-            util.space_plots(cache)
 
             if avg > settings['stopAverage'] or bestMin > settings['stopBest']:
                 return halloffame
@@ -161,8 +158,6 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             with checkpointFile.open('wb')as cp_file:
                 pickle.dump(cp, cp_file)
 
-            util.space_plots(cache)
-
         # Begin the generational process
         for gen in range(start_gen, ngen+1):
 
@@ -201,8 +196,6 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 numpy.savetxt(data, numpy.array(halloffame))
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
-
-            util.space_plots(cache)
 
             if avg > settings['stopAverage'] or bestMin > settings['stopBest']:
                 return halloffame
