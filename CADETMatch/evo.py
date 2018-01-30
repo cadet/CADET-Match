@@ -45,7 +45,7 @@ def fitness(individual, json_path):
             scores.extend(results[experiment['name']]['scores'])
             error += results[experiment['name']]['error']
         else:
-            return cache.WORST, []
+            return cache.WORST, [], None
 
     #need
     scores = util.RoundToSigFigs(scores, 4)

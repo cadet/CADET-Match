@@ -638,5 +638,7 @@ def cleanupFront(cache, halloffame):
         for path in directory.glob('%s*' % save_name_base):
             path.unlink()
 
-def graph_process(cache):
-    subprocess.Popen([sys.executable, 'generate_graphs.py', cache.json_path])
+def graph_process(cache, process=None):
+    if process is None or process.returncode is not None:
+        process = subprocess.Popen([sys.executable, 'generate_graphs.py', cache.json_path])
+    return process

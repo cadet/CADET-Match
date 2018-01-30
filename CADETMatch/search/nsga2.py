@@ -28,6 +28,7 @@ def run(cache, tools, creator):
     totalGenerations = parameters * cache.settings['generations']
 
     checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings['checkpointFile'])
+    process = None
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
@@ -65,11 +66,11 @@ def run(cache, tools, creator):
    
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
-        util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
+        util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame)
 
         avg, bestMin, bestProd = util.averageFitness(population)
         util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
-        util.graph_process(cache)
+        process = util.graph_process(cache, process)
         
         #if halloffame is not None:
         #    util.updateParetoFront(halloffame, population)
@@ -87,8 +88,6 @@ def run(cache, tools, creator):
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(cp, cp_file)
-
-        util.space_plots(cache)
 
         # Begin the generational process
         for gen in range(start_gen, totalGenerations+1):
@@ -109,14 +108,14 @@ def run(cache, tools, creator):
         
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
 
             avg, bestMin, bestProd = util.averageFitness(offspring)
             util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
-            util.graph_process(cache)
+            process = util.graph_process(cache, process)
 
             # Select the next generation population
             population = cache.toolbox.select(population + offspring, populationSize)
@@ -130,8 +129,6 @@ def run(cache, tools, creator):
                 numpy.savetxt(data, numpy.array(halloffame))
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
-
-            util.space_plots(cache)
 
             if avg > cache.settings['stopAverage'] or bestMin > cache.settings['stopBest']:
                 return halloffame

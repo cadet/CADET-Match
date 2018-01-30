@@ -101,6 +101,10 @@ def plotExperiments(save_name_base, settings, target, directory, file_pattern):
         
         dst = Path(directory, file_pattern % (save_name_base, experimentName))
 
+        if dst.exists():
+            #this item has already been plotted, this means that plots are occurring faster than generations are so kill this version
+            sys.exit()
+
         numPlots = len(experiment['features']) + 1  #1 additional plot added as an overview for the simulation
 
         exp_time = target[experimentName]['time']
@@ -133,11 +137,11 @@ def plotExperiments(save_name_base, settings, target, directory, file_pattern):
 
             sim_time, sim_value = get_times_values(simulation, target[experimentName][featureName])
 
-            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybridDecay', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 
-                               'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid'):
+            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybridDecay', 'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 
+                               'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2'):
                 graph.plot(sim_time, sim_value, 'r--', label='Simulation')
                 graph.plot(exp_time, exp_value, 'g:', label='Experiment')
-            elif featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_cross', 'derivative_similarity_cross_alt'):
+            elif featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_hybrid2', 'derivative_similarity_cross', 'derivative_similarity_cross_alt'):
                 #try:
                 sim_spline = scipy.interpolate.UnivariateSpline(sim_time, smoothing(sim_time, sim_value), s=smoothing_factor(sim_value)).derivative(1)
                 exp_spline = scipy.interpolate.UnivariateSpline(exp_time, smoothing(exp_time, exp_value), s=smoothing_factor(exp_value)).derivative(1)

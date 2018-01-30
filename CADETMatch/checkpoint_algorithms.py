@@ -15,6 +15,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
     checkpointFile = Path(settings['resultsDirMisc'], settings['checkpointFile'])
+    process = None
 
     sim_start = generation_start = time.time()
 
@@ -47,7 +48,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             avg, bestMin, bestProd = util.averageFitness(population)
             util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
-            util.graph_process(cache)
+            process = util.graph_process(cache, process)
 
             logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
@@ -76,7 +77,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             avg, bestMin, bestProd = util.averageFitness(offspring)
             util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
-            util.graph_process(cache)
+            process = util.graph_process(cache, process)
 
             # Update the hall of fame with the generated individuals
             #if halloffame is not None:
@@ -111,6 +112,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
     #import search.spea2
     #from line_profiler import LineProfiler
     #profile = LineProfiler(search.spea2.selSPEA2)
+    process = None
 
     checkpointFile = Path(settings['resultsDirMisc'], settings['checkpointFile'])
 
@@ -145,7 +147,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             avg, bestMin, bestProd = util.averageFitness(population)
             util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
-            util.graph_process(cache)
+            process = util.graph_process(cache, process)
 
             logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
@@ -179,7 +181,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             avg, bestMin, bestProd = util.averageFitness(offspring)
             util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
-            util.graph_process(cache)
+            process = util.graph_process(cache, process)
 
             # Select the next generation population
             population[:] = toolbox.select(offspring + population, mu)
