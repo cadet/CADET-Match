@@ -12,8 +12,6 @@ from pathlib import Path
 from addict import Dict
 
 #matplotlib OO interface
-import matplotlib
-matplotlib.use('agg')
 from matplotlib import figure
 from matplotlib import cm
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -682,7 +680,14 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
     cpu_time = psutil.Process().cpu_times()
     now = time.time()
 
+    results = Path(cache.settings['resultsDirBase'])
+
+    hof = results / "hof.npy"
+
     data = numpy.array([i.fitness.values for i in halloffame])
+
+    with hof.open('wb') as hof_file:
+        numpy.save(hof_file, data)
 
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
@@ -717,58 +722,6 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
                          now - sim_start,
                          now - generation_start,
                          cpu_time.user + cpu_time.system])
-    graphProgress(cache, data)
-
-def graphProgress(cache, data):
-    if disableAllGraphs:
-        return
-    df = pandas.read_csv(str(cache.progress_path))
-
-    output = cache.settings['resultsDirProgress']
-
-    x = ['Generation', 'Total CPU Time']
-    y = ['Average Score', 'Minimum Score', 'Product Score',
-         'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score']
-
-    for i in x:
-        for j in y:
-            fig = figure.Figure()
-            canvas = FigureCanvas(fig)
-
-            graph = fig.add_subplot(1, 1, 1)
-
-            graph.plot(df[i],df[j])
-            graph.set_ylim((0,1))
-            graph.set_title('%s vs %s' % (i,j))
-            graph.set_xlabel(i)
-            graph.set_ylabel(j)
-
-            filename = "%s vs %s.png" % (i,j)
-            file_path = output / filename
-            fig.savefig(str(file_path))
-            fig.clear()
-            del fig, canvas
-
-    row, col = data.shape
-    x_tick = numpy.array(range(col))
-    x = numpy.repeat(x_tick, row, 0)
-    x.shape = data.shape
-
-    fig = figure.Figure()
-    canvas = FigureCanvas(fig)
-    graph = fig.add_subplot(1, 1, 1)
-
-    graph.scatter(x, data)
-    headers = [i.replace('_', ' ') for i in cache.score_headers]
-    graph.set_xticks(x_tick)
-    graph.tick_params(labelrotation = 90)
-    graph.set_xticklabels(headers)
-
-    file_path = output / "scores.png"
-    fig.savefig(bytes(file_path), bbox_inches='tight')
-    fig.clear()
-    del fig, canvas
-    gc.collect()
 
 def metaCSV(cache):
     repeat = int(cache.settings['repeat'])
@@ -872,17 +825,8 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
     cleanupFront(cache, halloffame)
 
 def updateParetoFront(halloffame, offspring):
-    #which items where added
-    #which items where removed
-    #need set for before and after
-    start = time.time()
-    before = set(map(tuple, halloffame.items))
     halloffame.update([offspring,])
     after = set(map(tuple, halloffame.items))
-    #print("Update took", time.time() - start)
-    #print("Pareto front increased by", len(after) - len(before))
-    #print("Pareto front members added", after - before)
-    #print("Pareto front members removed", before - after)
 
     return tuple(offspring) in after
 
@@ -925,3 +869,6 @@ def cleanupFront(cache, halloffame):
     for save_name_base in remove:
         for path in directory.glob('%s*' % save_name_base):
             path.unlink()
+
+def graph_process(cache):
+    subprocess.Popen([sys.executable, 'generate_graphs.py', cache.json_path])

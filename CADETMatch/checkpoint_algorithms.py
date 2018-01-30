@@ -45,11 +45,9 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
             util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
 
-            #if halloffame is not None:
-            #    util.updateParetoFront(halloffame, population)
-
             avg, bestMin, bestProd = util.averageFitness(population)
             util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
+            util.graph_process(cache)
 
             logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
@@ -77,16 +75,17 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
 
+            avg, bestMin, bestProd = util.averageFitness(offspring)
+            util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
+            util.graph_process(cache)
+
             # Update the hall of fame with the generated individuals
             #if halloffame is not None:
             #    util.updateParetoFront(halloffame, offspring)
 
             # Select the next generation population
             population[:] = toolbox.select(offspring, mu)
-
-            avg, bestMin, bestProd = util.averageFitness(offspring)
-            util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
-        
+                   
             # Update the statistics with the new population
             record = stats.compile(population) if stats is not None else {}
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
@@ -147,11 +146,9 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
             util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
 
-            #if halloffame is not None:
-            #    util.updateParetoFront(halloffame, population)
-
             avg, bestMin, bestProd = util.averageFitness(population)
             util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
+            util.graph_process(cache)
 
             logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
@@ -185,16 +182,12 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
 
-            # Update the hall of fame with the generated individuals
-            #if halloffame is not None:
-            #    util.updateParetoFront(halloffame, offspring)
+            avg, bestMin, bestProd = util.averageFitness(offspring)
+            util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
+            util.graph_process(cache)
 
             # Select the next generation population
             population[:] = toolbox.select(offspring + population, mu)
-            #population[:] = search.spea2.selSPEA2(offspring + population, mu)
-
-            avg, bestMin, bestProd = util.averageFitness(offspring)
-            util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
         
             # Update the statistics with the new population
             record = stats.compile(population) if stats is not None else {}
