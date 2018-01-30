@@ -66,6 +66,10 @@ def run(cache, tools, creator):
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
         util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
+
+        avg, bestMin, bestProd = util.averageFitness(population)
+        util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
+        util.graph_process(cache)
         
         #if halloffame is not None:
         #    util.updateParetoFront(halloffame, population)
@@ -74,9 +78,6 @@ def run(cache, tools, creator):
         # no actual selection is done
         population = cache.toolbox.select(population, len(population)) 
     
-        avg, bestMin, bestProd = util.averageFitness(population)
-        util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
-
         logbook.record(gen=start_gen, evals=len(invalid_ind))
 
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
@@ -113,11 +114,9 @@ def run(cache, tools, creator):
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
 
-            #if halloffame is not None:
-            #    util.updateParetoFront(halloffame, offspring)
-        
             avg, bestMin, bestProd = util.averageFitness(offspring)
             util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
+            util.graph_process(cache)
 
             # Select the next generation population
             population = cache.toolbox.select(population + offspring, populationSize)
