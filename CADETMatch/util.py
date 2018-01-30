@@ -41,7 +41,7 @@ decim.getcontext().prec = 64
 __logBase10of2_decim = decim.Decimal(2).log10()
 __logBase10of2 = float(__logBase10of2_decim)
 
-disableAllGraphs = True
+disableAllGraphs = False
 
 def smoothing_factor(y):
     return max(y)/1000000.0
@@ -850,15 +850,13 @@ def metaCSV(cache):
 def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
     fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
     start = time.time()
-    removeFront = set()
     for ind, result in zip(invalid_ind, fitnesses):
         fit, csv_line, results = result
         ind.fitness.values = fit
 
         if csv_line:
             writer.writerow(csv_line)
-            onFront, remove  = updateParetoFront(halloffame, ind)
-            removeFront.update(remove)
+            onFront = updateParetoFront(halloffame, ind)
             if onFront:
                 processResults(ind, cache, results)
             cleanupProcess(results)
@@ -871,7 +869,7 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
     csvfile.flush()
 
     #print("Current front", len(halloffame))
-    cleanupFront(cache, removeFront)
+    cleanupFront(cache, halloffame)
 
 def updateParetoFront(halloffame, offspring):
     #which items where added
@@ -886,7 +884,7 @@ def updateParetoFront(halloffame, offspring):
     #print("Pareto front members added", after - before)
     #print("Pareto front members removed", before - after)
 
-    return tuple(offspring) in after, before - after
+    return tuple(offspring) in after
 
 def processResults(individual, cache, results):
     #generate save name
@@ -909,9 +907,21 @@ def cleanupProcess(results):
         if result['path']:
             os.remove(result['path'])
 
-def cleanupFront(cache, remove):
+def cleanupFront(cache, halloffame):
     directory = Path(cache.settings['resultsDirEvo'])
-    for ind in remove:
-        save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
+
+    #find all items in directory
+    paths = directory.glob('*.h5')
+
+    #make set of items based on removing everything after _
+    exists = {str(path.name).split('_', 1)[0] for path in paths}
+
+    #make set of allowed keys based on hall of hame
+    allowed = {hashlib.md5(str(list(individual)).encode('utf-8', 'ignore')).hexdigest() for individual in halloffame.items}
+
+    #remove everything not in hall of fame
+    remove = exists - allowed
+
+    for save_name_base in remove:
         for path in directory.glob('%s*' % save_name_base):
             path.unlink()
