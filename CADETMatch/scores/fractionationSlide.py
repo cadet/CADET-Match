@@ -78,15 +78,12 @@ def run(sim_data, feature):
         rollLeft, rollRight, searchMax = rollRange(times, sim_value, searchIndexStart, searchIndexStop)
         #print("rollLeft\t", rollLeft, "\trollRight\t", rollRight, "\tsearchMax\t", searchMax)
 
-        result = scipy.optimize.differential_evolution(goal, bounds = [(0,3001),], 
+        bounds = find_bounds(times, sim_value)
+        result = scipy.optimize.differential_evolution(goal, bounds = [bounds,], 
                                                        args = (exp_values, times, sim_value, start, stop, flow))
         #print(result)
 
-        try:
-            time_offset = numpy.abs(times[searchMax] - times[searchMax + int(result.x[0])])
-        except IndexError:
-            #This covers the case where no working time offset can be found so give the max penalty for this position
-            time_offset = times[-1]
+        time_offset = times[int(abs(round(result.x[0])))]
         #print("time_offset\t", time_offset)
         sim_data_value = numpy.roll(sim_value, int(result.x[0]))
         fracOffset = util.fractionate(start, stop, times, sim_data_value) * flow
@@ -111,6 +108,18 @@ def run(sim_data, feature):
     sim_data['graph_sim'] = graph_sim
 
     return scores, util.sse(numpy.array(sim_values_sse), numpy.array(exp_values_sse))
+
+def find_bounds(times, values):
+    "find the maximum amount left and right the system can be rolled based on 10% of peak max"
+    peak_max = max(values)
+    cutoff = 0.1 * peak_max
+
+    data = (values > cutoff).nonzero()
+
+    min_index = data[0][0]
+    max_index = data[0][-1]
+
+    return [-min_index, len(values) - max_index - 1]
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
