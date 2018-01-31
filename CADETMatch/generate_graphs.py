@@ -16,6 +16,9 @@ import itertools
 from cadet import Cadet
 from addict import Dict
 
+#parallelization
+from scoop import futures
+
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
 
@@ -96,79 +99,82 @@ def graph_simulation(simulation, graph):
         graph.legend(lines, labels, loc=0)
 
 def plotExperiments(save_name_base, settings, target, directory, file_pattern):
-    for experiment in settings['experiments']:
-        experimentName = experiment['name']
+    futures.map(plot_experiment, settings['experiments'], itertools.repeat(save_name_base), 
+                itertools.repeat(settings), itertools.repeat(target), itertools.repeat(directory), itertools.repeat(file_pattern))
+
+def plot_experiment(experiment, save_name_base, settings, target, directory, file_pattern):
+    experimentName = experiment['name']
         
-        dst = Path(directory, file_pattern % (save_name_base, experimentName))
+    dst = Path(directory, file_pattern % (save_name_base, experimentName))
 
-        if dst.exists():
-            #this item has already been plotted, this means that plots are occurring faster than generations are so kill this version
-            sys.exit()
+    if dst.exists():
+        #this item has already been plotted, this means that plots are occurring faster than generations are so kill this version
+        sys.exit()
 
-        numPlots = len(experiment['features']) + 1  #1 additional plot added as an overview for the simulation
+    numPlots = len(experiment['features']) + 1  #1 additional plot added as an overview for the simulation
 
-        exp_time = target[experimentName]['time']
-        exp_value = target[experimentName]['value']
+    exp_time = target[experimentName]['time']
+    exp_value = target[experimentName]['value']
 
-        fig = figure.Figure(figsize=[10, numPlots*10])
-        canvas = FigureCanvas(fig)
+    fig = figure.Figure(figsize=[10, numPlots*10])
+    canvas = FigureCanvas(fig)
 
-        simulation = Cadet()
-        h5_path = Path(directory) / ('%s_%s_EVO.h5' % (save_name_base, experimentName))
-        simulation.filename = bytes(h5_path)
-        simulation.load()
+    simulation = Cadet()
+    h5_path = Path(directory) / ('%s_%s_EVO.h5' % (save_name_base, experimentName))
+    simulation.filename = bytes(h5_path)
+    simulation.load()
 
-        results = {}
-        results['simulation'] = simulation
+    results = {}
+    results['simulation'] = simulation
 
-        graph_simulation(simulation, fig.add_subplot(numPlots, 1, 1))
+    graph_simulation(simulation, fig.add_subplot(numPlots, 1, 1))
 
-        for idx, feature in enumerate(experiment['features']):
-            graph = fig.add_subplot(numPlots, 1, idx+1+1) #additional +1 added due to the overview plot
+    for idx, feature in enumerate(experiment['features']):
+        graph = fig.add_subplot(numPlots, 1, idx+1+1) #additional +1 added due to the overview plot
             
-            featureName = feature['name']
-            featureType = feature['type']
+        featureName = feature['name']
+        featureType = feature['type']
 
-            feat = target[experimentName][featureName]
+        feat = target[experimentName][featureName]
 
-            selected = feat['selected']
-            exp_time = feat['time'][selected]
-            exp_value = feat['value'][selected]
+        selected = feat['selected']
+        exp_time = feat['time'][selected]
+        exp_value = feat['value'][selected]
 
-            sim_time, sim_value = get_times_values(simulation, target[experimentName][featureName])
+        sim_time, sim_value = get_times_values(simulation, target[experimentName][featureName])
 
-            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybridDecay', 'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 
-                               'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2'):
-                graph.plot(sim_time, sim_value, 'r--', label='Simulation')
-                graph.plot(exp_time, exp_value, 'g:', label='Experiment')
-            elif featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_hybrid2', 'derivative_similarity_cross', 'derivative_similarity_cross_alt'):
-                #try:
-                sim_spline = scipy.interpolate.UnivariateSpline(sim_time, smoothing(sim_time, sim_value), s=smoothing_factor(sim_value)).derivative(1)
-                exp_spline = scipy.interpolate.UnivariateSpline(exp_time, smoothing(exp_time, exp_value), s=smoothing_factor(exp_value)).derivative(1)
+        if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybridDecay', 'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 
+                            'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2'):
+            graph.plot(sim_time, sim_value, 'r--', label='Simulation')
+            graph.plot(exp_time, exp_value, 'g:', label='Experiment')
+        elif featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_hybrid2', 'derivative_similarity_cross', 'derivative_similarity_cross_alt'):
+            #try:
+            sim_spline = scipy.interpolate.UnivariateSpline(sim_time, smoothing(sim_time, sim_value), s=smoothing_factor(sim_value)).derivative(1)
+            exp_spline = scipy.interpolate.UnivariateSpline(exp_time, smoothing(exp_time, exp_value), s=smoothing_factor(exp_value)).derivative(1)
 
-                graph.plot(sim_time, sim_spline(sim_time), 'r--', label='Simulation')
-                graph.plot(exp_time, exp_spline(exp_time), 'g:', label='Experiment')
-                #except:
-                #    pass
-            elif featureType in ('fractionation', 'fractionationCombine', 'fractionationMeanVariance', 'fractionationMoment', 'fractionationSlide'):
-                cache.scores[featureType].run(results, feat)
+            graph.plot(sim_time, sim_spline(sim_time), 'r--', label='Simulation')
+            graph.plot(exp_time, exp_spline(exp_time), 'g:', label='Experiment')
+            #except:
+            #    pass
+        elif featureType in ('fractionation', 'fractionationCombine', 'fractionationMeanVariance', 'fractionationMoment', 'fractionationSlide'):
+            cache.scores[featureType].run(results, feat)
 
 
-                graph_exp = results['graph_exp']
-                graph_sim = results['graph_sim']
+            graph_exp = results['graph_exp']
+            graph_sim = results['graph_sim']
 
-                colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+            colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
-                for idx, (key, value) in enumerate(graph_sim.items()):
-                    (time, values) = zip(*value)
-                    graph.plot(time, values, '%s--' % colors[idx], label='Simulation Comp: %s' % key)
+            for idx, (key, value) in enumerate(graph_sim.items()):
+                (time, values) = zip(*value)
+                graph.plot(time, values, '%s--' % colors[idx], label='Simulation Comp: %s' % key)
 
-                for idx, (key, value) in enumerate(graph_exp.items()):
-                    (time, values) = zip(*value)
-                    graph.plot(time, values, '%s:' % colors[idx], label='Experiment Comp: %s' % key)
-            graph.legend()
+            for idx, (key, value) in enumerate(graph_exp.items()):
+                (time, values) = zip(*value)
+                graph.plot(time, values, '%s:' % colors[idx], label='Experiment Comp: %s' % key)
+        graph.legend()
 
-        fig.savefig(bytes(dst))
+    fig.savefig(bytes(dst))
 
 def graphSpace(cache):
     csv_path = Path(cache.settings['resultsDirBase']) / cache.settings['CSV']
@@ -180,14 +186,12 @@ def graphSpace(cache):
     #3d plots
     prod = list(itertools.product(comp_two, cache.score_indexes))
     seq = [(str(output), str(csv_path), i[0][0], i[0][1], i[1]) for i in prod]
-    for i in seq:
-        plot_3d(i)
+    futures.map(plot_3d, seq)
     
     #2d plots
     prod = list(itertools.product(comp_one, cache.score_indexes))
     seq = [(str(output), str(csv_path), i[0][0], i[1]) for i in prod]
-    for i in seq:
-        plot_2d(i)
+    futures.map(plot_2d, seq)
 
 def plot_3d(arg):
     "This leaks memory and should be disabled for now"
@@ -255,22 +259,7 @@ def graphProgress(cache):
     y = ['Average Score', 'Minimum Score', 'Product Score',
          'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score']
 
-    for i in x:
-        for j in y:
-            fig = figure.Figure()
-            canvas = FigureCanvas(fig)
-
-            graph = fig.add_subplot(1, 1, 1)
-
-            graph.plot(df[i],df[j])
-            graph.set_ylim((0,1))
-            graph.set_title('%s vs %s' % (i,j))
-            graph.set_xlabel(i)
-            graph.set_ylabel(j)
-
-            filename = "%s vs %s.png" % (i,j)
-            file_path = output / filename
-            fig.savefig(str(file_path))
+    futures.map(singleGraphProgress, itertools.product(x,y))            
 
     row, col = data.shape
     x_tick = numpy.array(range(col))
@@ -290,6 +279,25 @@ def graphProgress(cache):
 
     file_path = output / "scores.png"
     fig.savefig(bytes(file_path), bbox_inches='tight')
+
+def singleGraphProgress(tup):
+    x,y = tup
+
+    fig = figure.Figure()
+    canvas = FigureCanvas(fig)
+
+    graph = fig.add_subplot(1, 1, 1)
+
+    graph.plot(df[i],df[j])
+    graph.set_ylim((0,1))
+    graph.set_title('%s vs %s' % (i,j))
+    graph.set_xlabel(i)
+    graph.set_ylabel(j)
+
+    filename = "%s vs %s.png" % (i,j)
+    file_path = output / filename
+    fig.savefig(str(file_path))
+
 
 def get_times_values(simulation, target, selected = None):
 

@@ -132,7 +132,9 @@ def run(cache, tools, creator):
                 pickle.dump(cp, cp_file)
 
             if avg > cache.settings['stopAverage'] or bestMin > cache.settings['stopBest']:
+                util.finish(process, cache)
                 return halloffame
+        util.finish(process, cache)
         return halloffame
 
 def setupDEAP(cache, fitness, map_function, creator, base, tools):

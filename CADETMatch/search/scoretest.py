@@ -2,6 +2,7 @@ import util
 import pareto
 import csv
 from pathlib import Path
+import time
 
 name = 'ScoreTest'
 
@@ -11,6 +12,7 @@ def run(cache, tools, creator):
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
         pop = cache.toolbox.population(n=0)
+        sim_start = generation_start = time.time()
 
         if "seeds" in cache.settings:
             print(cache.settings['seeds'])
@@ -22,7 +24,12 @@ def run(cache, tools, creator):
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
         util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof)
-
+        
+        avg, bestMin, bestProd = util.averageFitness(pop)
+        
+        util.writeProgress(cache, -1, pop, hof, avg, bestMin, bestProd, sim_start, generation_start)
+        
+        util.finish(None, cache)
         return hof
 
 def setupDEAP(cache, fitness, map_function, creator, base, tools):

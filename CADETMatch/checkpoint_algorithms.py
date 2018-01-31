@@ -100,7 +100,9 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
                 pickle.dump(cp, cp_file)
 
             if avg > settings['stopAverage'] or bestMin > settings['stopBest']:
+                util.finish(process, cache)
                 return halloffame
+        util.finish(process, cache)
         return halloffame
 
 
@@ -200,5 +202,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 pickle.dump(cp, cp_file)
 
             if avg > settings['stopAverage'] or bestMin > settings['stopBest']:
+                util.finish(process, cache)
                 return halloffame
+        util.finish(process, cache)
         return halloffame

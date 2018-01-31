@@ -685,7 +685,16 @@ def cleanupFront(cache, halloffame):
         for path in directory.glob('%s*' % save_name_base):
             path.unlink()
 
-def graph_process(cache, process=None):
+def graph_process(cache, process=None, parallel=False):
     if process is None or process.returncode is not None:
-        process = subprocess.Popen([sys.executable, 'generate_graphs.py', cache.json_path])
+        if parallel:
+            process = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path])
+        else:
+            process = subprocess.Popen([sys.executable, 'generate_graphs.py', cache.json_path])
     return process
+
+def finish(process, cache):
+    if process is not None:
+        process.kill()
+    process = graph_process(cache, None, parallel=True)
+    process.wait()
