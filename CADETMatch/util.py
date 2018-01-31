@@ -78,12 +78,12 @@ def find_breakthrough(times, data):
 def generateIndividual(icls, size, imin, imax):
     #while 1:
     #ind = icls(random.uniform(imin[idx], imax[idx]) for idx in range(size))
-    return icls(RoundToSigFigs(numpy.random.uniform(imin, imax), 8))
+    return icls(RoundToSigFigs(numpy.random.uniform(imin, imax), 4))
     #  if feasible(ind):
     #       return ind
 
 def initIndividual(icls, content):
-    return icls(RoundToSigFigs(content, 8))
+    return icls(RoundToSigFigs(content, 4))
 
 def feasible(individual):
     "evaluate if this individual is feasible"
@@ -150,7 +150,54 @@ def saveExperiments(save_name_base, settings, target, results, directory, file_p
             simulation.save()
     return True
 
+def convert_individual(individual, cache):
+    #This function should be refactored with set_simulation, for now copy and paste to verify if the idea works
+    cadetValues = []
+
+    idx = 0
+    for parameter in cache.settings['parameters']:
+        location = parameter['location']
+        transform = parameter['transform']
+
+        try:
+            comp = parameter['component']
+            bound = parameter['bound']
+            indexes = []
+        except KeyError:
+            indexes = parameter['indexes']
+            bound = []
+
+        if bound:
+            if transform == 'keq':
+                unit = location[0].split('/')[3]
+            elif transform == 'log':
+                unit = location.split('/')[3]
+
+        if transform == 'keq':
+            for bnd in bound:
+                cadetValues.append(math.exp(individual[idx]))
+                cadetValues.append(math.exp(individual[idx])/(math.exp(individual[idx+1])))
+
+                idx += 2
+
+        elif transform == "log":
+            for bnd in bound:
+                if comp == -1:
+                    cadetValues.append(math.exp(individual[idx]))
+                else:
+                    cadetValues.append(math.exp(individual[idx]))
+
+                idx += 1
+
+            for index in indexes:
+                cadetValues.append(math.exp(individual[idx]))
+
+                idx += 1
+    return cadetValues
+
+
 def set_simulation(individual, simulation, settings):
+    sigfigs = 3
     log("individual", individual)
 
     cadetValues = []
@@ -185,8 +232,8 @@ def set_simulation(individual, simulation, settings):
         if transform == 'keq':
             for bnd in bound:
                 position = boundOffset[comp] + bnd
-                simulation[location[0].lower()][position] = math.exp(individual[idx])
-                simulation[location[1].lower()][position] = math.exp(individual[idx])/(math.exp(individual[idx+1]))
+                simulation[location[0].lower()][position] = RoundToSigFigs(math.exp(individual[idx]), sigfigs)
+                simulation[location[1].lower()][position] = RoundToSigFigs(math.exp(individual[idx])/(math.exp(individual[idx+1])), sigfigs)
 
                 cadetValues.append(simulation[location[0]][position])
                 cadetValues.append(simulation[location[1]][position])
@@ -201,19 +248,19 @@ def set_simulation(individual, simulation, settings):
             for bnd in bound:
                 if comp == -1:
                     position = ()
-                    simulation[location.lower()] = math.exp(individual[idx])
+                    simulation[location.lower()] = RoundToSigFigs(math.exp(individual[idx]), sigfigs)
                     cadetValues.append(simulation[location])
                     cadetValuesKEQ.append(simulation[location])
                 else:
                     position = boundOffset[comp] + bnd
-                    simulation[location.lower()][position] = math.exp(individual[idx])
+                    simulation[location.lower()][position] = RoundToSigFigs(math.exp(individual[idx]), sigfigs)
                     cadetValues.append(simulation[location][position])
                     cadetValuesKEQ.append(simulation[location][position])
 
                 idx += 1
 
             for index in indexes:
-                simulation[location.lower()][index] = math.exp(individual[idx])
+                simulation[location.lower()][index] = RoundToSigFigs(math.exp(individual[idx]), sigfigs)
                 cadetValues.append(simulation[location][index])
                 cadetValuesKEQ.append(simulation[location][index])
 
@@ -341,12 +388,12 @@ def bestMinScore(hof):
     idxMax = numpy.argmax([min(i.fitness.values) for i in hof])
     return hof[idxMax]
 
-def similar(a, b):
+def similar(a, b, cache):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
-    a = numpy.array(a)
-    b = numpy.array(b)
+    a = numpy.array(convert_individual(a,cache))
+    b = numpy.array(convert_individual(b,cache))
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-6)
+    return numpy.all(diff < 1e-3)
 
 def RoundOffspring(cache, offspring):
     for child in offspring:
@@ -579,7 +626,7 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
 
         if csv_line:
             writer.writerow(csv_line)
-            onFront = updateParetoFront(halloffame, ind)
+            onFront = updateParetoFront(halloffame, ind, cache)
             if onFront:
                 processResults(ind, cache, results)
             cleanupProcess(results)
@@ -594,8 +641,8 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
     #print("Current front", len(halloffame))
     cleanupFront(cache, halloffame)
 
-def updateParetoFront(halloffame, offspring):
-    halloffame.update([offspring,])
+def updateParetoFront(halloffame, offspring, cache):
+    halloffame.update([offspring,], cache)
     after = set(map(tuple, halloffame.items))
 
     return tuple(offspring) in after

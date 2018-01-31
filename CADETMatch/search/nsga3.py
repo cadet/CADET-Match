@@ -4,6 +4,8 @@ import random
 import nsga3_selection
 
 from deap import algorithms
+import functools
+import pareto
 
 name = "NSGA3"
 
@@ -23,7 +25,7 @@ def run(cache, tools, creator):
         seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]
         pop.extend(seed_pop)
 
-    hof = tools.ParetoFront(similar=util.similar)
+    hof = pareto.ParetoFront(similar=util.similar)
 
     return checkpoint_algorithms.eaMuPlusLambda(pop, cache.toolbox,
                               mu=populationSize, 

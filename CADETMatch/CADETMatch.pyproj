@@ -52,6 +52,9 @@
     <Compile Include="nsga3_selection.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="pareto.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="plugins.py">
       <SubType>Code</SubType>
     </Compile>

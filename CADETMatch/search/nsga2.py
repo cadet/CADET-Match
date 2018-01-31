@@ -9,6 +9,7 @@ import time
 import csv
 
 from deap import algorithms
+import pareto
 
 name = "NSGA2"
 
@@ -56,7 +57,7 @@ def run(cache, tools, creator):
 
             start_gen = 0    
 
-            halloffame = tools.ParetoFront(similar=util.similar)
+            halloffame = pareto.ParetoFront(similar=util.similar)
             logbook = tools.Logbook()
             gradCheck = cache.settings['gradCheck']
 
