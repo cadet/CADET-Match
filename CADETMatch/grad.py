@@ -105,8 +105,6 @@ def jacobian(x, cache):
     return jac.transpose()
 
 def fitness_sens(individual, cache):
-    if not(util.feasible(individual)):
-        return [0.0] * evo.numGoals
     print("Gradient Running for ", individual)
     scores = []
     error = 0.0

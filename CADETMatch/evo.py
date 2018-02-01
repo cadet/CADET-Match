@@ -30,9 +30,6 @@ ERROR = {'scores': None,
 def fitness(individual, json_path):
     if json_path != cache.json_path:
         cache.setup(json_path)
-    
-    if not(util.feasible(individual)):
-        return cache.WORST, []
 
     scores = []
     error = 0.0

@@ -76,19 +76,10 @@ def find_breakthrough(times, data):
     return (selected_times[0], max(data)), (selected_times[-1], max(data))
 
 def generateIndividual(icls, size, imin, imax):
-    #while 1:
-    #ind = icls(random.uniform(imin[idx], imax[idx]) for idx in range(size))
     return icls(RoundToSigFigs(numpy.random.uniform(imin, imax), 4))
-    #  if feasible(ind):
-    #       return ind
 
 def initIndividual(icls, content):
     return icls(RoundToSigFigs(content, 4))
-
-def feasible(individual):
-    "evaluate if this individual is feasible"
-
-    return True
 
 print_log = 0
 
@@ -624,7 +615,13 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
         fit, csv_line, results = result
         ind.fitness.values = fit
 
+        save_name_base = hashlib.md5(str(ind).encode('utf-8', 'ignore')).hexdigest()
+
         if csv_line:
+            if save_name_base != csv_line[1]:
+                print(save_name_base, csv_line[1], str(ind))
+                sys.exit()
+
             writer.writerow(csv_line)
             onFront = updateParetoFront(halloffame, ind, cache)
             if onFront:
@@ -634,6 +631,7 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
         #Flush at most every 60 seconds
         if time.time() - start > 60:    
             csvfile.flush()
+            start = time.time()
     
     #flush before returning
     csvfile.flush()

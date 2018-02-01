@@ -62,8 +62,6 @@ def fitness_sens_grad(individual, finished=0):
     return fitness_sens(individual, finished)
 
 def fitness_sens(individual, finished=1):
-    if not(util.feasible(individual)):
-        return [0.0] * cache.numGoals
     scores = []
     error = 0.0
 
