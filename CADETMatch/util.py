@@ -115,7 +115,6 @@ def smoothing(times, values):
     if filter_length % 2 == 0:
         filter_length += 1
     return scipy.signal.savgol_filter(values, filter_length, 3)
-    #return scipy.signal.hilbert(values)
 
 def mutPolynomialBoundedAdaptive(individual, eta, low, up, indpb):
     """Adaptive eta for mutPolynomialBounded"""
@@ -123,6 +122,23 @@ def mutPolynomialBoundedAdaptive(individual, eta, low, up, indpb):
     prod = product_score(scores)
     eta = eta + prod * 100
     return tools.mutPolynomialBounded(individual, eta, low, up, indpb)
+
+def mutationBoundedAdaptive(individual, low, up, indpb):
+    scores = individual.fitness.values
+    prod = product_score(scores)
+
+    max_step = numpy.abs(numpy.array(up) - numpy.array(low))/4
+    min_step = 0.001
+
+    scale = (min_step - max_step) * prod + max_step
+
+    rand = numpy.random.rand(len(individual))
+
+    for idx, i in enumerate(individual):
+        if rand[idx] <= indpb:
+            dist = numpy.random.normal(0, scale[idx])
+            individual[idx] = min(max(i + dist, up[idx]), low[idx])
+    return individual,
 
 def saveExperiments(save_name_base, settings, target, results, directory, file_pattern):
     for experiment in settings['experiments']:
@@ -615,13 +631,7 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
         fit, csv_line, results = result
         ind.fitness.values = fit
 
-        save_name_base = hashlib.md5(str(ind).encode('utf-8', 'ignore')).hexdigest()
-
         if csv_line:
-            if save_name_base != csv_line[1]:
-                print(save_name_base, csv_line[1], str(ind))
-                sys.exit()
-
             writer.writerow(csv_line)
             onFront = updateParetoFront(halloffame, ind, cache)
             if onFront:
