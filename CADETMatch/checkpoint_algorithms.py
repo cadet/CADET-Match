@@ -79,10 +79,6 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
             process = util.graph_process(cache, process)
 
-            # Update the hall of fame with the generated individuals
-            #if halloffame is not None:
-            #    util.updateParetoFront(halloffame, offspring)
-
             # Select the next generation population
             population[:] = toolbox.select(offspring, mu)
                    

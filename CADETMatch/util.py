@@ -519,17 +519,20 @@ def writeProgress(cache, generation, population, halloffame, average_score, mini
         row, col = data.shape
         data_mean = numpy.mean(data, 1)
         data_mean_mean = numpy.mean(data_mean)
+        data_mean_best = numpy.max(data_mean)
 
         data_min = numpy.min(data, 1)
         data_min_mean = numpy.mean(data_min)
+        data_min_best = numpy.max(data_min)
 
         data_prod = numpy.power(numpy.prod(data, 1), 1.0/col)
         data_prod_mean = numpy.mean(data_prod)
+        data_prod_best = numpy.max(data_prod)
  
         print("Generation: ", generation, 
-              "\tAverage Score: ", data_mean_mean, 
-              "\tMinimum Score: ", data_min_mean, 
-              "\tProduct Score: ", data_prod_mean)
+              "\tAverage Score: ", RoundToSigFigs(data_mean_mean,4), '\tBest:', RoundToSigFigs(data_mean_best,4),
+              "\tMinimum Score: ", RoundToSigFigs(data_min_mean,4), '\tBest:', RoundToSigFigs(data_min_best,4),
+              "\tProduct Score: ", RoundToSigFigs(data_prod_mean,4), '\tBest:', RoundToSigFigs(data_prod_best,4))
         
         writer.writerow([generation,
                          len(population),

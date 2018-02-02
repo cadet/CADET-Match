@@ -7,6 +7,7 @@ import numpy
 from scipy.spatial.distance import cdist
 
 import deap.tools.emo
+import pareto
 
 name = 'SPEA2a'
 
@@ -29,7 +30,7 @@ def run(cache, tools, creator):
 
     totalGenerations = parameters * cache.settings['generations']
 
-    hof = tools.ParetoFront(similar=util.similar)
+    hof = pareto.ParetoFront(similar=util.similar)
 
     return checkpoint_algorithms.eaMuCommaLambda(pop, cache.toolbox, mu=MU, lambda_=LAMBDA,
         cxpb=cache.settings['crossoverRate'], mutpb=cache.settings['mutationRate'], ngen=totalGenerations, settings=cache.settings, halloffame=hof, tools=tools, cache=cache)
@@ -48,7 +49,7 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
     cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
 
     if cache.adaptive:
-        cache.toolbox.register("mutate", util.mutPolynomialBoundedAdaptive, eta=10.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
+        cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
     else:
         cache.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
 
@@ -62,7 +63,6 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
 # Strength Pareto         (SPEA-II)  #
 ######################################
 
-#@profile
 def selSPEA2(individuals, k):
     """Apply SPEA-II selection operator on the *individuals*. Usually, the
     size of *individuals* will be larger than *n* because any individual
