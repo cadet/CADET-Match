@@ -20,7 +20,7 @@ def run(sim_data, feature):
     pearson, diff_time = score.pearson(exp_time_values, sim_data_values, exp_data_values)
     
     temp = [pearson, 
-            feature['value_function'](value_high), 
+            feature['value_function'](start[1]), 
             feature['time_function'](diff_time)]
     return temp, util.sse(sim_data_values, exp_data_values)
 
