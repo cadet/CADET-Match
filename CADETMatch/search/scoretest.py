@@ -21,13 +21,14 @@ def run(cache, tools, creator):
             print(pop)
 
         hof = pareto.ParetoFront(similar=util.similar)
+        meta_hof = pareto.ParetoFront(similar=util.similar)
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
-        util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof)
+        util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof)
         
         avg, bestMin, bestProd = util.averageFitness(pop)
         
-        util.writeProgress(cache, -1, pop, hof, avg, bestMin, bestProd, sim_start, generation_start)
+        util.writeProgress(cache, -1, pop, hof, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
         
         util.finish(None, cache)
         return hof
