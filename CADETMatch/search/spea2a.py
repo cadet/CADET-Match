@@ -31,9 +31,11 @@ def run(cache, tools, creator):
     totalGenerations = parameters * cache.settings['generations']
 
     hof = pareto.ParetoFront(similar=util.similar)
+    meta_hof = pareto.ParetoFront(similar=util.similar)
 
     return checkpoint_algorithms.eaMuCommaLambda(pop, cache.toolbox, mu=MU, lambda_=LAMBDA,
-        cxpb=cache.settings['crossoverRate'], mutpb=cache.settings['mutationRate'], ngen=totalGenerations, settings=cache.settings, halloffame=hof, tools=tools, cache=cache)
+        cxpb=cache.settings['crossoverRate'], mutpb=cache.settings['mutationRate'], ngen=totalGenerations, 
+        settings=cache.settings, halloffame=hof, tools=tools, cache=cache, meta_hof = meta_hof)
 
 def setupDEAP(cache, fitness, map_function, creator, base, tools):
     "setup the DEAP variables"

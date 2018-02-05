@@ -108,6 +108,7 @@ def createDirectories(cache, json_path):
     cache.settings['resultsDirSpace'].mkdir(parents=True, exist_ok=True)
     cache.settings['resultsDirEvo'].mkdir(parents=True, exist_ok=True)
     cache.settings['resultsDirProgress'].mkdir(parents=True, exist_ok=True)
+    cache.settings['resultsDirMeta'].mkdir(parents=True, exist_ok=True)
 
     #copy simulation setting file to result base directory
     try:

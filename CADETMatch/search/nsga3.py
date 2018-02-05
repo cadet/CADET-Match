@@ -26,6 +26,7 @@ def run(cache, tools, creator):
         pop.extend(seed_pop)
 
     hof = pareto.ParetoFront(similar=util.similar)
+    meta_hof = pareto.ParetoFront(similar=util.similar)
 
     return checkpoint_algorithms.eaMuPlusLambda(pop, cache.toolbox,
                               mu=populationSize, 
@@ -36,7 +37,8 @@ def run(cache, tools, creator):
                               settings=cache.settings,
                               tools=tools,
                               halloffame=hof,
-                              cache=cache)
+                              cache=cache,
+                              meta_hof = meta_hof)
 
 def setupDEAP(cache, fitness, map_function, creator, base, tools):
     "setup the DEAP variables"

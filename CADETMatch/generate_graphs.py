@@ -26,9 +26,10 @@ def main():
     cache.setup(sys.argv[1])
     cache.progress_path = Path(cache.settings['resultsDirBase']) / "progress.csv"
 
+    graphMeta(cache)
     graphProgress(cache)
     graphSpace(cache)
-    graphExperiments(cache)
+    graphExperiments(cache)    
 
 def graphExperiments(cache):
     directory = Path(cache.settings['resultsDirEvo'])
@@ -43,10 +44,23 @@ def graphExperiments(cache):
 
     toGenerate = existsH5 - existsPNG
 
-    #for save_name_base in toGenerate:
-    #    plotExperiments(save_name_base, cache.settings, cache.target, cache.settings['resultsDirEvo'], '%s_%s_EVO.png')
-
     list(futures.map(plotExperiments, toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirEvo']), itertools.repeat('%s_%s_EVO.png')))
+
+def graphMeta(cache):
+    directory = Path(cache.settings['resultsDirMeta'])
+
+    #find all items in directory
+    pathsH5 = directory.glob('*.h5')
+    pathsPNG = directory.glob('*.png')
+
+    #make set of items based on removing everything after _
+    existsH5 = {str(path.name).split('_', 1)[0] for path in pathsH5}
+    existsPNG = {str(path.name).split('_', 1)[0] for path in pathsPNG}
+
+    toGenerate = existsH5 - existsPNG
+
+    list(futures.map(plotExperiments, toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirMeta']), itertools.repeat('%s_%s_meta.png')))
+
 
 def graph_simulation(simulation, graph):
     ncomp = int(simulation.root.input.model.unit_001.ncomp)
@@ -124,7 +138,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
         canvas = FigureCanvas(fig)
 
         simulation = Cadet()
-        h5_path = Path(directory) / ('%s_%s_EVO.h5' % (save_name_base, experimentName))
+        h5_path = Path(directory) / (file_pattern.replace('png', 'h5') % (save_name_base, experimentName))
         simulation.filename = bytes(h5_path)
         simulation.load()
 

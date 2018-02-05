@@ -42,6 +42,7 @@ def run(cache, tools, creator):
             start_gen = cp["generation"]    
     
             halloffame = cp["halloffame"]
+            meta_hof = cp['meta_halloffame']
             logbook = cp["logbook"]
             random.setstate(cp["rndstate"])
             gradCheck = cp['gradCheck']
@@ -58,6 +59,7 @@ def run(cache, tools, creator):
             start_gen = 0    
 
             halloffame = pareto.ParetoFront(similar=util.similar)
+            meta_hof = pareto.ParetoFront(similar=util.similar)
             logbook = tools.Logbook()
             gradCheck = cache.settings['gradCheck']
 
@@ -67,10 +69,10 @@ def run(cache, tools, creator):
    
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
-        util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame)
+        util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof)
 
         avg, bestMin, bestProd = util.averageFitness(population)
-        util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
+        util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
         process = util.graph_process(cache, process)
         
         #if halloffame is not None:
@@ -83,7 +85,7 @@ def run(cache, tools, creator):
         logbook.record(gen=start_gen, evals=len(invalid_ind))
 
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-            logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
+            logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
         #cp = dict(population=population, generation=start_gen, halloffame=halloffame,
         #    logbook=logbook, rndstate=random.getstate())
 
@@ -109,13 +111,13 @@ def run(cache, tools, creator):
         
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
 
             avg, bestMin, bestProd = util.averageFitness(offspring)
-            util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
+            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
             process = util.graph_process(cache, process)
 
             # Select the next generation population
@@ -123,7 +125,7 @@ def run(cache, tools, creator):
             logbook.record(gen=gen, evals=len(invalid_ind))
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-                logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
+                logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
 
             hof = Path(cache.settings['resultsDirMisc'], 'hof')
             with hof.open('wb') as data:

@@ -9,7 +9,7 @@ import time
 import csv
 
 def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
-                    stats=None, halloffame=None, verbose=__debug__, tools=None, cache=None):
+                    stats=None, halloffame=None, verbose=__debug__, tools=None, cache=None, meta_hof=None):
     """from DEAP function but with checkpoiting"""
 
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
@@ -30,6 +30,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             start_gen = cp["generation"]    
     
             halloffame = cp["halloffame"]
+            meta_hof = cp['meta_halloffame']
             logbook = cp["logbook"]
             random.setstate(cp["rndstate"])
             gradCheck = cp['gradCheck']
@@ -44,10 +45,10 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof)
 
             avg, bestMin, bestProd = util.averageFitness(population)
-            util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
+            util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
             process = util.graph_process(cache, process)
 
             logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
@@ -56,7 +57,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             logbook.record(gen=0, nevals=len(invalid_ind), **record)
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-                logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
+                logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
 
             with checkpointFile.open('wb')as cp_file:
                 pickle.dump(cp, cp_file)
@@ -70,13 +71,13 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
 
             avg, bestMin, bestProd = util.averageFitness(offspring)
-            util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
+            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
             process = util.graph_process(cache, process)
 
             # Select the next generation population
@@ -87,7 +88,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
             cp = dict(population=population, generation=gen, halloffame=halloffame,
-                logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
+                logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
 
             hof = Path(settings['resultsDirMisc'], 'hof')
             with hof.open('wb') as data:
@@ -103,7 +104,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
 
 def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
-                   stats=None, halloffame=None, verbose=__debug__, tools=None, cache=None):
+                   stats=None, halloffame=None, verbose=__debug__, tools=None, cache=None, meta_hof=None):
     """from DEAP function but with checkpoiting"""
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
@@ -127,10 +128,10 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             start_gen = cp["generation"]    
     
             halloffame = cp["halloffame"]
+            meta_hof = cp['meta_halloffame']
             logbook = cp["logbook"]
             random.setstate(cp["rndstate"])
             gradCheck = cp['gradCheck']
-
         else:
             # Start a new evolution
             start_gen = 0    
@@ -141,10 +142,10 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof)
 
             avg, bestMin, bestProd = util.averageFitness(population)
-            util.writeProgress(cache, -1, population, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
+            util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
             process = util.graph_process(cache, process)
 
             logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
@@ -153,7 +154,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             logbook.record(gen=0, nevals=len(invalid_ind), **record)
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-                logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
+                logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
 
             with checkpointFile.open('wb')as cp_file:
                 pickle.dump(cp, cp_file)
@@ -168,17 +169,17 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof)
 
             # Combination of varOr and RoundOffSpring invalidates some members of the population, not sure why yet
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame)
+            util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
 
             avg, bestMin, bestProd = util.averageFitness(offspring)
-            util.writeProgress(cache, gen, offspring, halloffame, avg, bestMin, bestProd, sim_start, generation_start)
+            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
             process = util.graph_process(cache, process)
 
             # Select the next generation population
@@ -189,7 +190,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             logbook.record(gen=gen, nevals=len(invalid_ind), **record)
 
             cp = dict(population=population, generation=gen, halloffame=halloffame,
-                logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck)
+                logbook=logbook, rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
 
             hof = Path(settings['resultsDirMisc'], 'hof')
             with hof.open('wb') as data:

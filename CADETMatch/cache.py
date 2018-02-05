@@ -47,6 +47,7 @@ class Cache:
 
         #create used paths in settings, only the root process will make the directories later
         self.settings['resultsDirEvo'] = Path(self.settings['resultsDir']) / "evo"
+        self.settings['resultsDirMeta'] = Path(self.settings['resultsDir']) / "meta"
         self.settings['resultsDirGrad'] = Path(self.settings['resultsDir']) / "grad"
         self.settings['resultsDirMisc'] = Path(self.settings['resultsDir']) / "misc"
         self.settings['resultsDirSpace'] = Path(self.settings['resultsDir']) / "space"

@@ -500,17 +500,21 @@ def fractionate(start_seq, stop_seq, times, values):
         temp.append(numpy.trapz(local_values, local_times))
     return numpy.array(temp)
 
-def writeProgress(cache, generation, population, halloffame, average_score, minimum_score, product_score, sim_start, generation_start):
+def writeProgress(cache, generation, population, halloffame, meta_halloffame, average_score, minimum_score, product_score, sim_start, generation_start):
     cpu_time = psutil.Process().cpu_times()
     now = time.time()
 
     results = Path(cache.settings['resultsDirBase'])
 
     hof = results / "hof.npy"
+    meta_hof = results / "meta_hof.npy"
 
     data = numpy.array([i.fitness.values for i in halloffame])
 
     with hof.open('wb') as hof_file:
+        numpy.save(hof_file, data)
+
+    with meta_hof.open('wb') as hof_file:
         numpy.save(hof_file, data)
 
     with cache.progress_path.open('a', newline='') as csvfile:
@@ -627,18 +631,32 @@ def metaCSV(cache):
                          numpy.mean(paretoProductScore), numpy.std(paretoProductScore),
                          numpy.mean(totalCPUTime), numpy.std(totalCPUTime),])
 
-def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
+def meta_calc(scores):
+    return [product_score(scores), 
+            numpy.min(scores), 
+            numpy.sum(scores)/len(scores), 
+            numpy.linalg.norm(scores)/numpy.sqrt(len(scores))]
+
+def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof):
     fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
     start = time.time()
     for ind, result in zip(invalid_ind, fitnesses):
         fit, csv_line, results = result
         ind.fitness.values = fit
 
+        ind_meta = toolbox.clone(ind)
+        ind_meta.fitness.values = meta_calc(fit)
+
         if csv_line:
             writer.writerow(csv_line)
             onFront = updateParetoFront(halloffame, ind, cache)
             if onFront:
                 processResults(ind, cache, results)
+
+            onFrontMeta = updateParetoFront(meta_hof, ind_meta, cache)
+            if onFrontMeta:
+                processResultsMeta(ind, cache, results)
+
             cleanupProcess(results)
         
         #Flush at most every 60 seconds
@@ -650,7 +668,7 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame):
     csvfile.flush()
 
     #print("Current front", len(halloffame))
-    cleanupFront(cache, halloffame)
+    cleanupFront(cache, halloffame, meta_hof)
 
 def updateParetoFront(halloffame, offspring, cache):
     halloffame.update([offspring,], cache)
@@ -664,36 +682,58 @@ def processResults(individual, cache, results):
 
     individual.save_name_base = save_name_base
 
-    for result in results.values():
-        if result['cadetValuesKEQ']:
-            cadetValuesKEQ = result['cadetValuesKEQ']
-            break
-
     notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirEvo'], '%s_%s_EVO.h5')
-    
+ 
+def processResultsMeta(individual, cache, results):
+    #generate save name
+    save_name_base = hashlib.md5(str(list(individual)).encode('utf-8', 'ignore')).hexdigest()
+
+    individual.save_name_base = save_name_base
+
+    notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirMeta'], '%s_%s_meta.h5')    
+
 def cleanupProcess(results):
     #cleanup
     for result in results.values():
         if result['path']:
             os.remove(result['path'])
 
-def cleanupFront(cache, halloffame):
-    directory = Path(cache.settings['resultsDirEvo'])
+def cleanupFront(cache, halloffame, meta_hof):
+    cleanDir(Path(cache.settings['resultsDirEvo']), halloffame)
+    cleanDir(Path(cache.settings['resultsDirMeta']), meta_hof)
+    #directory = Path(cache.settings['resultsDirEvo'])
 
     #find all items in directory
-    paths = directory.glob('*.h5')
+    #paths = directory.glob('*.h5')
+
+    #make set of items based on removing everything after _
+    #exists = {str(path.name).split('_', 1)[0] for path in paths}
+
+    #make set of allowed keys based on hall of hame
+    #allowed = {hashlib.md5(str(list(individual)).encode('utf-8', 'ignore')).hexdigest() for individual in halloffame.items}
+
+    #remove everything not in hall of fame
+    #remove = exists - allowed
+
+    #for save_name_base in remove:
+    #    for path in directory.glob('%s*' % save_name_base):
+    #        path.unlink()
+
+def cleanDir(dir, hof):
+    #find all items in directory
+    paths = dir.glob('*.h5')
 
     #make set of items based on removing everything after _
     exists = {str(path.name).split('_', 1)[0] for path in paths}
 
     #make set of allowed keys based on hall of hame
-    allowed = {hashlib.md5(str(list(individual)).encode('utf-8', 'ignore')).hexdigest() for individual in halloffame.items}
+    allowed = {hashlib.md5(str(list(individual)).encode('utf-8', 'ignore')).hexdigest() for individual in hof.items}
 
     #remove everything not in hall of fame
     remove = exists - allowed
 
     for save_name_base in remove:
-        for path in directory.glob('%s*' % save_name_base):
+        for path in dir.glob('%s*' % save_name_base):
             path.unlink()
 
 def graph_process(cache, process=None, parallel=False):
