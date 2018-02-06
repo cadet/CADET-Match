@@ -16,6 +16,11 @@ import itertools
 from cadet import Cadet
 from addict import Dict
 
+if "scoop" in sys.modules:
+    scoopAvailable = True
+else:
+    scoopAvailable = False
+
 #parallelization
 from scoop import futures
 
@@ -28,8 +33,10 @@ def main():
 
     graphMeta(cache)
     graphProgress(cache)
-    graphSpace(cache)
-    graphExperiments(cache)    
+
+    if scoopAvailable:
+        graphSpace(cache)
+        graphExperiments(cache)    
 
 def graphExperiments(cache):
     directory = Path(cache.settings['resultsDirEvo'])
