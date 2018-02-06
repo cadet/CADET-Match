@@ -701,23 +701,6 @@ def cleanupProcess(results):
 def cleanupFront(cache, halloffame, meta_hof):
     cleanDir(Path(cache.settings['resultsDirEvo']), halloffame)
     cleanDir(Path(cache.settings['resultsDirMeta']), meta_hof)
-    #directory = Path(cache.settings['resultsDirEvo'])
-
-    #find all items in directory
-    #paths = directory.glob('*.h5')
-
-    #make set of items based on removing everything after _
-    #exists = {str(path.name).split('_', 1)[0] for path in paths}
-
-    #make set of allowed keys based on hall of hame
-    #allowed = {hashlib.md5(str(list(individual)).encode('utf-8', 'ignore')).hexdigest() for individual in halloffame.items}
-
-    #remove everything not in hall of fame
-    #remove = exists - allowed
-
-    #for save_name_base in remove:
-    #    for path in directory.glob('%s*' % save_name_base):
-    #        path.unlink()
 
 def cleanDir(dir, hof):
     #find all items in directory
@@ -737,12 +720,24 @@ def cleanDir(dir, hof):
             path.unlink()
 
 def graph_process(cache, process=None, parallel=False):
+    if cache.lastGraphTime is None:
+        cache.lastGraphTime = time.time()
+    
+    if (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
+        if process is not None:
+            process.kill()
+        process = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path])
+        process.wait()
+        cache.lastGraphTime = time.time()
+        return process
+
     if process is None or process.returncode is not None:
         if parallel:
             process = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path])
         else:
             process = subprocess.Popen([sys.executable, 'generate_graphs.py', cache.json_path])
-    return process
+    
+        return process
 
 def finish(process, cache):
     if process is not None:

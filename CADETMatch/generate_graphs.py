@@ -1,4 +1,10 @@
 import sys
+
+if "scoop" in sys.modules:
+    scoopAvailable = True
+else:
+    scoopAvailable = False
+
 from matplotlib import figure
 from matplotlib import cm
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -15,11 +21,6 @@ import itertools
 
 from cadet import Cadet
 from addict import Dict
-
-if "scoop" in sys.modules:
-    scoopAvailable = True
-else:
-    scoopAvailable = False
 
 #parallelization
 from scoop import futures

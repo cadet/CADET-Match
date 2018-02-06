@@ -26,6 +26,8 @@ class Cache:
         self.parameter_indexes = None
         self.score_indexes = None
         self.score_headers = None
+        self.graphGenerateTime = None
+        self.lastGraphTime = None
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
                                  'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score',
@@ -53,6 +55,8 @@ class Cache:
         self.settings['resultsDirSpace'] = Path(self.settings['resultsDir']) / "space"
         self.settings['resultsDirProgress'] = Path(self.settings['resultsDir']) / "progress"
         self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
+
+        self.graphGenerateTime = int(self.settings.get('graphGenerateTime', 3600))
 
     def setupSettings(self):
         settings_file = Path(self.json_path)
