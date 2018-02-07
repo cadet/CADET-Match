@@ -163,9 +163,10 @@ def setupTemplates(cache):
         template.root.input['return'].unit_001.write_solution_particle = 0
         template.root.input['return'].unit_001.write_solution_column_inlet = 1
         template.root.input['return'].unit_001.write_solution_column_outlet = 1
+        template.root.input['return'].unit_001.write_solution_inlet = 1
+        template.root.input['return'].unit_001.write_solution_outlet = 1
         template.root.input['return'].unit_001.split_components_data = 0
         template.root.input.solver.nthreads = 1
-        template.root.input.solver.time_integrator.init_step_size = 0
         template.root.input.solver.time_integrator.max_steps = 0
 
         template.save()

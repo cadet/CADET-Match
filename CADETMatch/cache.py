@@ -217,7 +217,7 @@ class Cache:
             CV_time = (area * length) / flow
 
         if 'CSV' in experiment:
-            data = numpy.genfromtxt(experiment['CSV'], delimiter=',')
+            data = numpy.loadtxt(experiment['CSV'], delimiter=',')
 
             temp['time'] = data[:, 0]
             temp['value'] = data[:, 1]
@@ -231,7 +231,7 @@ class Cache:
             temp[featureName] = {}
 
             if 'CSV' in feature:
-                dataLocal = numpy.genfromtxt(feature['CSV'], delimiter=',')
+                dataLocal = numpy.loadtxt(feature['CSV'], delimiter=',')
                 temp[featureName]['time'] = dataLocal[:, 0]
                 temp[featureName]['value'] = dataLocal[:, 1]
             else:
