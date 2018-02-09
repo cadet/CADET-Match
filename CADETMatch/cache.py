@@ -27,7 +27,9 @@ class Cache:
         self.score_indexes = None
         self.score_headers = None
         self.graphGenerateTime = None
+        self.graphMetaTime = None
         self.lastGraphTime = None
+        self.lastMetaTime = None
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
                                  'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score',
@@ -57,6 +59,7 @@ class Cache:
         self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
 
         self.graphGenerateTime = int(self.settings.get('graphGenerateTime', 3600))
+        self.graphMetaTime = int(self.settings.get('graphMetaTime', 60*5))
 
     def setupSettings(self):
         settings_file = Path(self.json_path)

@@ -729,14 +729,18 @@ def cleanDir(dir, hof):
 def graph_process(cache, last=0):
     if cache.lastGraphTime is None:
         cache.lastGraphTime = time.time()
+    if cache.lastMetaTime is None:
+        cache.lastMetaTime = time.time()
     
     if last or (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
         subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path, '1'], 
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
         cache.lastGraphTime = time.time()
     else:
-        subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path, '0'], 
+        if (time.time() - cache.lastMetaTime) > cache.graphMetaTime:
+            subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path, '0'], 
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+            cache.lastMetaTime = time.time()
 
 def finish(cache):
     graph_process(cache, last=True)
