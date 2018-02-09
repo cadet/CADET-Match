@@ -1,10 +1,5 @@
 import sys
 
-if "scoop" in sys.modules:
-    scoopAvailable = True
-else:
-    scoopAvailable = False
-
 from matplotlib import figure
 from matplotlib import cm
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -32,10 +27,12 @@ def main():
     cache.setup(sys.argv[1])
     cache.progress_path = Path(cache.settings['resultsDirBase']) / "progress.csv"
 
+    fullGeneration = int(sys.argv[2])
+
     graphMeta(cache)
     graphProgress(cache)
 
-    if scoopAvailable:
+    if fullGeneration:
         graphSpace(cache)
         graphExperiments(cache)    
 

@@ -29,7 +29,6 @@ def run(cache, tools, creator):
     totalGenerations = parameters * cache.settings['generations']
 
     checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings['checkpointFile'])
-    process = None
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
@@ -73,7 +72,7 @@ def run(cache, tools, creator):
 
         avg, bestMin, bestProd = util.averageFitness(population)
         util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
-        process = util.graph_process(cache, process)
+        util.graph_process(cache)
         
         #if halloffame is not None:
         #    util.updateParetoFront(halloffame, population)
@@ -118,7 +117,7 @@ def run(cache, tools, creator):
 
             avg, bestMin, bestProd = util.averageFitness(offspring)
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
-            process = util.graph_process(cache, process)
+            util.graph_process(cache)
 
             # Select the next generation population
             population = cache.toolbox.select(population + offspring, populationSize)
@@ -134,9 +133,9 @@ def run(cache, tools, creator):
                 pickle.dump(cp, cp_file)
 
             if avg > cache.settings['stopAverage'] or bestMin > cache.settings['stopBest']:
-                util.finish(process, cache)
+                util.finish(cache)
                 return halloffame
-        util.finish(process, cache)
+        util.finish(cache)
         return halloffame
 
 def setupDEAP(cache, fitness, map_function, creator, base, tools):

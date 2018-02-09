@@ -15,7 +15,6 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
     checkpointFile = Path(settings['resultsDirMisc'], settings['checkpointFile'])
-    process = None
 
     sim_start = generation_start = time.time()
 
@@ -49,7 +48,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             avg, bestMin, bestProd = util.averageFitness(population)
             util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
-            process = util.graph_process(cache, process)
+            util.graph_process(cache)
 
             logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
@@ -78,7 +77,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             avg, bestMin, bestProd = util.averageFitness(offspring)
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
-            process = util.graph_process(cache, process)
+            util.graph_process(cache)
 
             # Select the next generation population
             population[:] = toolbox.select(offspring, mu)
@@ -97,9 +96,9 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
                 pickle.dump(cp, cp_file)
 
             if avg > settings['stopAverage'] or bestMin > settings['stopBest']:
-                util.finish(process, cache)
+                util.finish(cache)
                 return halloffame
-        util.finish(process, cache)
+        util.finish(cache)
         return halloffame
 
 
@@ -111,7 +110,6 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
     #import search.spea2
     #from line_profiler import LineProfiler
     #profile = LineProfiler(search.spea2.selSPEA2)
-    process = None
 
     checkpointFile = Path(settings['resultsDirMisc'], settings['checkpointFile'])
 
@@ -146,7 +144,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             avg, bestMin, bestProd = util.averageFitness(population)
             util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
-            process = util.graph_process(cache, process)
+            util.graph_process(cache)
 
             logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
@@ -180,7 +178,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             avg, bestMin, bestProd = util.averageFitness(offspring)
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
-            process = util.graph_process(cache, process)
+            util.graph_process(cache)
 
             # Select the next generation population
             population[:] = toolbox.select(offspring + population, mu)
@@ -199,7 +197,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 pickle.dump(cp, cp_file)
 
             if avg > settings['stopAverage'] or bestMin > settings['stopBest']:
-                util.finish(process, cache)
+                util.finish(cache)
                 return halloffame
-        util.finish(process, cache)
+        util.finish(cache)
         return halloffame

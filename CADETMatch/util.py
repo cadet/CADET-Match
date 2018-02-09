@@ -127,17 +127,14 @@ def mutPolynomialBoundedAdaptive(individual, eta, low, up, indpb):
 def mutationBoundedAdaptive(individual, low, up, indpb):
     scores = individual.fitness.values
     prod = product_score(scores)
-
-    max_step = numpy.abs(numpy.array(up) - numpy.array(low))/4
-    min_step = max_step * 1e-4
-
-    scale = (min_step - max_step) * prod + max_step
-
+    
     rand = numpy.random.rand(len(individual))
 
     for idx, i in enumerate(individual):
         if rand[idx] <= indpb:
-            dist = numpy.random.normal(0, scale[idx])
+            #scale = (1e-3 - 1.0) * prod + 1  (linear does not work well)
+            scale = numpy.exp(-5.824*prod) * (up[idx] - low[idx])/1.0
+            dist = numpy.random.normal(scale, scale/2.0) * random.sample([-1, 1], 1)[0]
             individual[idx] = max(min(i + dist, up[idx]), low[idx])
     return individual,
 
@@ -729,28 +726,17 @@ def cleanDir(dir, hof):
         for path in dir.glob('%s*' % save_name_base):
             path.unlink()
 
-def graph_process(cache, process=None, parallel=False):
+def graph_process(cache, last=0):
     if cache.lastGraphTime is None:
         cache.lastGraphTime = time.time()
     
-    if (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
-        if process is not None:
-            process.kill()
-        process = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path])
-        process.wait()
+    if last or (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
+        subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path, '1'], 
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
         cache.lastGraphTime = time.time()
-        return process
+    else:
+        subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path, '0'], 
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
 
-    if process is None or process.returncode is not None:
-        if parallel:
-            process = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path])
-        else:
-            process = subprocess.Popen([sys.executable, 'generate_graphs.py', cache.json_path])
-    
-        return process
-
-def finish(process, cache):
-    if process is not None:
-        process.kill()
-    process = graph_process(cache, None, parallel=True)
-    process.wait()
+def finish(cache):
+    graph_process(cache, last=True)
