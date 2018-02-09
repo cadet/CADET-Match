@@ -1,6 +1,7 @@
 import util
 import score
 import scipy.stats
+import numpy
 
 name = "similarityHybridDecay"
 adaptive = True
@@ -13,6 +14,10 @@ def run(sim_data, feature):
 
     exp_data_values = feature['value'][selected]
     exp_time_values = feature['time'][selected]
+
+    norm1 = numpy.linalg.norm(sim_time_values - exp_time_values)
+    norm2 = numpy.linalg.norm(sim_data_values - exp_data_values)
+    max1 = numpy.max(numpy.abs(sim_data_values - exp_data_values))
  
     [high, low] = util.find_peak(exp_time_values, sim_data_values)
 

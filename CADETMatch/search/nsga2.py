@@ -107,7 +107,7 @@ def run(cache, tools, creator):
                 cache.toolbox.mutate(ind2)
                 del ind1.fitness.values, ind2.fitness.values
 
-            offspring = util.RoundOffspring(cache, offspring)
+            offspring = util.RoundOffspring(cache, offspring, halloffame)
         
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -154,8 +154,10 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
 
     if cache.adaptive:
         cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
+        cache.toolbox.register("force_mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
     else:
         cache.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
+        cache.toolbox.register("force_mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
 
     cache.toolbox.register("select", tools.selNSGA2)
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)

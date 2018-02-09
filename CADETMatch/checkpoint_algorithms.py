@@ -67,7 +67,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             generation_start = time.time()
             # Vary the population
             offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
-            offspring = util.RoundOffspring(cache, offspring)
+            offspring = util.RoundOffspring(cache, offspring, halloffame)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -165,7 +165,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             generation_start = time.time()
             # Vary the population
             offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
-            offspring = util.RoundOffspring(cache, offspring)
+            offspring = util.RoundOffspring(cache, offspring, halloffame)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]

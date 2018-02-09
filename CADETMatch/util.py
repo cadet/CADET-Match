@@ -24,6 +24,7 @@ import psutil
 
 from scoop import futures
 import gc
+import random
 
 import decimal as decim
 decim.getcontext().prec = 64
@@ -128,7 +129,7 @@ def mutationBoundedAdaptive(individual, low, up, indpb):
     prod = product_score(scores)
 
     max_step = numpy.abs(numpy.array(up) - numpy.array(low))/4
-    min_step = 0.001
+    min_step = max_step * 1e-4
 
     scale = (min_step - max_step) * prod + max_step
 
@@ -137,7 +138,7 @@ def mutationBoundedAdaptive(individual, low, up, indpb):
     for idx, i in enumerate(individual):
         if rand[idx] <= indpb:
             dist = numpy.random.normal(0, scale[idx])
-            individual[idx] = min(max(i + dist, up[idx]), low[idx])
+            individual[idx] = max(min(i + dist, up[idx]), low[idx])
     return individual,
 
 def saveExperiments(save_name_base, settings, target, results, directory, file_pattern):
@@ -206,6 +207,8 @@ def convert_individual(individual, cache):
 def set_simulation(individual, simulation, settings):
     sigfigs = 3
     log("individual", individual)
+
+    data = numpy.exp(individual)
 
     cadetValues = []
     cadetValuesKEQ = []
@@ -402,7 +405,7 @@ def similar(a, b, cache):
     diff = numpy.abs((a-b)/a)
     return numpy.all(diff < 1e-3)
 
-def RoundOffspring(cache, offspring):
+def RoundOffspring(cache, offspring, hof):
     for child in offspring:
         temp = RoundToSigFigs(child, 4)
         if all(child == temp):
@@ -423,7 +426,14 @@ def RoundOffspring(cache, offspring):
 
     #population size needs to remain the same so add more children randomly if we have removed duplicates
     while len(new_offspring) < len(offspring):
-        child = cache.toolbox.individual()
+        if len(hof):
+            ind = hof[random.sample(range(len(hof)), 1)[0]]
+        else:
+            ind = cache.toolbox.individual()
+
+        child = cache.toolbox.clone(ind)
+        cache.toolbox.force_mutate(child)
+
         key = tuple(child)
         if key not in unique:
             new_offspring.append(child)
