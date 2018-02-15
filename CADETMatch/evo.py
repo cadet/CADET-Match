@@ -45,7 +45,10 @@ def fitness(individual, json_path):
             return cache.WORST, [], None
 
     #need
-    scores = util.RoundToSigFigs(scores, 3)
+    if cache.roundScores is not None:
+        scores = util.RoundToSigFigs(scores, cache.roundScores)
+    else:
+        scores = scores
 
     #human scores
     humanScores = numpy.array( [util.product_score(scores), 
@@ -53,10 +56,10 @@ def fitness(individual, json_path):
                                 numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), 
                                 error] )
 
-    humanScores = util.RoundToSigFigs(humanScores, 3)
-
-    #generate save name
-    save_name_base = hashlib.md5(str(individual).encode('utf-8', 'ignore')).hexdigest()
+    if cache.roundScores is not None:
+        humanScores = util.RoundToSigFigs(humanScores, cache.roundScores)
+    else:
+        humanScores = humanScores
 
     for result in results.values():
         if result['cadetValuesKEQ']:
@@ -65,7 +68,7 @@ def fitness(individual, json_path):
 
     #generate csv
     csv_record = []
-    csv_record.extend([time.ctime(), save_name_base, 'EVO', 'NA'])
+    csv_record.extend(['EVO', 'NA'])
     csv_record.extend(["%.5g" % i for i in cadetValuesKEQ])
     csv_record.extend(["%.5g" % i for i in scores])
     csv_record.extend(["%.5g" % i for i in humanScores])

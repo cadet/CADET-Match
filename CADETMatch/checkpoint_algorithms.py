@@ -65,7 +65,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
         for gen in range(start_gen, ngen+1):
             generation_start = time.time()
             # Vary the population
-            offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
+            offspring = varAnd(population, toolbox, cxpb, mutpb)
             offspring = util.RoundOffspring(cache, offspring, halloffame)
 
             # Evaluate the individuals with an invalid fitness
@@ -162,7 +162,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             generation_start = time.time()
             # Vary the population
-            offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
+            offspring = varAnd(population, toolbox, cxpb, mutpb)
             offspring = util.RoundOffspring(cache, offspring, halloffame)
 
             # Evaluate the individuals with an invalid fitness
@@ -201,3 +201,23 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 return halloffame
         util.finish(cache)
         return halloffame
+
+def varAnd(population, toolbox, cxpb, mutpb):
+    """This is copied from the DEAP version but the mutation and crossover order are switched.
+    This allows adaptive mutation to be used before the fitness scores are invalided.
+    """
+    offspring = [toolbox.clone(ind) for ind in population]
+
+    # Apply crossover and mutation on the offspring
+    for i in range(len(offspring)):
+        if random.random() < mutpb:
+            offspring[i], = toolbox.mutate(offspring[i])
+            del offspring[i].fitness.values
+
+    for i in range(1, len(offspring), 2):
+        if random.random() < cxpb:
+            offspring[i - 1], offspring[i] = toolbox.mate(offspring[i - 1],
+                                                          offspring[i])
+            del offspring[i - 1].fitness.values, offspring[i].fitness.values
+
+    return offspring

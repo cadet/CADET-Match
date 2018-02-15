@@ -9,7 +9,7 @@ from scipy.spatial.distance import pdist, squareform
 import deap.tools.emo
 import pareto
 
-name = 'SPEA2'
+name = 'SPEA2_mut_adapt'
 
 def run(cache, tools, creator):
     "run the parameter estimation"
@@ -56,8 +56,8 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
     cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
 
     if cache.adaptive:
-        cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
-        cache.toolbox.register("force_mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
+        cache.toolbox.register("mutate", util.mutPolynomialBoundedAdaptive, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
+        cache.toolbox.register("force_mutate", util.mutPolynomialBoundedAdaptive, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
     else:
         cache.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
         cache.toolbox.register("force_mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
@@ -185,3 +185,4 @@ def trim_individuals(k, N, distances, sorted_indices):
         to_remove.append(min_pos)
         size -= 1
     return to_remove
+

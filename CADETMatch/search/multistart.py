@@ -34,10 +34,10 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
     creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
 
     cache.toolbox.register("individual", util.generateIndividual, creator.Individual,
-        len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE)
+        len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, cache)
     cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)
 
-    cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual)
+    cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
 
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
 

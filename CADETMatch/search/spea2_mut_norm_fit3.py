@@ -8,8 +8,9 @@ from scipy.spatial.distance import pdist, squareform
 
 import deap.tools.emo
 import pareto
+import fitness
 
-name = 'SPEA2'
+name = 'SPEA2_mut_norm_fit3'
 
 def run(cache, tools, creator):
     "run the parameter estimation"
@@ -42,9 +43,9 @@ def run(cache, tools, creator):
 
     return result
 
-def setupDEAP(cache, fitness, map_function, creator, base, tools):
+def setupDEAP(cache, fitness_func, map_function, creator, base, tools):
     "setup the DEAP variables"
-    creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
+    creator.create("FitnessMax", fitness.Fitness3, weights=[1.0] * cache.numGoals)
     creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
 
     cache.toolbox.register("individual", util.generateIndividual, creator.Individual,
@@ -56,14 +57,14 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
     cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
 
     if cache.adaptive:
-        cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
-        cache.toolbox.register("force_mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
+        cache.toolbox.register("mutate", util.mutationBoundedAdaptive2, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
+        cache.toolbox.register("force_mutate", util.mutationBoundedAdaptive2, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
     else:
         cache.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
         cache.toolbox.register("force_mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
 
     cache.toolbox.register("select", selSPEA2)
-    cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
+    cache.toolbox.register("evaluate", fitness_func, json_path=cache.json_path)
 
     cache.toolbox.register('map', map_function)
 
@@ -185,3 +186,5 @@ def trim_individuals(k, N, distances, sorted_indices):
         to_remove.append(min_pos)
         size -= 1
     return to_remove
+
+

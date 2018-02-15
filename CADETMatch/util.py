@@ -76,11 +76,17 @@ def find_breakthrough(times, data):
     selected_times = times[selected]
     return (selected_times[0], max(data)), (selected_times[-1], max(data))
 
-def generateIndividual(icls, size, imin, imax):
-    return icls(RoundToSigFigs(numpy.random.uniform(imin, imax), 4))
+def generateIndividual(icls, size, imin, imax, cache):
+    if cache.roundParameters is not None:
+        return icls(RoundToSigFigs(numpy.random.uniform(imin, imax), cache.roundParameters))
+    else:
+        return icls(numpy.random.uniform(imin, imax))
 
-def initIndividual(icls, content):
-    return icls(RoundToSigFigs(content, 4))
+def initIndividual(icls, cache, content):
+    if cache.roundParameters is not None:
+        return icls(RoundToSigFigs(content, cache.roundParameters))
+    else:
+        return icls(content)
 
 print_log = 0
 
@@ -138,21 +144,55 @@ def mutationBoundedAdaptive(individual, low, up, indpb):
             individual[idx] = max(min(i + dist, up[idx]), low[idx])
     return individual,
 
+def mutationBoundedAdaptive2(individual, low, up, indpb):
+    scores = individual.fitness.values
+    prod = product_score(scores)
+
+    if prod < 0.9:
+        y = [4,1]
+        x = [0.1, 0.9]
+    
+        m = (y[1] - y[0])/(x[1] - x[0])
+        b = y[1] - m * x[1]
+        center = prod*m+b
+        sigma = center/2
+    else:
+        y = [1,0.05]
+        x = [0.9, 0.95]
+    
+        m = (y[1] - y[0])/(x[1] - x[0])
+        b = y[1] - m * x[1]
+
+        center = 0
+        sigma = prod*m+b
+    
+    rand = numpy.random.rand(len(individual))
+
+    for idx, i in enumerate(individual):
+        if rand[idx] <= indpb:
+            if sigma == 0:
+                dist = numpy.random.normal(center, sigma)
+            else:
+                dist = numpy.random.normal(center, sigma) * random.sample([-1, 1], 1)[0]
+            individual[idx] = max(min(i + dist, up[idx]), low[idx])
+    return individual,
+
 def saveExperiments(save_name_base, settings, target, results, directory, file_pattern):
     for experiment in settings['experiments']:
         experimentName = experiment['name']
+        simulation = results[experimentName]['simulation']
 
         dst = Path(directory, file_pattern % (save_name_base, experimentName))
 
         if dst.is_file():  #File already exists don't try to write over it
             return False
         else:
-            simulation = results[experimentName]['simulation']
             simulation.filename = bytes(dst)
 
             for (header, score) in zip(experiment['headers'], results[experimentName]['scores']):
                 simulation.root.score[header] = score
             simulation.save()
+
     return True
 
 def convert_individual(individual, cache):
@@ -201,7 +241,7 @@ def convert_individual(individual, cache):
     return cadetValues
 
 
-def set_simulation(individual, simulation, settings):
+def set_simulation(individual, simulation, settings, cache):
     sigfigs = 3
     log("individual", individual)
 
@@ -239,8 +279,12 @@ def set_simulation(individual, simulation, settings):
         if transform == 'keq':
             for bnd in bound:
                 position = boundOffset[comp] + bnd
-                simulation[location[0].lower()][position] = RoundToSigFigs(math.exp(individual[idx]), sigfigs)
-                simulation[location[1].lower()][position] = RoundToSigFigs(math.exp(individual[idx])/(math.exp(individual[idx+1])), sigfigs)
+                if cache.roundParameters is not None:
+                    simulation[location[0].lower()][position] = RoundToSigFigs(math.exp(individual[idx]), cache.roundParameters)
+                    simulation[location[1].lower()][position] = RoundToSigFigs(math.exp(individual[idx])/(math.exp(individual[idx+1])), cache.roundParameters)
+                else:
+                    simulation[location[0].lower()][position] = math.exp(individual[idx])
+                    simulation[location[1].lower()][position] = math.exp(individual[idx])/(math.exp(individual[idx+1]))
 
                 cadetValues.append(simulation[location[0]][position])
                 cadetValues.append(simulation[location[1]][position])
@@ -255,19 +299,28 @@ def set_simulation(individual, simulation, settings):
             for bnd in bound:
                 if comp == -1:
                     position = ()
-                    simulation[location.lower()] = RoundToSigFigs(math.exp(individual[idx]), sigfigs)
+                    if cache.roundParameters is not None:
+                        simulation[location.lower()] = RoundToSigFigs(math.exp(individual[idx]), cache.roundParameters)
+                    else:
+                        simulation[location.lower()] = math.exp(individual[idx])
                     cadetValues.append(simulation[location])
                     cadetValuesKEQ.append(simulation[location])
                 else:
                     position = boundOffset[comp] + bnd
-                    simulation[location.lower()][position] = RoundToSigFigs(math.exp(individual[idx]), sigfigs)
+                    if cache.roundParameters is not None:
+                        simulation[location.lower()][position] = RoundToSigFigs(math.exp(individual[idx]), cache.roundParameters)
+                    else:
+                        simulation[location.lower()][position] = math.exp(individual[idx])
                     cadetValues.append(simulation[location][position])
                     cadetValuesKEQ.append(simulation[location][position])
 
                 idx += 1
 
             for index in indexes:
-                simulation[location.lower()][index] = RoundToSigFigs(math.exp(individual[idx]), sigfigs)
+                if cache.roundParameters is not None:
+                    simulation[location.lower()][index] = RoundToSigFigs(math.exp(individual[idx]), cache.roundParameters)
+                else:
+                    simulation[location.lower()][index] = math.exp(individual[idx])
                 cadetValues.append(simulation[location][index])
                 cadetValuesKEQ.append(simulation[location][index])
 
@@ -284,7 +337,7 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     simulation.filename = path
 
     simulation.root.input.solver.nthreads = int(settings.get('nThreads', 1))
-    cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings)
+    cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings, cache)
 
     simulation.save()
 
@@ -404,7 +457,10 @@ def similar(a, b, cache):
 
 def RoundOffspring(cache, offspring, hof):
     for child in offspring:
-        temp = RoundToSigFigs(child, 4)
+        if cache.roundParameters is not None:
+            temp = RoundToSigFigs(child, cache.roundParameters)
+        else:
+            temp = numpy.array(child)
         if all(child == temp):
             pass
         else:
@@ -541,9 +597,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, av
         data_prod_best = numpy.max(data_prod)
  
         print("Generation: ", generation, 
-              "\tAverage Score: ", RoundToSigFigs(data_mean_mean,4), '\tBest:', RoundToSigFigs(data_mean_best,4),
-              "\tMinimum Score: ", RoundToSigFigs(data_min_mean,4), '\tBest:', RoundToSigFigs(data_min_best,4),
-              "\tProduct Score: ", RoundToSigFigs(data_prod_mean,4), '\tBest:', RoundToSigFigs(data_prod_best,4))
+              "\tAverage Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_mean_mean,4), RoundToSigFigs(data_mean_best,4)),
+              "\tMinimum Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_min_mean,4), RoundToSigFigs(data_min_best,4)),
+              "\tProduct Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_prod_mean,4), RoundToSigFigs(data_prod_best,4)))
         
         writer.writerow([generation,
                          len(population),
@@ -646,30 +702,30 @@ def meta_calc(scores):
 
 def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof):
     fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
-    start = time.time()
+    csv_lines = []
     for ind, result in zip(invalid_ind, fitnesses):
         fit, csv_line, results = result
+        
+        save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
+        
         ind.fitness.values = fit
 
         ind_meta = toolbox.clone(ind)
         ind_meta.fitness.values = meta_calc(fit)
 
         if csv_line:
-            writer.writerow(csv_line)
+            csv_lines.append([time.ctime(), save_name_base] + csv_line)
             onFront = updateParetoFront(halloffame, ind, cache)
             if onFront:
-                processResults(ind, cache, results)
+                processResults(save_name_base, ind, cache, results)
 
             onFrontMeta = updateParetoFront(meta_hof, ind_meta, cache)
             if onFrontMeta:
-                processResultsMeta(ind, cache, results)
+                processResultsMeta(save_name_base, ind, cache, results)
 
             cleanupProcess(results)
-        
-        #Flush at most every 60 seconds
-        if time.time() - start > 60:    
-            csvfile.flush()
-            start = time.time()
+
+    writer.writerows(csv_lines)
     
     #flush before returning
     csvfile.flush()
@@ -683,20 +739,10 @@ def updateParetoFront(halloffame, offspring, cache):
 
     return tuple(offspring) in after
 
-def processResults(individual, cache, results):
-    #generate save name
-    save_name_base = hashlib.md5(str(list(individual)).encode('utf-8', 'ignore')).hexdigest()
-
-    individual.save_name_base = save_name_base
-
+def processResults(save_name_base, individual, cache, results):
     notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirEvo'], '%s_%s_EVO.h5')
  
-def processResultsMeta(individual, cache, results):
-    #generate save name
-    save_name_base = hashlib.md5(str(list(individual)).encode('utf-8', 'ignore')).hexdigest()
-
-    individual.save_name_base = save_name_base
-
+def processResultsMeta(save_name_base, individual, cache, results):
     notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirMeta'], '%s_%s_meta.h5')    
 
 def cleanupProcess(results):
