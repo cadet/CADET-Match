@@ -19,7 +19,7 @@ class Fitness2(base.Fitness):
         bools = self_weight >= other_weight
         greater_bools = self_weight > other_weight
 
-        if numpy.all(bools) and numpy.sum(greater_bools) >= (len(bools) - 2):
+        if numpy.all(bools) and numpy.sum(greater_bools) >= 2:
             not_equal = True
         else:
             not_equal = False
@@ -43,7 +43,7 @@ class Fitness3(base.Fitness):
         bools = self_weight >= other_weight
         greater_bools = self_weight > other_weight
 
-        if numpy.all(bools) and numpy.sum(greater_bools) >= (len(bools) -3):
+        if numpy.all(bools) and numpy.sum(greater_bools) >= 3:
             not_equal = True
         else:
             not_equal = False

@@ -1,11 +1,6 @@
 
 import sys
 
-if "scoop" in sys.modules:
-    scoopAvailable = True
-else:
-    scoopAvailable = False
-
 import evo
 #import grad
 #import gradFD
@@ -178,10 +173,7 @@ def setupDeap(cache):
     searchMethod = cache.settings.get('searchMethod', 'SPEA2')
     cache.toolbox = base.Toolbox()
 
-    if scoopAvailable:
-        cache.search[searchMethod].setupDEAP(cache, evo.fitness, futures.map_as_completed, creator, base, tools)
-    else:
-        cache.search[searchMethod].setupDEAP(cache, evo.fitness, futures.map, creator, base, tools)
+    cache.search[searchMethod].setupDEAP(cache, evo.fitness, futures.map, creator, base, tools)
 
 if __name__ == "__main__":
     start = time.time()

@@ -165,6 +165,9 @@ def mutationBoundedAdaptive2(individual, low, up, indpb):
 
         center = 0
         sigma = prod*m+b
+        if sigma < 0:
+            print("sigma:", sigma, "\tprod:", prod, "m:", m, "\tb:",b)
+            sigma = 0.01
     
     rand = numpy.random.rand(len(individual))
 
