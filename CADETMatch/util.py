@@ -25,6 +25,7 @@ import psutil
 from scoop import futures
 import gc
 import random
+import calc_coeff
 
 import decimal as decim
 decim.getcontext().prec = 64
@@ -149,25 +150,14 @@ def mutationBoundedAdaptive2(individual, low, up, indpb):
     prod = product_score(scores)
 
     if prod < 0.9:
-        y = [4,1]
-        x = [0.1, 0.9]
-    
-        m = (y[1] - y[0])/(x[1] - x[0])
-        b = y[1] - m * x[1]
-        center = prod*m+b
+        m,b = calc_coeff.linear_coeff(0.1, 4, 0.9, 1)
+        center = calc_coeff.linear(prod, m, b)
         sigma = center/2
     else:
-        y = [1,0.05]
-        x = [0.9, 0.95]
-    
-        m = (y[1] - y[0])/(x[1] - x[0])
-        b = y[1] - m * x[1]
+        m,b = calc_coeff.exponential_coeff(0.9, 1, 1.0, 1e-2)
 
         center = 0
-        sigma = prod*m+b
-        if sigma < 0:
-            print("sigma:", sigma, "\tprod:", prod, "m:", m, "\tb:",b)
-            sigma = 0.01
+        sigma = calc_coeff.exponential(prod, m, b)
     
     rand = numpy.random.rand(len(individual))
 

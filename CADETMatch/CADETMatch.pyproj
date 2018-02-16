@@ -35,6 +35,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CADETMatch.py" />
+    <Compile Include="calc_coeff.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="checkpoint_algorithms.py">
       <SubType>Code</SubType>
     </Compile>
