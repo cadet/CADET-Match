@@ -65,7 +65,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
         for gen in range(start_gen, ngen+1):
             generation_start = time.time()
             # Vary the population
-            offspring = varAnd(population, toolbox, cxpb, mutpb)
+            offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
             offspring = util.RoundOffspring(cache, offspring, halloffame)
 
             # Evaluate the individuals with an invalid fitness
@@ -75,12 +75,12 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
 
+            # Select the next generation population
+            population[:] = toolbox.select(offspring, mu)
+
             avg, bestMin, bestProd = util.averageFitness(offspring)
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
             util.graph_process(cache)
-
-            # Select the next generation population
-            population[:] = toolbox.select(offspring, mu)
                    
             # Update the statistics with the new population
             record = stats.compile(population) if stats is not None else {}
@@ -137,7 +137,6 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             logbook = tools.Logbook()
             gradCheck = settings['gradCheck']
 
-
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
             util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof)
@@ -159,10 +158,9 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
         # Begin the generational process
         for gen in range(start_gen, ngen+1):
-
             generation_start = time.time()
             # Vary the population
-            offspring = varAnd(population, toolbox, cxpb, mutpb)
+            offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
             offspring = util.RoundOffspring(cache, offspring, halloffame)
 
             # Evaluate the individuals with an invalid fitness
@@ -177,11 +175,12 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             offspring.extend(newChildren)
 
             avg, bestMin, bestProd = util.averageFitness(offspring)
-            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
-            util.graph_process(cache)
-
+            
             # Select the next generation population
             population[:] = toolbox.select(offspring + population, mu)
+
+            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
+            util.graph_process(cache)
         
             # Update the statistics with the new population
             record = stats.compile(population) if stats is not None else {}
