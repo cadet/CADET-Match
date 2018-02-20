@@ -30,7 +30,7 @@ def run(cache, tools, creator):
         
         util.writeProgress(cache, -1, pop, hof, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
         
-        util.finish(None, cache)
+        util.finish(cache)
         return hof
 
 def setupDEAP(cache, fitness, map_function, creator, base, tools):

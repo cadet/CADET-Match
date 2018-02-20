@@ -73,21 +73,12 @@ def time_function_decay(CV_time, peak_time, diff_input=False):
 
     return wrapper
 
-
 def time_function(CV_time, peak_time, diff_input=False):
-    x_exp = numpy.array([CV_time/2.0, 10.0*CV_time])
-    y_exp = numpy.array([0.97, 0.5])
+    x_lin = numpy.array([0, CV_time])
+    y_lin = numpy.array([1, 0.0])
 
-    x_lin = numpy.array([0, CV_time/2.0])
-    y_lin = numpy.array([1, 0.97])
-
-    a_exp, b_exp = calc_coeff.exponential_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
+    #a_exp, b_exp = calc_coeff.exponential_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
     a_lin, b_lin = calc_coeff.linear_coeff(x_lin[0], y_lin[0], x_lin[1], y_lin[1])
-
-    #args_exp = scipy.optimize.curve_fit(exponential, x_exp, y_exp, [1, -0.1], method='trf')[0]
-    #args_lin = scipy.optimize.curve_fit(linear, x_lin, y_lin, [1, -0.1], method='trf')[0]
-    
-    #scale = 1.0/logistic(0.0, *args)
 
     def wrapper(x):
 
@@ -96,7 +87,35 @@ def time_function(CV_time, peak_time, diff_input=False):
         else:
             diff = numpy.abs(x - peak_time)
 
-        if diff < CV_time/2.0:
+        #if diff < CV_time/2.0:
+        value = calc_coeff.linear(diff, a_lin, b_lin)
+        value = max(value, 0.0)
+
+        return value
+
+    return wrapper
+
+def time_function2(CV_time, peak_time, diff_input=False):
+    #x_exp = numpy.array([CV_time/2.0, 10.0*CV_time])
+    x_exp = numpy.array([60.0, 10.0*CV_time])
+    y_exp = numpy.array([0.97, 0.5])
+
+    #x_lin = numpy.array([0, CV_time/2.0])
+    x_lin = numpy.array([0, 60.0])
+    y_lin = numpy.array([1, 0.97])
+
+    a_exp, b_exp = calc_coeff.exponential_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
+    a_lin, b_lin = calc_coeff.linear_coeff(x_lin[0], y_lin[0], x_lin[1], y_lin[1])
+
+    def wrapper(x):
+
+        if diff_input:
+            diff = x
+        else:
+            diff = numpy.abs(x - peak_time)
+
+        #if diff < CV_time/2.0:
+        if diff < 60.0:
             #value = linear(diff, *args_lin)
             value = calc_coeff.linear(diff, a_lin, b_lin)
         else:
