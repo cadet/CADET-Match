@@ -574,7 +574,7 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, av
         numpy.save(hof_file, data)
 
     with cache.progress_path.open('a', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
         row, col = data.shape
         data_mean = numpy.mean(data, 1)
@@ -659,7 +659,7 @@ def metaCSV(cache):
         
     meta_progress = base_dir / "meta_progress.csv"
     with meta_progress.open('w', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
         writer.writerow(['Population', 'Dimension In', 'Dimension Out', 'Search Method',
                          'Generation', 'Generation STDDEV',
@@ -696,6 +696,7 @@ def meta_calc(scores):
 def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof):
     fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
     csv_lines = []
+    meta_csv_lines = []
     for ind, result in zip(invalid_ind, fitnesses):
         fit, csv_line, results = result
         
@@ -714,6 +715,7 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
 
             onFrontMeta = updateParetoFront(meta_hof, ind_meta, cache)
             if onFrontMeta:
+                meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                 processResultsMeta(save_name_base, ind, cache, results)
 
             cleanupProcess(results)
@@ -723,14 +725,38 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
     #flush before returning
     csvfile.flush()
 
+    path_meta_csv = cache.settings['resultsDirMeta'] / 'results.csv'
+    with path_meta_csv.open('a', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
+        writer.writerows(meta_csv_lines)
+
     #print("Current front", len(halloffame))
     cleanupFront(cache, halloffame, meta_hof)
+    writeMetaFront(cache, meta_hof, path_meta_csv)
 
 def updateParetoFront(halloffame, offspring, cache):
     halloffame.update([offspring,], cache)
     after = set(map(tuple, halloffame.items))
 
     return tuple(offspring) in after
+
+def writeMetaFront(cache, meta_hof, path_meta_csv):
+    data = pandas.read_csv(path_meta_csv)
+
+    new_data = []
+
+    allowed = {hashlib.md5(str(list(individual)).encode('utf-8', 'ignore')).hexdigest() for individual in meta_hof.items}
+
+    for index, row in data.iterrows():
+        if row[1] in allowed:
+            new_data.append(row.to_dict())
+           
+    new_data = pandas.DataFrame(new_data, columns=data.columns.values)
+
+    new_data.to_csv(path_meta_csv, quoting=csv.QUOTE_ALL, index=False)
+    new_data.to_excel(cache.settings['resultsDirMeta'] / 'results.xlsx', index=False)
+
+
 
 def processResults(save_name_base, individual, cache, results):
     notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirEvo'], '%s_%s_EVO.h5')

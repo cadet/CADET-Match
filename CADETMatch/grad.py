@@ -148,7 +148,7 @@ def fitness_sens(individual, cache):
     #generate csv
     path = Path(evo.settings['resultsDirBase'], evo.settings['CSV'])
     with path.open('a', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
         writer.writerow([time.ctime(), save_name_base, 'GRAD', numpy.linalg.cond(jacobian(tuple(individual), cache))] + ["%.5g" % i for i in cadetValues] + ["%.5g" % i for i in scores] + list(humanScores)) 
 
     notDuplicate = saveExperimentsSens(save_name_base, evo.settings, evo.target, results)

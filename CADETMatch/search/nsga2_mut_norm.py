@@ -32,7 +32,7 @@ def run(cache, tools, creator):
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
         if checkpointFile.exists():
             with checkpointFile.open('rb') as cp_file:

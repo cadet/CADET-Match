@@ -103,7 +103,7 @@ def fitness_sens(individual, finished=1):
         #generate csv
         path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
         with path.open('a', newline='') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+            writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
             writer.writerow([time.ctime(), save_name_base, 'GRAD', ''] + ["%.5g" % i for i in cadetValuesKEQ] + ["%.5g" % i for i in scores] + list(humanScores)) 
 
         notDuplicate = saveExperimentsSens(save_name_base, cache.settings, cache.target, results)

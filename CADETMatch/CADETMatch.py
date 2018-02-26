@@ -115,7 +115,13 @@ def createCSV(cache):
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     if not path.exists():
         with path.open('w', newline='') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+            writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
+            writer.writerow(cache.headers)
+
+    path = cache.settings['resultsDirMeta'] / 'results.csv'
+    if not path.exists():
+        with path.open('w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
             writer.writerow(cache.headers)
 
 def createProgressCSV(cache):
@@ -123,7 +129,7 @@ def createProgressCSV(cache):
     cache.progress_path = path
     if not path.exists():
         with path.open('w', newline='') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+            writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
             writer.writerow(cache.progress_headers)
 
 def setupTemplates(cache):
