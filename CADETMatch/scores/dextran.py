@@ -29,10 +29,10 @@ def run(sim_data, feature):
     expDerivValues = exp_spline_derivative(expSelected)
 
     values = sim_spline_derivative(exp_time_values)
-    sim_max_index = numpy.argmax(values)
-    sim_max_time = exp_time_values[sim_max_index]
+    #sim_max_index = numpy.argmax(values)
+    #sim_max_time = exp_time_values[sim_max_index]
 
-    simSelected = selected & (feature['time'] <= sim_max_time)
+    simSelected = selected & (feature['time'] <= max_time)
 
     simTime, simValues = util.get_times_values(sim_data['simulation'], feature, simSelected)
 

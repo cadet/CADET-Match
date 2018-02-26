@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\CADET_ParameterEstimation\adsorption\lrm\linear2\SWARM_linear.json"</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\sciebo\Documents\CADETMatch Documentation\Examples\Example1\Dextran\NSGA2_dextran2.json"</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -149,6 +149,15 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\multistart.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\nsga2_mut.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\nsga2_mut_adapt.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\nsga2_mut_norm.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\retired\multiswarm.py">
