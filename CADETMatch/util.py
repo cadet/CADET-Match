@@ -796,15 +796,17 @@ def graph_process(cache, last=0):
         cache.lastGraphTime = time.time()
     if cache.lastMetaTime is None:
         cache.lastMetaTime = time.time()
+
+    cwd = str(Path(__file__).parent)
     
     if last or (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
         subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path, '1'], 
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
         cache.lastGraphTime = time.time()
     else:
         if (time.time() - cache.lastMetaTime) > cache.graphMetaTime:
             subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path, '0'], 
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
             cache.lastMetaTime = time.time()
 
 def finish(cache):

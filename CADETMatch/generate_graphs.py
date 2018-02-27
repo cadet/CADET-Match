@@ -20,12 +20,16 @@ from addict import Dict
 #parallelization
 from scoop import futures
 
+import os
+
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
 
 def main():
     cache.setup(sys.argv[1])
     cache.progress_path = Path(cache.settings['resultsDirBase']) / "progress.csv"
+
+    print(os.getcwd())
 
     fullGeneration = int(sys.argv[2])
 
@@ -282,7 +286,7 @@ def graphProgress(cache):
     y = ['Average Score', 'Minimum Score', 'Product Score',
          'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score']
 
-    list(futures.map(singleGraphProgress, itertools.product(x,y), itertools.repeat(df), itertools.repeat(output)))
+    list(futures.map(singleGraphProgress, itertools.product(x,y), itertools.repeat(df), itertools.repeat(output), itertools.repeat(sys.argv[1])))
 
     row, col = data.shape
     x_tick = numpy.array(range(col))
@@ -303,7 +307,10 @@ def graphProgress(cache):
     file_path = output / "scores.png"
     fig.savefig(bytes(file_path), bbox_inches='tight')
 
-def singleGraphProgress(tup, df, output):
+def singleGraphProgress(tup, df, output, json_path):
+    if json_path != cache.json_path:
+        cache.setup(json_path)
+
     i,j = tup
 
     fig = figure.Figure()
