@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\sciebo\Documents\CADETMatch Documentation\Examples\Example1\Dextran\NSGA2_dextran2.json"</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\sciebo\Documents\CADETMatch Documentation\Examples\Example1\Dextran\NSGA2_dextran.json"</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>

@@ -7,6 +7,7 @@ from cadet import Cadet
 import numpy
 
 import plugins
+import os
 
 class Cache:
     def __init__(self):
@@ -41,6 +42,11 @@ class Cache:
         "setup the cache based on the json file being used"
         self.json_path = json_path
         self.setupSettings()
+
+        baseDir = self.settings.get('baseDir', None)
+        if baseDir is not None:
+            os.chdir(baseDir)
+
         Cadet.cadet_path = self.settings['CADETPath']
 
         self.setupHeaders()
