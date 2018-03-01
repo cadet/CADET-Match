@@ -710,7 +710,7 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)
             onFront = updateParetoFront(halloffame, ind, cache)
-            if onFront:
+            if onFront and not cache.metaResultsOnly:
                 processResults(save_name_base, ind, cache, results)
 
             onFrontMeta = updateParetoFront(meta_hof, ind_meta, cache)

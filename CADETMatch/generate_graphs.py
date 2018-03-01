@@ -170,7 +170,8 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
 
             sim_time, sim_value = get_times_values(simulation, target[experimentName][featureName])
 
-            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybridDecay', 'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 
+            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybridDecay', 
+                               'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 
                                'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2'):
                 graph.plot(sim_time, sim_value, 'r--', label='Simulation')
                 graph.plot(exp_time, exp_value, 'g:', label='Experiment')

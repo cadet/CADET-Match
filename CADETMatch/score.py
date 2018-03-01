@@ -47,12 +47,12 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
     sim_data_values_copy = numpy.copy(sim_data_values)
     sim_data_values_copy = numpy.roll(sim_data_values_copy, -diff_index)
 
-    pear = scipy.stats.pearsonr(exp_data_values, sim_data_values)
+    pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
 
     return pear_corr(pear[0]), diff_time
 
 def time_function_decay(CV_time, peak_time, diff_input=False):
-    x_exp = numpy.array([0, 10.0*CV_time])
+    x_exp = numpy.array([0, 2.0*CV_time])
     y_exp = numpy.array([1, 0.5])
 
     a, b = calc_coeff.exponential_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
@@ -97,7 +97,7 @@ def time_function(CV_time, peak_time, diff_input=False):
 
 def time_function2(CV_time, peak_time, diff_input=False):
     #x_exp = numpy.array([CV_time/2.0, 10.0*CV_time])
-    x_exp = numpy.array([60.0, 10.0*CV_time])
+    x_exp = numpy.array([60.0, 2.0*CV_time])
     y_exp = numpy.array([0.97, 0.5])
 
     #x_lin = numpy.array([0, CV_time/2.0])

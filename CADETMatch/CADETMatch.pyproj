@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\sciebo\Documents\CADETMatch Documentation\Examples\Example1\Dextran\NSGA2_dextran.json" 1</CommandLineArguments>
+    <CommandLineArguments>"F:\AMS-024\Estimation\Dextrane\dextrane2.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -98,6 +98,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\dextranHybrid.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\dextranHybrid2.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\fractionation.py">
