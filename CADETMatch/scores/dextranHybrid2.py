@@ -22,10 +22,6 @@ def run(sim_data, feature):
     if max(sim_data_values) < max_value: #the system has no point higher than the value we are looking for, this is a failure
         return failure
 
-    lower_index = numpy.argmax(sim_data_values >= 0.05*max_value)
-    lower_time = sim_time_values[lower_index]
-    lower_value = sim_data_values[lower_index]
-
     exp_time_values = exp_time_values[selected]
     exp_data_zero = feature['exp_data_zero']
 
@@ -55,8 +51,6 @@ def run(sim_data, feature):
             feature['offsetTimeFunction'](diff_time), 
             feature['offsetDerTimeFunction'](diff_time_der), 
             feature['valueFunction'](max(sim_data_zero)),
-            #feature['offsetTimeLowerFunction'](lower_time),
-            #feature['valueLowerFunction'](lower_value),
             feature['value_function_high'](highs[1]),             
             feature['value_function_low'](lows[1]),
             ], util.sse(sim_data_zero, exp_data_zero)
@@ -72,10 +66,6 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     max_index = numpy.argmax(values)
     max_time = selectedTimes[max_index]
     max_value = selectedValues[max_index]
-
-    lower_index = numpy.argmax(selectedValues >= 0.05*max_value)
-    lower_time = selectedTimes[lower_index]
-    lower_value = selectedValues[lower_index]
 
     min_index = numpy.argmax(selectedValues >= 5e-3*max_value)
     min_time = selectedTimes[min_index]
@@ -95,8 +85,6 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['offsetTimeFunction'] = score.time_function_decay(CV_time/10.0, None, diff_input=True)
     temp['offsetDerTimeFunction'] = score.time_function_decay(CV_time/10.0, None, diff_input=True)
     temp['valueFunction'] = score.value_function(max_value, abstol)
-    temp['offsetTimeLowerFunction'] = score.time_function_decay(CV_time/10.0, lower_time, diff_input=False)
-    temp['valueLowerFunction'] = score.value_function(lower_value, abstol)
     temp['value_function_high'] = score.value_function(high[1], abstol, 0.1)
     temp['value_function_low'] = score.value_function(low[1], abstol, 0.1)
     return temp
@@ -105,7 +93,6 @@ def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
     temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, 
             "%s_Time" % name, "%s_DerTime" % name, "%s_Value" % name, 
-            #"%s_10P_Time" % name, "%s_10P_Value" % name,
             "%s_Der_High_Value" % name, "%s_Der_Low_Value" % name]
     return temp
 
