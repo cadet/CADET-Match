@@ -24,7 +24,7 @@ def run(cache, tools, creator):
         meta_hof = pareto.ParetoFront(similar=util.similar)
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
-        util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof)
+        stalled = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof, -1)
         
         avg, bestMin, bestProd = util.averageFitness(pop)
         

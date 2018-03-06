@@ -34,6 +34,8 @@ class Cache:
         self.roundParameters = None
         self.roundScores = None
         self.metaResultsOnly = 0
+        self.stallGenerations = 10
+        self.lastProgressGeneration = -1
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
                                  'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score',
@@ -75,6 +77,7 @@ class Cache:
         self.roundParameters = self.settings.get('roundParameters', None)
         self.roundScores = self.settings.get('roundScores', None)
         self.metaResultsOnly = self.settings.get('metaResultsOnly', 0)
+        self.stallGenerations = int(self.settings.get('stallGenerations', 10))
 
     def setupSettings(self):
         settings_file = Path(self.json_path)

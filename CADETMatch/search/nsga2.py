@@ -68,7 +68,7 @@ def run(cache, tools, creator):
    
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
-        util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof)
+        stalled = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
 
         avg, bestMin, bestProd = util.averageFitness(population)
         util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
@@ -110,7 +110,7 @@ def run(cache, tools, creator):
         
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof)
+            stalled = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
             gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
             offspring.extend(newChildren)
@@ -132,7 +132,7 @@ def run(cache, tools, creator):
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
 
-            if avg > cache.settings['stopAverage'] or bestMin > cache.settings['stopBest']:
+            if avg > cache.settings['stopAverage'] or bestMin > cache.settings['stopBest'] or stalled:
                 util.finish(cache)
                 return halloffame
         util.finish(cache)

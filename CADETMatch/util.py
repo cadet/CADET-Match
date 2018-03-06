@@ -712,7 +712,7 @@ def meta_calc(scores):
             numpy.sum(scores)/len(scores), 
             numpy.linalg.norm(scores)/numpy.sqrt(len(scores))]
 
-def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof):
+def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation):
     fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
     csv_lines = []
     meta_csv_lines = []
@@ -736,6 +736,7 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
             if onFrontMeta:
                 meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                 processResultsMeta(save_name_base, ind, cache, results)
+                cache.lastProgressGeneration = generation
 
             cleanupProcess(results)
 
@@ -753,11 +754,16 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
     cleanupFront(cache, halloffame, meta_hof)
     writeMetaFront(cache, meta_hof, path_meta_csv)
 
+    stalled = (generation - cache.lastProgressGeneration) > cache.stallGenerations
+    print("Generations without progress", generation - cache.lastProgressGeneration)
+    return stalled
+
 def updateParetoFront(halloffame, offspring, cache):
+    before = set(map(tuple, halloffame.items))
     halloffame.update([offspring,], cache)
     after = set(map(tuple, halloffame.items))
 
-    return tuple(offspring) in after
+    return tuple(offspring) in after and tuple(offspring) not in before
 
 def writeMetaFront(cache, meta_hof, path_meta_csv):
     data = pandas.read_csv(path_meta_csv)
