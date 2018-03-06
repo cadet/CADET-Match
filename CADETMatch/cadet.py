@@ -14,6 +14,7 @@ class Cadet():
 
     #cadet_path must be set in order for simulations to run
     cadet_path = None
+    return_information = None
 
     pp = pprint.PrettyPrinter(indent=4)
 
@@ -30,8 +31,10 @@ class Cadet():
         with h5py.File(self.filename, 'w') as h5file:
             recursively_save(h5file, '/', self.root)
 
-    def run(self, timeout = None):
-        subprocess.run([self.cadet_path, self.filename], timeout = timeout)
+    def run(self, timeout = None, check=None):
+        data = subprocess.run([self.cadet_path, self.filename], timeout = timeout, check=check, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.return_information = data
+        return data
 
     def __str__(self):
         temp = []

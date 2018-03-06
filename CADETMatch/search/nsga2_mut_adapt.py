@@ -19,7 +19,7 @@ def run(cache, tools, creator):
 
     parameters = len(cache.MIN_VALUE)
 
-    populationSize = parameters * cache.settings['population']
+    populationSize = parameters * cache.settings['population'] + len(cache.settings.get('seeds', []))
 
     #populationSize has to be a multiple of 4 so increase to the next multiple of 4
     populationSize += (-populationSize % 4)
@@ -49,7 +49,7 @@ def run(cache, tools, creator):
         else:
             # Start a new evolution
 
-            population = cache.toolbox.population(n=populationSize)
+            population = cache.toolbox.population(n= (populationSize - len(cache.settings.get('seeds', []))) )
 
             if "seeds" in cache.settings:
                 seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]

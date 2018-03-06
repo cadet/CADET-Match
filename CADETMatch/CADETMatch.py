@@ -93,6 +93,7 @@ def setup(cache, json_path):
     createDirectories(cache, json_path)
     createCSV(cache)
     createProgressCSV(cache)
+    createErrorCSV(cache)
     setupTemplates(cache)
     setupDeap(cache)
 
@@ -131,6 +132,14 @@ def createProgressCSV(cache):
         with path.open('w', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
             writer.writerow(cache.progress_headers)
+
+def createErrorCSV(cache):
+    path = Path(cache.settings['resultsDirBase'], "error.csv")
+    cache.error_path = path
+    if not path.exists():
+        with path.open('w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
+            writer.writerow(cache.parameter_headers + ['Return Code', 'STDOUT', 'STDERR'])
 
 def setupTemplates(cache):
     "setup all the experimental templates"

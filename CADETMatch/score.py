@@ -52,10 +52,12 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
     return pear_corr(pear[0]), diff_time
 
 def time_function_decay(CV_time, peak_time, diff_input=False):
-    x_exp = numpy.array([0, 2.0*CV_time])
+    x_exp = numpy.array([0, 1.0*CV_time])
     y_exp = numpy.array([1, 0.5])
 
-    a, b = calc_coeff.exponential_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
+    #a, b = calc_coeff.exponential_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
+
+    a, b = calc_coeff.linear_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
     
     #args_exp = scipy.optimize.curve_fit(exponential, x_exp, y_exp, [1, -0.1], method='trf')[0]
 
@@ -67,7 +69,8 @@ def time_function_decay(CV_time, peak_time, diff_input=False):
             diff = numpy.abs(x - peak_time)
 
         #value = exponential(diff, *args_exp)
-        value = calc_coeff.exponential(diff, a, b)
+        #value = calc_coeff.exponential(diff, a, b)
+        value = max(0.0, calc_coeff.linear(diff, a, b))
 
         return value
 
@@ -131,7 +134,8 @@ def value_function(peak_height, tolerance=1e-8, bottom_score = 0.01):
     x = numpy.array([0.0, 1.0])
     y = numpy.array([1.0, bottom_score])
 
-    a, b = calc_coeff.exponential_coeff(x[0], y[0], x[1], y[1])
+    #a, b = calc_coeff.exponential_coeff(x[0], y[0], x[1], y[1])
+    a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
     
     #args = scipy.optimize.curve_fit(exponential, x, y, [1, -0.1])[0]
 
@@ -145,12 +149,14 @@ def value_function(peak_height, tolerance=1e-8, bottom_score = 0.01):
             else:
                 diff = numpy.abs(x-tolerance)/numpy.abs(tolerance)
                 #return exponential(diff, *args) * scale
-                return calc_coeff.exponential(diff, a, b)
+                #return calc_coeff.exponential(diff, a, b)
+                return max(0, calc_coeff.linear(diff, a, b))
     else:
         def wrapper(x):
             diff = numpy.abs(x-peak_height)/numpy.abs(peak_height)
             #return exponential(diff, *args) * scale
-            return calc_coeff.exponential(diff, a, b)
+            #return calc_coeff.exponential(diff, a, b)
+            return max(0, calc_coeff.linear(diff, a, b))
 
     return wrapper
 

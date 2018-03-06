@@ -149,6 +149,9 @@ def mutationBoundedAdaptive2(individual, low, up, indpb):
     scores = individual.fitness.values
     prod = product_score(scores)
 
+    if numpy.isnan(prod):
+        prod = 0.0
+
     if prod < 0.9:
         m,b = calc_coeff.linear_coeff(0.1, 4, 0.9, 1)
         center = calc_coeff.linear(prod, m, b)
@@ -339,9 +342,13 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         return None
 
     try:
-        simulation.run(timeout = timeout)
+        simulation.run(timeout = timeout, check=True)
     except subprocess.TimeoutExpired:
         print("Simulation Timed Out")
+        return leave()
+    except subprocess.CalledProcessError as error:
+        print("The simulation failed")
+        logError(cache, cadetValuesKEQ, error)
         return leave()
 
     #read sim data
@@ -375,6 +382,18 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         temp['error'] += sse
 
     return temp
+
+def logError(cache, values, error):
+    with cache.error_path.open('a', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
+
+        row = list(values)
+        row.append(error.returncode)
+        row.append(error.stdout)
+        row.append(error.stderr)
+
+        writer.writerow(row)
+
 
 def repeatSimulation(idx):
     "read the original json file and copy it to a subdirectory for each repeat and change where the target data is written"

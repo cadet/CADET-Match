@@ -67,6 +67,8 @@ class Cache:
         self.settings['resultsDirProgress'] = Path(self.settings['resultsDir']) / "progress"
         self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
 
+        self.error_path = Path(cache.settings['resultsDirBase'], "error.csv")
+
         self.graphGenerateTime = int(self.settings.get('graphGenerateTime', 3600))
         self.graphMetaTime = int(self.settings.get('graphMetaTime', 60*5))
 
@@ -91,6 +93,8 @@ class Cache:
         self.badScore = 0.0
 
         base = len(self.headers)
+
+        parameter_headers = []
         
         for parameter in self.settings['parameters']:
             try:
@@ -102,16 +106,20 @@ class Cache:
                 nameKA = location[0].rsplit('/', 1)[-1]
                 nameKD = location[1].rsplit('/', 1)[-1]
                 for bound in parameter['bound']:
-                    self.headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
-                    self.headers.append("%s Comp:%s Bound:%s" % (nameKD, comp, bound))
-                    self.headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
+                    parameter_headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
+                    parameter_headers.append("%s Comp:%s Bound:%s" % (nameKD, comp, bound))
+                    parameter_headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
             elif parameter['transform'] == 'log':
                 location = parameter['location']
                 name = location.rsplit('/', 1)[-1]
                 for bound in parameter.get('bound', []):
-                    self.headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
+                    parameter_headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
                 for idx in parameter.get('indexes', []):
-                    self.headers.append("%s Comp:%s Index:%s" % (name, comp, idx))
+                    parameter_headers.append("%s Comp:%s Index:%s" % (name, comp, idx))
+
+        self.parameter_headers = parameter_headers
+
+        self.headers.extend(parameter_headers)
 
         parameters = len(self.headers)
         self.parameter_indexes = list(range(base, parameters))
