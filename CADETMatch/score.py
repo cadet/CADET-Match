@@ -6,15 +6,6 @@ import scipy.signal
 import numpy.linalg
 import calc_coeff
 
-def logistic(x, a, b):
-    return  1.0-1.0/(1.0+numpy.exp(a*(x-b)))
-
-def exponential(x, a, b):
-    return a * scipy.exp(b*x)
-
-def linear(x, a, b):
-    return a*x+b
-
 def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
     corr = scipy.signal.correlate(exp_data_values, sim_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
 
@@ -59,8 +50,6 @@ def time_function_decay(CV_time, peak_time, diff_input=False):
 
     a, b = calc_coeff.linear_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
     
-    #args_exp = scipy.optimize.curve_fit(exponential, x_exp, y_exp, [1, -0.1], method='trf')[0]
-
     def wrapper(x):
 
         if diff_input:
@@ -68,7 +57,6 @@ def time_function_decay(CV_time, peak_time, diff_input=False):
         else:
             diff = numpy.abs(x - peak_time)
 
-        #value = exponential(diff, *args_exp)
         #value = calc_coeff.exponential(diff, a, b)
         value = max(0.0, calc_coeff.linear(diff, a, b))
 
@@ -119,10 +107,8 @@ def time_function2(CV_time, peak_time, diff_input=False):
 
         #if diff < CV_time/2.0:
         if diff < 60.0:
-            #value = linear(diff, *args_lin)
             value = calc_coeff.linear(diff, a_lin, b_lin)
         else:
-            #value = exponential(diff, *args_exp)
             value = calc_coeff.exponential(diff, a_exp, b_exp)
 
         return value
@@ -137,10 +123,6 @@ def value_function(peak_height, tolerance=1e-8, bottom_score = 0.01):
     #a, b = calc_coeff.exponential_coeff(x[0], y[0], x[1], y[1])
     a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
     
-    #args = scipy.optimize.curve_fit(exponential, x, y, [1, -0.1])[0]
-
-    #scale = 1.0/exponential(0.0, *args)
-    
     if numpy.abs(peak_height) < tolerance:
         print("peak height less than tolerance", tolerance, peak_height)
         def wrapper(x):
@@ -148,13 +130,11 @@ def value_function(peak_height, tolerance=1e-8, bottom_score = 0.01):
                 return 1.0
             else:
                 diff = numpy.abs(x-tolerance)/numpy.abs(tolerance)
-                #return exponential(diff, *args) * scale
                 #return calc_coeff.exponential(diff, a, b)
                 return max(0, calc_coeff.linear(diff, a, b))
     else:
         def wrapper(x):
             diff = numpy.abs(x-peak_height)/numpy.abs(peak_height)
-            #return exponential(diff, *args) * scale
             #return calc_coeff.exponential(diff, a, b)
             return max(0, calc_coeff.linear(diff, a, b))
 
