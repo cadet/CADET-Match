@@ -3,7 +3,7 @@ import sys
 
 import evo
 #import grad
-#import gradFD
+import gradFD
 import util
 import time
 import numpy
@@ -188,7 +188,7 @@ def setupDeap(cache):
     searchMethod = cache.settings.get('searchMethod', 'SPEA2')
     cache.toolbox = base.Toolbox()
 
-    cache.search[searchMethod].setupDEAP(cache, evo.fitness, futures.map, creator, base, tools)
+    cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, futures.map, creator, base, tools)
 
 if __name__ == "__main__":
     start = time.time()

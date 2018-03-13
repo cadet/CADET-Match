@@ -26,14 +26,14 @@ def run(cache, tools, creator):
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
         stalled = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof, -1)
         
-        avg, bestMin, bestProd = util.averageFitness(pop)
+        avg, bestMin, bestProd = util.averageFitness(pop, cache)
         
         util.writeProgress(cache, -1, pop, hof, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
         
         util.finish(cache)
         return hof
 
-def setupDEAP(cache, fitness, map_function, creator, base, tools):
+def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
     creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
@@ -45,5 +45,7 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
     cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
 
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
+    cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
+    cache.toolbox.register('grad_search', grad_search)
 
     cache.toolbox.register('map', map_function)

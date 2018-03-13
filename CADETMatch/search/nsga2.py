@@ -4,7 +4,6 @@ import util
 import numpy
 from pathlib import Path
 #import grad
-import gradFD
 import time
 import csv
 
@@ -70,7 +69,7 @@ def run(cache, tools, creator):
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
         stalled = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
 
-        avg, bestMin, bestProd = util.averageFitness(population)
+        avg, bestMin, bestProd = util.averageFitness(population, cache)
         util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
         util.graph_process(cache)
         
@@ -112,10 +111,10 @@ def run(cache, tools, creator):
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             stalled = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
-            gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
+            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile)
             offspring.extend(newChildren)
 
-            avg, bestMin, bestProd = util.averageFitness(offspring)
+            avg, bestMin, bestProd = util.averageFitness(offspring, cache)
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
             util.graph_process(cache)
 
@@ -132,13 +131,13 @@ def run(cache, tools, creator):
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
 
-            if avg > cache.settings['stopAverage'] or bestMin > cache.settings['stopBest'] or stalled:
+            if avg >= cache.settings['stopAverage'] or bestMin >= cache.settings['stopBest'] or stalled:
                 util.finish(cache)
                 return halloffame
         util.finish(cache)
         return halloffame
 
-def setupDEAP(cache, fitness, map_function, creator, base, tools):
+def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
     creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
@@ -160,5 +159,7 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
 
     cache.toolbox.register("select", tools.selNSGA2)
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
+    cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
+    cache.toolbox.register('grad_search', grad_search)
 
     cache.toolbox.register('map', map_function)

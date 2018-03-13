@@ -39,7 +39,7 @@ def run(cache, tools, creator):
                               halloffame=hof,
                               cache=cache)
 
-def setupDEAP(cache, fitness, map_function, creator, base, tools):
+def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
     creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
@@ -59,6 +59,8 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
 
     cache.toolbox.register("select", sel_nsga_iii)
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
+    cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
+    cache.toolbox.register('grad_search', grad_search)
 
     cache.toolbox.register('map', map_function)
 

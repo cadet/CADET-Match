@@ -4,7 +4,6 @@ import random
 import numpy
 import util
 from deap import algorithms
-import gradFD
 import time
 import csv
 
@@ -46,7 +45,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
             stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
 
-            avg, bestMin, bestProd = util.averageFitness(population)
+            avg, bestMin, bestProd = util.averageFitness(population, cache)
             util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
             util.graph_process(cache)
 
@@ -72,13 +71,13 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
-            gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
+            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile)
             offspring.extend(newChildren)
 
             # Select the next generation population
             population[:] = toolbox.select(offspring, mu)
 
-            avg, bestMin, bestProd = util.averageFitness(offspring)
+            avg, bestMin, bestProd = util.averageFitness(offspring, cache)
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
             util.graph_process(cache)
                    
@@ -95,7 +94,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
 
-            if avg > settings['stopAverage'] or bestMin > settings['stopBest'] or stalled:
+            if avg >= settings['stopAverage'] or bestMin >= settings['stopBest'] or stalled:
                 util.finish(cache)
                 return halloffame
         util.finish(cache)
@@ -141,7 +140,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
             stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
 
-            avg, bestMin, bestProd = util.averageFitness(population)
+            avg, bestMin, bestProd = util.averageFitness(population, cache)
             util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
             util.graph_process(cache)
 
@@ -171,10 +170,10 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
             stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
-            gradCheck, newChildren = gradFD.search(gradCheck, offspring, cache)
+            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile)
             offspring.extend(newChildren)
 
-            avg, bestMin, bestProd = util.averageFitness(offspring)
+            avg, bestMin, bestProd = util.averageFitness(offspring, cache)
             
             # Select the next generation population
             population[:] = toolbox.select(offspring + population, mu)
@@ -195,7 +194,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
 
-            if avg > settings['stopAverage'] or bestMin > settings['stopBest'] or stalled:
+            if avg >= settings['stopAverage'] or bestMin >= settings['stopBest'] or stalled:
                 util.finish(cache)
                 return halloffame
         util.finish(cache)

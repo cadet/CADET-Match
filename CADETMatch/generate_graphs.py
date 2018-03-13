@@ -213,17 +213,21 @@ def graphSpace(cache):
 
     #3d plots
     prod = list(itertools.product(comp_two, cache.score_indexes))
-    seq = [(str(output), str(csv_path), i[0][0], i[0][1], i[1]) for i in prod]
+    seq = [(str(output), str(csv_path), i[0][0], i[0][1], i[1], sys.argv[1]) for i in prod]
     list(futures.map(plot_3d, seq))
     
     #2d plots
     prod = list(itertools.product(comp_one, cache.score_indexes))
-    seq = [(str(output), str(csv_path), i[0][0], i[1]) for i in prod]
+    seq = [(str(output), str(csv_path), i[0][0], i[1], sys.argv[1]) for i in prod]
     list(futures.map(plot_2d, seq))
 
 def plot_3d(arg):
     "This leaks memory and should be disabled for now"
-    directory_path, csv_path, c1, c2, score = arg
+    directory_path, csv_path, c1, c2, score, json_path = arg
+
+    if json_path != cache.json_path:
+        cache.setup(json_path)
+
     dataframe = pandas.read_csv(csv_path)
     directory = Path(directory_path)
 
@@ -250,7 +254,11 @@ def plot_3d(arg):
     fig.savefig(str(directory / filename), bbox_inches='tight')
     
 def plot_2d(arg):
-    directory_path, csv_path, c1, score = arg
+    directory_path, csv_path, c1, score, json_path = arg
+
+    if json_path != cache.json_path:
+        cache.setup(json_path)
+
     dataframe = pandas.read_csv(csv_path)
     directory = Path(directory_path)
     headers = dataframe.columns.values.tolist()

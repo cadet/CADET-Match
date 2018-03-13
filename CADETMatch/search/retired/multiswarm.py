@@ -169,7 +169,7 @@ def updateParticle(part, best, chi, c):
     part.speed = list(map(operator.add, part.speed, a))
     part[:] = list(map(operator.add, part, part.speed))
 
-def setupDEAP(cache, fitness, map_function, creator, base, tools):
+def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
     speed_min = -(numpy.array(cache.MAX_VALUE) - numpy.array(cache.MIN_VALUE))/2.0
     speed_max = (numpy.array(cache.MAX_VALUE) - numpy.array(cache.MIN_VALUE))/2.0
@@ -190,6 +190,8 @@ def setupDEAP(cache, fitness, map_function, creator, base, tools):
     cache.toolbox.register("update", updateParticle, chi=0.729843788, c=2.05)
     cache.toolbox.register("convert", convertQuantum, dist="nuvd")
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
+    cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
+    cache.toolbox.register('grad_search', grad_search)
 
     #cache.toolbox.register('map', map_function)
 

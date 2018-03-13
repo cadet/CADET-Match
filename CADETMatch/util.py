@@ -102,7 +102,7 @@ def product_score(values):
     else:
         return -numpy.prod(numpy.abs(values))**(1.0/len(values))
 
-def averageFitness(offspring):
+def averageFitness(offspring, cache):
     total = 0.0
     number = 0.0
     bestMin = -sys.float_info.max
@@ -113,7 +113,13 @@ def averageFitness(offspring):
         number += len(i.fitness.values)
         bestMin = max(bestMin, min(i.fitness.values))
         bestProd = max(bestProd, product_score(i.fitness.values))
-    return total/number, bestMin, bestProd
+
+    result = [total/number, bestMin, bestProd]
+
+    if cache.roundScores is not None:
+        return roundScores(result, cache.roundScores)
+    else:
+        return result
 
 def smoothing(times, values):
     #temporarily get rid of smoothing for debugging

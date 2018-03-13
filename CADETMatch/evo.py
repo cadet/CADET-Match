@@ -1,14 +1,10 @@
 import numpy
 import util
 
-#import csv
-import hashlib
 import time
 
 from pathlib import Path
 
-from deap import algorithms
-from deap import base
 from deap import creator
 from deap import tools
 

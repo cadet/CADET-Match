@@ -76,7 +76,7 @@ def search(gradCheck, offspring, toolbox):
             temp.append(a)
     
     if temp:
-        avg, bestMin = util.averageFitness(temp)
+        avg, bestMin = util.averageFitness(temp, cache)
         if 0.9 * bestMin > gradCheck:
             gradCheck = 0.9 * bestMin
         #if len(temp) > 0 or all(failed):
