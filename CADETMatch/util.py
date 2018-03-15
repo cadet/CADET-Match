@@ -243,7 +243,7 @@ def convert_individual(individual, cache):
     return cadetValues
 
 
-def set_simulation(individual, simulation, settings, cache):
+def set_simulation(individual, simulation, settings, cache, fullPrecision):
     sigfigs = 3
     log("individual", individual)
 
@@ -281,7 +281,7 @@ def set_simulation(individual, simulation, settings, cache):
         if transform == 'keq':
             for bnd in bound:
                 position = boundOffset[comp] + bnd
-                if cache.roundParameters is not None:
+                if cache.roundParameters is not None and not fullPrecision:
                     simulation[location[0].lower()][position] = RoundToSigFigs(math.exp(individual[idx]), cache.roundParameters)
                     simulation[location[1].lower()][position] = RoundToSigFigs(math.exp(individual[idx])/(math.exp(individual[idx+1])), cache.roundParameters)
                 else:
@@ -301,7 +301,7 @@ def set_simulation(individual, simulation, settings, cache):
             for bnd in bound:
                 if comp == -1:
                     position = ()
-                    if cache.roundParameters is not None:
+                    if cache.roundParameters is not None and not fullPrecision:
                         simulation[location.lower()] = RoundToSigFigs(math.exp(individual[idx]), cache.roundParameters)
                     else:
                         simulation[location.lower()] = math.exp(individual[idx])
@@ -309,7 +309,7 @@ def set_simulation(individual, simulation, settings, cache):
                     cadetValuesKEQ.append(simulation[location])
                 else:
                     position = boundOffset[comp] + bnd
-                    if cache.roundParameters is not None:
+                    if cache.roundParameters is not None and not fullPrecision:
                         simulation[location.lower()][position] = RoundToSigFigs(math.exp(individual[idx]), cache.roundParameters)
                     else:
                         simulation[location.lower()][position] = math.exp(individual[idx])
@@ -319,7 +319,7 @@ def set_simulation(individual, simulation, settings, cache):
                 idx += 1
 
             for index in indexes:
-                if cache.roundParameters is not None:
+                if cache.roundParameters is not None and not fullPrecision:
                     simulation[location.lower()][index] = RoundToSigFigs(math.exp(individual[idx]), cache.roundParameters)
                 else:
                     simulation[location.lower()][index] = math.exp(individual[idx])
@@ -331,7 +331,7 @@ def set_simulation(individual, simulation, settings, cache):
     log("finished setting hdf5")
     return cadetValues, cadetValuesKEQ
 
-def runExperiment(individual, experiment, settings, target, template_sim, timeout, cache):
+def runExperiment(individual, experiment, settings, target, template_sim, timeout, cache, fullPrecision=False):
     handle, path = tempfile.mkstemp(suffix='.h5')
     os.close(handle)
 
@@ -339,7 +339,7 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     simulation.filename = path
 
     simulation.root.input.solver.nthreads = int(settings.get('nThreads', 1))
-    cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings, cache)
+    cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings, cache, fullPrecision)
 
     simulation.save()
 

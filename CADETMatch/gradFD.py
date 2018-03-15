@@ -68,6 +68,7 @@ def gradSearch(x, json_path):
         cache.setup(json_path)
 
     try:
+        x = numpy.clip(x, cache.MIN_VALUE, cache.MAX_VALUE)
         val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(cache.MIN_VALUE, cache.MAX_VALUE), 
             gtol=1e-14, ftol=1e-5, xtol=1e-14, diff_step=1e-7, x_scale="jac")
         #scores = fitness_sens(val.x, finished=1)
@@ -77,9 +78,6 @@ def gradSearch(x, json_path):
         #If the gradient fails return None as the point so the optimizer can adapt
         #print("Gradient Failure")
         #print(sys.exc_info()[0])
-        return None
-    except ValueError:
-        print('Gradient failure start point', x, cache.MIN_VALUE, cache.MAX_VALUE)
         return None
 
 def fitness_sens_grad(individual, finished=0):
@@ -117,4 +115,4 @@ def runExperimentSens(individual, experiment, settings, target, cache):
         templateSim.load()
         experiment['simulationSens'] = templateSim
 
-    return util.runExperiment(individual, experiment, settings, target, experiment['simulationSens'], float(experiment['timeout']), cache)
+    return util.runExperiment(individual, experiment, settings, target, experiment['simulationSens'], float(experiment['timeout']), cache, fullPrecision=True)
