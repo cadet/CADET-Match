@@ -117,7 +117,7 @@ def averageFitness(offspring, cache):
     result = [total/number, bestMin, bestProd]
 
     if cache.roundScores is not None:
-        return roundScores(result, cache.roundScores)
+        return RoundToSigFigs(result, cache.roundScores)
     else:
         return result
 

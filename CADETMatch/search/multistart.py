@@ -21,11 +21,15 @@ def run(cache, tools, creator):
 
     gradCheck = cache.badScore
 
-    gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, pop, cache, check_all=True)
+    path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
+    with path.open('a', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-    hof.update(newChildren)
+        gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, pop, cache, writer, csvfile, check_all=True)
 
-    return hof
+        hof.update(newChildren)
+
+        return hof
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"

@@ -70,13 +70,16 @@ def gradSearch(x, json_path):
     try:
         val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(cache.MIN_VALUE, cache.MAX_VALUE), 
             gtol=1e-14, ftol=1e-5, xtol=1e-14, diff_step=1e-7, x_scale="jac")
-        scores = fitness_sens(val.x, finished=1)
+        #scores = fitness_sens(val.x, finished=1)
         #print(val.x, numpy.exp(val.x), val.jac, scores, val.message)
         return val
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
         #print("Gradient Failure")
         #print(sys.exc_info()[0])
+        return None
+    except ValueError:
+        print('Gradient failure start point', x, cache.MIN_VALUE, cache.MAX_VALUE)
         return None
 
 def fitness_sens_grad(individual, finished=0):

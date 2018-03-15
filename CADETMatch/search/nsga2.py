@@ -115,6 +115,7 @@ def run(cache, tools, creator):
             offspring.extend(newChildren)
 
             avg, bestMin, bestProd = util.averageFitness(offspring, cache)
+
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
             util.graph_process(cache)
 
@@ -134,6 +135,7 @@ def run(cache, tools, creator):
             if avg >= cache.settings['stopAverage'] or bestMin >= cache.settings['stopBest'] or stalled:
                 util.finish(cache)
                 return halloffame
+
         util.finish(cache)
         return halloffame
 
