@@ -16,7 +16,7 @@ from cache import cache
 class GradientException(Exception):
     pass
 
-def search(gradCheck, offspring, cache, writer, csvfile, halloffame, meta_hof, check_all=False):
+def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, generation, check_all=False):
     if check_all:
         checkOffspring = offspring
     else:
@@ -33,8 +33,8 @@ def search(gradCheck, offspring, cache, writer, csvfile, halloffame, meta_hof, c
         if i is None:
             failed.append(1)
         elif i.success:
-            a = cache.toolbox.individual_guess(i.x)
-            fit, csv_line, results = cache.toolbox.evaluate(a)
+            ind = cache.toolbox.individual_guess(i.x)
+            fit, csv_line, results = cache.toolbox.evaluate(ind)
 
             csv_line[0] = 'GRAD'
 
@@ -45,7 +45,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, halloffame, meta_hof, c
 
             if csv_line:
                 csv_lines.append([time.ctime(), save_name_base] + csv_line)
-                onFront = util.updateParetoFront(halloffame, ind, cache)
+                onFront = util.updateParetoFront(grad_hof, ind, cache)
                 if onFront and not cache.metaResultsOnly:
                     util.processResultsGrad(save_name_base, ind, cache, results)
 
@@ -58,9 +58,9 @@ def search(gradCheck, offspring, cache, writer, csvfile, halloffame, meta_hof, c
                 util.cleanupProcess(results)
 
             failed.append(0)
-            a.fitness.values = fit
+            ind.fitness.values = fit
             #print(i.x, fit)
-            temp.append(a)
+            temp.append(ind)
     
     if temp:
         avg, bestMin, bestProd = util.averageFitness(temp, cache)
@@ -82,8 +82,8 @@ def search(gradCheck, offspring, cache, writer, csvfile, halloffame, meta_hof, c
         writer.writerows(meta_csv_lines)
 
     #print("Current front", len(halloffame))
-    cleanupFront(cache, halloffame, meta_hof)
-    writeMetaFront(cache, meta_hof, path_meta_csv)
+    util.cleanupFront(cache, None, meta_hof, grad_hof)
+    util.writeMetaFront(cache, meta_hof, path_meta_csv)
 
     return gradCheck, temp
 

@@ -26,7 +26,7 @@ def run(cache, tools, creator):
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, pop, cache, writer, csvfile, halloffame, meta_hof, check_all=True)
+        gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, pop, cache, writer, csvfile, halloffame, meta_hof, -1, check_all=True)
 
         hof.update(newChildren)
 

@@ -77,7 +77,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
-            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile)
+            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
 
             # Select the next generation population
@@ -181,7 +181,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
             stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
-            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile)
+            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
 
             avg, bestMin, bestProd = util.averageFitness(offspring, cache)
@@ -311,7 +311,7 @@ def nsga2(populationSize, ngen, cache, tools):
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             stalled = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
-            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, halloffame, meta_hof)
+            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
 
             avg, bestMin, bestProd = util.averageFitness(offspring, cache)

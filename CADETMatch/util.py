@@ -808,9 +808,15 @@ def cleanupProcess(results):
         if result['path']:
             os.remove(result['path'])
 
-def cleanupFront(cache, halloffame, meta_hof):
-    cleanDir(Path(cache.settings['resultsDirEvo']), halloffame)
-    cleanDir(Path(cache.settings['resultsDirMeta']), meta_hof)
+def cleanupFront(cache, halloffame=None, meta_hof=None, grad_hof=None):
+    if halloffame is not None:
+        cleanDir(Path(cache.settings['resultsDirEvo']), halloffame)
+    
+    if grad_hof is not None:
+        cleanDir(Path(cache.settings['resultsDirMeta']), meta_hof)
+
+    if grad_hof is not None:
+        cleanDir(Path(cache.settings['resultsDirGrad']), grad_hof)
 
 def cleanDir(dir, hof):
     #find all items in directory
