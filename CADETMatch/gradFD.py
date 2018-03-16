@@ -16,7 +16,7 @@ from cache import cache
 class GradientException(Exception):
     pass
 
-def search(gradCheck, offspring, cache, writer, csvfile, check_all=False):
+def search(gradCheck, offspring, cache, writer, csvfile, halloffame, meta_hof, check_all=False):
     if check_all:
         checkOffspring = offspring
     else:
@@ -26,6 +26,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, check_all=False):
     temp = []
     failed = []
     csv_lines = []
+    meta_csv_lines = []
 
     for i in newOffspring:
         #print(i, dir(i))
@@ -39,8 +40,22 @@ def search(gradCheck, offspring, cache, writer, csvfile, check_all=False):
 
             save_name_base = hashlib.md5(str(list(i.x)).encode('utf-8', 'ignore')).hexdigest()
 
+            ind_meta = cache.toolbox.clone(ind)
+            ind_meta.fitness.values = util.meta_calc(fit)
+
             if csv_line:
                 csv_lines.append([time.ctime(), save_name_base] + csv_line)
+                onFront = util.updateParetoFront(halloffame, ind, cache)
+                if onFront and not cache.metaResultsOnly:
+                    util.processResultsGrad(save_name_base, ind, cache, results)
+
+                onFrontMeta = util.updateParetoFront(meta_hof, ind_meta, cache)
+                if onFrontMeta:
+                    meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
+                    util.processResultsMeta(save_name_base, ind, cache, results)
+                    cache.lastProgressGeneration = generation
+
+                util.cleanupProcess(results)
 
             failed.append(0)
             a.fitness.values = fit
@@ -60,6 +75,15 @@ def search(gradCheck, offspring, cache, writer, csvfile, check_all=False):
     
     #flush before returning
     csvfile.flush()
+
+    path_meta_csv = cache.settings['resultsDirMeta'] / 'results.csv'
+    with path_meta_csv.open('a', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
+        writer.writerows(meta_csv_lines)
+
+    #print("Current front", len(halloffame))
+    cleanupFront(cache, halloffame, meta_hof)
+    writeMetaFront(cache, meta_hof, path_meta_csv)
 
     return gradCheck, temp
 

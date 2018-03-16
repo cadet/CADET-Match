@@ -787,7 +787,8 @@ def writeMetaFront(cache, meta_hof, path_meta_csv):
     new_data.to_csv(path_meta_csv, quoting=csv.QUOTE_ALL, index=False)
     new_data.to_excel(cache.settings['resultsDirMeta'] / 'results.xlsx', index=False)
 
-
+def processResultsGrad(save_name_base, individual, cache, results):
+    notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirGrad'], '%s_%s_GRAD.h5')
 
 def processResults(save_name_base, individual, cache, results):
     notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirEvo'], '%s_%s_EVO.h5')

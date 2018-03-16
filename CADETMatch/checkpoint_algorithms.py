@@ -9,7 +9,7 @@ import csv
 import pareto
 
 def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
-                    stats=None, halloffame=None, verbose=__debug__, tools=None, cache=None, meta_hof=None):
+                    stats=None, verbose=__debug__, tools=None, cache=None):
     """from DEAP function but with checkpoiting"""
 
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
@@ -30,6 +30,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
     
             halloffame = cp["halloffame"]
             meta_hof = cp['meta_halloffame']
+            grad_hof = cp['grad_halloffame']
             logbook = cp["logbook"]
             random.setstate(cp["rndstate"])
             gradCheck = cp['gradCheck']
@@ -40,6 +41,9 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             logbook = tools.Logbook()
             gradCheck = settings['gradCheck']
+
+            halloffame = pareto.ParetoFront(similar=util.similar)
+            meta_hof = pareto.ParetoFront(similar=util.similar)
 
 
             # Evaluate the individuals with an invalid fitness
@@ -103,7 +107,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
 
 def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
-                   stats=None, halloffame=None, verbose=__debug__, tools=None, cache=None, meta_hof=None):
+                   stats=None, verbose=__debug__, tools=None, cache=None):
     """from DEAP function but with checkpoiting"""
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
@@ -127,6 +131,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
     
             halloffame = cp["halloffame"]
             meta_hof = cp['meta_halloffame']
+            grad_hof = cp['grad_halloffame']
             logbook = cp["logbook"]
             random.setstate(cp["rndstate"])
             gradCheck = cp['gradCheck']
@@ -136,6 +141,9 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             logbook = tools.Logbook()
             gradCheck = settings['gradCheck']
+
+            halloffame = pareto.ParetoFront(similar=util.similar)
+            meta_hof = pareto.ParetoFront(similar=util.similar)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -238,6 +246,7 @@ def nsga2(populationSize, ngen, cache, tools):
     
             halloffame = cp["halloffame"]
             meta_hof = cp['meta_halloffame']
+            grad_hof = cp['grad_halloffame']
             random.setstate(cp["rndstate"])
             gradCheck = cp['gradCheck']
 
@@ -254,6 +263,7 @@ def nsga2(populationSize, ngen, cache, tools):
 
             halloffame = pareto.ParetoFront(similar=util.similar)
             meta_hof = pareto.ParetoFront(similar=util.similar)
+            grad_hof = pareto.ParetoFront(similar=util.similar)
             gradCheck = cache.settings['gradCheck']
 
 
@@ -273,7 +283,7 @@ def nsga2(populationSize, ngen, cache, tools):
     
 
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-            rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
+            rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(cp, cp_file)
@@ -299,7 +309,7 @@ def nsga2(populationSize, ngen, cache, tools):
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             stalled = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
-            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile)
+            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, halloffame, meta_hof)
             offspring.extend(newChildren)
 
             avg, bestMin, bestProd = util.averageFitness(offspring, cache)
@@ -311,7 +321,7 @@ def nsga2(populationSize, ngen, cache, tools):
             population = cache.toolbox.select(population + offspring, populationSize)
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
+                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)
 
             hof = Path(cache.settings['resultsDirMisc'], 'hof')
             with hof.open('wb') as data:

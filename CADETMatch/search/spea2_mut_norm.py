@@ -6,9 +6,6 @@ import random
 import numpy
 from scipy.spatial.distance import pdist, squareform
 
-import deap.tools.emo
-import pareto
-
 name = 'SPEA2_mut_norm'
 
 def run(cache, tools, creator):
@@ -38,7 +35,7 @@ def run(cache, tools, creator):
 
     result = checkpoint_algorithms.eaMuPlusLambda(pop, cache.toolbox, mu=MU, lambda_=LAMBDA,
         cxpb=cache.settings['crossoverRate'], mutpb=cache.settings['mutationRate'], ngen=totalGenerations, settings=cache.settings, 
-        halloffame=hof, tools=tools, cache=cache, meta_hof = meta_hof)
+        tools=tools, cache=cache)
 
     return result
 

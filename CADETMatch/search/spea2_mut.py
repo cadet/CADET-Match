@@ -7,7 +7,6 @@ import numpy
 from scipy.spatial.distance import pdist, squareform
 
 import deap.tools.emo
-import pareto
 
 name = 'SPEA2_mut'
 
@@ -30,15 +29,12 @@ def run(cache, tools, creator):
 
     totalGenerations = parameters * cache.settings['generations']
 
-    hof = pareto.ParetoFront(similar=util.similar)
-    meta_hof = pareto.ParetoFront(similar=util.similar)
-
     #return checkpoint_algorithms.eaMuCommaLambda(pop, toolbox, mu=MU, lambda_=LAMBDA,
     #    cxpb=settings['crossoverRate'], mutpb=settings['mutationRate'], ngen=totalGenerations, settings=settings, halloffame=hof, tools=tools)
 
     result = checkpoint_algorithms.eaMuPlusLambda(pop, cache.toolbox, mu=MU, lambda_=LAMBDA,
         cxpb=cache.settings['crossoverRate'], mutpb=cache.settings['mutationRate'], ngen=totalGenerations, settings=cache.settings, 
-        halloffame=hof, tools=tools, cache=cache, meta_hof = meta_hof)
+        tools=tools, cache=cache)
 
     return result
 
