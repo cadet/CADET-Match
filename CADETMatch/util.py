@@ -581,7 +581,7 @@ def fractionate(start_seq, stop_seq, times, values):
         temp.append(numpy.trapz(local_values, local_times))
     return numpy.array(temp)
 
-def writeProgress(cache, generation, population, halloffame, meta_halloffame, average_score, minimum_score, product_score, sim_start, generation_start):
+def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, average_score, minimum_score, product_score, sim_start, generation_start):
     cpu_time = psutil.Process().cpu_times()
     now = time.time()
 
@@ -589,28 +589,34 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, av
 
     hof = results / "hof.npy"
     meta_hof = results / "meta_hof.npy"
+    grad_hof = results / "grad_hof.npy"
 
     data = numpy.array([i.fitness.values for i in halloffame])
+    data_meta = numpy.array([i.fitness.values for i in halloffame])
+    data_grad = numpy.array([i.fitness.values for i in halloffame])
 
     with hof.open('wb') as hof_file:
         numpy.save(hof_file, data)
 
     with meta_hof.open('wb') as hof_file:
-        numpy.save(hof_file, data)
+        numpy.save(hof_file, data_meta)
+
+    with grad_hof.open('wb') as hof_file:
+        numpy.save(hof_file, data_grad)
 
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
         row, col = data.shape
-        data_mean = numpy.mean(data, 1)
+        data_mean = numpy.mean(data_meta, 1)
         data_mean_mean = numpy.mean(data_mean)
         data_mean_best = numpy.max(data_mean)
 
-        data_min = numpy.min(data, 1)
+        data_min = numpy.min(data_meta, 1)
         data_min_mean = numpy.mean(data_min)
         data_min_best = numpy.max(data_min)
 
-        data_prod = numpy.power(numpy.prod(data, 1), 1.0/col)
+        data_prod = numpy.power(numpy.prod(data_meta, 1), 1.0/col)
         data_prod_mean = numpy.mean(data_prod)
         data_prod_best = numpy.max(data_prod)
  

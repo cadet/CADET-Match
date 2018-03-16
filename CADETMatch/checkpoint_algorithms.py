@@ -44,6 +44,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             halloffame = pareto.ParetoFront(similar=util.similar)
             meta_hof = pareto.ParetoFront(similar=util.similar)
+            grad_hof = pareto.ParetoFront(similar=util.similar)
 
 
             # Evaluate the individuals with an invalid fitness
@@ -51,7 +52,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
 
             avg, bestMin, bestProd = util.averageFitness(population, cache)
-            util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
+            util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start)
             util.graph_process(cache)
 
             logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
@@ -83,7 +84,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             population[:] = toolbox.select(offspring, mu)
 
             avg, bestMin, bestProd = util.averageFitness(offspring, cache)
-            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
+            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start)
             util.graph_process(cache)
                    
             # Update the statistics with the new population
@@ -144,13 +145,14 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             halloffame = pareto.ParetoFront(similar=util.similar)
             meta_hof = pareto.ParetoFront(similar=util.similar)
+            grad_hof = pareto.ParetoFront(similar=util.similar)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
             stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
 
             avg, bestMin, bestProd = util.averageFitness(population, cache)
-            util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
+            util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start)
             util.graph_process(cache)
 
             logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
@@ -187,7 +189,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             # Select the next generation population
             population[:] = toolbox.select(offspring + population, mu)
 
-            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
+            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start)
             util.graph_process(cache)
         
             # Update the statistics with the new population
@@ -274,7 +276,7 @@ def nsga2(populationSize, ngen, cache, tools):
         stalled = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
 
         avg, bestMin, bestProd = util.averageFitness(population, cache)
-        util.writeProgress(cache, -1, population, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
+        util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start)
         util.graph_process(cache)
         
         # This is just to assign the crowding distance to the individuals
@@ -314,7 +316,7 @@ def nsga2(populationSize, ngen, cache, tools):
 
             avg, bestMin, bestProd = util.averageFitness(offspring, cache)
 
-            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, avg, bestMin, bestProd, sim_start, generation_start)
+            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start)
             util.graph_process(cache)
 
             # Select the next generation population
