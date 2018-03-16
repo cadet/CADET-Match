@@ -812,7 +812,7 @@ def cleanupFront(cache, halloffame=None, meta_hof=None, grad_hof=None):
     if halloffame is not None:
         cleanDir(Path(cache.settings['resultsDirEvo']), halloffame)
     
-    if grad_hof is not None:
+    if meta_hof is not None:
         cleanDir(Path(cache.settings['resultsDirMeta']), meta_hof)
 
     if grad_hof is not None:

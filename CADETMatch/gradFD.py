@@ -24,21 +24,22 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
     newOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad, map(list, checkOffspring))
 
     temp = []
-    failed = []
+    #failed = []
     csv_lines = []
     meta_csv_lines = []
 
     for i in newOffspring:
         #print(i, dir(i))
         if i is None:
-            failed.append(1)
+            #failed.append(1)
+            pass
         elif i.success:
             ind = cache.toolbox.individual_guess(i.x)
             fit, csv_line, results = cache.toolbox.evaluate(ind)
 
             csv_line[0] = 'GRAD'
 
-            save_name_base = hashlib.md5(str(list(i.x)).encode('utf-8', 'ignore')).hexdigest()
+            save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
 
             ind_meta = cache.toolbox.clone(ind)
             ind_meta.fitness.values = util.meta_calc(fit)
@@ -57,7 +58,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
 
                 util.cleanupProcess(results)
 
-            failed.append(0)
+            #failed.append(0)
             ind.fitness.values = fit
             #print(i.x, fit)
             temp.append(ind)
