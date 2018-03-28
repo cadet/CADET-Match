@@ -33,7 +33,11 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             grad_hof = cp['grad_halloffame']
             logbook = cp["logbook"]
             random.setstate(cp["rndstate"])
-            gradCheck = cp['gradCheck']
+
+            if cp['gradCheck'] > cache.settings['gradCheck']:
+                gradCheck = cp['gradCheck']
+            else:
+                gradCheck = cache.settings['gradCheck']
 
         else:
             # Start a new evolution
@@ -135,7 +139,11 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             grad_hof = cp['grad_halloffame']
             logbook = cp["logbook"]
             random.setstate(cp["rndstate"])
-            gradCheck = cp['gradCheck']
+            
+            if cp['gradCheck'] > cache.settings['gradCheck']:
+                gradCheck = cp['gradCheck']
+            else:
+                gradCheck = cache.settings['gradCheck']
         else:
             # Start a new evolution
             start_gen = 0    
@@ -250,7 +258,11 @@ def nsga2(populationSize, ngen, cache, tools):
             meta_hof = cp['meta_halloffame']
             grad_hof = cp['grad_halloffame']
             random.setstate(cp["rndstate"])
-            gradCheck = cp['gradCheck']
+
+            if cp['gradCheck'] > cache.settings['gradCheck']:
+                gradCheck = cp['gradCheck']
+            else:
+                gradCheck = cache.settings['gradCheck']
 
         else:
             # Start a new evolution
