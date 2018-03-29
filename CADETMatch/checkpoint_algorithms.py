@@ -53,7 +53,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
+            stalled, stallWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
 
             avg, bestMin, bestProd = util.averageFitness(population, cache)
             util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start)
@@ -79,7 +79,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
+            stalled, stallWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
             gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
@@ -157,7 +157,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
+            stalled, stallWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
 
             avg, bestMin, bestProd = util.averageFitness(population, cache)
             util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start)
@@ -183,11 +183,11 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
+            stalled, stallWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
             # Combination of varOr and RoundOffSpring invalidates some members of the population, not sure why yet
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            stalled = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
+            stalled, stallWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
             gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
@@ -241,6 +241,9 @@ def varAnd(population, toolbox, cxpb, mutpb):
 
 def nsga2(populationSize, ngen, cache, tools):
     """NSGA2 with checkpointing"""
+    #fix max population to be a multiple of 4
+    cache.settings['maxPopulation'] = cache.settings['maxPopulation'] + (-cache.settings['maxPopulation'] % 4)
+
     cxpb = cache.settings['crossoverRate']
     checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings['checkpointFile'])
 
@@ -285,7 +288,7 @@ def nsga2(populationSize, ngen, cache, tools):
    
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
-        stalled = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
+        stalled, stallWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1)
 
         avg, bestMin, bestProd = util.averageFitness(population, cache)
         util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start)
@@ -321,7 +324,7 @@ def nsga2(populationSize, ngen, cache, tools):
         
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            stalled = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
+            stalled, stallWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
             gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
@@ -333,6 +336,27 @@ def nsga2(populationSize, ngen, cache, tools):
 
             # Select the next generation population
             population = cache.toolbox.select(population + offspring, populationSize)
+
+            if stallWarn:
+                maxPopulation = cache.settings['maxPopulation']
+                newPopulationSize = int(populationSize * 1.5)
+                newPopulationSize += (-newPopulationSize % 4)
+                newPopulationSize = min(newPopulationSize, maxPopulation)
+
+                diffSize = newPopulationSize - populationSize
+                newPopulation = cache.toolbox.population(n=diffSize)
+
+                print("Expanding population size", diffSize)
+
+                invalid_ind = [ind for ind in newPopulation if not ind.fitness.valid]
+                util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
+
+                # This is just to assign the crowding distance to the individuals
+                # no actual selection is done
+                newPopulation = cache.toolbox.select(newPopulation, len(newPopulation)) 
+                
+                population.extend(newPopulation)
+                populationSize = newPopulationSize
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)

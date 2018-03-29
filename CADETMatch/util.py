@@ -620,7 +620,7 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         data_prod_mean = numpy.mean(data_prod)
         data_prod_best = numpy.max(data_prod)
  
-        print("Generation: ", generation, 
+        print("Generation: ", generation, "\tPopulation: ", len(population),
               "\tAverage Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_mean_mean,4), RoundToSigFigs(data_mean_best,4)),
               "\tMinimum Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_min_mean,4), RoundToSigFigs(data_min_best,4)),
               "\tProduct Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_prod_mean,4), RoundToSigFigs(data_prod_best,4)))
@@ -767,8 +767,9 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
     writeMetaFront(cache, meta_hof, path_meta_csv)
 
     stalled = (generation - cache.lastProgressGeneration) > cache.stallGenerations
+    stallWarn = (generation - cache.lastProgressGeneration) > cache.stallCorrect
     print("Generations without progress", generation - cache.lastProgressGeneration)
-    return stalled
+    return stalled, stallWarn
 
 def updateParetoFront(halloffame, offspring, cache):
     before = set(map(tuple, halloffame.items))
