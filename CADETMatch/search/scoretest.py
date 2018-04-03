@@ -25,7 +25,7 @@ def run(cache, tools, creator):
         grad_hof = pareto.ParetoFront(similar=util.similar)
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
-        stalled, stallWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof, -1)
+        stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof, -1)
         
         avg, bestMin, bestProd = util.averageFitness(pop, cache)
         

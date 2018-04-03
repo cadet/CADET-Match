@@ -753,6 +753,11 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
             cleanupProcess(results)
 
     writer.writerows(csv_lines)
+
+    if generation == cache.lastProgressGeneration:
+        cache.generationsOfProgress += 1
+    else:
+        cache.generationsOfProgress = 0
     
     #flush before returning
     csvfile.flush()
@@ -766,10 +771,12 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
     cleanupFront(cache, halloffame, meta_hof)
     writeMetaFront(cache, meta_hof, path_meta_csv)
 
-    stalled = (generation - cache.lastProgressGeneration) > cache.stallGenerations
-    stallWarn = (generation - cache.lastProgressGeneration) > cache.stallCorrect
+    stalled = (generation - cache.lastProgressGeneration) >= cache.stallGenerations
+    stallWarn = (generation - cache.lastProgressGeneration) >= cache.stallCorrect
+    progressWarn = cache.generationsOfProgress >= cache.progressCorrect
     print("Generations without progress", generation - cache.lastProgressGeneration)
-    return stalled, stallWarn
+    print("Generations of progress", cache.generationsOfProgress)
+    return stalled, stallWarn, progressWarn
 
 def updateParetoFront(halloffame, offspring, cache):
     before = set(map(tuple, halloffame.items))

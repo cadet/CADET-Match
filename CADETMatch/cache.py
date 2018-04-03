@@ -36,7 +36,9 @@ class Cache:
         self.metaResultsOnly = 0
         self.stallGenerations = 10
         self.stallCorrect = 5
+        self.progressCorrect = 5
         self.lastProgressGeneration = -1
+        self.generationsOfProgress = 0
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
                                  'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score',
@@ -80,6 +82,7 @@ class Cache:
         self.metaResultsOnly = self.settings.get('metaResultsOnly', 0)
         self.stallGenerations = int(self.settings.get('stallGenerations', 10))
         self.stallCorrect = int(self.settings.get('stallCorrect', 5))
+        self.progressCorrect = int(self.settings.get('progressCorrect', 5))
 
     def setupSettings(self):
         settings_file = Path(self.json_path)
@@ -88,6 +91,8 @@ class Cache:
 
             self.settings['population'] = int(self.settings['population'])
             self.settings['maxPopulation'] = int(self.settings.get('maxPopulation', self.settings['population'] * 10))
+            self.settings['minPopulation'] = int(self.settings.get('minPopulation', self.settings['population']))
+
 
             if "bootstrap" in self.settings:
                 self.settings['bootstrap']['samples'] = int(self.settings['bootstrap']['samples'])
