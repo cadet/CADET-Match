@@ -728,6 +728,9 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
     fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
     csv_lines = []
     meta_csv_lines = []
+
+    made_progress = False
+
     for ind, result in zip(invalid_ind, fitnesses):
         fit, csv_line, results = result
         
@@ -748,15 +751,17 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
             if onFrontMeta:
                 meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                 processResultsMeta(save_name_base, ind, cache, results)
-                cache.lastProgressGeneration = generation
+                made_progress = True
 
             cleanupProcess(results)
 
     writer.writerows(csv_lines)
 
-    if generation == cache.lastProgressGeneration:
-        cache.generationsOfProgress += 1
-    else:
+    if made_progress:
+        if generation != cache.lastProgressGeneration:
+            cache.generationsOfProgress += 1
+            cache.lastProgressGeneration = generation
+    elif generation != cache.lastProgressGeneration:
         cache.generationsOfProgress = 0
     
     #flush before returning
