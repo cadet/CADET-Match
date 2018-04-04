@@ -6,6 +6,8 @@ import random
 import numpy
 from scipy.spatial.distance import pdist, squareform
 
+import deap.tools.emo
+
 name = 'SPEA2_mut_norm'
 
 def run(cache, tools, creator):
