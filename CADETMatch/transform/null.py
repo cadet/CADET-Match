@@ -4,9 +4,6 @@ count = 1
 def getUnit(location):
     return location.split('/')[3]
 
-def transform(seq):
-    return seq
-
 def untransform(seq, cache, fullPrecision=False):
     values = [individual[0],]
 

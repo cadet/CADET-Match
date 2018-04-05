@@ -7,9 +7,6 @@ count = 2
 def getUnit(location):
     return location[0].split('/')[3]
 
-def transform(seq):
-    return numpy.log([seq[0], seq[1]])
-
 def untransform(seq, cache, fullPrecision=False):
     values = [numpy.exp(seq[0]), numpy.exp(seq[0])/(numpy.exp(seq[1]))]
 
