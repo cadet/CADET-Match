@@ -13,6 +13,7 @@ class Cache:
     def __init__(self):
         self.scores = plugins.get_plugins('scores')
         self.search = plugins.get_plugins('search')
+        self.transforms = plugins.get_plugins('transform')
         self.settings = None
         self.headers = None
         self.numGoals = None
@@ -23,7 +24,6 @@ class Cache:
         self.WORST = None
         self.json_path = None
         self.adaptive = None
-        self.transform = None
         self.parameter_indexes = None
         self.score_indexes = None
         self.score_headers = None
@@ -60,8 +60,6 @@ class Cache:
         self.setupMinMax()
 
         self.WORST = [self.badScore] * self.numGoals
-
-        self.settings['transform'] = self.transform
 
         #create used paths in settings, only the root process will make the directories later
         self.settings['resultsDirEvo'] = Path(self.settings['resultsDir']) / "evo"
@@ -108,25 +106,7 @@ class Cache:
         parameter_headers = []
         
         for parameter in self.settings['parameters']:
-            try:
-                comp = parameter['component']
-            except KeyError:
-                comp = 'None'
-            if parameter['transform'] == 'keq':
-                location = parameter['location']
-                nameKA = location[0].rsplit('/', 1)[-1]
-                nameKD = location[1].rsplit('/', 1)[-1]
-                for bound in parameter['bound']:
-                    parameter_headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
-                    parameter_headers.append("%s Comp:%s Bound:%s" % (nameKD, comp, bound))
-                    parameter_headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
-            elif parameter['transform'] == 'log':
-                location = parameter['location']
-                name = location.rsplit('/', 1)[-1]
-                for bound in parameter.get('bound', []):
-                    parameter_headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
-                for idx in parameter.get('indexes', []):
-                    parameter_headers.append("%s Comp:%s Index:%s" % (name, comp, idx))
+            parameter_headers.extend(self.transforms[parameter['transform']].getHeaders(parameter))
 
         self.parameter_headers = parameter_headers
 
@@ -179,27 +159,8 @@ class Cache:
 
             transform = parameter['transform']
 
-            if transform == 'keq':
-                location = parameter['location']
-                nameKA = location[0].rsplit('/', 1)[-1]
-                nameKD = location[1].rsplit('/', 1)[-1]
-                unit = int(location[0].split('/')[3].replace('unit_', ''))
-
-                for bound in parameter['bound']:
-                    parms.append((nameKA, unit, comp, bound))
-                    parms.append((nameKD, unit, comp, bound))
-
-            elif transform == 'log':
-                location = parameter['location']
-                name = location.rsplit('/', 1)[-1]
-                try:
-                    unit = int(location.split('/')[3].replace('unit_', ''))
-                except ValueError:
-                    unit = ''
-                    sensitivityOk = 0
-
-                for bound in parameter['bound']:
-                    parms.append((name, unit, comp, bound))
+            parms, sensitivityOk = cache.transforms[transform].setupTarget(parameter)
+            parms.extend(parms)
 
         if sensitivityOk:
             self.target['sensitivities'] = parms
@@ -293,31 +254,12 @@ class Cache:
         "build the minimum and maximum parameter boundaries"
         self.MIN_VALUE = []
         self.MAX_VALUE = []
-        self.transform = []
 
         for parameter in self.settings['parameters']:
             transform = parameter['transform']
             location = parameter['location']
 
-            if transform == 'keq':
-                minKA = parameter['minKA']
-                maxKA = parameter['maxKA']
-                minKEQ = parameter['minKEQ']
-                maxKEQ = parameter['maxKEQ']
-
-                minValues = [item for pair in zip(minKA, minKEQ) for item in pair]
-                maxValues = [item for pair in zip(maxKA, maxKEQ) for item in pair]
-
-                self.transform.extend([numpy.log for i in minValues])
-
-                minValues = numpy.log(minValues)
-                maxValues = numpy.log(maxValues)
-
-            elif transform == 'log':
-                minValues = numpy.log(parameter['min'])
-                maxValues = numpy.log(parameter['max'])
-                self.transform.append(numpy.log)
-
+            minValues, maxValues = self.transforms[transform].getBounds(parameter)
             self.MIN_VALUE.extend(minValues)
             self.MAX_VALUE.extend(maxValues)
 

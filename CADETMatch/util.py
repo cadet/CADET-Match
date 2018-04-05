@@ -198,138 +198,47 @@ def saveExperiments(save_name_base, settings, target, results, directory, file_p
     return True
 
 def convert_individual(individual, cache):
-    #This function should be refactored with set_simulation, for now copy and paste to verify if the idea works
+    idx = 0
     cadetValues = []
 
     idx = 0
     for parameter in cache.settings['parameters']:
-        location = parameter['location']
         transform = parameter['transform']
+        count = cache.transforms[transform].count
+        seq = individual[idx:idx+count]
+        values, headerValues = cache.transforms[transform].untransform(seq, cache, False)
+        cadetValues.extend(values)
+        idx += count
 
-        try:
-            comp = parameter['component']
-            bound = parameter['bound']
-            indexes = []
-        except KeyError:
-            indexes = parameter['indexes']
-            bound = []
-
-        if bound:
-            if transform == 'keq':
-                unit = location[0].split('/')[3]
-            elif transform == 'log':
-                unit = location.split('/')[3]
-
-        if transform == 'keq':
-            for bnd in bound:
-                cadetValues.append(math.exp(individual[idx]))
-                cadetValues.append(math.exp(individual[idx])/(math.exp(individual[idx+1])))
-
-                idx += 2
-
-        elif transform == "log":
-            for bnd in bound:
-                if comp == -1:
-                    cadetValues.append(math.exp(individual[idx]))
-                else:
-                    cadetValues.append(math.exp(individual[idx]))
-
-                idx += 1
-
-            for index in indexes:
-                cadetValues.append(math.exp(individual[idx]))
-
-                idx += 1
     return cadetValues
 
-
 def set_simulation(individual, simulation, settings, cache, fullPrecision):
-    sigfigs = 3
     log("individual", individual)
-
-    data = numpy.exp(individual)
 
     cadetValues = []
     cadetValuesKEQ = []
 
     idx = 0
     for parameter in settings['parameters']:
-        location = parameter['location']
         transform = parameter['transform']
-
-        try:
-            comp = parameter['component']
-            bound = parameter['bound']
-            indexes = []
-        except KeyError:
-            indexes = parameter['indexes']
-            bound = []
-
-        if bound:
-            if transform == 'keq':
-                unit = location[0].split('/')[3]
-            elif transform == 'log':
-                unit = location.split('/')[3]
-
-            if simulation.root.input.model[unit].unit_type == b'CSTR':
-                NBOUND = simulation.root.input.model[unit].nbound
-            else:
-                NBOUND = simulation.root.input.model[unit].discretization.nbound
-
-            boundOffset = numpy.cumsum(numpy.concatenate([[0,], NBOUND]))
-
-        if transform == 'keq':
-            for bnd in bound:
-                position = boundOffset[comp] + bnd
-                if cache.roundParameters is not None and not fullPrecision:
-                    simulation[location[0].lower()][position] = RoundToSigFigs(math.exp(individual[idx]), cache.roundParameters)
-                    simulation[location[1].lower()][position] = RoundToSigFigs(math.exp(individual[idx])/(math.exp(individual[idx+1])), cache.roundParameters)
-                else:
-                    simulation[location[0].lower()][position] = math.exp(individual[idx])
-                    simulation[location[1].lower()][position] = math.exp(individual[idx])/(math.exp(individual[idx+1]))
-
-                cadetValues.append(simulation[location[0]][position])
-                cadetValues.append(simulation[location[1]][position])
-
-                cadetValuesKEQ.append(simulation[location[0]][position])
-                cadetValuesKEQ.append(simulation[location[1]][position])
-                cadetValuesKEQ.append(simulation[location[0]][position]/simulation[location[1]][position])
-
-                idx += 2
-
-        elif transform == "log":
-            for bnd in bound:
-                if comp == -1:
-                    position = ()
-                    if cache.roundParameters is not None and not fullPrecision:
-                        simulation[location.lower()] = RoundToSigFigs(math.exp(individual[idx]), cache.roundParameters)
-                    else:
-                        simulation[location.lower()] = math.exp(individual[idx])
-                    cadetValues.append(simulation[location])
-                    cadetValuesKEQ.append(simulation[location])
-                else:
-                    position = boundOffset[comp] + bnd
-                    if cache.roundParameters is not None and not fullPrecision:
-                        simulation[location.lower()][position] = RoundToSigFigs(math.exp(individual[idx]), cache.roundParameters)
-                    else:
-                        simulation[location.lower()][position] = math.exp(individual[idx])
-                    cadetValues.append(simulation[location][position])
-                    cadetValuesKEQ.append(simulation[location][position])
-
-                idx += 1
-
-            for index in indexes:
-                if cache.roundParameters is not None and not fullPrecision:
-                    simulation[location.lower()][index] = RoundToSigFigs(math.exp(individual[idx]), cache.roundParameters)
-                else:
-                    simulation[location.lower()][index] = math.exp(individual[idx])
-                cadetValues.append(simulation[location][index])
-                cadetValuesKEQ.append(simulation[location][index])
-
-                idx += 1
+        count = cache.transforms[transform].count
+        seq = individual[idx:idx+count]
+        values, headerValues = cache.transforms[transform].setSimulation(simulation, parameter, seq, cache, fullPrecision)
+        cadetValues.extend(values)
+        cadetValuesKEQ.extend(headerValues)
+        idx += count
 
     log("finished setting hdf5")
     return cadetValues, cadetValuesKEQ
+
+def getBoundOffset(unit):
+    if unit.unit_type == b'CSTR':
+        NBOUND = unit.nbound
+    else:
+        NBOUND = unit.discretization.nbound
+
+    boundOffset = numpy.cumsum(numpy.concatenate([[0,], NBOUND]))
+    return boundOffset
 
 def runExperiment(individual, experiment, settings, target, template_sim, timeout, cache, fullPrecision=False):
     handle, path = tempfile.mkstemp(suffix='.h5')
@@ -779,8 +688,6 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
     stalled = (generation - cache.lastProgressGeneration) >= cache.stallGenerations
     stallWarn = (generation - cache.lastProgressGeneration) >= cache.stallCorrect
     progressWarn = cache.generationsOfProgress >= cache.progressCorrect
-    print("Generations without progress", generation - cache.lastProgressGeneration)
-    print("Generations of progress", cache.generationsOfProgress)
     return stalled, stallWarn, progressWarn
 
 def updateParetoFront(halloffame, offspring, cache):

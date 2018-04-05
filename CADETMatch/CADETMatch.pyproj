@@ -202,6 +202,24 @@
     <Compile Include="search\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="transform\keq.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="transform\log.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="transform\norm.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="transform\norm_keq.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="transform\norm_log.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="transform\null.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="util.py">
       <SubType>Code</SubType>
     </Compile>
@@ -216,6 +234,7 @@
     <Content Include="README.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="transform\" />
     <Folder Include="search\" />
     <Folder Include="scores\" />
     <Folder Include="search\retired\" />

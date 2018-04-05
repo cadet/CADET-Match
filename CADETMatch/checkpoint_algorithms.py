@@ -349,8 +349,6 @@ def nsga2(populationSize, ngen, cache, tools):
                 diffSize = newPopulationSize - populationSize
                 newPopulation = cache.toolbox.population(n=diffSize)
 
-                print("Expanding population size", diffSize)
-
                 invalid_ind = [ind for ind in newPopulation if not ind.fitness.valid]
                 util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen)
 
@@ -372,7 +370,6 @@ def nsga2(populationSize, ngen, cache, tools):
                 
                 population = cache.toolbox.select(population, newPopulationSize) 
                 populationSize = newPopulationSize
-                print("Decreasing population", diffSize, len(population), newPopulationSize)
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)

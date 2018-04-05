@@ -291,9 +291,9 @@ def graphProgress(cache):
 
     output = cache.settings['resultsDirProgress']
 
-    x = ['Generation', 'Total CPU Time']
+    x = ['Generation', 'Total CPU Time', 'Population']
     y = ['Average Score', 'Minimum Score', 'Product Score',
-         'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score']
+         'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score', 'Population']
 
     list(futures.map(singleGraphProgress, itertools.product(x,y), itertools.repeat(df), itertools.repeat(output), itertools.repeat(sys.argv[1])))
 
@@ -328,7 +328,7 @@ def singleGraphProgress(tup, df, output, json_path):
     graph = fig.add_subplot(1, 1, 1)
 
     graph.plot(df[i],df[j])
-    graph.set_ylim((0,1))
+    graph.set_ylim((0,1.1*max(df[j])))
     graph.set_title('%s vs %s' % (i,j))
     graph.set_xlabel(i)
     graph.set_ylabel(j)
