@@ -7,7 +7,7 @@ count = 1
 def getUnit(location):
     return location.split('/')[3]
 
-def untransform(seq, cache, fullPrecision=False):
+def untransform(seq, cache, parameter, fullPrecision=False):
     values = [numpy.exp(seq[0]),]
 
     if cache.roundParameters is not None and not fullPrecision:
@@ -17,7 +17,7 @@ def untransform(seq, cache, fullPrecision=False):
     return values, headerValues
 
 def setSimulation(sim, parameter, seq, cache, fullPrecision=False):
-    values, headerValues = untransform(seq, cache, fullPrecision)
+    values, headerValues = untransform(seq, cache, parameter, fullPrecision)
 
     location = parameter['location']
     

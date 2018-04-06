@@ -206,7 +206,7 @@ def convert_individual(individual, cache):
         transform = parameter['transform']
         count = cache.transforms[transform].count
         seq = individual[idx:idx+count]
-        values, headerValues = cache.transforms[transform].untransform(seq, cache, False)
+        values, headerValues = cache.transforms[transform].untransform(seq, cache, parameter, False)
         cadetValues.extend(values)
         idx += count
 
