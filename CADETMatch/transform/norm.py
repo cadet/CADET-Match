@@ -7,7 +7,10 @@ def getUnit(location):
     return location.split('/')[3]
 
 def untransform(seq, cache, parameter, fullPrecision=False):
-    values = [seq[0],]
+    minValue = parameter['min']
+    maxValue = parameter['max']
+
+    values = [(maxValue - minValue) * seq[0] + minValue,]
 
     if cache.roundParameters is not None and not fullPrecision:
         values = [util.RoundToSigFigs(i, cache.roundParameters) for i in values]
