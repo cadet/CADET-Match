@@ -1,3 +1,5 @@
+import util
+
 name = "null"
 count = 1
 
@@ -5,7 +7,7 @@ def getUnit(location):
     return location.split('/')[3]
 
 def untransform(seq, cache, fullPrecision=False):
-    values = [individual[0],]
+    values = [seq[0],]
 
     if cache.roundParameters is not None and not fullPrecision:
         values = [util.RoundToSigFigs(i, cache.roundParameters) for i in values]
@@ -58,8 +60,8 @@ def setupTarget(parameter):
     return [(name, unit, comp, bound),], sensitivityOk
 
 def getBounds(parameter):
-    minValue = numpy.log(parameter['min'])
-    maxValue = numpy.log(parameter['max'])
+    minValue = parameter['min']
+    maxValue = parameter['max']
 
     return [minValue,], [maxValue,]
 
@@ -75,8 +77,9 @@ def getHeaders(parameter):
     bound = parameter.get('bound', None)
     index = parameter.get('index', None)
     
+    headers = []
     if bound is not None:
-        parameter_headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
+        headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
     if index is not None:
-        parameter_headers.append("%s Comp:%s Index:%s" % (name, comp, index))
+        headers.append("%s Comp:%s Index:%s" % (name, comp, index))
     return headers
