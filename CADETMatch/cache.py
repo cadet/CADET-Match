@@ -68,6 +68,7 @@ class Cache:
         self.settings['resultsDirMisc'] = Path(self.settings['resultsDir']) / "misc"
         self.settings['resultsDirSpace'] = Path(self.settings['resultsDir']) / "space"
         self.settings['resultsDirProgress'] = Path(self.settings['resultsDir']) / "progress"
+        self.settings['resultsDirTraining'] = Path(self.settings['resultsDir']) / "training"
         self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
 
         self.error_path = Path(cache.settings['resultsDirBase'], "error.csv")
@@ -257,8 +258,6 @@ class Cache:
 
         for parameter in self.settings['parameters']:
             transform = parameter['transform']
-            location = parameter['location']
-
             minValues, maxValues = self.transforms[transform].getBounds(parameter)
             self.MIN_VALUE.extend(minValues)
             self.MAX_VALUE.extend(maxValues)

@@ -490,7 +490,7 @@ def fractionate(start_seq, stop_seq, times, values):
         temp.append(numpy.trapz(local_values, local_times))
     return numpy.array(temp)
 
-def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, average_score, minimum_score, product_score, sim_start, generation_start):
+def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, average_score, minimum_score, product_score, sim_start, generation_start, training=None):
     cpu_time = psutil.Process().cpu_times()
     now = time.time()
 
@@ -512,6 +512,22 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
     with grad_hof.open('wb') as hof_file:
         numpy.save(hof_file, data_grad)
+
+
+    if training is not None:
+        trainingDir = Path(cache.settings['resultsDirTraining'])
+        training_input = trainingDir / "input.npy"
+        training_output = trainingDir / "output.npy"
+        training_output_meta = trainingDir / "output_meta.npy"
+
+        with training_input.open('wb') as temp:
+            numpy.save(temp, numpy.array(training['input']))
+
+        with training_output.open('wb') as temp:
+            numpy.save(temp, numpy.array(training['output']))
+
+        with training_output_meta.open('wb') as temp:
+            numpy.save(temp, numpy.array(training['output_meta']))
 
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
@@ -633,7 +649,7 @@ def meta_calc(scores):
             numpy.sum(scores)/len(scores), 
             numpy.linalg.norm(scores)/numpy.sqrt(len(scores))]
 
-def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation):
+def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, training=None):
     fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
     csv_lines = []
     meta_csv_lines = []
@@ -649,6 +665,11 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
 
         ind_meta = toolbox.clone(ind)
         ind_meta.fitness.values = meta_calc(fit)
+
+        if training is not None:
+            training['input'].append(tuple(ind))
+            training['output'].append(tuple(fit))
+            training['output_meta'].append(tuple(meta_calc(fit)))
 
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)
