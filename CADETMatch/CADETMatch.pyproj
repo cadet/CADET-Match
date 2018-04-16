@@ -16,7 +16,8 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>"F:\CADET_ParameterEstimation\adsorption\lrmp\sma_break\NSGA2_sma.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
+    <InterpreterArguments>
+    </InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>

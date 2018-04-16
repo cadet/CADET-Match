@@ -529,6 +529,11 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         with training_output_meta.open('wb') as temp:
             numpy.save(temp, numpy.array(training['output_meta']))
 
+        for filename, chroma in training['results'].items():
+            file_data = trainingDir / ("%s.npy" % filename)
+            with file_data.open('wb') as temp:
+                numpy.save(temp, numpy.array(chroma))
+
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
@@ -666,10 +671,35 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
         ind_meta = toolbox.clone(ind)
         ind_meta.fitness.values = meta_calc(fit)
 
-        if training is not None:
+        if training is not None and results is not None:
             training['input'].append(tuple(ind))
             training['output'].append(tuple(fit))
             training['output_meta'].append(tuple(meta_calc(fit)))
+
+            if 'results' not in training:
+                training['results'] = {}
+
+            for experimentName, experiment in results.items():
+                sim = experiment['simulation']
+                times = sim.root.output.solution.solution_times
+
+                timeName = '%s_time' % experimentName
+
+                if timeName not in training['results']:
+                    training['results'][timeName] = times
+
+                for unitName, unit in sim.root.output.solution.items():
+                    if unitName.startswith('unit_') and sim.root.input.model[unitName].unit_type == b'OUTLET':
+                        for solutionName, solution in unit.items():
+                            if solutionName.startswith('solution_outlet_comp'):
+                                comp = solutionName.replace('solution_outlet_comp_', '')
+
+                                name = '%s_%s_%s' % (experimentName, unitName, comp)
+
+                                if name not in training['results']:
+                                    training['results'][name] = []
+
+                                training['results'][name].append(tuple(solution))
 
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)
