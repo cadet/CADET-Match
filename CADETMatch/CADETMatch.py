@@ -29,9 +29,9 @@ def main():
     #grad.setupTemplates(evo.settings, evo.target)
     hof = evo.run(cache)
 
-    print("hall of fame")
-    for i in hof:
-        print(i, type(i), i.fitness.values)
+    #print("hall of fame")
+    #for i in hof:
+    #    print(i, type(i), i.fitness.values)
 
     if "repeat" in cache.settings:
         repeat = int(cache.settings['repeat'])
@@ -178,7 +178,7 @@ def setupTemplates(cache):
         template.root.input['return'].unit_001.write_solution_outlet = 1
         template.root.input['return'].unit_001.split_components_data = 0
         template.root.input.solver.nthreads = 1
-        template.root.input.solver.time_integrator.max_steps = 0
+        #template.root.input.solver.time_integrator.max_steps = 100000
 
         template.save()
 
