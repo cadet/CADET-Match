@@ -206,19 +206,23 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
 
 def graphSpace(cache):
     csv_path = Path(cache.settings['resultsDirBase']) / cache.settings['CSV']
-    output = cache.settings['resultsDirSpace']
+    output_2d = cache.settings['resultsDirSpace'] / "2d"
+    output_3d = cache.settings['resultsDirSpace'] / "3d"
+
+    output_2d.mkdir(parents=True, exist_ok=True)
+    output_3d.mkdir(parents=True, exist_ok=True)
 
     comp_two = list(itertools.combinations(cache.parameter_indexes, 2))
     comp_one = list(itertools.combinations(cache.parameter_indexes, 1))
 
     #3d plots
     prod = list(itertools.product(comp_two, cache.score_indexes))
-    seq = [(str(output), str(csv_path), i[0][0], i[0][1], i[1], sys.argv[1]) for i in prod]
+    seq = [(str(output_3d), str(csv_path), i[0][0], i[0][1], i[1], sys.argv[1]) for i in prod]
     list(futures.map(plot_3d, seq))
     
     #2d plots
     prod = list(itertools.product(comp_one, cache.score_indexes))
-    seq = [(str(output), str(csv_path), i[0][0], i[1], sys.argv[1]) for i in prod]
+    seq = [(str(output_2d), str(csv_path), i[0][0], i[1], sys.argv[1]) for i in prod]
     list(futures.map(plot_2d, seq))
 
 def plot_3d(arg):
