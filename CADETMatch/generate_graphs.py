@@ -226,7 +226,7 @@ def graphSpace(cache):
     list(futures.map(plot_2d, seq))
 
 def plot_3d(arg):
-    "This leaks memory and should be disabled for now"
+    "This leaks memory and is run in a separate short-lived process, do not integrate into the matching main process"
     directory_path, csv_path, c1, c2, score, json_path = arg
 
     if json_path != cache.json_path:

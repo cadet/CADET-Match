@@ -22,7 +22,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
     sim_start = generation_start = time.time()
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
-    training = {'input':[], 'output':[], 'output_meta':[]}
+    training = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}}
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
@@ -128,7 +128,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
     sim_start = generation_start = time.time()
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
-    training = {'input':[], 'output':[], 'output_meta':[]}
+    training = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}}
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
@@ -252,7 +252,7 @@ def nsga2(populationSize, ngen, cache, tools):
     checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings['checkpointFile'])
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
-    training = {'input':[], 'output':[], 'output_meta':[]}
+    training = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}}
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
