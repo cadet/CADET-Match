@@ -59,7 +59,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             avg, bestMin, bestProd = util.averageFitness(population, cache)
             util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
-            util.graph_process(cache)
+            util.graph_process(cache, "First")
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
@@ -86,7 +86,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             avg, bestMin, bestProd = util.averageFitness(offspring, cache)
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
-            util.graph_process(cache)
+            util.graph_process(cache, gen)
 
             if stallWarn:
                 maxPopulation = cache.settings['maxPopulation'] * len(cache.MIN_VALUE)
@@ -163,7 +163,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             avg, bestMin, bestProd = util.averageFitness(population, cache)
             util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
-            util.graph_process(cache)
+            util.graph_process(cache, "First")
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
@@ -195,7 +195,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             population[:] = toolbox.select(offspring + population, mu)
 
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
-            util.graph_process(cache)
+            util.graph_process(cache, gen)
 
             cp = dict(population=population, generation=gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
@@ -297,7 +297,7 @@ def nsga2(populationSize, ngen, cache, tools):
 
         avg, bestMin, bestProd = util.averageFitness(population, cache)
         util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
-        util.graph_process(cache)
+        util.graph_process(cache, "First")
         
         # This is just to assign the crowding distance to the individuals
         # no actual selection is done
@@ -337,7 +337,7 @@ def nsga2(populationSize, ngen, cache, tools):
             avg, bestMin, bestProd = util.averageFitness(offspring, cache)
 
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
-            util.graph_process(cache)
+            util.graph_process(cache, gen)
 
             # Select the next generation population
             population = cache.toolbox.select(population + offspring, populationSize)

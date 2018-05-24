@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\temp\sma2join\NSGA2_combine_slide_flat\NSGA2_combine_slide.json" 1</CommandLineArguments>
+    <CommandLineArguments>"F:\CADET_ParameterEstimation\transport\grm\dextran\NSGA2_dextran.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -53,6 +53,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="gradFD.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="graph_spearman.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="nsga3_selection.py">
@@ -227,6 +230,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="util.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="video_spearman.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="__init__.py">

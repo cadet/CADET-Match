@@ -832,13 +832,16 @@ def cleanDir(dir, hof):
         for path in dir.glob('%s*' % save_name_base):
             path.unlink()
 
-def graph_process(cache, last=0):
+def graph_process(cache, generation, last=0):
     if cache.lastGraphTime is None:
         cache.lastGraphTime = time.time()
     if cache.lastMetaTime is None:
         cache.lastMetaTime = time.time()
 
     cwd = str(Path(__file__).parent)
+
+    subprocess.run([sys.executable, 'graph_spearman.py', cache.json_path, str(generation)], 
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
     
     if last or (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
         subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path, '1'], 
@@ -851,4 +854,8 @@ def graph_process(cache, last=0):
             cache.lastMetaTime = time.time()
 
 def finish(cache):
-    graph_process(cache, last=True)
+    graph_process(cache, "Last", last=True)
+
+    cwd = str(Path(__file__).parent)
+    subprocess.run([sys.executable, 'video_spearman.py', cache.json_path], 
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
