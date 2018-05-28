@@ -16,7 +16,6 @@ def run(sim_data, feature):
     multiplier = 1.0/samplesPerComponent
 
     times = simulation.root.output.solution.solution_times
-    flow = simulation.root.input.model.connections.switch_000.connections[9]
 
     scores = []
 
@@ -28,7 +27,7 @@ def run(sim_data, feature):
     for (start, stop, component, values, func_mean_time, func_variance_time, func_skew_time, func_mean_value, func_variance_value, func_skew_value) in funcs:
         time_center = (start + stop)/2.0
                 
-        sim_values = util.fractionate(start, stop, times, simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component]) * flow
+        sim_values = util.fractionate(start, stop, times, simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component])
        
         mean_sim_time, variance_sim_time, skew_sim_time, mean_sim_value, variance_sim_value, skew_sim_value = util.fracStat(time_center, sim_values)
 
@@ -62,9 +61,8 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
 
     time_center = (start + stop)/2.0
 
-    flow = sim.root.input.model.connections.switch_000.connections[9]
     smallestTime = min(data['Stop'] - data['Start'])
-    abstolFraction = flow * abstol * smallestTime
+    abstolFraction = abstol * smallestTime
 
     funcs = []
 

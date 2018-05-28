@@ -8,9 +8,9 @@ name = "fractionationSlide"
 adaptive = True
 badScore = 0
 
-def goal(offset, frac_exp, sim_data_time, sim_data_value, start, stop, flow):
+def goal(offset, frac_exp, sim_data_time, sim_data_value, start, stop):
     sim_data_value = numpy.roll(sim_data_value, int(offset))
-    frac_sim = util.fractionate(start, stop, sim_data_time, sim_data_value) * flow
+    frac_sim = util.fractionate(start, stop, sim_data_time, sim_data_value)
     return numpy.sum((frac_exp-frac_sim)**2)
 
 def searchRange(times, start_frac, stop_frac, CV_time):
@@ -58,7 +58,6 @@ def run(sim_data, feature):
     time_center = (start + stop)/2.0
 
     times = simulation.root.output.solution.solution_times
-    flow = simulation.root.input.model.connections.switch_000.connections[9]
 
     scores = []
 
@@ -80,13 +79,13 @@ def run(sim_data, feature):
 
         bounds = find_bounds(times, sim_value)
         result = scipy.optimize.differential_evolution(goal, bounds = [bounds,], 
-                                                       args = (exp_values, times, sim_value, start, stop, flow))
+                                                       args = (exp_values, times, sim_value, start, stop))
         #print(result)
 
         time_offset = times[int(abs(round(result.x[0])))]
         #print("time_offset\t", time_offset)
         sim_data_value = numpy.roll(sim_value, int(result.x[0]))
-        fracOffset = util.fractionate(start, stop, times, sim_data_value) * flow
+        fracOffset = util.fractionate(start, stop, times, sim_data_value)
 
         #score_corr, diff_time = score.cross_correlate(time_center, fracOffset, exp_values)
 
@@ -131,9 +130,8 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     start = numpy.array(data.iloc[:, 0])
     stop = numpy.array(data.iloc[:, 1])
 
-    flow = sim.root.input.model.connections.switch_000.connections[9]
     smallestTime = min(start - stop)
-    abstolFraction = flow * abstol * smallestTime
+    abstolFraction = abstol * smallestTime
 
     funcs = []
 

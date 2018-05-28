@@ -488,7 +488,7 @@ def fractionate(start_seq, stop_seq, times, values):
         local_times = times[selected]
         local_values = values[selected]
 
-        temp.append(numpy.trapz(local_values, local_times))
+        temp.append(numpy.trapz(local_values, local_times)/ (stop - start))
     return numpy.array(temp)
 
 def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, average_score, minimum_score, product_score, sim_start, generation_start, training=None):
@@ -841,16 +841,16 @@ def graph_process(cache, generation, last=0):
     cwd = str(Path(__file__).parent)
 
     subprocess.run([sys.executable, 'graph_spearman.py', cache.json_path, str(generation)], 
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
     
     if last or (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
         subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path, '1'], 
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
         cache.lastGraphTime = time.time()
     else:
         if (time.time() - cache.lastMetaTime) > cache.graphMetaTime:
             subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path, '0'], 
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
             cache.lastMetaTime = time.time()
 
 def finish(cache):
@@ -858,4 +858,4 @@ def finish(cache):
 
     cwd = str(Path(__file__).parent)
     subprocess.run([sys.executable, 'video_spearman.py', cache.json_path], 
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)

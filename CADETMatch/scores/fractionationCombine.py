@@ -17,7 +17,6 @@ def run(sim_data, feature):
     multiplier = 1.0/samplesPerComponent
 
     times = simulation.root.output.solution.solution_times
-    flow = simulation.root.input.model.connections.switch_000.connections[9]
 
     scores = {}
     for comp in components:
@@ -34,7 +33,7 @@ def run(sim_data, feature):
         local_times = times[selected]
         local_values = simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component][selected]
 
-        sim_value = numpy.trapz(local_values, local_times) * flow
+        sim_value = numpy.trapz(local_values, local_times)
 
         exp_values.append(exp_value)
         sim_values.append(sim_value)
@@ -67,9 +66,8 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
 
     headers = data.columns.values.tolist()
 
-    flow = sim.root.input.model.connections.switch_000.connections[9]
     smallestTime = min(data['Stop'] - data['Start'])
-    abstolFraction = flow * abstol * smallestTime
+    abstolFraction = abstol * smallestTime
 
     print('abstolFraction', abstolFraction)
 
