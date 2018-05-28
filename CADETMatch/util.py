@@ -488,6 +488,10 @@ def fractionate(start_seq, stop_seq, times, values):
         local_times = times[selected]
         local_values = values[selected]
 
+        #need to use the actual start and stop times from the data no what we want to cut at
+        stop = local_times[-1]
+        start = local_times[0]
+
         temp.append(numpy.trapz(local_values, local_times)/ (stop - start))
     return numpy.array(temp)
 
