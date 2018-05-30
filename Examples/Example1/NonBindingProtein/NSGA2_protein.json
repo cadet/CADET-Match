@@ -1,0 +1,85 @@
+{
+    "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+	"baseDir": "F:/Examples/Example1/NonBindingProtein",
+    "searchMethod": "NSGA2_mut_norm",
+	"resultsDir": "fit",
+	"CSV": "protein_NSGA2.csv",
+    "crossoverRate": 0.5,
+	"checkpointFile": "check",
+	"stopAverage": 0.999,
+	"stopBest": 0.999,
+	"gradCheck": 1.0,
+	"generations": 100,
+    "population": 100,
+    "roundParameters": 3,
+    "roundScores": 3,
+    "metaResultsOnly": 1,
+    "stallGenerations": 10,
+	"parameters": [
+		{
+			"transform": "log",
+			"component": -1,
+			"bound": [
+				-1
+			],
+			"location": "/input/model/unit_001/FILM_DIFFUSION",
+			"min": [
+				1e-10
+			],
+			"max": [
+				0.01
+			]
+		},
+		{
+			"transform": "log",
+			"component": -1,
+			"bound": [
+				-1
+			],
+			"location": "/input/model/unit_001/PAR_POROSITY",
+			"min": [
+				0.1
+			],
+			"max": [
+				0.9
+			]
+		},
+		{
+			"transform": "log",
+			"component": -1,
+			"bound": [
+				-1
+			],
+			"location": "/input/model/unit_001/PAR_DIFFUSION",
+			"min": [
+				1e-14
+			],
+			"max": [
+				0.01
+			]
+		}
+	],
+	"experiments": [
+		{
+			"CSV": "protein_pulse.csv",
+			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
+			"HDF5": "protein_pulse.h5",
+			"name": "main",
+			"timeout": 4.01073694229126,
+			"features": [
+				{
+					"name": "Pulse",
+					"start": 0,
+					"stop": 1500.0,
+					"type": "similarityHybridDecay2"
+				},
+				{
+					"name": "Deriv",
+					"start": 0,
+					"stop": 1500.0,
+					"type": "derivative_similarity_hybrid2"
+				}
+			]
+		}
+	]
+}

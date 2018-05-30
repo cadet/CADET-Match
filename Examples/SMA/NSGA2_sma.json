@@ -1,0 +1,97 @@
+{
+    "baseDir": "F:/Examples/SMA",
+	"crossoverRate": 0.8,
+	"checkpointFile": "check",
+	"stopAverage": 0.999,
+	"stopBest": 0.95,
+	"keepTop": 0.995,
+	"gradCheck": 1.0,
+	"generations": 25,
+	"keep": 0.2,
+	"mutationRate": 0.05,
+    "roundParameters": 3,
+    "roundScores": 3,
+    "metaResultsOnly": 1,
+    "stallGenerations": 10,
+	"parameters": [
+		{
+			"transform": "keq",
+			"component": 1,
+			"bound": [
+				0
+			],
+			"location": [
+				"/input/model/unit_001/adsorption/SMA_KA",
+				"/input/model/unit_001/adsorption/SMA_KD"
+			],
+			"minKA": [
+				1e-3
+			],
+			"maxKA": [
+				1e3
+			],
+			"minKEQ": [
+				1e-3
+			],
+			"maxKEQ": [
+				1e3
+			]
+		},
+		{
+			"transform": "log",
+			"component": 1,
+			"bound": [
+				0
+			],
+			"location": "/input/model/unit_001/adsorption/SMA_NU",
+			"min": [
+				1.0
+			],
+			"max": [
+				40.0
+			]
+		},
+		{
+			"transform": "log",
+			"component": 1,
+			"bound": [
+				0
+			],
+			"location": "/input/model/unit_001/adsorption/SMA_SIGMA",
+			"min": [
+				1.0
+			],
+			"max": [
+				100.0
+			]
+		}
+	],
+	"population": 100,
+	"experiments": [
+		{
+			"CSV": "pulse.csv",
+			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
+			"HDF5": "pulse.h5",
+			"name": "main",
+			"timeout": 32.43798017501831,
+			"features": [
+				{
+					"name": "Pulse",
+					"start": 0,
+					"stop": 20000.0,
+					"type": "similarityHybrid2"
+				},
+				{
+					"name": "Deriv",
+					"start": 0,
+					"stop": 20000.0,
+					"type": "derivative_similarity_hybrid2"
+				}
+			]
+		}
+	],
+	"CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+	"searchMethod": "NSGA2_mut_adapt",
+	"resultsDir": "fit",
+	"CSV": "sma_NSGA2.csv"
+}

@@ -1,0 +1,206 @@
+{
+  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+  "baseDir": "F:/Examples/Example3/Isotherm",
+  "resultsDir": "fit/",
+  "CSV": "isotherm_NSGA2.csv",
+  "checkpointFile": "check",
+  "stopAverage": 0.999,
+  "stopBest": 0.999,
+  "gradCheck": 1.0,
+  "searchMethod": "NSGA2_mut_adapt",
+  "crossoverRate": 0.8,
+  "generations": 100,
+  "population": 100,
+  "roundParameters": 3,
+  "roundScores": 3,
+  "metaResultsOnly": 1,
+  "stallGenerations": 15,
+	"parameters": [
+		{
+			"transform": "keq",
+			"component": 1,
+			"bound": [
+				0
+			],
+			"location": [
+				"/input/model/unit_001/adsorption/SMA_KA",
+				"/input/model/unit_001/adsorption/SMA_KD"
+			],
+			"minKA": [
+				1e-3
+			],
+			"maxKA": [
+				1e3
+			],
+			"minKEQ": [
+				1e-3
+			],
+			"maxKEQ": [
+				1e3
+			]
+		},
+		{
+			"transform": "keq",
+			"component": 2,
+			"bound": [
+				0
+			],
+			"location": [
+				"/input/model/unit_001/adsorption/SMA_KA",
+				"/input/model/unit_001/adsorption/SMA_KD"
+			],
+			"minKA": [
+				1e-3
+			],
+			"maxKA": [
+				1e3
+			],
+			"minKEQ": [
+				1e-3
+			],
+			"maxKEQ": [
+				1e3
+			]
+		},
+		{
+			"transform": "log",
+			"component": 1,
+			"bound": [
+				0
+			],
+			"location": "/input/model/unit_001/adsorption/SMA_NU",
+			"min": [
+				1.0
+			],
+			"max": [
+				40.0
+			]
+		},
+		{
+			"transform": "log",
+			"component": 2,
+			"bound": [
+				0
+			],
+			"location": "/input/model/unit_001/adsorption/SMA_NU",
+			"min": [
+				1.0
+			],
+			"max": [
+				40.0
+			]
+		},
+		{
+			"transform": "log",
+			"component": 1,
+			"bound": [
+				0
+			],
+			"location": "/input/model/unit_001/adsorption/SMA_SIGMA",
+			"min": [
+				1.0
+			],
+			"max": [
+				100.0
+			]
+		},
+		{
+			"transform": "log",
+			"component": 2,
+			"bound": [
+				0
+			],
+			"location": "/input/model/unit_001/adsorption/SMA_SIGMA",
+			"min": [
+				1.0
+			],
+			"max": [
+				100.0
+			]
+		}
+	],
+	"experiments": [
+		{
+			"CSV": "pulse_c1.csv",
+			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
+			"HDF5": "pulse.h5",
+			"name": "pulse",
+			"timeout": 47.792232036590576,
+			"features": [
+				{
+					"CSV": "pulse_c1.csv",
+					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
+					"name": "Pulse",
+					"start": 0,
+					"stop": 25000.0,
+					"type": "similarityHybrid"
+				},
+				{
+					"CSV": "pulse_c2.csv",
+					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_002",
+					"name": "Pulse2",
+					"start": 0,
+					"stop": 25000.0,
+					"type": "similarityHybrid"
+				},
+				{
+					"CSV": "pulse_c1.csv",
+					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
+					"name": "Deriv",
+					"start": 0,
+					"stop": 25000.0,
+					"type": "derivative_similarity_hybrid"
+				},
+				{
+					"CSV": "pulse_c2.csv",
+					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_002",
+					"name": "Deriv2",
+					"start": 0,
+					"stop": 25000.0,
+					"type": "derivative_similarity_hybrid"
+				}
+			]
+		},
+		{
+			"CSV": "break_c1.csv",
+			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
+			"HDF5": "break.h5",
+			"name": "break",
+			"timeout": 10.764646530151367,
+			"features": [
+				{
+					"CSV": "break_c1.csv",
+					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
+					"name": "Pulse3",
+					"start": 0,
+					"stop": 2500.0,
+					"type": "similarityHybrid"
+				},
+				{
+					"CSV": "break_c2.csv",
+					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_002",
+					"name": "Pulse4",
+					"start": 0,
+					"stop": 2500.0,
+					"type": "similarityHybrid"
+				},
+				{
+					"CSV": "break_c1.csv",
+					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
+					"name": "Deriv3",
+					"start": 0,
+					"stop": 2500.0,
+					"type": "derivative_similarity_hybrid"
+				},
+				{
+					"CSV": "break_c2.csv",
+					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_002",
+					"name": "Deriv4",
+					"start": 0,
+					"stop": 2500.0,
+					"type": "derivative_similarity_hybrid"
+				}
+			]
+		}
+	]
+}
