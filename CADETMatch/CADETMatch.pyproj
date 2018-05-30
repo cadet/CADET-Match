@@ -58,6 +58,9 @@
     <Compile Include="graph_spearman.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="LICENSE">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="nsga3_selection.py">
       <SubType>Code</SubType>
     </Compile>

@@ -23,7 +23,6 @@ import csv
 import psutil
 
 from scoop import futures
-import gc
 import random
 import calc_coeff
 import h5py
