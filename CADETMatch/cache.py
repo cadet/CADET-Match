@@ -225,9 +225,7 @@ class Cache:
         for feature in experiment['features']:
             featureName = feature['name']
             featureType = feature['type']
-            featureStart = float(feature['start'])
-            featureStop = float(feature['stop'])
-
+            
             temp[featureName] = {}
 
             if 'CSV' in feature:
@@ -237,6 +235,13 @@ class Cache:
             else:
                 temp[featureName]['time'] = data[:, 0]
                 temp[featureName]['value'] = data[:, 1]
+
+            try:
+                featureStart = float(feature['start'])
+                featureStop = float(feature['stop'])
+            except KeyError:
+                feature['start']= featureStart = temp[featureName]['time'][0]
+                feature['stop'] = featureStop = temp[featureName]['time'][-1]
 
             if 'isotherm' in feature:
                 temp[featureName]['isotherm'] = feature['isotherm']

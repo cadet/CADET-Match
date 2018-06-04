@@ -55,11 +55,12 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1, training)
+            if invalid_ind:
+                stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1, training)
 
-            avg, bestMin, bestProd = util.averageFitness(population, cache)
-            util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
-            util.graph_process(cache, "First")
+                avg, bestMin, bestProd = util.averageFitness(population, cache)
+                util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
+                util.graph_process(cache, "First")
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
@@ -159,11 +160,12 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1, training)
+            if invalid_ind:
+                stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1, training)
 
-            avg, bestMin, bestProd = util.averageFitness(population, cache)
-            util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
-            util.graph_process(cache, "First")
+                avg, bestMin, bestProd = util.averageFitness(population, cache)
+                util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
+                util.graph_process(cache, "First")
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof)
@@ -293,11 +295,13 @@ def nsga2(populationSize, ngen, cache, tools):
    
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
-        stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1, training)
+        if invalid_ind:
+            stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1, training)
+            stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1, training)
 
-        avg, bestMin, bestProd = util.averageFitness(population, cache)
-        util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
-        util.graph_process(cache, "First")
+            avg, bestMin, bestProd = util.averageFitness(population, cache)
+            util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
+            util.graph_process(cache, "First")
         
         # This is just to assign the crowding distance to the individuals
         # no actual selection is done
@@ -374,7 +378,7 @@ def nsga2(populationSize, ngen, cache, tools):
                 population = cache.toolbox.select(population, newPopulationSize) 
                 populationSize = newPopulationSize
 
-            cp = dict(population=population, generation=start_gen, halloffame=halloffame,
+            cp = dict(population=population, generation=gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)
 
             hof = Path(cache.settings['resultsDirMisc'], 'hof')

@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\temp\AMS-003\sma\NSGA2_300nm_adapt_fraction_multi.json" 1</CommandLineArguments>
+    <CommandLineArguments>"F:\AMS-003\transport\bypass\NSGA2_bypass1_dextran.json" 0</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
