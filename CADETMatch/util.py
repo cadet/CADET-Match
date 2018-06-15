@@ -594,7 +594,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                          data_prod_mean,
                          now - sim_start,
                          now - generation_start,
-                         cpu_time.user + cpu_time.system])
+                         cpu_time.user + cpu_time.system,
+                         cache.lastProgressGeneration,
+                         cache.generationsOfProgress])
 
 def metaCSV(cache):
     repeat = int(cache.settings['repeat'])
@@ -614,6 +616,7 @@ def metaCSV(cache):
     dimensionIn = None
     dimensionOut = None
     searchMethod = None
+
 
     #read base progress csv and append each score
     base_dir = Path(cache.settings['resultsDirOriginal'])
@@ -641,6 +644,8 @@ def metaCSV(cache):
         paretoAverageScore = [data['Pareto Mean Average Score'].iloc[-1]]
         paretoMinimumScore = [data['Pareto Mean Minimum Score'].iloc[-1]]
         paretoProductScore = [data['Pareto Mean Product Score'].iloc[-1]]
+        paretoProductScore = [data['Pareto Mean Product Score'].iloc[-1]]
+
 
         
     meta_progress = base_dir / "meta_progress.csv"

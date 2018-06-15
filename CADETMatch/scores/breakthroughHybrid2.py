@@ -1,6 +1,7 @@
 import util
 import score
 import scipy.stats
+import scipy.interpolate
 
 name = "breakthroughHybrid2"
 adaptive = True

@@ -43,7 +43,8 @@ class Cache:
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
                                  'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score',
-                                 'Elapsed Time', 'Generation Time', 'Total CPU Time']
+                                 'Elapsed Time', 'Generation Time', 'Total CPU Time', 'Last Progress Generation',
+                                 'Generations of Progress']
 
     def setup(self, json_path):
         "setup the cache based on the json file being used"
