@@ -33,11 +33,13 @@ def main():
 
     fullGeneration = int(sys.argv[2])
 
+    #full generation 1 = 2D, 2 = 2D + 3D
+
     graphMeta(cache)
     graphProgress(cache)
 
     if fullGeneration:
-        graphSpace(cache)
+        graphSpace(fullGeneration, cache)
         graphExperiments(cache)    
 
 def graphExperiments(cache):
@@ -204,7 +206,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
 
         fig.savefig(bytes(dst))
 
-def graphSpace(cache):
+def graphSpace(fullGeneration, cache):
     csv_path = Path(cache.settings['resultsDirBase']) / cache.settings['CSV']
     output_2d = cache.settings['resultsDirSpace'] / "2d"
     output_3d = cache.settings['resultsDirSpace'] / "3d"
@@ -216,14 +218,16 @@ def graphSpace(cache):
     comp_one = list(itertools.combinations(cache.parameter_indexes, 1))
 
     #3d plots
-    prod = list(itertools.product(comp_two, cache.score_indexes))
-    seq = [(str(output_3d), str(csv_path), i[0][0], i[0][1], i[1], sys.argv[1]) for i in prod]
-    list(futures.map(plot_3d, seq))
+    if fullGeneration >= 2:
+        prod = list(itertools.product(comp_two, cache.score_indexes))
+        seq = [(str(output_3d), str(csv_path), i[0][0], i[0][1], i[1], sys.argv[1]) for i in prod]
+        list(futures.map(plot_3d, seq))
     
     #2d plots
-    prod = list(itertools.product(comp_one, cache.score_indexes))
-    seq = [(str(output_2d), str(csv_path), i[0][0], i[1], sys.argv[1]) for i in prod]
-    list(futures.map(plot_2d, seq))
+    if fullGeneration >= 1:
+        prod = list(itertools.product(comp_one, cache.score_indexes))
+        seq = [(str(output_2d), str(csv_path), i[0][0], i[1], sys.argv[1]) for i in prod]
+        list(futures.map(plot_2d, seq))
 
 def plot_3d(arg):
     "This leaks memory and is run in a separate short-lived process, do not integrate into the matching main process"
