@@ -40,6 +40,7 @@ class Cache:
         self.lastProgressGeneration = -1
         self.generationsOfProgress = 0
         self.fullTrainingData = 0
+        self.sobolGeneration = False
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
                                  'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score',
@@ -86,6 +87,8 @@ class Cache:
         self.progressCorrect = int(self.settings.get('progressCorrect', 5))
 
         self.fullTrainingData = int(self.settings.get('fullTrainingData', 0))
+
+        self.sobolGeneration = bool(self.settings.get('soboloGeneration', False))
 
     def setupSettings(self):
         settings_file = Path(self.json_path)

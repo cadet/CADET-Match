@@ -354,7 +354,7 @@ def nsga2(populationSize, ngen, cache, tools):
                 newPopulationSize += (-newPopulationSize % 4)
 
                 diffSize = newPopulationSize - populationSize
-                newPopulation = cache.toolbox.population(n=diffSize)
+                newPopulation = cache.toolbox.randomPopulation(n=diffSize)
 
                 invalid_ind = [ind for ind in newPopulation if not ind.fitness.valid]
                 util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen, training)

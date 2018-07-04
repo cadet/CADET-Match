@@ -32,6 +32,8 @@ decim.getcontext().prec = 64
 __logBase10of2_decim = decim.Decimal(2).log10()
 __logBase10of2 = float(__logBase10of2_decim)
 
+import SALib.sample.sobol_sequence
+
 def smoothing_factor(y):
     return max(y)/1000000.0
 
@@ -88,6 +90,17 @@ def initIndividual(icls, cache, content):
         return icls(RoundToSigFigs(content, cache.roundParameters))
     else:
         return icls(content)
+
+def sobolGenerator(icls, cache, n):
+    if n > 0:
+        populationDimension = len(cache.MIN_VALUE)
+        populationSize = n
+        sobol = SALib.sample.sobol_sequence.sample(populationSize, populationDimension)
+        data = numpy.apply_along_axis(list, 1, sobol)
+        data = list(map(icls, data))
+        return data
+    else:
+        return []
 
 print_log = 0
 
