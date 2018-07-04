@@ -861,16 +861,16 @@ def graph_process(cache, generation, last=0):
 
     cwd = str(Path(__file__).parent)
 
-    subprocess.run([sys.executable, 'graph_spearman.py', cache.json_path, str(generation)], 
+    subprocess.run([sys.executable, 'graph_spearman.py', str(cache.json_path), str(generation)], 
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
     
     if last or (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
-        subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path, '1'], 
+        subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
         cache.lastGraphTime = time.time()
     else:
         if (time.time() - cache.lastMetaTime) > cache.graphMetaTime:
-            subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', cache.json_path, '0'], 
+            subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '0'], 
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
             cache.lastMetaTime = time.time()
 
@@ -878,5 +878,5 @@ def finish(cache):
     graph_process(cache, "Last", last=True)
 
     cwd = str(Path(__file__).parent)
-    subprocess.run([sys.executable, 'video_spearman.py', cache.json_path], 
+    subprocess.run([sys.executable, 'video_spearman.py', str(cache.json_path)], 
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
