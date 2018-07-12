@@ -13,11 +13,15 @@ def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
 
     score = corr[index]
 
-    endTime = exp_time_values[-1]
+    sim_time_values = numpy.roll(exp_time_values, shift=int(numpy.ceil(index)))
 
-    startIndex = -numpy.abs(len(exp_time_values) - index)
-    startTime = exp_time_values[startIndex]
-    diff_time = endTime - startTime
+    diff_time = numpy.abs(exp_time_values[0] - sim_time_values[0])
+
+    #endTime = exp_time_values[-1]
+
+    #startIndex = -numpy.abs(len(exp_time_values) - index)
+    #startTime = exp_time_values[startIndex]
+    #diff_time = endTime - startTime
 
     return score, diff_time
 
