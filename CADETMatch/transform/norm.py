@@ -6,6 +6,15 @@ count = 1
 def getUnit(location):
     return location.split('/')[3]
 
+def transform(parameter):
+    minValue = parameter['min']
+    maxValue = parameter['max']
+
+    def trans(i):
+        return (i - minValue)/(maxValue-minValue)
+
+    return [trans,]
+
 def untransform(seq, cache, parameter, fullPrecision=False):
     minValue = parameter['min']
     maxValue = parameter['max']

@@ -7,6 +7,15 @@ count = 2
 def getUnit(location):
     return location[0].split('/')[3]
 
+def transform(parameter):
+    def trans_a(i):
+        return numpy.log(i)
+
+    def trans_b(i):
+        return numpy.log(i)
+
+    return [trans_a, trans_b]
+
 def untransform(seq, cache, parameter, fullPrecision=False):
     values = [numpy.exp(seq[0]), numpy.exp(seq[0])/(numpy.exp(seq[1]))]
 

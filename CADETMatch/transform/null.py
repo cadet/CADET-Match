@@ -6,6 +6,12 @@ count = 1
 def getUnit(location):
     return location.split('/')[3]
 
+def transform(parameter):
+    def trans(i):
+        return i
+
+    return [trans,]
+
 def untransform(seq, cache, parameter, fullPrecision=False):
     values = [seq[0],]
 

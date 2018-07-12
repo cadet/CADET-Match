@@ -7,6 +7,20 @@ count = 2
 def getUnit(location):
     return location[0].split('/')[3]
 
+def transform(parameter):
+    minKA = numpy.log(parameter['minKA'])
+    maxKA = numpy.log(parameter['maxKA'])
+    minKEQ = numpy.log(parameter['minKEQ'])
+    maxKEQ = numpy.log(parameter['maxKEQ'])
+
+    def trans_a(i):
+        return (numpy.log(i) - minKA)/(maxKA-minKA)
+
+    def trans_b(i):
+        return (numpy.log(i) - minKEQ)/(maxKEQ-minKEQ)
+
+    return [trans_a, trans_b]
+
 def untransform(seq, cache, parameter, fullPrecision=False):
     minKA = parameter['minKA']
     maxKA = parameter['maxKA']

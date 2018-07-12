@@ -7,6 +7,15 @@ count = 1
 def getUnit(location):
     return location.split('/')[3]
 
+def transform(parameter):
+    minValue = numpy.log(parameter['min'])
+    maxValue = numpy.log(parameter['max'])
+
+    def trans(i):
+        return (numpy.log(i) - minValue)/(maxValue-minValue)
+
+    return [trans,]
+
 def untransform(seq, cache, parameter, fullPrecision=False):
     minValue = numpy.log(parameter['min'])
     maxValue = numpy.log(parameter['max'])

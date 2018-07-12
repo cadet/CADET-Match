@@ -64,6 +64,8 @@ class Cache:
 
         self.WORST = [self.badScore] * self.numGoals
 
+        self.settings['transform'] = self.transform
+
         #create used paths in settings, only the root process will make the directories later
         self.settings['resultsDirEvo'] = Path(self.settings['resultsDir']) / "evo"
         self.settings['resultsDirMeta'] = Path(self.settings['resultsDir']) / "meta"
@@ -267,11 +269,13 @@ class Cache:
         "build the minimum and maximum parameter boundaries"
         self.MIN_VALUE = []
         self.MAX_VALUE = []
+        self.transform = []
 
         for parameter in self.settings['parameters']:
             transform = parameter['transform']
             minValues, maxValues = self.transforms[transform].getBounds(parameter)
             self.MIN_VALUE.extend(minValues)
             self.MAX_VALUE.extend(maxValues)
+            self.transform.extend(self.transforms[transform].transform(parameter))
 
 cache = Cache()
