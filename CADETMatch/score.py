@@ -17,12 +17,6 @@ def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
 
     diff_time = numpy.abs(exp_time_values[0] - sim_time_values[0])
 
-    #endTime = exp_time_values[-1]
-
-    #startIndex = -numpy.abs(len(exp_time_values) - index)
-    #startTime = exp_time_values[startIndex]
-    #diff_time = endTime - startTime
-
     return score, diff_time
 
 def pearson(exp_time_values, sim_data_values, exp_data_values):
@@ -34,13 +28,11 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
 
     endTime = exp_time_values[-1]
 
-    startIndex = -numpy.abs(len(exp_time_values) - index)
-    startTime = exp_time_values[startIndex]
-    diff_time = endTime - startTime
-    diff_index = len(exp_time_values) - index - 1
+    sim_time_values = numpy.roll(exp_time_values, shift=int(numpy.ceil(index)))
 
-    sim_data_values_copy = numpy.copy(sim_data_values)
-    sim_data_values_copy = numpy.roll(sim_data_values_copy, -diff_index)
+    diff_time = numpy.abs(exp_time_values[0] - sim_time_values[0])
+
+    sim_data_values_copy = numpy.roll(sim_data_values, shift=int(numpy.ceil(index)))
 
     pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
 
