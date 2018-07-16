@@ -146,40 +146,40 @@ def smoothing(times, values):
 def mutPolynomialBoundedAdaptive(individual, eta, low, up, indpb):
     """Adaptive eta for mutPolynomialBounded"""
     scores = individual.fitness.values
-    prod = product_score(scores)
-    eta = eta + prod * 100
+    mult = min(scores)
+    eta = eta + mult * 0
     return tools.mutPolynomialBounded(individual, eta, low, up, indpb)
 
 def mutationBoundedAdaptive(individual, low, up, indpb):
     scores = individual.fitness.values
-    prod = product_score(scores)
+    mult = min(scores)
     
     rand = numpy.random.rand(len(individual))
 
     for idx, i in enumerate(individual):
         if rand[idx] <= indpb:
             #scale = (1e-3 - 1.0) * prod + 1  (linear does not work well)
-            scale = numpy.exp(-5.824*prod) * (up[idx] - low[idx])/1.0
+            scale = numpy.exp(-5.824*mult) * (up[idx] - low[idx])/1.0
             dist = numpy.random.normal(scale, scale/2.0) * random.sample([-1, 1], 1)[0]
             individual[idx] = max(min(i + dist, up[idx]), low[idx])
     return individual,
 
 def mutationBoundedAdaptive2(individual, low, up, indpb):
     scores = individual.fitness.values
-    prod = product_score(scores)
+    mult = min(scores)
 
-    if numpy.isnan(prod):
-        prod = 0.0
+    if numpy.isnan(mult):
+        mult = 0.0
 
-    if prod < 0.9:
+    if mult < 0.9:
         m,b = calc_coeff.linear_coeff(0.1, 4, 0.9, 1)
-        center = calc_coeff.linear(prod, m, b)
+        center = calc_coeff.linear(mult, m, b)
         sigma = center/2
     else:
         m,b = calc_coeff.exponential_coeff(0.9, 1, 1.0, 1e-2)
 
         center = 0
-        sigma = calc_coeff.exponential(prod, m, b)
+        sigma = calc_coeff.exponential(mult, m, b)
     
     rand = numpy.random.rand(len(individual))
 
