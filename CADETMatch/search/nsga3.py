@@ -45,7 +45,12 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register("individual", util.generateIndividual, creator.Individual,
         len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, cache)
-    cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)
+
+    if cache.sobolGeneration:
+        cache.toolbox.register("population", util.sobolGenerator, creator.Individual, cache)
+    else:
+        cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)
+    cache.toolbox.register("randomPopulation", tools.initRepeat, list, cache.toolbox.individual)
 
     cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
 
