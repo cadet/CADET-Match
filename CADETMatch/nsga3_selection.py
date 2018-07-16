@@ -24,6 +24,8 @@ import random
 import numpy as np
 from deap import tools
 
+import SALib.sample.sobol_sequence
+
 class ReferencePoint(list):
     '''A reference point exists in objective space an has a set of individuals
     associated to it.'''
@@ -36,21 +38,26 @@ def generate_reference_points(num_objs, num_divisions_per_obj=4):
     '''Generates reference points for NSGA-III selection. This code is based on
     `jMetal NSGA-III implementation <https://github.com/jMetal/jMetal>`_.
     '''
+
+    sobol = SALib.sample.sobol_sequence.sample(100 * num_objs, num_objs)
+    data = np.apply_along_axis(list, 1, sobol)
+    data = list(map(ReferencePoint, data))
+    return data
     #This entire function needs to be completely recoded, in high dimensions in it is major time sink
     # 287/622s. This should probably be done once and stored instead of regenerated at every iteration
-    def gen_refs_recursive(work_point, num_objs, left, total, depth):
-        if depth == num_objs - 1:
-            work_point[depth] = left/total
-            ref = ReferencePoint(copy.deepcopy(work_point))
-            return [ref]
-        else:
-            res = []
-            for i in range(left):
-                work_point[depth] = i/total
-                res = res + gen_refs_recursive(work_point, num_objs, left-i, total, depth+1)
-            return res
-    return gen_refs_recursive([0]*num_objs, num_objs, num_objs*num_divisions_per_obj,
-                              num_objs*num_divisions_per_obj, 0)
+    #def gen_refs_recursive(work_point, num_objs, left, total, depth):
+    #    if depth == num_objs - 1:
+    #        work_point[depth] = left/total
+    #        ref = ReferencePoint(copy.deepcopy(work_point))
+    #        return [ref]
+    #    else:
+    #        res = []
+    #        for i in range(left):
+    #            work_point[depth] = i/total
+    #            res = res + gen_refs_recursive(work_point, num_objs, left-i, total, depth+1)
+    #        return res
+    #return gen_refs_recursive([0]*num_objs, num_objs, num_objs*num_divisions_per_obj,
+    #                          num_objs*num_divisions_per_obj, 0)
 
 def find_ideal_point(individuals):
     'Finds the ideal point from a set individuals.'
@@ -148,15 +155,15 @@ def niching_select(individuals, k):
     normalize_objectives(individuals, intercepts, ideal_point)
 
     reference_points = generate_reference_points(len(individuals[0].fitness.values))
-    print(len(reference_points))
+    #print(len(reference_points))
 
     ref = np.array(reference_points)
-    print(ref.shape)
+    #print(ref.shape)
 
-    print(set(ref[:,0]))
-    print(set(ref[:,1]))
-    print(set(ref[:,2]))
-    print(set(ref[:,3]))
+    #print(set(ref[:,0]))
+    #print(set(ref[:,1]))
+    #print(set(ref[:,2]))
+    #print(set(ref[:,3]))
 
     associate(individuals, reference_points)
 

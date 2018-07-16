@@ -195,13 +195,31 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
 
                 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
+                findMax = 0
                 for idx, (key, value) in enumerate(graph_sim.items()):
                     (time, values) = zip(*value)
-                    graph.plot(time, values, '%s--' % colors[idx], label='Simulation Comp: %s' % key)
+                    findMax = max(findMax, max(values))
 
                 for idx, (key, value) in enumerate(graph_exp.items()):
                     (time, values) = zip(*value)
-                    graph.plot(time, values, '%s:' % colors[idx], label='Experiment Comp: %s' % key)
+                    findMax = max(findMax, max(values))
+
+
+                factors = []
+                for idx, (key, value) in enumerate(graph_sim.items()):
+                    (time, values) = zip(*value)
+                    mult = 1.0
+                    if max(values) < .2 * findMax:
+                        mult = findMax/(2*max(values))
+                        values = [i* mult for i in values]
+                    factors.append(mult)
+                    graph.plot(time, values, '%s--' % colors[idx], label='Simulation Comp: %s Mult:%.2f' % (key, mult))
+
+                for idx, (key, value) in enumerate(graph_exp.items()):
+                    (time, values) = zip(*value)
+                    mult = factors[idx]
+                    values = [i* mult for i in values]
+                    graph.plot(time, values, '%s:' % colors[idx], label='Experiment Comp: %s Mult:%.2f' % (key, mult))
             graph.legend()
 
         fig.savefig(bytes(dst))

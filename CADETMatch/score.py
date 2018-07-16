@@ -15,7 +15,9 @@ def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
 
     sim_time_values = numpy.roll(exp_time_values, shift=int(numpy.ceil(index)))
 
-    diff_time = numpy.abs(exp_time_values[0] - sim_time_values[0])
+    diff_time = numpy.abs(exp_time_values[int(len(exp_time_values)/2)] - sim_time_values[int(len(exp_time_values)/2)])
+
+    #diff_time = exp_time_values[index % len(exp_time_values)] - exp_time_values[0]
 
     return score, diff_time
 
@@ -30,7 +32,12 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
 
     sim_time_values = numpy.roll(exp_time_values, shift=int(numpy.ceil(index)))
 
-    diff_time = numpy.abs(exp_time_values[0] - sim_time_values[0])
+    diff_time = numpy.abs(exp_time_values[int(len(exp_time_values)/2)] - sim_time_values[int(len(exp_time_values)/2)])
+
+    #assume time is monospaced
+    #print(index, index % len(exp_time_values))
+    #print(exp_time_values[index % len(exp_time_values)], exp_time_values[0])
+    #diff_time = exp_time_values[index % len(exp_time_values)] - exp_time_values[0]
 
     sim_data_values_copy = numpy.roll(sim_data_values, shift=int(numpy.ceil(index)))
 
