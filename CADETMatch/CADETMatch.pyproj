@@ -157,6 +157,9 @@
     <Compile Include="scores\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="search\mcmc.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="search\multistart.py">
       <SubType>Code</SubType>
     </Compile>

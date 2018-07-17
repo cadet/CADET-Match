@@ -194,6 +194,12 @@ def niching_select(individuals, k):
             individuals.remove(sel)
         else:
             reference_points.remove(chosen_rp)
+    
+    #These attributes are no longer needed but make the checkpoints huge        
+    for i in res:
+        i.reference_point = None
+        i.ref_point_distance = None
+
     return res
 
 def sel_nsga_iii(individuals, k):
