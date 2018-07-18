@@ -697,14 +697,48 @@ def meta_calc(scores):
             numpy.sum(scores)/len(scores), 
             numpy.linalg.norm(scores)/numpy.sqrt(len(scores))]
 
-def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, training=None):
-    fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
+def update_training(cache, ind, fit, training, results):
+    if training is not None and results is not None:
+        training['input'].append(tuple(ind))
+        training['output'].append(tuple(fit))
+        training['output_meta'].append(tuple(meta_calc(fit)))
+
+        if cache.fullTrainingData:
+            if 'results' not in training:
+                training['results'] = {}
+
+            if 'times' not in training:
+                training['times'] = {}
+
+            for experimentName, experiment in results.items():
+                sim = experiment['simulation']
+                times = sim.root.output.solution.solution_times
+
+                timeName = '%s_time' % experimentName
+
+                if timeName not in training['times']:
+                    training['times'][timeName] = times
+
+                for unitName, unit in sim.root.output.solution.items():
+                    if unitName.startswith('unit_') and sim.root.input.model[unitName].unit_type == b'OUTLET':
+                        for solutionName, solution in unit.items():
+                            if solutionName.startswith('solution_outlet_comp'):
+                                comp = solutionName.replace('solution_outlet_comp_', '')
+
+                                name = '%s_%s_%s' % (experimentName, unitName, comp)
+
+                                if name not in training['results']:
+                                    training['results'][name] = []
+
+                                training['results'][name].append(tuple(solution))
+
+def process_population(toolbox, cache, population, fitnesses, writer, csvfile, halloffame, meta_hof, generation, training=None):
     csv_lines = []
     meta_csv_lines = []
 
     made_progress = False
 
-    for ind, result in zip(invalid_ind, fitnesses):
+    for ind, result in zip(population, fitnesses):
         fit, csv_line, results = result
         
         save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
@@ -714,39 +748,7 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
         ind_meta = toolbox.clone(ind)
         ind_meta.fitness.values = meta_calc(fit)
 
-        if training is not None and results is not None:
-            training['input'].append(tuple(ind))
-            training['output'].append(tuple(fit))
-            training['output_meta'].append(tuple(meta_calc(fit)))
-
-            if cache.fullTrainingData:
-                if 'results' not in training:
-                    training['results'] = {}
-
-                if 'times' not in training:
-                    training['times'] = {}
-
-                for experimentName, experiment in results.items():
-                    sim = experiment['simulation']
-                    times = sim.root.output.solution.solution_times
-
-                    timeName = '%s_time' % experimentName
-
-                    if timeName not in training['times']:
-                        training['times'][timeName] = times
-
-                    for unitName, unit in sim.root.output.solution.items():
-                        if unitName.startswith('unit_') and sim.root.input.model[unitName].unit_type == b'OUTLET':
-                            for solutionName, solution in unit.items():
-                                if solutionName.startswith('solution_outlet_comp'):
-                                    comp = solutionName.replace('solution_outlet_comp_', '')
-
-                                    name = '%s_%s_%s' % (experimentName, unitName, comp)
-
-                                    if name not in training['results']:
-                                        training['results'][name] = []
-
-                                    training['results'][name].append(tuple(solution))
+        update_training(cache, ind, fit, training, results)
 
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)
@@ -787,6 +789,11 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
     stallWarn = (generation - cache.lastProgressGeneration) >= cache.stallCorrect
     progressWarn = cache.generationsOfProgress >= cache.progressCorrect
     return stalled, stallWarn, progressWarn
+
+def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, training=None):
+    fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
+
+    return process_population(toolbox, cache, invalid_ind, fitnesses, writer, csvfile, halloffame, meta_hof, generation, training)
 
 def updateParetoFront(halloffame, offspring, cache):
     before = set(map(tuple, halloffame.items))

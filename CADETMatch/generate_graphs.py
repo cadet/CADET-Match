@@ -150,7 +150,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
 
         simulation = Cadet()
         h5_path = Path(directory) / (file_pattern.replace('png', 'h5') % (save_name_base, experimentName))
-        simulation.filename = bytes(h5_path)
+        simulation.filename = str(h5_path)
         simulation.load()
 
         results = {}
@@ -222,7 +222,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                     graph.plot(time, values, '%s:' % colors[idx], label='Experiment Comp: %s Mult:%.2f' % (key, mult))
             graph.legend()
 
-        fig.savefig(bytes(dst))
+        fig.savefig(str(dst))
 
 def graphSpace(fullGeneration, cache):
     csv_path = Path(cache.settings['resultsDirBase']) / cache.settings['CSV']
@@ -340,7 +340,7 @@ def graphProgress(cache):
     graph.set_ylim((0,1))
 
     file_path = output / "scores.png"
-    fig.savefig(bytes(file_path), bbox_inches='tight')
+    fig.savefig(str(file_path), bbox_inches='tight')
 
 def singleGraphProgress(tup, df, output, json_path):
     if json_path != cache.json_path:
