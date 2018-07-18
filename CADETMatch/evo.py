@@ -12,9 +12,7 @@ import os
 
 from cadet import Cadet
 
-from cache import cache
-
-import copy
+import cache
 
 ERROR = {'scores': None,
          'path': None,
@@ -24,25 +22,25 @@ ERROR = {'scores': None,
          'cadetValuesKEQ': None}
 
 def fitness(individual, json_path):
-    if json_path != cache.json_path:
-        cache.setup(json_path)
+    if json_path != cache.cache.json_path:
+        cache.cache.setup(json_path)
 
     scores = []
     error = 0.0
 
     results = {}
-    for experiment in cache.settings['experiments']:
-        result = runExperiment(individual, experiment, cache.settings, cache.target, cache)
+    for experiment in cache.cache.settings['experiments']:
+        result = runExperiment(individual, experiment, cache.cache.settings, cache.cache.target, cache.cache)
         if result is not None:
             results[experiment['name']] = result
             scores.extend(results[experiment['name']]['scores'])
             error += results[experiment['name']]['error']
         else:
-            return cache.WORST, [], None
+            return cache.cache.WORST, [], None
 
     #need
-    if cache.roundScores is not None:
-        scores = util.RoundToSigFigs(scores, cache.roundScores)
+    if cache.cache.roundScores is not None:
+        scores = util.RoundToSigFigs(scores, cache.cache.roundScores)
     else:
         scores = scores
 
@@ -52,8 +50,8 @@ def fitness(individual, json_path):
                                 numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), 
                                 error] )
 
-    if cache.roundScores is not None:
-        humanScores = util.RoundToSigFigs(humanScores, cache.roundScores)
+    if cache.cache.roundScores is not None:
+        humanScores = util.RoundToSigFigs(humanScores, cache.cache.roundScores)
     else:
         humanScores = humanScores
 

@@ -3,7 +3,6 @@ import pickle
 import util
 import numpy
 from pathlib import Path
-#import grad
 import time
 import csv
 

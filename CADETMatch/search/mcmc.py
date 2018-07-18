@@ -17,8 +17,8 @@ import corner
 
 import matplotlib.mlab as mlab
 
-import cache
 import evo
+import cache
 
 import numpy as np
 import pareto

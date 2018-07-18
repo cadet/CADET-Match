@@ -11,7 +11,7 @@ import sys
 
 from cadet import Cadet
 
-from cache import cache
+import cache
 
 class GradientException(Exception):
     pass
@@ -89,12 +89,12 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
     return gradCheck, temp
 
 def gradSearch(x, json_path):
-    if json_path != cache.json_path:
-        cache.setup(json_path)
+    if json_path != cache.cache.json_path:
+        cache.cache.setup(json_path)
 
     try:
-        x = numpy.clip(x, cache.MIN_VALUE, cache.MAX_VALUE)
-        val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(cache.MIN_VALUE, cache.MAX_VALUE), 
+        x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
+        val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE), 
             gtol=1e-14, ftol=1e-5, xtol=1e-14, diff_step=1e-7, x_scale="jac")
         #scores = fitness_sens(val.x, finished=1)
         #print(val.x, numpy.exp(val.x), val.jac, scores, val.message)
@@ -113,8 +113,8 @@ def fitness_sens(individual, finished=1):
     error = 0.0
 
     results = {}
-    for experiment in cache.settings['experiments']:
-        result = runExperimentSens(individual, experiment, cache.settings, cache.target, cache)
+    for experiment in cache.cache.settings['experiments']:
+        result = runExperimentSens(individual, experiment, cache.cache.settings, cache.cache.target, cache.cache)
         if result is not None:
             results[experiment['name']] = result
             scores.extend(results[experiment['name']]['scores'])
