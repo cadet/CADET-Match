@@ -37,10 +37,40 @@ def main():
 
     graphMeta(cache)
     graphProgress(cache)
+    graphCorner(cache)
 
     if fullGeneration:
         graphSpace(fullGeneration, cache)
         graphExperiments(cache)    
+
+def graphCorner(cache):
+    headers = cache.parameter_headers
+
+    trainingDir = Path(cache.settings['resultsDirTraining'])
+    training_h5 = trainingDir / "training.h5"
+
+    data = {}
+    with h5py.File(training_h5, 'r') as hf:
+        for key in h5.keys():
+            data[key] = h5[key].value
+
+    out_dir = cache.settings['resultsDirProgress']
+
+    fig = corner.corner(data['input'], quantiles=(0.16, 0.84),
+                   show_titles=True, title_kwargs={"fontsize": 12}, labels=headers)
+    fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
+
+    fig = corner.corner(data['input'], quantiles=(0.16, 0.84), weights=data['output_meta'][:,1],
+                   show_titles=True, title_kwargs={"fontsize": 12}, labels=headers)
+    fig.savefig(str(out_dir / "corner_min.png"), bbox_inches='tight')
+
+    fig = corner.corner(data['input'], quantiles=(0.16, 0.84), weights=data['output_meta'][:,2],
+                   show_titles=True, title_kwargs={"fontsize": 12}, labels=headers)
+    fig.savefig(str(out_dir / "corner_prod.png"), bbox_inches='tight')
+
+    fig = corner.corner(data['input'], quantiles=(0.16, 0.84), weights=data['output_meta'][:,3],
+                   show_titles=True, title_kwargs={"fontsize": 12}, labels=headers)
+    fig.savefig(str(out_dir / "corner_norm.png"), bbox_inches='tight')
 
 def graphExperiments(cache):
     directory = Path(cache.settings['resultsDirEvo'])

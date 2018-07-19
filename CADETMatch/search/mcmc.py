@@ -31,10 +31,10 @@ name = "MCMC"
 def log_prior(theta, cache):
     # Create flat distributions.
     individual = theta[:-1]
-    theta = numpy.array(theta)
+    error = theta[-1]
     lower_bound = numpy.array(cache.MIN_VALUE)
     upper_bound = numpy.array(cache.MAX_VALUE)
-    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound):
+    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound) and 1e-10 < error < 1:
         return 0.0
     else:
         return -numpy.inf
