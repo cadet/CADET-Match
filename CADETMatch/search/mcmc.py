@@ -13,6 +13,9 @@ import checkpoint_algorithms
 
 import emcee
 import SALib.sample.sobol_sequence
+
+import matplotlib
+matplotlib.use('Agg')
 import corner
 
 import matplotlib.mlab as mlab
@@ -49,10 +52,10 @@ def log_posterior(theta, json_path):
     lp = log_prior(theta, cache.cache)
     # only compute model if likelihood of the prior is not - infinity
     if not numpy.isfinite(lp):
-        return -numpy.inf, None, None, None
+        return -numpy.inf, None, None, None, None
     #try:
     ll, scores, csv_record, results = log_likelihood(theta, json_path)
-    return lp + ll, scores, csv_record, results
+    return lp + ll, theta, scores, csv_record, results
     #except:
     #    # if model does not converge:
     #    return -numpy.inf, None, None, None
@@ -63,6 +66,10 @@ def run(cache, tools, creator):
 
     parameters = len(cache.MIN_VALUE) + 1
     populationSize = parameters * cache.settings['population']
+
+    #Population must be even
+    populationSize = populationSize + populationSize % 2  
+
     sobol = SALib.sample.sobol_sequence.sample(populationSize, parameters)
 
     selected = sobol[:,-1] == 0
@@ -143,11 +150,9 @@ def process(cache, halloffame, meta_hof, grad_hof, training, results, writer, cs
 
     population = []
     fitnesses = []
-    for sse, fit, csv_line, result in results:
+    for sse, theta, fit, csv_line, result in results:
         if result is not None:
-            for obj in result.values():
-                parameters = obj['cadetValuesKEQ']
-                break
+            parameters = theta[:-1]
             fitnesses.append( (fit, csv_line, result) )
 
             ind = cache.toolbox.individual_guess(parameters)
