@@ -50,9 +50,9 @@ def get_times_values(simulation, target, selected = None):
     isotherm = target['isotherm']
 
     if isinstance(isotherm, list):
-        values = numpy.sum([simulation[i] for i in isotherm], 0)
+        values = numpy.sum([simulation[i] for i in isotherm], 0) * target['factor']
     else:
-        values = simulation[isotherm]
+        values = simulation[isotherm] * target['factor']
     
     if selected is None:
         selected = target['selected']

@@ -1,5 +1,8 @@
 import sys
 
+import matplotlib
+matplotlib.use('Agg')
+
 from matplotlib import figure
 from matplotlib import cm
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -21,6 +24,8 @@ from addict import Dict
 from scoop import futures
 
 import os
+import h5py
+import corner
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
@@ -50,7 +55,7 @@ def graphCorner(cache):
     training_h5 = trainingDir / "training.h5"
 
     data = {}
-    with h5py.File(training_h5, 'r') as hf:
+    with h5py.File(training_h5, 'r') as h5:
         for key in h5.keys():
             data[key] = h5[key].value
 
@@ -198,9 +203,10 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
 
             selected = feat['selected']
             exp_time = feat['time'][selected]
-            exp_value = feat['value'][selected]
+            exp_value = feat['value'][selected] / feat['factor']
 
             sim_time, sim_value = get_times_values(simulation, target[experimentName][featureName])
+            
 
             if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybridDecay', 
                                'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 

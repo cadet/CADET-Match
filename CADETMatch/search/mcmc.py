@@ -25,25 +25,37 @@ import cache
 
 import numpy as np
 import pareto
+import modEnsemble
 
 name = "MCMC"
 
 def log_prior(theta, cache):
     # Create flat distributions.
-    individual = theta[:-1]
-    error = theta[-1]
+    individual = theta
+    #error = theta[-1]
     lower_bound = numpy.array(cache.MIN_VALUE)
     upper_bound = numpy.array(cache.MAX_VALUE)
-    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound) and 1e-10 < error < 1:
+    #if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound): # and 0 < error < 0.1:
+    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound):
         return 0.0
     else:
         return -numpy.inf
 
 def log_likelihood(theta, json_path):
-    individual = theta[:-1]
+    individual = theta
     scores, csv_record, results = evo.fitness(individual, json_path)
-    error = theta[-1]
-    return -0.5 * (numpy.sum(numpy.log(2 * numpy.pi * error ** 2)) + float(csv_record[-1]) / error ** 2), scores, csv_record, results
+    #error = theta[-1]
+    #error = theta[-1]
+    #print(-1 * scores[1])
+    #print("terms", numpy.sum(numpy.log(2 * numpy.pi * error ** 2)), float(csv_record[-1]), float(csv_record[-1]) / error ** 2)
+    #return -0.5 * (numpy.sum(numpy.log(2 * numpy.pi * error ** 2)) + float(csv_record[-1]) / error ** 2), scores, csv_record, results
+    #return -1 * numpy.log(scores[1] + 1e-14), scores, csv_record, results
+    
+    #seems to work
+    #return -1 * numpy.log(float(csv_record[-1])), scores, csv_record, results
+
+    #return numpy.log(scores[1] + 1e-14), scores, csv_record, results
+    return numpy.log(scores[2] + 1e-14), scores, csv_record, results
 
 def log_posterior(theta, json_path):
     if json_path != cache.cache.json_path:
@@ -64,7 +76,7 @@ def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
 
-    parameters = len(cache.MIN_VALUE) + 1
+    parameters = len(cache.MIN_VALUE) #+ 1
     populationSize = parameters * cache.settings['population']
 
     #Population must be even
@@ -72,15 +84,21 @@ def run(cache, tools, creator):
 
     sobol = SALib.sample.sobol_sequence.sample(populationSize, parameters)
 
-    selected = sobol[:,-1] == 0
-    sobol[selected,-1] += 1e-4
+    #selected = sobol[:,-1] == 0
+    #sobol[selected,-1] += 0.1
+    #sobol[:,-1] = sobol[:,-1] * 0.1
+
+    #low = cache.MIN_VALUE + [0.0]
+    #high = cache.MAX_VALUE + [0.1]
+
+    #sobol = numpy.random.uniform(low, high, (populationSize, len(low)))
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox)
-        emcee.EnsembleSampler._get_lnprob = _get_lnprob
+        sampler = modEnsemble.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox)
+        #emcee.EnsembleSampler._get_lnprob = _get_lnprob
 
         training = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}}
         halloffame = pareto.ParetoFront(similar=util.similar)
@@ -88,7 +106,7 @@ def run(cache, tools, creator):
         grad_hof = pareto.ParetoFront(similar=util.similar)
 
         def local(results):
-            return process(cache, halloffame, meta_hof, grad_hof, training, results, writer, csvfile)
+            return process(cache, halloffame, meta_hof, grad_hof, training, results, writer, csvfile, sampler)
         sampler.process = local
 
         state = sampler.run_mcmc(sobol, cache.settings['burnIn'])
@@ -135,7 +153,7 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register('map', map_function)
 
-def process(cache, halloffame, meta_hof, grad_hof, training, results, writer, csv_file):
+def process(cache, halloffame, meta_hof, grad_hof, training, results, writer, csv_file, sampler):
     if 'gen' not in process.__dict__:
         process.gen = 0
 
@@ -145,6 +163,9 @@ def process(cache, halloffame, meta_hof, grad_hof, training, results, writer, cs
     if 'generation_start' not in process.__dict__:
         process.generation_start = time.time()
 
+    print("Mean acceptance fraction: {0:.3f}"
+                .format(numpy.mean(sampler.acceptance_fraction)))
+
     csv_lines = []
     meta_csv_lines = []
 
@@ -152,7 +173,7 @@ def process(cache, halloffame, meta_hof, grad_hof, training, results, writer, cs
     fitnesses = []
     for sse, theta, fit, csv_line, result in results:
         if result is not None:
-            parameters = theta[:-1]
+            parameters = theta
             fitnesses.append( (fit, csv_line, result) )
 
             ind = cache.toolbox.individual_guess(parameters)

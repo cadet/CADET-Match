@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\CADET_ParameterEstimation\transport\grm\protein\NSGA2_protein.json" 1</CommandLineArguments>
+    <CommandLineArguments>"F:\CADET_ParameterEstimation\transport\grm\dextran\NSGA2_dextran.json" 0</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -59,6 +59,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="LICENSE">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="modEnsemble.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="nsga3_selection.py">

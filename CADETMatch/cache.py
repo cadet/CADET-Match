@@ -40,6 +40,7 @@ class Cache:
         self.lastProgressGeneration = -1
         self.generationsOfProgress = 0
         self.fullTrainingData = 0
+        self.normalizeOutput = False
         self.sobolGeneration = False
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
@@ -57,6 +58,8 @@ class Cache:
             os.chdir(baseDir)
 
         Cadet.cadet_path = self.settings['CADETPath']
+
+        self.normalizeOutput = bool(self.settings.get('normalizeOutput', False))
 
         self.setupHeaders()
         self.setupTarget()
@@ -91,7 +94,7 @@ class Cache:
         self.fullTrainingData = int(self.settings.get('fullTrainingData', 0))
 
         self.sobolGeneration = bool(self.settings.get('soboloGeneration', False))
-
+        
     def setupSettings(self):
         settings_file = Path(self.json_path)
         with settings_file.open() as json_data:
@@ -241,6 +244,12 @@ class Cache:
             else:
                 temp[featureName]['time'] = data[:, 0]
                 temp[featureName]['value'] = data[:, 1]
+
+            if self.normalizeOutput:
+                temp[featureName]['factor'] = 1.0/numpy.max(temp[featureName]['value'])
+                temp[featureName]['value'] = temp[featureName]['value'] * temp[featureName]['factor']
+            else:
+                temp[featureName]['factor'] = 1.0
 
             try:
                 featureStart = float(feature['start'])
