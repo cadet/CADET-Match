@@ -31,20 +31,30 @@ name = "MCMC"
 
 def log_prior(theta, cache):
     # Create flat distributions.
-    individual = theta
-    #error = theta[-1]
+    individual = theta[:-1]
+    error = theta[-1]
     lower_bound = numpy.array(cache.MIN_VALUE)
     upper_bound = numpy.array(cache.MAX_VALUE)
-    #if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound): # and 0 < error < 0.1:
-    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound):
+    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound) and 1e-10 < error < 1e-1:
+    #if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound):
         return 0.0
     else:
         return -numpy.inf
 
 def log_likelihood(theta, json_path):
-    individual = theta
+    individual = theta[:-1]
     scores, csv_record, results = evo.fitness(individual, json_path)
-    #error = theta[-1]
+    error = theta[-1]
+    count = sum([i['error_count'] for i in results.values()])
+    sse = sum([i['error'] for i in results.values()])
+
+    score = -0.5 * (count * np.log(2 * numpy.pi * error ** 2) + sse / (error ** 2) )
+
+    #print(np.log(2 * numpy.pi * error ** 2), count * np.log(2 * numpy.pi * error ** 2), sse / (error ** 2))
+
+    #score = -0.5 * np.sum(np.log(2 * np.pi * error ** 2) + (y - y_model) ** 2 / error ** 2)
+
+
     #error = theta[-1]
     #print(-1 * scores[1])
     #print("terms", numpy.sum(numpy.log(2 * numpy.pi * error ** 2)), float(csv_record[-1]), float(csv_record[-1]) / error ** 2)
@@ -55,7 +65,8 @@ def log_likelihood(theta, json_path):
     #return -1 * numpy.log(float(csv_record[-1])), scores, csv_record, results
 
     #return numpy.log(scores[1] + 1e-14), scores, csv_record, results
-    return numpy.log(scores[2] + 1e-14), scores, csv_record, results
+    #numpy.log(scores[2] + 1e-14), scores, csv_record, results
+    return score, scores, csv_record, results 
 
 def log_posterior(theta, json_path):
     if json_path != cache.cache.json_path:
@@ -76,13 +87,16 @@ def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
 
-    parameters = len(cache.MIN_VALUE) #+ 1
+    parameters = len(cache.MIN_VALUE) + 1
     populationSize = parameters * cache.settings['population']
 
     #Population must be even
     populationSize = populationSize + populationSize % 2  
 
     sobol = SALib.sample.sobol_sequence.sample(populationSize, parameters)
+
+    #correct the last column to be in our error range
+    sobol[:,-1] = (1e-1 - 1e-10) * sobol[:,-1] + 1e-10
 
     #selected = sobol[:,-1] == 0
     #sobol[selected,-1] += 0.1

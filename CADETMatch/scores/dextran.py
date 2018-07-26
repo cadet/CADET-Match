@@ -47,7 +47,7 @@ def run(sim_data, feature):
     if scoreDeriv < 0:
         scoreDeriv = 0
 
-    return [score, scoreDeriv, feature['maxTimeFunction'](diff_time)], util.sse(sim_data_values, exp_data_values)
+    return [score, scoreDeriv, feature['maxTimeFunction'](diff_time)], util.sse(sim_data_values, exp_data_values), len(sim_data_values)
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}

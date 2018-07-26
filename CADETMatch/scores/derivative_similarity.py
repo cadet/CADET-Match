@@ -30,7 +30,7 @@ def run(sim_data, feature):
             feature['value_function_high'](highs[1]), 
             feature['time_function_high'](highs[0]),
             feature['value_function_low'](lows[1]), 
-            feature['time_function_low'](lows[0]),], util.sse(sim_data_values, exp_data_values)
+            feature['time_function_low'](lows[0]),], util.sse(sim_data_values, exp_data_values), len(sim_data_values)
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}

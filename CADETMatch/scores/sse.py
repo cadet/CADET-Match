@@ -13,7 +13,7 @@ def run(sim_data, feature):
     exp_time_values = feature['time'][selected]
     exp_data_values = feature['value'][selected]
 
-    return [-util.sse(sim_data_values, exp_data_values),], util.sse(sim_data_values, exp_data_values)
+    return [-util.sse(sim_data_values, exp_data_values),], util.sse(sim_data_values, exp_data_values), len(sim_data_values)
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     return {}

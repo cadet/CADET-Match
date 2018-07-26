@@ -31,7 +31,7 @@ def run(sim_data, feature):
     return [score_corr, 
             feature['time_function'](diff_time),
             feature['value_function_high'](highs[1]),             
-            feature['value_function_low'](lows[1]),], util.sse(sim_data_values, exp_data_values)
+            feature['value_function_low'](lows[1]),], util.sse(sim_data_values, exp_data_values), len(sim_data_values)
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}

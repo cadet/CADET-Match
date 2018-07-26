@@ -49,7 +49,7 @@ def run(sim_data, feature):
 
     sim_data['graph_exp'] = graph_exp
     sim_data['graph_sim'] = graph_sim
-    return scores, util.sse(numpy.array(sim_values), numpy.array(exp_values))
+    return scores, util.sse(numpy.array(sim_values), numpy.array(exp_values)), len(sim_values)
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}

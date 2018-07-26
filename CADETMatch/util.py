@@ -294,6 +294,7 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     temp['path'] = path
     temp['scores'] = []
     temp['error'] = 0.0
+    temp['error_count'] = 0.0
     temp['cadetValues'] = cadetValues
     temp['cadetValuesKEQ'] = cadetValuesKEQ
 
@@ -304,10 +305,11 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         featureName = feature['name']
 
         if featureType in cache.scores:
-            scores, sse = cache.scores[featureType].run(temp, target[experiment['name']][featureName])
+            scores, sse, sse_count = cache.scores[featureType].run(temp, target[experiment['name']][featureName])
  
         temp['scores'].extend(scores)
         temp['error'] += sse
+        temp['error_count'] += sse_count
 
     return temp
 

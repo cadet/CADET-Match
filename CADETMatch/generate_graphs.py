@@ -49,7 +49,8 @@ def main():
         graphExperiments(cache)    
 
 def graphCorner(cache):
-    headers = cache.parameter_headers
+    headers = list(cache.parameter_headers)
+    headers.append('variance')
 
     trainingDir = Path(cache.settings['resultsDirTraining'])
     training_h5 = trainingDir / "training.h5"

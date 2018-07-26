@@ -53,7 +53,7 @@ def run(sim_data, feature):
             feature['valueFunction'](max(sim_data_zero)),
             feature['value_function_high'](highs[1]),             
             feature['value_function_low'](lows[1]),
-            ], util.sse(sim_data_zero, exp_data_zero)
+            ], util.sse(sim_data_zero, exp_data_zero), len(sim_data_zero)
 
     return data
 
