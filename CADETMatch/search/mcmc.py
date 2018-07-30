@@ -3,6 +3,7 @@ import pickle
 import util
 import numpy
 from pathlib import Path
+import h5py
 #import grad
 import time
 import csv
@@ -48,7 +49,12 @@ def log_likelihood(theta, json_path):
     count = sum([i['error_count'] for i in results.values()])
     sse = sum([i['error'] for i in results.values()])
 
-    score = -0.5 * (count * np.log(2 * numpy.pi * error ** 2) + sse / (error ** 2) )
+    #sse
+    #score = -0.5 * (count * np.log(2 * numpy.pi * error ** 2) + sse / (error ** 2) )
+
+    #min
+    score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[1]) / (error ** 2) )
+
 
     #print(np.log(2 * numpy.pi * error ** 2), count * np.log(2 * numpy.pi * error ** 2), sse / (error ** 2))
 
@@ -111,8 +117,8 @@ def run(cache, tools, creator):
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        sampler = modEnsemble.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox)
-        #emcee.EnsembleSampler._get_lnprob = _get_lnprob
+        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox)
+        emcee.EnsembleSampler._get_lnprob = _get_lnprob
 
         training = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}}
         halloffame = pareto.ParetoFront(similar=util.similar)
@@ -123,9 +129,36 @@ def run(cache, tools, creator):
             return process(cache, halloffame, meta_hof, grad_hof, training, results, writer, csvfile, sampler)
         sampler.process = local
 
-        state = sampler.run_mcmc(sobol, cache.settings['burnIn'])
+        converge = np.random.rand(50)
+        burn_seq = []
+        chain_seq = []
+
+        for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(sobol, iterations=cache.settings.get('burnIn', 10000) )):
+            accept = np.mean(sampler.acceptance_fraction)
+            burn_seq.append(accept)
+            converge[:-1] = converge[1:]
+            converge[-1] = accept
+            writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
+            print(np.std(converge), np.mean(converge), np.std(converge)/1e-4)
+            if np.std(converge) < 1e-4 * np.mean(converge):
+                print("burn in completed at iteration ", idx)
+                break
+
         sampler.reset()
-        sampler.run_mcmc(state[0], cache.settings['chainLength'])
+
+        checkInterval = 100
+        mult = 100
+        for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(p, iterations=cache.settings.get('chainLength', 10000) )):
+            accept = np.mean(sampler.acceptance_fraction)
+            chain_seq.append(accept)
+            writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
+            if idx % checkInterval == 0:  
+                chain = sampler.chain[:, :, 0].T
+                tau = autocorr_new(sampler.chain[:, :idx, 0].T)
+                print("Mean acceptance fraction: {1} {0:.3f} tau: {2}".format(accept, idx, tau))
+                if idx > mult * tau:
+                    print("we have run long enough and can quit ", idx)
+                    break
 
     fig = corner.corner(sampler.flatchain)
     out_dir = cache.settings['resultsDirBase']
@@ -278,3 +311,68 @@ def _get_lnprob(self, pos=None):
         raise ValueError("lnprob returned NaN.")
 
     return lnprob, blob
+
+
+#auto correlation support functions
+
+def autocorr_new(y, c=5.0):
+    f = np.zeros(y.shape[1])
+    for yy in y:
+        f += autocorr_func_1d(yy)
+    f /= len(y)
+    taus = 2.0*np.cumsum(f)-1.0
+    window = auto_window(taus, c)
+    return taus[window]
+
+# Automated windowing procedure following Sokal (1989)
+def auto_window(taus, c):
+    m = np.arange(len(taus)) < c * taus
+    if np.any(m):
+        return np.argmin(m)
+    return len(taus) - 1
+
+def autocorr_func_1d(x, norm=True):
+    x = np.atleast_1d(x)
+    if len(x.shape) != 1:
+        raise ValueError("invalid dimensions for 1D autocorrelation function")
+    n = next_pow_two(len(x))
+
+    # Compute the FFT and then (from that) the auto-correlation function
+    f = np.fft.fft(x - np.mean(x), n=2*n)
+    acf = np.fft.ifft(f * np.conjugate(f))[:len(x)].real
+    acf /= 4*n
+
+    # Optionally normalize
+    if norm:
+        acf /= acf[0]
+
+    return acf
+
+def next_pow_two(n):
+    i = 1
+    while i < n:
+        i = i << 1
+    return i
+
+def writeMCMC(cache, sampler, burn_seq, chain_seq, idx):
+    "write out the mcmc data so it can be plotted"
+    miscDir = Path(cache.settings['resultsDirMisc'])
+    mcmc_h5 = miscDir / "mcmc.h5"
+
+    chain = sampler.chain
+    chain = chain[:, :idx, :]
+    chain_shape = chain.shape
+    chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
+
+    with h5py.File(mcmc_h5, 'w') as hf:
+        #if we don't have a file yet then we have to be doing burn in so no point in checking
+        
+        if burn_seq:
+            data = numpy.array(burn_seq).reshape(-1, 1)
+            hf.create_dataset("burn_in_acceptance", data=data, maxshape=(None, 1), compression="gzip")
+        
+        if chain_seq:
+            data = numpy.array(burn_seq).reshape(-1, 1)   
+            hf.create_dataset("mcmc_acceptance", data=data, maxshape=(None, 1), compression="gzip")
+                
+        hf.create_dataset("chain", data=chain, compression="gzip")

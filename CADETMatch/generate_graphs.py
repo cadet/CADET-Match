@@ -50,33 +50,67 @@ def main():
 
 def graphCorner(cache):
     headers = list(cache.parameter_headers)
-    headers.append('variance')
-
+    
     trainingDir = Path(cache.settings['resultsDirTraining'])
     training_h5 = trainingDir / "training.h5"
 
-    data = {}
-    with h5py.File(training_h5, 'r') as h5:
-        for key in h5.keys():
-            data[key] = h5[key].value
+    miscDir = Path(cache.settings['resultsDirMisc'])
+    mcmc_h5 = miscDir / "mcmc.h5"
 
-    out_dir = cache.settings['resultsDirProgress']
+    if mcmc_h5.exists():
+        headers.append('variance')
 
-    fig = corner.corner(data['input'], quantiles=(0.16, 0.84),
-                   show_titles=True, title_kwargs={"fontsize": 12}, labels=headers)
-    fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
+        data = {}
+        with h5py.File(mcmc_h5, 'r') as h5:
+            for key in h5.keys():
+                data[key] = h5[key].value
 
-    fig = corner.corner(data['input'], quantiles=(0.16, 0.84), weights=data['output_meta'][:,1],
-                   show_titles=True, title_kwargs={"fontsize": 12}, labels=headers)
-    fig.savefig(str(out_dir / "corner_min.png"), bbox_inches='tight')
+        if len(data['chain']) > 1e5:
+            indexes = np.random.choice(data['chain'].shape[0], int(1e5), replace=False)
+            chain = data['chain'][indexes]
+        else:
+            chain = data['chain']
+        
+        out_dir = cache.settings['resultsDirProgress']
 
-    fig = corner.corner(data['input'], quantiles=(0.16, 0.84), weights=data['output_meta'][:,2],
-                   show_titles=True, title_kwargs={"fontsize": 12}, labels=headers)
-    fig.savefig(str(out_dir / "corner_prod.png"), bbox_inches='tight')
+        fig = corner.corner(chain, quantiles=(0.16, 0.5, 0.84),
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
+        fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
+    else:
+        data = {}
+        with h5py.File(training_h5, 'r') as h5:
+            for key in h5.keys():
+                data[key] = h5[key].value
 
-    fig = corner.corner(data['input'], quantiles=(0.16, 0.84), weights=data['output_meta'][:,3],
-                   show_titles=True, title_kwargs={"fontsize": 12}, labels=headers)
-    fig.savefig(str(out_dir / "corner_norm.png"), bbox_inches='tight')
+        if len(data['input']) > 1e5:
+            indexes = np.random.choice(data['input'].shape[0], int(1e5), replace=False)
+            data_input = data['input'][indexes]
+            weight_min = data['output_meta'][indexes,1]
+            weight_prod = data['output_meta'][indexes,2]
+            weight_norm = data['output_meta'][indexes,3]
+        else:
+            data_input = data['input']
+            weight_min = data['output_meta'][:,1]
+            weight_prod = data['output_meta'][:,2]
+            weight_norm = data['output_meta'][:,3]
+
+        out_dir = cache.settings['resultsDirProgress']
+
+        fig = corner.corner(data_input, quantiles=(0.16, 0.5, 0.84),
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
+        fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
+
+        fig = corner.corner(data_input, quantiles=(0.16, 0.5, 0.84), weights=weight_min,
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
+        fig.savefig(str(out_dir / "corner_min.png"), bbox_inches='tight')
+
+        fig = corner.corner(data_input, quantiles=(0.16, 0.5, 0.84), weights=weight_prod,
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
+        fig.savefig(str(out_dir / "corner_prod.png"), bbox_inches='tight')
+
+        fig = corner.corner(data_input, quantiles=(0.16, 0.5, 0.84), weights=weight_norm,
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
+        fig.savefig(str(out_dir / "corner_norm.png"), bbox_inches='tight')
 
 def graphExperiments(cache):
     directory = Path(cache.settings['resultsDirEvo'])
