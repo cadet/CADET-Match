@@ -11,9 +11,6 @@ import os
 
 class Cache:
     def __init__(self):
-        self.scores = plugins.get_plugins('scores')
-        self.search = plugins.get_plugins('search')
-        self.transforms = plugins.get_plugins('transform')
         self.settings = None
         self.headers = None
         self.numGoals = None
@@ -48,8 +45,14 @@ class Cache:
                                  'Elapsed Time', 'Generation Time', 'Total CPU Time', 'Last Progress Generation',
                                  'Generations of Progress']
 
-    def setup(self, json_path):
+    def setup(self, json_path, load_plugins=True):
         "setup the cache based on the json file being used"
+        if load_plugins:
+            self.scores = plugins.get_plugins('scores')
+            self.search = plugins.get_plugins('search')
+            self.transforms = plugins.get_plugins('transform')
+
+
         self.json_path = json_path
         self.setupSettings()
 
@@ -94,6 +97,7 @@ class Cache:
         self.fullTrainingData = int(self.settings.get('fullTrainingData', 0))
 
         self.sobolGeneration = bool(self.settings.get('soboloGeneration', False))
+        self.scoreMCMC = self.settings.get('scoreMCMC', "sse")
         
     def setupSettings(self):
         settings_file = Path(self.json_path)

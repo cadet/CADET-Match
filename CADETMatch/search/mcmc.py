@@ -32,6 +32,8 @@ name = "MCMC"
 
 minVar = 1e-10
 maxVar = 1e-1
+minLogVar = numpy.log(minVar)
+maxLogVar = numpy.log(maxVar)
 
 def log_prior(theta, cache):
     # Create flat distributions.
@@ -39,7 +41,7 @@ def log_prior(theta, cache):
     error = theta[-1]
     lower_bound = numpy.array(cache.MIN_VALUE)
     upper_bound = numpy.array(cache.MAX_VALUE)
-    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound) and minVar < error < maxVar:
+    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound) and 0 < error < 1:
     #if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound):
         return 0.0
     else:
@@ -48,18 +50,25 @@ def log_prior(theta, cache):
 def log_likelihood(theta, json_path):
     individual = theta[:-1]
     scores, csv_record, results = evo.fitness(individual, json_path)
-    error = theta[-1]
+    #error = theta[-1]
+    error = numpy.exp((maxLogVar - minLogVar) * theta[-1] + minLogVar)
     count = sum([i['error_count'] for i in results.values()])
     sse = sum([i['error'] for i in results.values()])
 
-    #sse
-    #score = -0.5 * (count * np.log(2 * numpy.pi * error ** 2) + sse / (error ** 2) )
+    if json_path != cache.cache.json_path:
+        cache.cache.setup(json_path, False)
 
-    #min
-    #score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[1]) / (error ** 2) )
+    if cache.cache.scoreMCMC == 'sse':
+        #sse
+        score = -0.5 * (count * np.log(2 * numpy.pi * error ** 2) + sse / (error ** 2) )
 
-    #prod
-    score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[2]) / (error ** 2) )
+    if cache.cache.scoreMCMC == 'min':
+        #min
+        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[1]) / (error ** 2) )
+
+    if cache.cache.scoreMCMC == 'product':
+        #prod
+        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[2]) / (error ** 2) )
 
     return score, scores, csv_record, results 
 
@@ -91,16 +100,7 @@ def run(cache, tools, creator):
     sobol = SALib.sample.sobol_sequence.sample(populationSize, parameters)
 
     #correct the last column to be in our error range
-    sobol[:,-1] = (maxVar - minVar) * sobol[:,-1] + minVar
-
-    #selected = sobol[:,-1] == 0
-    #sobol[selected,-1] += 0.1
-    #sobol[:,-1] = sobol[:,-1] * 0.1
-
-    #low = cache.MIN_VALUE + [0.0]
-    #high = cache.MAX_VALUE + [0.1]
-
-    #sobol = numpy.random.uniform(low, high, (populationSize, len(low)))
+    #sobol[:,-1] = (maxLogVar - minLogVar) * sobol[:,-1] + minLogVar
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
@@ -158,8 +158,7 @@ def run(cache, tools, creator):
     out_dir = cache.settings['resultsDirBase']
     fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
 
-    smallest = numpy.argmin(chain)
-    return chain[smallest]
+    return numpy.mean(chain, 0)
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
@@ -364,7 +363,7 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx):
 
     chain_transform = numpy.array(chain_transform)
 
-    variance = ((maxVar - minVar) * chain[:,-1] + maxVar).reshape(-1, 1)
+    variance = numpy.exp((maxLogVar - minLogVar) * chain[:,-1] + minLogVar).reshape(-1, 1)
 
     chain_transform = numpy.hstack( (chain_transform, variance) )
 
