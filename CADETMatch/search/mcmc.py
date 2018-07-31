@@ -158,6 +158,8 @@ def run(cache, tools, creator):
     out_dir = cache.settings['resultsDirBase']
     fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
 
+    plotTube(cache, chain)
+
     return numpy.mean(chain, 0)
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
@@ -380,3 +382,44 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx):
                 
         hf.create_dataset("chain", data=chain, compression="gzip")
         hf.create_dataset("chain_transform", data=chain_transform, compression="gzip")
+
+def plotTube(cache, chain):
+    if len(chain) > 1e2:
+        indexes = np.random.choice(chain.shape[0], int(100), replace=False)
+        chain = chain[indexes]
+
+    individuals = []
+
+    for idx in range(len(chain)):
+        individuals.append(chain[idx,0:-1])
+
+    fitnesses = cache.toolbox.map(cache.toolbox.evaluate, individuals)
+
+    results = {}
+    for (fit, csv_line, result) in fitnesses:
+        
+        for key,value in result.items():
+            sims = results.get(key, {})
+
+            sim = value['simulation']
+            ncomp = sim.root.input.model.unit_002.ncomp
+
+            for i in range(ncomp):
+                comps = sims.get(i, [])
+                comps.append(sim.root.output.solution.unit_002["solution_inlet_comp_%03d" % i])
+                sims[i] = comps
+
+            results[key] = sims
+
+        util.cleanupProcess(result)
+
+    for expName, comps in results.items():
+        for compIdx, compValue in comps.items():
+            data = numpy.array(compValue)
+            results[expName][compIdx] = data
+            results[expName]["mean"] = numpy.mean(data, 0)
+            results[expName]["std"] = numpy.std(data, 0)
+            results[expName]["min"] = numpy.min(data, 0)
+            results[expName]["max"] = numpy.max(data, 0)
+
+    print(results)
