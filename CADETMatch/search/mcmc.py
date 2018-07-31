@@ -30,13 +30,16 @@ import modEnsemble
 
 name = "MCMC"
 
+minVar = 1e-10
+maxVar = 1e-1
+
 def log_prior(theta, cache):
     # Create flat distributions.
     individual = theta[:-1]
     error = theta[-1]
     lower_bound = numpy.array(cache.MIN_VALUE)
     upper_bound = numpy.array(cache.MAX_VALUE)
-    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound) and 1e-10 < error < 1e-1:
+    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound) and minVar < error < maxVar:
     #if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound):
         return 0.0
     else:
@@ -53,25 +56,11 @@ def log_likelihood(theta, json_path):
     #score = -0.5 * (count * np.log(2 * numpy.pi * error ** 2) + sse / (error ** 2) )
 
     #min
-    score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[1]) / (error ** 2) )
+    #score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[1]) / (error ** 2) )
 
+    #prod
+    score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[2]) / (error ** 2) )
 
-    #print(np.log(2 * numpy.pi * error ** 2), count * np.log(2 * numpy.pi * error ** 2), sse / (error ** 2))
-
-    #score = -0.5 * np.sum(np.log(2 * np.pi * error ** 2) + (y - y_model) ** 2 / error ** 2)
-
-
-    #error = theta[-1]
-    #print(-1 * scores[1])
-    #print("terms", numpy.sum(numpy.log(2 * numpy.pi * error ** 2)), float(csv_record[-1]), float(csv_record[-1]) / error ** 2)
-    #return -0.5 * (numpy.sum(numpy.log(2 * numpy.pi * error ** 2)) + float(csv_record[-1]) / error ** 2), scores, csv_record, results
-    #return -1 * numpy.log(scores[1] + 1e-14), scores, csv_record, results
-    
-    #seems to work
-    #return -1 * numpy.log(float(csv_record[-1])), scores, csv_record, results
-
-    #return numpy.log(scores[1] + 1e-14), scores, csv_record, results
-    #numpy.log(scores[2] + 1e-14), scores, csv_record, results
     return score, scores, csv_record, results 
 
 def log_posterior(theta, json_path):
@@ -102,7 +91,7 @@ def run(cache, tools, creator):
     sobol = SALib.sample.sobol_sequence.sample(populationSize, parameters)
 
     #correct the last column to be in our error range
-    sobol[:,-1] = (1e-1 - 1e-10) * sobol[:,-1] + 1e-10
+    sobol[:,-1] = (maxVar - minVar) * sobol[:,-1] + minVar
 
     #selected = sobol[:,-1] == 0
     #sobol[selected,-1] += 0.1
@@ -139,33 +128,37 @@ def run(cache, tools, creator):
             converge[:-1] = converge[1:]
             converge[-1] = accept
             writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
-            print(np.std(converge), np.mean(converge), np.std(converge)/1e-4)
-            if np.std(converge) < 1e-4 * np.mean(converge):
+            print(np.std(converge), np.mean(converge), np.std(converge)/1e-3)
+            if np.std(converge) < 1e-3:
                 print("burn in completed at iteration ", idx)
                 break
 
         sampler.reset()
+        burn_seq = []
 
         checkInterval = 100
-        mult = 100
+        mult = 1000
         for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(p, iterations=cache.settings.get('chainLength', 10000) )):
             accept = np.mean(sampler.acceptance_fraction)
             chain_seq.append(accept)
             writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
             if idx % checkInterval == 0:  
-                chain = sampler.chain[:, :, 0].T
                 tau = autocorr_new(sampler.chain[:, :idx, 0].T)
                 print("Mean acceptance fraction: {1} {0:.3f} tau: {2}".format(accept, idx, tau))
-                if idx > mult * tau:
+                if idx > (mult * tau):
                     print("we have run long enough and can quit ", idx)
                     break
 
-    fig = corner.corner(sampler.flatchain)
+    chain = sampler.chain
+    chain = chain[:, :idx, :]
+    chain_shape = chain.shape
+    chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
+                
+    fig = corner.corner(chain)
     out_dir = cache.settings['resultsDirBase']
     fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
 
-    chain = sampler.flatchain
-    smallest = numpy.argmin(chain[:,-1])
+    smallest = numpy.argmin(chain)
     return chain[smallest]
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
@@ -360,19 +353,31 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx):
     mcmc_h5 = miscDir / "mcmc.h5"
 
     chain = sampler.chain
-    chain = chain[:, :idx, :]
+    chain = chain[:, :idx+1, :]
     chain_shape = chain.shape
     chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
+
+    chain_transform = []
+    for i in range(len(chain)):
+        conv = util.convert_individual(chain[i,:], cache)
+        chain_transform.append(conv)
+
+    chain_transform = numpy.array(chain_transform)
+
+    variance = ((maxVar - minVar) * chain[:,-1] + maxVar).reshape(-1, 1)
+
+    chain_transform = numpy.hstack( (chain_transform, variance) )
 
     with h5py.File(mcmc_h5, 'w') as hf:
         #if we don't have a file yet then we have to be doing burn in so no point in checking
         
         if burn_seq:
             data = numpy.array(burn_seq).reshape(-1, 1)
-            hf.create_dataset("burn_in_acceptance", data=data, maxshape=(None, 1), compression="gzip")
+            hf.create_dataset("burn_in_acceptance", data=data, compression="gzip")
         
         if chain_seq:
-            data = numpy.array(burn_seq).reshape(-1, 1)   
-            hf.create_dataset("mcmc_acceptance", data=data, maxshape=(None, 1), compression="gzip")
+            data = numpy.array(chain_seq).reshape(-1, 1)   
+            hf.create_dataset("mcmc_acceptance", data=data, compression="gzip")
                 
         hf.create_dataset("chain", data=chain, compression="gzip")
+        hf.create_dataset("chain_transform", data=chain_transform, compression="gzip")

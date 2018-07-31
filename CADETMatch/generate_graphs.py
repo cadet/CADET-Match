@@ -50,6 +50,7 @@ def main():
 
 def graphCorner(cache):
     headers = list(cache.parameter_headers)
+    headers = [header.split()[0] for header in headers]
     
     trainingDir = Path(cache.settings['resultsDirTraining'])
     training_h5 = trainingDir / "training.h5"
@@ -68,14 +69,20 @@ def graphCorner(cache):
         if len(data['chain']) > 1e5:
             indexes = np.random.choice(data['chain'].shape[0], int(1e5), replace=False)
             chain = data['chain'][indexes]
+            chain_transform = data['chain_transform'][indexes]
         else:
             chain = data['chain']
+            chain_transform = data['chain_transform']
         
         out_dir = cache.settings['resultsDirProgress']
 
         fig = corner.corner(chain, quantiles=(0.16, 0.5, 0.84),
                        show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
         fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
+
+        fig = corner.corner(chain_transform, quantiles=(0.16, 0.5, 0.84),
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
+        fig.savefig(str(out_dir / "corner_transform.png"), bbox_inches='tight')
     else:
         data = {}
         with h5py.File(training_h5, 'r') as h5:

@@ -211,7 +211,6 @@ def saveExperiments(save_name_base, settings, target, results, directory, file_p
     return True
 
 def convert_individual(individual, cache):
-    idx = 0
     cadetValues = []
 
     idx = 0
