@@ -129,15 +129,15 @@ def run(cache, tools, creator):
             converge[:-1] = converge[1:]
             converge[-1] = accept
             writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
-            print(np.std(converge), np.mean(converge), np.std(converge)/1e-3)
-            if np.std(converge) < 1e-3:
+            print(np.std(converge), np.mean(converge), np.std(converge)/1e-4)
+            if np.std(converge) < 1e-4:
                 print("burn in completed at iteration ", idx)
                 break
 
         sampler.reset()
 
         checkInterval = 100
-        mult = 1000
+        mult = 500
         for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(p, iterations=cache.settings.get('chainLength', 10000) )):
             accept = np.mean(sampler.acceptance_fraction)
             chain_seq.append(accept)
@@ -154,11 +154,6 @@ def run(cache, tools, creator):
     chain_shape = chain.shape
     chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
                 
-    fig = corner.corner(chain)
-    out_dir = cache.settings['resultsDirBase']
-    fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
-    plt.close()
-
     plotTube(cache, chain)
 
     return numpy.mean(chain, 0)
