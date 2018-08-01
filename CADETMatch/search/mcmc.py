@@ -155,7 +155,7 @@ def run(cache, tools, creator):
     chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
                 
     plotTube(cache, chain)
-
+    util.finish(cache)
     return numpy.mean(chain, 0)
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
