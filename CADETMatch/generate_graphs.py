@@ -83,6 +83,27 @@ def graphCorner(cache):
         fig = corner.corner(chain_transform, quantiles=(0.16, 0.5, 0.84),
                        show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
         fig.savefig(str(out_dir / "corner_transform.png"), bbox_inches='tight')
+
+        if 'burn_in_acceptance' in data:
+            fig = figure.Figure(figsize=[10, 10])
+            canvas = FigureCanvas(fig)
+            graph = fig.add_subplot(1, 1, 1)
+            graph.plot(data['burn_in_acceptance'])
+            graph.set_title("Burn In Acceptance")
+            graph.set_xlabel('Step')
+            graph.set_ylabel('Acceptance')
+            fig.savefig(str(out_dir / "burn_in_acceptance.png"), bbox_inches='tight')
+
+        if 'mcmc_acceptance' in data:
+            fig = figure.Figure(figsize=[10, 10])
+            canvas = FigureCanvas(fig)
+            graph = fig.add_subplot(1, 1, 1)
+            graph.plot(data['mcmc_acceptance'])
+            graph.set_title("MCMC Acceptance")
+            graph.set_xlabel('Step')
+            graph.set_ylabel('Acceptance')
+            fig.savefig(str(out_dir / "mcmc_acceptance.png"), bbox_inches='tight')
+
     else:
         data = {}
         with h5py.File(training_h5, 'r') as h5:
