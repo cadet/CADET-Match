@@ -18,6 +18,7 @@ import SALib.sample.sobol_sequence
 import matplotlib
 matplotlib.use('Agg')
 import corner
+import matplotlib.pyplot as plt
 
 import matplotlib.mlab as mlab
 
@@ -134,7 +135,6 @@ def run(cache, tools, creator):
                 break
 
         sampler.reset()
-        burn_seq = []
 
         checkInterval = 100
         mult = 1000
@@ -157,6 +157,7 @@ def run(cache, tools, creator):
     fig = corner.corner(chain)
     out_dir = cache.settings['resultsDirBase']
     fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
+    plt.close()
 
     plotTube(cache, chain)
 
@@ -356,18 +357,15 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx):
     chain = sampler.chain
     chain = chain[:, :idx+1, :]
     chain_shape = chain.shape
-    chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
+    flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 
-    chain_transform = []
-    for i in range(len(chain)):
-        conv = util.convert_individual(chain[i,:], cache)
-        chain_transform.append(conv)
+    chain_transform = numpy.array(chain)
+    for walker in range(chain_shape[0]):
+        for position in range(chain_shape[1]):
+            chain_transform[walker, position,:-1] = util.convert_individual(chain_transform[walker, position, :-1], cache)
+    chain_transform[:,:,-1] = numpy.exp((maxLogVar - minLogVar) * chain_transform[:,:,-1] + minLogVar)
 
-    chain_transform = numpy.array(chain_transform)
-
-    variance = numpy.exp((maxLogVar - minLogVar) * chain[:,-1] + minLogVar).reshape(-1, 1)
-
-    chain_transform = numpy.hstack( (chain_transform, variance) )
+    flat_chain_transform = chain_transform.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 
     with h5py.File(mcmc_h5, 'w') as hf:
         #if we don't have a file yet then we have to be doing burn in so no point in checking
@@ -380,10 +378,13 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx):
             data = numpy.array(chain_seq).reshape(-1, 1)   
             hf.create_dataset("mcmc_acceptance", data=data, compression="gzip")
                 
-        hf.create_dataset("chain", data=chain, compression="gzip")
-        hf.create_dataset("chain_transform", data=chain_transform, compression="gzip")
+        hf.create_dataset("full_chain", data=chain, compression="gzip")
+        hf.create_dataset("full_chain_transform", data=chain_transform, compression="gzip")
 
-def plotTube(cache, chain):
+        hf.create_dataset("flat_chain", data=flat_chain, compression="gzip")
+        hf.create_dataset("flat_chain_transform", data=flat_chain_transform, compression="gzip")
+
+def processChainForPlots(cache, chain):
     if len(chain) > 1e2:
         indexes = np.random.choice(chain.shape[0], int(100), replace=False)
         chain = chain[indexes]
@@ -396,6 +397,7 @@ def plotTube(cache, chain):
     fitnesses = cache.toolbox.map(cache.toolbox.evaluate, individuals)
 
     results = {}
+    times = {}
     for (fit, csv_line, result) in fitnesses:
         
         for key,value in result.items():
@@ -411,15 +413,68 @@ def plotTube(cache, chain):
 
             results[key] = sims
 
+            if key not in times:
+                times[key] = sim.root.output.solution.solution_times
+
         util.cleanupProcess(result)
 
-    for expName, comps in results.items():
-        for compIdx, compValue in comps.items():
+    for expName, comps in list(results.items()):
+        for compIdx, compValue in list(comps.items()):
             data = numpy.array(compValue)
-            results[expName][compIdx] = data
-            results[expName]["mean"] = numpy.mean(data, 0)
-            results[expName]["std"] = numpy.std(data, 0)
-            results[expName]["min"] = numpy.min(data, 0)
-            results[expName]["max"] = numpy.max(data, 0)
+            results[expName][compIdx] = {}
+            results[expName][compIdx]['data'] = data
+            results[expName][compIdx]["mean"] = numpy.mean(data, 0)
+            results[expName][compIdx]["std"] = numpy.std(data, 0)
+            results[expName][compIdx]["min"] = numpy.min(data, 0)
+            results[expName][compIdx]["max"] = numpy.max(data, 0)
+            results[expName][compIdx]['time'] = times[expName]
 
-    print(results)
+    combinations = {}
+    for expName, comps in results.items():
+        data = numpy.zeros(comps[0]['data'].shape)
+        times = comps[0]['time']
+        for compIdx, compValue in list(comps.items()):
+            data = data + compValue['data']
+        temp = {}
+        temp['data'] = data
+        temp['time'] = times
+        temp["mean"] = numpy.mean(data, 0)
+        temp["std"] = numpy.std(data, 0)
+        temp["min"] = numpy.min(data, 0)
+        temp["max"] = numpy.max(data, 0)
+        combinations[expName] = temp
+    return results, combinations
+
+def plotTube(cache, chain):
+    results, combinations = processChainForPlots(cache, chain)
+
+    output_mcmc = cache.settings['resultsDirSpace'] / "mcmc"
+    output_mcmc.mkdir(parents=True, exist_ok=True)
+
+    for expName,value in combinations.items():
+        plot_mcmc(output_mcmc, value, expName, "combine")
+
+    for expName, comps in list(results.items()):
+        for compIdx, compValue in list(comps.items()):
+            plot_mcmc(output_mcmc, compValue, expName, compIdx)
+
+def plot_mcmc(output_mcmc, value, expName, name):
+    data = value['data']
+    times = value['time']
+    mean = value["mean"]
+    std = value["std"]
+    minValues = value["min"]
+    maxValues = value["max"]
+
+    plt.plot(times, mean)
+    plt.fill_between(times, mean - std, mean + std,
+                color='green', alpha=0.2)
+    plt.fill_between(times, minValues, maxValues,
+                color='blue', alpha=0.2)
+    plt.savefig(str(output_mcmc / ("%s_%s.png" % (expName, name) ) ), bbox_inches='tight')
+    plt.close()
+
+    plt.plot(times, data.transpose())
+    plt.savefig(str(output_mcmc / ("%s_%s_lines.png" % (expName, name) ) ), bbox_inches='tight')
+    plt.close()
+
