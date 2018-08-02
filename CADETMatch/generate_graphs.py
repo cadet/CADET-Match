@@ -69,7 +69,7 @@ def graphCorner(cache):
                 data[key] = h5[key].value
 
         if len(data['flat_chain']) > 1e5:
-            indexes = np.random.choice(data['flat_chain'].shape[0], int(1e5), replace=False)
+            indexes = numpy.random.choice(data['flat_chain'].shape[0], int(1e5), replace=False)
             chain = data['flat_chain'][indexes]
             chain_transform = data['flat_chain_transform'][indexes]
         else:
@@ -114,7 +114,7 @@ def graphCorner(cache):
                 data[key] = h5[key].value
 
         if len(data['input']) > 1e5:
-            indexes = np.random.choice(data['input'].shape[0], int(1e5), replace=False)
+            indexes = numpy.random.choice(data['input'].shape[0], int(1e5), replace=False)
             data_input = data['input'][indexes]
             weight_min = data['output_meta'][indexes,1]
             weight_prod = data['output_meta'][indexes,2]

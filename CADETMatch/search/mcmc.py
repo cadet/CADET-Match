@@ -71,6 +71,22 @@ def log_likelihood(theta, json_path):
         #prod
         score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[2]) / (error ** 2) )
 
+    if cache.cache.scoreMCMC == 'min2':
+        #min
+        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[1]**2) / (error ** 2) )
+
+    if cache.cache.scoreMCMC == 'product2':
+        #prod
+        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[2]**2) / (error ** 2) )
+
+    if cache.cache.scoreMCMC == 'min5':
+        #min
+        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[1]**5) / (error ** 2) )
+
+    if cache.cache.scoreMCMC == 'product5':
+        #prod
+        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[2]**5) / (error ** 2) )
+
     return score, scores, csv_record, results 
 
 def log_posterior(theta, json_path):

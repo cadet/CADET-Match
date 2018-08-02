@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\CADET_ParameterEstimation\transport\grm\dextran\MCMC_dextran.json" 0</CommandLineArguments>
+    <CommandLineArguments>"F:\CADET_ParameterEstimation\transport\grm\dextran\MCMC_dextran_null.json" 0</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
