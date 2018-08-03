@@ -145,8 +145,8 @@ def run(cache, tools, creator):
             converge[:-1] = converge[1:]
             converge[-1] = accept
             writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
-            print(np.std(converge), np.mean(converge), np.std(converge)/1e-4)
-            if np.std(converge) < 1e-4:
+            print(np.std(converge), np.mean(converge), np.std(converge)/1e-3)
+            if np.std(converge) < 1e-3:
                 print("burn in completed at iteration ", idx)
                 break
 

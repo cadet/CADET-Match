@@ -15,55 +15,33 @@
     "stallGenerations": 10,
 	"parameters": [
 		{
-			"transform": "keq",
+			"transform": "norm_keq",
 			"component": 1,
-			"bound": [
-				0
-			],
+			"bound": 0,
 			"location": [
 				"/input/model/unit_001/adsorption/SMA_KA",
 				"/input/model/unit_001/adsorption/SMA_KD"
 			],
-			"minKA": [
-				1e-3
-			],
-			"maxKA": [
-				1e3
-			],
-			"minKEQ": [
-				1e-3
-			],
-			"maxKEQ": [
-				1e3
-			]
+			"minKA": 1e-3,
+			"maxKA": 1e3,
+			"minKEQ": 1e-3,
+			"maxKEQ": 1e3
 		},
 		{
-			"transform": "log",
+			"transform": "norm",
 			"component": 1,
-			"bound": [
-				0
-			],
+			"bound": 0,
 			"location": "/input/model/unit_001/adsorption/SMA_NU",
-			"min": [
-				1.0
-			],
-			"max": [
-				40.0
-			]
+			"min": 1.0,
+			"max": 40.0
 		},
 		{
-			"transform": "log",
+			"transform": "norm",
 			"component": 1,
-			"bound": [
-				0
-			],
+			"bound": 0,
 			"location": "/input/model/unit_001/adsorption/SMA_SIGMA",
-			"min": [
-				1.0
-			],
-			"max": [
-				100.0
-			]
+			"min": 1.0,
+			"max": 100.0
 		}
 	],
 	"population": 100,
@@ -77,8 +55,6 @@
 			"features": [
 				{
 					"name": "Pulse",
-					"start": 0,
-					"stop": 6000.0,
 					"type": "breakthroughHybrid2"
 				}
 			]
@@ -92,14 +68,10 @@
 			"features": [
 				{
 					"name": "Pulse",
-					"start": 0,
-					"stop": 20000.0,
 					"type": "similarityHybrid2"
 				},
 				{
 					"name": "Deriv",
-					"start": 0,
-					"stop": 20000.0,
 					"type": "derivative_similarity_hybrid2"
 				}
 			]

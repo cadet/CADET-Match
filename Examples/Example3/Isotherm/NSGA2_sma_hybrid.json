@@ -17,106 +17,62 @@
   "stallGenerations": 15,
 	"parameters": [
 		{
-			"transform": "keq",
+			"transform": "norm_keq",
 			"component": 1,
-			"bound": [
-				0
-			],
+			"bound": -1,
 			"location": [
 				"/input/model/unit_001/adsorption/SMA_KA",
 				"/input/model/unit_001/adsorption/SMA_KD"
 			],
-			"minKA": [
-				1e-3
-			],
-			"maxKA": [
-				1e3
-			],
-			"minKEQ": [
-				1e-3
-			],
-			"maxKEQ": [
-				1e3
-			]
+			"minKA": 1e-3,
+			"maxKA": 1e3,
+			"minKEQ": 1e-3,
+			"maxKEQ": 1e3
 		},
 		{
-			"transform": "keq",
+			"transform": "norm_keq",
 			"component": 2,
-			"bound": [
-				0
-			],
+			"bound": -1,
 			"location": [
 				"/input/model/unit_001/adsorption/SMA_KA",
 				"/input/model/unit_001/adsorption/SMA_KD"
 			],
-			"minKA": [
-				1e-3
-			],
-			"maxKA": [
-				1e3
-			],
-			"minKEQ": [
-				1e-3
-			],
-			"maxKEQ": [
-				1e3
-			]
+			"minKA": 1e-3,
+			"maxKA": 1e3,
+			"minKEQ": 1e-3,
+			"maxKEQ": 1e3
 		},
 		{
-			"transform": "log",
+			"transform": "norm",
 			"component": 1,
-			"bound": [
-				0
-			],
+			"bound": -1,
 			"location": "/input/model/unit_001/adsorption/SMA_NU",
-			"min": [
-				1.0
-			],
-			"max": [
-				40.0
-			]
+			"min": 1.0,
+			"max": 40.0
 		},
 		{
-			"transform": "log",
+			"transform": "norm",
 			"component": 2,
-			"bound": [
-				0
-			],
+			"bound": -1,
 			"location": "/input/model/unit_001/adsorption/SMA_NU",
-			"min": [
-				1.0
-			],
-			"max": [
-				40.0
-			]
+			"min": 1.0,
+			"max": 40.0
 		},
 		{
-			"transform": "log",
+			"transform": "norm",
 			"component": 1,
-			"bound": [
-				0
-			],
+			"bound": -1,
 			"location": "/input/model/unit_001/adsorption/SMA_SIGMA",
-			"min": [
-				1.0
-			],
-			"max": [
-				100.0
-			]
+			"min": 1.0,
+			"max": 100.0
 		},
 		{
-			"transform": "log",
+			"transform": "norm",
 			"component": 2,
-			"bound": [
-				0
-			],
+			"bound": -1,
 			"location": "/input/model/unit_001/adsorption/SMA_SIGMA",
-			"min": [
-				1.0
-			],
-			"max": [
-				100.0
-			]
+			"min": 1.0,
+			"max": 100.0
 		}
 	],
 	"experiments": [
@@ -131,33 +87,25 @@
 					"CSV": "pulse_c1.csv",
 					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
 					"name": "Pulse",
-					"start": 0,
-					"stop": 25000.0,
-					"type": "similarityHybrid"
+					"type": "similarityHybrid2"
 				},
 				{
 					"CSV": "pulse_c2.csv",
 					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_002",
 					"name": "Pulse2",
-					"start": 0,
-					"stop": 25000.0,
-					"type": "similarityHybrid"
+					"type": "similarityHybrid2"
 				},
 				{
 					"CSV": "pulse_c1.csv",
 					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
 					"name": "Deriv",
-					"start": 0,
-					"stop": 25000.0,
-					"type": "derivative_similarity_hybrid"
+					"type": "derivative_similarity_hybrid2"
 				},
 				{
 					"CSV": "pulse_c2.csv",
 					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_002",
 					"name": "Deriv2",
-					"start": 0,
-					"stop": 25000.0,
-					"type": "derivative_similarity_hybrid"
+					"type": "derivative_similarity_hybrid2"
 				}
 			]
 		},
@@ -172,33 +120,25 @@
 					"CSV": "break_c1.csv",
 					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
 					"name": "Pulse3",
-					"start": 0,
-					"stop": 2500.0,
-					"type": "similarityHybrid"
+					"type": "similarityHybrid2"
 				},
 				{
 					"CSV": "break_c2.csv",
 					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_002",
 					"name": "Pulse4",
-					"start": 0,
-					"stop": 2500.0,
-					"type": "similarityHybrid"
+					"type": "similarityHybrid2"
 				},
 				{
 					"CSV": "break_c1.csv",
 					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
 					"name": "Deriv3",
-					"start": 0,
-					"stop": 2500.0,
-					"type": "derivative_similarity_hybrid"
+					"type": "derivative_similarity_hybrid2"
 				},
 				{
 					"CSV": "break_c2.csv",
 					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_002",
 					"name": "Deriv4",
-					"start": 0,
-					"stop": 2500.0,
-					"type": "derivative_similarity_hybrid"
+					"type": "derivative_similarity_hybrid2"
 				}
 			]
 		}

@@ -17,27 +17,17 @@
   "stallGenerations": 10,
 	"parameters": [
 		{
-			"transform": "keq",
+			"transform": "norm_keq",
 			"component": 0,
-			"bound": [
-				0
-			],
+			"bound": 0,
 			"location": [
 				"/input/model/unit_001/adsorption/LIN_KA",
 				"/input/model/unit_001/adsorption/LIN_KD"
 			],
-			"minKA": [
-				1e-8
-			],
-			"maxKA": [
-				1e8
-			],
-			"minKEQ": [
-				0.0001
-			],
-			"maxKEQ": [
-				10000.0
-			]
+			"minKA": 1e-8,
+			"maxKA": 1e8,
+			"minKEQ": 0.0001,
+			"maxKEQ": 10000.0
 		}
 	],
 	"experiments": [
@@ -50,14 +40,10 @@
 			"features": [
 				{
 					"name": "Pulse",
-					"start": 0,
-					"stop": 3000.0,
 					"type": "similarityHybrid2"
 				},
 				{
 					"name": "Deriv",
-					"start": 0,
-					"stop": 3000.0,
 					"type": "derivative_similarity_hybrid2"
 				}
 			]

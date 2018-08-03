@@ -45,18 +45,24 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register("individual", util.generateIndividual, creator.Individual,
         len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, cache)
-    cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)
+
+
+    if cache.sobolGeneration:
+        cache.toolbox.register("population", util.sobolGenerator, creator.Individual, cache)
+    else:
+        cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)
+    cache.toolbox.register("randomPopulation", tools.initRepeat, list, cache.toolbox.individual)
 
     cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
 
-    cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=5.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
+    cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=2.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
 
-    if cache.adaptive:
-        cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
-        cache.toolbox.register("force_mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
-    else:
-        cache.toolbox.register("mutate", tools.mutPolynomialBounded, eta=2.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
-        cache.toolbox.register("force_mutate", tools.mutPolynomialBounded, eta=2.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
+    #if cache.adaptive:
+    #    cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
+    #    cache.toolbox.register("force_mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
+    #else:
+    cache.toolbox.register("mutate", tools.mutPolynomialBounded, eta=2.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
+    cache.toolbox.register("force_mutate", tools.mutPolynomialBounded, eta=2.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
 
     cache.toolbox.register("select", selSPEA2)
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)

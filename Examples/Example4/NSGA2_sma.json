@@ -15,55 +15,33 @@
     "roundScores": 3,
 	"parameters": [
 		{
-			"transform": "keq",
+			"transform": "norm_keq",
 			"component": 1,
-			"bound": [
-				0
-			],
+			"bound": 0,
 			"location": [
 				"/input/model/unit_001/adsorption/SMA_KA",
 				"/input/model/unit_001/adsorption/SMA_KD"
 			],
-			"minKA": [
-				1e-08
-			],
-			"maxKA": [
-				100000000.0
-			],
-			"minKEQ": [
-				0.0001
-			],
-			"maxKEQ": [
-				10000.0
-			]
+			"minKA": 1e-08,
+			"maxKA": 100000000.0,
+			"minKEQ": 0.0001,
+			"maxKEQ": 10000.0
 		},
 		{
-			"transform": "log",
+			"transform": "norm",
 			"component": 1,
-			"bound": [
-				0
-			],
+			"bound": 0,
 			"location": "/input/model/unit_001/adsorption/SMA_NU",
-			"min": [
-				1.0
-			],
-			"max": [
-				40.0
-			]
+			"min": 1.0,
+			"max": 40.0
 		},
 		{
-			"transform": "log",
+			"transform": "norm",
 			"component": 1,
-			"bound": [
-				0
-			],
+			"bound": 0,
 			"location": "/input/model/unit_001/adsorption/SMA_SIGMA",
-			"min": [
-				1.0
-			],
-			"max": [
-				100.0
-			]
+			"min": 1.0,
+			"max": 100.0
 		}
 	],
 	"population": 100,
@@ -77,8 +55,6 @@
 			"features": [
 				{
 					"name": "Pulse",
-					"start": 0,
-					"stop": 6000.0,
 					"type": "breakthroughHybrid2"
 				}
 			]
