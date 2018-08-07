@@ -49,7 +49,7 @@ def main():
         graphExperiments(cache)    
 
 def graphCorner(cache):
-    headers = list(cache.parameter_headers)
+    headers = list(cache.parameter_headers_actual)
     headers = [header.split()[0] for header in headers]
     
     trainingDir = Path(cache.settings['resultsDirTraining'])
@@ -108,6 +108,9 @@ def graphCorner(cache):
 
     else:
         accept_range = [0.95] * len(headers)
+
+        print(headers)
+        print(accept_range)
         data = {}
         with h5py.File(training_h5, 'r') as h5:
             for key in h5.keys():

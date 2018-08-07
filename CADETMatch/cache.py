@@ -121,11 +121,14 @@ class Cache:
         base = len(self.headers)
 
         parameter_headers = []
+        parameter_headers_actual = []
         
         for parameter in self.settings['parameters']:
             parameter_headers.extend(self.transforms[parameter['transform']].getHeaders(parameter))
+            parameter_headers_actual.extend(self.transforms[parameter['transform']].getHeadersActual(parameter))
 
         self.parameter_headers = parameter_headers
+        self.parameter_headers_actual = parameter_headers_actual
 
         self.headers.extend(parameter_headers)
 

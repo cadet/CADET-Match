@@ -31,10 +31,17 @@ import modEnsemble
 
 name = "MCMC"
 
-minVar = 1e-10
-maxVar = 1e-1
-minLogVar = numpy.log(minVar)
-maxLogVar = numpy.log(maxVar)
+class Container:
+    def __init__(self, minVar, maxVar):
+        self.set(minVar, maxVar)
+
+    def set(self, minVar, maxVar):
+        self.minVar = minVar
+        self.maxVar = maxVar
+        self.minLogVar = numpy.log(minVar)
+        self.maxLogVar = numpy.log(maxVar)
+
+container = Container(1e-10, 1e-1)
 
 def log_prior(theta, cache):
     # Create flat distributions.
@@ -42,7 +49,7 @@ def log_prior(theta, cache):
     error = theta[-1]
     lower_bound = numpy.array(cache.MIN_VALUE)
     upper_bound = numpy.array(cache.MAX_VALUE)
-    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound) and 0 < error < 1:
+    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound) and 0 <= error <= 1:
     #if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound):
         return 0.0
     else:
@@ -52,12 +59,22 @@ def log_likelihood(theta, json_path):
     individual = theta[:-1]
     scores, csv_record, results = evo.fitness(individual, json_path)
     #error = theta[-1]
-    error = numpy.exp((maxLogVar - minLogVar) * theta[-1] + minLogVar)
+    error = numpy.exp((container.maxLogVar - container.minLogVar) * theta[-1] + container.minLogVar)
     count = sum([i['error_count'] for i in results.values()])
     sse = sum([i['error'] for i in results.values()])
 
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path, False)
+
+    #a_sse = count * np.log(2 * numpy.pi * error ** 2)
+    #b_sse = sse
+    #c_see = sse / (error ** 2)
+
+    #a_min = np.log(2 * numpy.pi * error ** 2)
+    #b_min = (1.0 - scores[1])
+    #c_min = (1.0 - scores[1]) / (error ** 2)
+    if cache.cache.scoreMCMC == 'score':
+        score = -0.5 * (len(scores) * np.log(2 * numpy.pi * error ** 2) + sum([1.0 - i for i in scores]) / (error ** 2) )
 
     if cache.cache.scoreMCMC == 'sse':
         #sse
@@ -65,27 +82,13 @@ def log_likelihood(theta, json_path):
 
     if cache.cache.scoreMCMC == 'min':
         #min
-        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[1]) / (error ** 2) )
+        min_score = min(scores)
+        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - min_score) / (error ** 2) )
 
     if cache.cache.scoreMCMC == 'product':
         #prod
-        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[2]) / (error ** 2) )
-
-    if cache.cache.scoreMCMC == 'min2':
-        #min
-        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[1]**2) / (error ** 2) )
-
-    if cache.cache.scoreMCMC == 'product2':
-        #prod
-        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[2]**2) / (error ** 2) )
-
-    if cache.cache.scoreMCMC == 'min5':
-        #min
-        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[1]**5) / (error ** 2) )
-
-    if cache.cache.scoreMCMC == 'product5':
-        #prod
-        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - scores[2]**5) / (error ** 2) )
+        prod_score = numpy.product(scores)
+        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - prod_score) / (error ** 2) )
 
     return score, scores, csv_record, results 
 
@@ -107,6 +110,9 @@ def log_posterior(theta, json_path):
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
+
+    if cache.scoreMCMC != 'sse':
+        container.set(1e-4, 1e4)
 
     parameters = len(cache.MIN_VALUE) + 1
     populationSize = parameters * cache.settings['population']
@@ -374,7 +380,7 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx):
     for walker in range(chain_shape[0]):
         for position in range(chain_shape[1]):
             chain_transform[walker, position,:-1] = util.convert_individual(chain_transform[walker, position, :-1], cache)
-    chain_transform[:,:,-1] = numpy.exp((maxLogVar - minLogVar) * chain_transform[:,:,-1] + minLogVar)
+    chain_transform[:,:,-1] = numpy.exp((container.maxLogVar - container.minLogVar) * chain_transform[:,:,-1] + container.minLogVar)
 
     flat_chain_transform = chain_transform.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 

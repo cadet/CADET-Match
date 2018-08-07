@@ -92,3 +92,6 @@ def getHeaders(parameter):
     if index is not None:
         headers.append("%s Comp:%s Index:%s" % (name, comp, index))
     return headers
+
+def getHeadersActual(parameter):
+    return getHeaders(parameter)

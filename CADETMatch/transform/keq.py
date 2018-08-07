@@ -78,3 +78,15 @@ def getHeaders(parameter):
     headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
     return headers
 
+def getHeadersActual(parameter):
+    location = parameter['location']
+    nameKA = location[0].rsplit('/', 1)[-1]
+    nameKD = location[1].rsplit('/', 1)[-1]
+    bound = parameter['bound']
+    comp = parameter['component']
+    
+    headers = []
+    headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
+    headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
+    return headers
+

@@ -70,3 +70,15 @@ def getHeaders(parameter):
     headers.append("%s+%s Comp:%s Bound:%s" % (nameNu, nameSigma, comp, bound))
     return headers
 
+def getHeadersActual(parameter):
+    nu_location = parameter['nu_location']
+    sigma_location = parameter['sigma_location']
+    nameNu = nu_location.rsplit('/', 1)[-1]
+    nameSigma = sigma_location.rsplit('/', 1)[-1]
+    bound = parameter['bound']
+    comp = parameter['component']
+    
+    headers = []
+    headers.append("%s Comp:%s Bound:%s" % (nameNu, comp, bound))
+    headers.append("%s+%s Comp:%s Bound:%s" % (nameNu, nameSigma, comp, bound))
+    return headers

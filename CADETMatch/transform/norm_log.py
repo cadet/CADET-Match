@@ -96,4 +96,6 @@ def getHeaders(parameter):
         headers.append("%s Comp:%s Index:%s" % (name, comp, index))
     return headers
 
+def getHeadersActual(parameter):
+    return getHeaders(parameter)
 
