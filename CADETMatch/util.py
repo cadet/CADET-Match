@@ -522,6 +522,15 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
     data_meta = numpy.array([i.fitness.values for i in halloffame])
     data_grad = numpy.array([i.fitness.values for i in halloffame])
 
+
+    #data distances
+    dist = scipy.spatial.distance.cdist(data, data)
+    dist_std = numpy.std(dist)
+    dist_min = numpy.min(dist[dist>0])
+    dist_max = numpy.max(dist)
+
+    dist_info = "Diversity Std \t %.3f Min \t %.3f Max \t %.3f" % (dist_std, dist_min, dist_max)
+
     with hof.open('wb') as hof_file:
         numpy.save(hof_file, data)
 
@@ -592,7 +601,8 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         print("Generation: ", generation, "\tPopulation: ", len(population),
               "\tAverage Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_mean_mean,4), RoundToSigFigs(data_mean_best,4)),
               "\tMinimum Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_min_mean,4), RoundToSigFigs(data_min_best,4)),
-              "\tProduct Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_prod_mean,4), RoundToSigFigs(data_prod_best,4)))
+              "\tProduct Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_prod_mean,4), RoundToSigFigs(data_prod_best,4)),
+              "\n\t", dist_info)
         
         writer.writerow([generation,
                          len(population),
