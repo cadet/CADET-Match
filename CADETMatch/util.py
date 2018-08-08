@@ -544,6 +544,7 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
     with grad_hof.open('wb') as hof_file:
         numpy.save(hof_file, data_grad)
 
+    gen_data = numpy.array([generation, len(training['input'])]).reshape(1,2)
 
     if training is not None:
         trainingDir = Path(cache.settings['resultsDirTraining'])
@@ -555,6 +556,7 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 hf.create_dataset("input", data=training['input'], maxshape=(None, len(training['input'][0])), compression="gzip")
                 hf.create_dataset("output", data=training['output'], maxshape=(None, len(training['output'][0])), compression="gzip")
                 hf.create_dataset("output_meta", data=training['output_meta'], maxshape=(None, len(training['output_meta'][0])), compression="gzip")
+                hf.create_dataset("generation", data=gen_data, maxshape=(None, 2), compression="gzip")
                 
                 if cache.fullTrainingData:
 
@@ -573,6 +575,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
                 hf["output_meta"].resize((hf["output_meta"].shape[0] + len(training['output_meta'])), axis = 0)
                 hf["output_meta"][-len(training['output_meta']):] = training['output_meta']
+
+                hf["generation"].resize((hf["generation"].shape[0] + 1), axis = 0)
+                hf["generation"][-1] = gen_data
                 
                 if cache.fullTrainingData:
 

@@ -25,8 +25,15 @@ def main():
 
     with h5py.File(training_path) as h5:
         data_output = h5['/output'].value
-        data_in = h5['/input'].value
-        data_meta = h5['/output_meta'].value
+        data_generation = h5['/generation'].value
+        
+        data_generation = h5['/generation'].value[-1, -1]
+        
+        
+        data_output = h5['/output'].value[-data_generation:, :]
+        data_in = h5['/input'].value[-data_generation:, :]
+        data_meta = h5['/output_meta'].value[-data_generation:, :]
+        
 
         data = numpy.concatenate([data_in, data_output, data_meta], axis=1)
 
