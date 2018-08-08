@@ -100,12 +100,12 @@ def log_posterior(theta, json_path):
     # only compute model if likelihood of the prior is not - infinity
     if not numpy.isfinite(lp):
         return -numpy.inf, None, None, None, None
-    #try:
-    ll, scores, csv_record, results = log_likelihood(theta, json_path)
-    return lp + ll, theta, scores, csv_record, results
-    #except:
-    #    # if model does not converge:
-    #    return -numpy.inf, None, None, None
+    try:
+        ll, scores, csv_record, results = log_likelihood(theta, json_path)
+        return lp + ll, theta, scores, csv_record, results
+    except:
+        # if model does not converge:
+        return -numpy.inf, None, None, None, None
 
 def run(cache, tools, creator):
     "run the parameter estimation"

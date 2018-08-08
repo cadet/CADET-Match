@@ -13,6 +13,7 @@ def run(cache, tools, creator):
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
         pop = cache.toolbox.population(n=0)
         sim_start = generation_start = time.time()
+        training = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}}
 
         if "seeds" in cache.settings:
             print(cache.settings['seeds'])
@@ -25,11 +26,11 @@ def run(cache, tools, creator):
         grad_hof = pareto.ParetoFront(similar=util.similar)
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
-        stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof, -1)
+        stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof, -1, training)
         
         avg, bestMin, bestProd = util.averageFitness(pop, cache)
         
-        util.writeProgress(cache, -1, pop, hof, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start)
+        util.writeProgress(cache, -1, pop, hof, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, training)
         
         util.finish(cache)
         return hof

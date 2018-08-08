@@ -525,11 +525,15 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
     #data distances
     dist = scipy.spatial.distance.cdist(data, data)
-    dist_std = numpy.std(dist)
-    dist_min = numpy.min(dist[dist>0])
-    dist_max = numpy.max(dist)
+    if len(dist):
+        dist_std = numpy.std(dist)
+        dist_min = numpy.min(dist[dist>0])
+        dist_max = numpy.max(dist)
+        dist_mean = numpy.mean(dist)
 
-    dist_info = "Diversity Std \t %.3f Min \t %.3f Max \t %.3f" % (dist_std, dist_min, dist_max)
+        dist_info = "Diversity Std \t %.3f Min \t %.3f Mean \t %.3f Max \t %.3f" % (dist_std, dist_min, dist_mean, dist_max)
+    else:
+        dist_info = "No Diversity Information"
 
     with hof.open('wb') as hof_file:
         numpy.save(hof_file, data)
