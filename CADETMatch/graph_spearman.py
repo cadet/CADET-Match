@@ -42,7 +42,7 @@ def main():
         fig = figure.Figure()
         canvas = FigureCanvas(fig)
         graph = fig.add_subplot(1, 1, 1)
-        im = graph.imshow(spear, cmap='terrain', interpolation='nearest', vmin=-1, vmax=1)
+        im = graph.imshow(spear, cmap='RdGy', interpolation='nearest', vmin=-1, vmax=1)
         graph.figure.colorbar(im, ax=graph)
         filename = "generation_%s.png" % (generation)
         fig.savefig(str(output_spear / filename), bbox_inches='tight')

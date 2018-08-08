@@ -150,6 +150,15 @@ def mutPolynomialBoundedAdaptive(individual, eta, low, up, indpb):
     eta = eta + mult * 0
     return tools.mutPolynomialBounded(individual, eta, low, up, indpb)
 
+def mutPolynomialBounded(individual, eta, low, up, indpb):
+    """Adaptive eta for mutPolynomialBounded"""
+    scores = individual.fitness.values
+    mult = min(scores)
+    eta = calc_coeff.exponential(mult, 1, 5.35) * eta
+
+    individual =  tools.mutPolynomialBounded(individual, eta, low, up, indpb)
+    return individual
+
 def mutationBoundedAdaptive(individual, low, up, indpb):
     scores = individual.fitness.values
     mult = min(scores)
