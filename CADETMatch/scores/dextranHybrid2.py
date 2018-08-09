@@ -9,7 +9,7 @@ badScore = 0
 
 def run(sim_data, feature):
     "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
-    failure = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 1e6
+    failure = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 1e6, 1
     
     exp_time_values = feature['time']
     max_value = feature['max_value']

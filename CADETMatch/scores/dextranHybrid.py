@@ -33,7 +33,7 @@ def run(sim_data, feature):
         sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
         exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
     except:  #I know a bare exception is bad but it looks like the exception is not exposed inside UnivariateSpline
-        return [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 1e6
+        return [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 1e6, 1
 
     exp_der_data_values = exp_spline(exp_time_values)
     sim_der_data_values = sim_spline(exp_time_values)

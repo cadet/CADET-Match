@@ -21,7 +21,7 @@ def run(sim_data, feature):
         sim_spline_derivative = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
         exp_spline_derivative = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
     except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
-        return [0.0, 0.0, 0.0], 1e6
+        return [0.0, 0.0, 0.0], 1e6, 1
 
     expSelected = selected & (feature['time'] <= max_time)
     expTime = feature['time'][expSelected]
