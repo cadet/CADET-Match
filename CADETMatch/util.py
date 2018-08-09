@@ -537,7 +537,10 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
     dist = scipy.spatial.distance.cdist(data, data)
     if len(dist):
         dist_std = numpy.std(dist)
-        dist_min = numpy.min(dist[dist>0])
+        try:
+            dist_min = numpy.min(dist[dist>0])
+        except ValueError:
+            dist_min = numpy.inf
         dist_max = numpy.max(dist)
         dist_mean = numpy.mean(dist)
 

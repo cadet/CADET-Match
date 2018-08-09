@@ -14,10 +14,9 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\AMS-003\transport\bypass\NSGA2_bypass.json" 0</CommandLineArguments>
+    <CommandLineArguments>"F:\AMS-003\transport\bypass\NSGA2_bypass_trans_area.json" 0</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>
-    </InterpreterArguments>
+    <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -233,10 +232,22 @@
     <Compile Include="transform\norm_nu_sigma.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="transform\norm_volume_area.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="transform\norm_volume_length.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="transform\null.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="transform\nu_sigma.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="transform\volume_area.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="transform\volume_length.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="util.py">
