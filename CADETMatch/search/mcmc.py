@@ -66,13 +66,6 @@ def log_likelihood(theta, json_path):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path, False)
 
-    #a_sse = count * np.log(2 * numpy.pi * error ** 2)
-    #b_sse = sse
-    #c_see = sse / (error ** 2)
-
-    #a_min = np.log(2 * numpy.pi * error ** 2)
-    #b_min = (1.0 - scores[1])
-    #c_min = (1.0 - scores[1]) / (error ** 2)
     if cache.cache.scoreMCMC == 'score':
         score = -0.5 * (len(scores) * np.log(2 * numpy.pi * error ** 2) + sum([1.0 - i for i in scores]) / (error ** 2) )
 
@@ -415,7 +408,19 @@ def processChainForPlots(cache, chain):
 
     results = {}
     times = {}
+
+    mcmc_selected = []
+    mcmc_selected_transformed = []
+    mcmc_selected_score = []
+
     for (fit, csv_line, result) in fitnesses:
+
+        mcmc_selected_score.append(tuple(fit))
+        for value in result.values():
+            mcmc_selected_transformed.append(tuple(value['cadetValues']))
+            mcmc_selected.append(tuple(value['individual']))
+            break
+
         
         for key,value in result.items():
             sims = results.get(key, {})
@@ -434,6 +439,8 @@ def processChainForPlots(cache, chain):
                 times[key] = sim.root.output.solution.solution_times
 
         util.cleanupProcess(result)
+
+    writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score)
 
     for expName, comps in list(results.items()):
         for compIdx, compValue in list(comps.items()):
@@ -461,6 +468,13 @@ def processChainForPlots(cache, chain):
         temp["max"] = numpy.max(data, 0)
         combinations[expName] = temp
     return results, combinations
+
+def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score):
+    mcmc_h5 = Path(cache.settings['resultsDirMisc']) / "mcmc.h5"
+    with h5py.File(mcmc_h5, 'a') as hf:
+         hf.create_dataset("mcmc_selected", data=numpy.array(mcmc_selected), compression="gzip")
+         hf.create_dataset("mcmc_selected_transformed", data=numpy.array(mcmc_selected_transformed), compression="gzip")
+         hf.create_dataset("mcmc_selected_score", data=numpy.array(mcmc_selected_score), compression="gzip")
 
 def plotTube(cache, chain):
     results, combinations = processChainForPlots(cache, chain)

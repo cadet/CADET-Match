@@ -154,8 +154,11 @@ def mutPolynomialBounded(individual, eta, low, up, indpb):
     """Adaptive eta for mutPolynomialBounded"""
     scores = individual.fitness.values
     mult = min(scores)
-    a,b = calc_coeff.exponential_coeff(0.0, 1, 0.99, 100)
-    eta = calc_coeff.exponential(mult, a, b) * eta
+    #a,b = calc_coeff.exponential_coeff(0.0, 1, 0.99, 275)
+    #eta = calc_coeff.exponential(mult, a, b) * eta
+
+    a,b = calc_coeff.linear_coeff(0.0, 1, 0.99, 300)
+    eta = calc_coeff.linear(mult, a, b) * eta
 
     individual =  tools.mutPolynomialBounded(individual, eta, low, up, indpb)
     return individual
@@ -306,6 +309,7 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     temp['error_count'] = 0.0
     temp['cadetValues'] = cadetValues
     temp['cadetValuesKEQ'] = cadetValuesKEQ
+    temp['individual'] = tuple(individual)
 
     for feature in experiment['features']:
         start = float(feature['start'])
