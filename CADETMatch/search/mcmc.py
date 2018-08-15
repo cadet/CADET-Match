@@ -151,7 +151,7 @@ def run(cache, tools, creator):
 
         sampler.reset()
 
-        checkInterval = 100
+        checkInterval = 25
         mult = 500
         for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(p, iterations=cache.settings.get('chainLength', 10000) )):
             accept = np.mean(sampler.acceptance_fraction)
