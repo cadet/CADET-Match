@@ -144,8 +144,8 @@ def run(cache, tools, creator):
             converge[:-1] = converge[1:]
             converge[-1] = accept
             writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
-            print(np.std(converge), np.mean(converge), np.std(converge)/1e-3)
-            if np.std(converge) < 1e-3:
+            print(np.std(converge), np.mean(converge), np.std(converge)/5e-4)
+            if np.std(converge) < 5e-4:
                 print("burn in completed at iteration ", idx)
                 break
 
@@ -395,6 +395,48 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx):
         hf.create_dataset("flat_chain_transform", data=flat_chain_transform, compression="gzip")
 
 def processChainForPlots(cache, chain):
+    mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, results, times = genRandomChoice(cache, chain)
+
+    mcmc_selected_new, mcmc_selected_transformed_new, mcmc_selected_score_new, results_new, times_new = genRandomChoiceNew(cache, chain)
+
+
+    writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score,
+        mcmc_selected_new, mcmc_selected_transformed_new, mcmc_selected_score_new)
+
+    results, combinations = processResultsForPlotting(results, times)
+    results_new, combinations_new = processResultsForPlotting(results_new, times_new)
+
+    return results, combinations, results_new, combinations_new
+
+def processResultsForPlotting(results, times):
+    for expName, comps in list(results.items()):
+        for compIdx, compValue in list(comps.items()):
+            data = numpy.array(compValue)
+            results[expName][compIdx] = {}
+            results[expName][compIdx]['data'] = data
+            results[expName][compIdx]["mean"] = numpy.mean(data, 0)
+            results[expName][compIdx]["std"] = numpy.std(data, 0)
+            results[expName][compIdx]["min"] = numpy.min(data, 0)
+            results[expName][compIdx]["max"] = numpy.max(data, 0)
+            results[expName][compIdx]['time'] = times[expName]
+
+    combinations = {}
+    for expName, comps in results.items():
+        data = numpy.zeros(comps[0]['data'].shape)
+        times = comps[0]['time']
+        for compIdx, compValue in list(comps.items()):
+            data = data + compValue['data']
+        temp = {}
+        temp['data'] = data
+        temp['time'] = times
+        temp["mean"] = numpy.mean(data, 0)
+        temp["std"] = numpy.std(data, 0)
+        temp["min"] = numpy.min(data, 0)
+        temp["max"] = numpy.max(data, 0)
+        combinations[expName] = temp
+    return results, combinations
+
+def genRandomChoice(cache, chain):
     if len(chain) > 1e2:
         indexes = np.random.choice(chain.shape[0], int(100), replace=False)
         chain = chain[indexes]
@@ -440,44 +482,91 @@ def processChainForPlots(cache, chain):
 
         util.cleanupProcess(result)
 
-    writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score)
+    mcmc_selected = numpy.array(mcmc_selected)
+    mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)
+    mcmc_selected_score = numpy.array(mcmc_selected_score)
 
-    for expName, comps in list(results.items()):
-        for compIdx, compValue in list(comps.items()):
-            data = numpy.array(compValue)
-            results[expName][compIdx] = {}
-            results[expName][compIdx]['data'] = data
-            results[expName][compIdx]["mean"] = numpy.mean(data, 0)
-            results[expName][compIdx]["std"] = numpy.std(data, 0)
-            results[expName][compIdx]["min"] = numpy.min(data, 0)
-            results[expName][compIdx]["max"] = numpy.max(data, 0)
-            results[expName][compIdx]['time'] = times[expName]
+    #set the upperbound of find outliers to 100% since we 
+    selected, bools = util.find_outliers(mcmc_selected_score, 10, 100)
+    
+    return mcmc_selected[bools], mcmc_selected_transformed[bools], mcmc_selected_score[bools], results, times
 
-    combinations = {}
-    for expName, comps in results.items():
-        data = numpy.zeros(comps[0]['data'].shape)
-        times = comps[0]['time']
-        for compIdx, compValue in list(comps.items()):
-            data = data + compValue['data']
-        temp = {}
-        temp['data'] = data
-        temp['time'] = times
-        temp["mean"] = numpy.mean(data, 0)
-        temp["std"] = numpy.std(data, 0)
-        temp["min"] = numpy.min(data, 0)
-        temp["max"] = numpy.max(data, 0)
-        combinations[expName] = temp
-    return results, combinations
+def genRandomChoiceNew(cache, chain):
+    if len(chain) > 1e2:
+        chain = sample_chain(chain, 100)
 
-def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score):
+    individuals = []
+
+    for idx in range(len(chain)):
+        individuals.append(chain[idx,0:-1])
+
+    fitnesses = cache.toolbox.map(cache.toolbox.evaluate, individuals)
+
+    results = {}
+    times = {}
+
+    mcmc_selected = []
+    mcmc_selected_transformed = []
+    mcmc_selected_score = []
+
+    for (fit, csv_line, result) in fitnesses:
+
+        mcmc_selected_score.append(tuple(fit))
+        for value in result.values():
+            mcmc_selected_transformed.append(tuple(value['cadetValues']))
+            mcmc_selected.append(tuple(value['individual']))
+            break
+
+        
+        for key,value in result.items():
+            sims = results.get(key, {})
+
+            sim = value['simulation']
+            ncomp = sim.root.input.model.unit_002.ncomp
+
+            for i in range(ncomp):
+                comps = sims.get(i, [])
+                comps.append(sim.root.output.solution.unit_002["solution_inlet_comp_%03d" % i])
+                sims[i] = comps
+
+            results[key] = sims
+
+            if key not in times:
+                times[key] = sim.root.output.solution.solution_times
+
+        util.cleanupProcess(result)
+    return mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, results, times
+
+def sample_d(initial, samples):
+    values,indices=np.histogram(initial,bins=100)
+    weights=values/np.sum(values)
+
+    #Below, 5 is the dimension of the returned array.
+    new_random=np.random.choice(indices[1:],samples,p=weights)
+    return new_random
+
+def sample_chain(chain, count):
+    temp = []
+    row, col = chain.shape
+    for i in range(col):
+        temp.append(sample_d(chain[:,i], count))
+    temp = np.array(temp)
+    return temp.transpose()
+
+def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score,
+        mcmc_selected_new, mcmc_selected_transformed_new, mcmc_selected_score_new):
     mcmc_h5 = Path(cache.settings['resultsDirMisc']) / "mcmc.h5"
     with h5py.File(mcmc_h5, 'a') as hf:
          hf.create_dataset("mcmc_selected", data=numpy.array(mcmc_selected), compression="gzip")
          hf.create_dataset("mcmc_selected_transformed", data=numpy.array(mcmc_selected_transformed), compression="gzip")
          hf.create_dataset("mcmc_selected_score", data=numpy.array(mcmc_selected_score), compression="gzip")
 
+         hf.create_dataset("mcmc_selected_new", data=numpy.array(mcmc_selected_new), compression="gzip")
+         hf.create_dataset("mcmc_selected_transformed_new", data=numpy.array(mcmc_selected_transformed_new), compression="gzip")
+         hf.create_dataset("mcmc_selected_score_new", data=numpy.array(mcmc_selected_score_new), compression="gzip")
+
 def plotTube(cache, chain):
-    results, combinations = processChainForPlots(cache, chain)
+    results, combinations, results_new, combinations_new = processChainForPlots(cache, chain)
 
     output_mcmc = cache.settings['resultsDirSpace'] / "mcmc"
     output_mcmc.mkdir(parents=True, exist_ok=True)
@@ -488,6 +577,13 @@ def plotTube(cache, chain):
     for expName, comps in list(results.items()):
         for compIdx, compValue in list(comps.items()):
             plot_mcmc(output_mcmc, compValue, expName, compIdx)
+
+    for expName,value in combinations_new.items():
+        plot_mcmc(output_mcmc, value, expName, "combine_new")
+
+    for expName, comps in list(results_new.items()):
+        for compIdx, compValue in list(comps.items()):
+            plot_mcmc(output_mcmc, compValue, expName, "%s_new" % compIdx)
 
 def plot_mcmc(output_mcmc, value, expName, name):
     data = value['data']

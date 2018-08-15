@@ -924,3 +924,9 @@ def finish(cache):
     cwd = str(Path(__file__).parent)
     subprocess.run([sys.executable, 'video_spearman.py', str(cache.json_path)], 
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
+
+def find_outliers(data, lower_percent=5, upper_percent=95):
+    lb, ub = numpy.percentile(data, [lower_percent, upper_percent], 0)
+    selected = (data >= lb) & (data <= ub)
+    bools = numpy.all(selected, 1)
+    return selected, bools

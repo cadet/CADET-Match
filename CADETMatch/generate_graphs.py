@@ -61,8 +61,6 @@ def graphCorner(cache):
     if mcmc_h5.exists():
         headers.append('variance')
 
-        accept_range = [0.95] * len(headers)
-
         data = {}
         with h5py.File(mcmc_h5, 'r') as h5:
             for key in h5.keys():
@@ -79,11 +77,11 @@ def graphCorner(cache):
         out_dir = cache.settings['resultsDirProgress']
 
         fig = corner.corner(chain, quantiles=(0.16, 0.5, 0.84),
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100, range=accept_range)
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
         fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
 
         fig = corner.corner(chain_transform, quantiles=(0.16, 0.5, 0.84),
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100, range=accept_range)
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
         fig.savefig(str(out_dir / "corner_transform.png"), bbox_inches='tight')
 
         if 'burn_in_acceptance' in data:
@@ -107,10 +105,6 @@ def graphCorner(cache):
             fig.savefig(str(out_dir / "mcmc_acceptance.png"), bbox_inches='tight')
 
     else:
-        accept_range = [0.95] * len(headers)
-
-        print(headers)
-        print(accept_range)
         data = {}
         with h5py.File(training_h5, 'r') as h5:
             for key in h5.keys():
@@ -131,19 +125,19 @@ def graphCorner(cache):
         out_dir = cache.settings['resultsDirProgress']
 
         fig = corner.corner(data_input, quantiles=(0.16, 0.5, 0.84),
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100, range=accept_range)
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
         fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
 
         fig = corner.corner(data_input, quantiles=(0.16, 0.5, 0.84), weights=weight_min,
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100, range=accept_range)
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
         fig.savefig(str(out_dir / "corner_min.png"), bbox_inches='tight')
 
         fig = corner.corner(data_input, quantiles=(0.16, 0.5, 0.84), weights=weight_prod,
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100, range=accept_range)
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
         fig.savefig(str(out_dir / "corner_prod.png"), bbox_inches='tight')
 
         fig = corner.corner(data_input, quantiles=(0.16, 0.5, 0.84), weights=weight_norm,
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100, range=accept_range)
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
         fig.savefig(str(out_dir / "corner_norm.png"), bbox_inches='tight')
 
 def graphExperiments(cache):
