@@ -436,9 +436,9 @@ def processResultsForPlotting(results, times):
         combinations[expName] = temp
     return results, combinations
 
-def genRandomChoice(cache, chain):
-    if len(chain) > 1e2:
-        indexes = np.random.choice(chain.shape[0], int(100), replace=False)
+def genRandomChoice(cache, chain, size=500):
+    if len(chain) > size:
+        indexes = np.random.choice(chain.shape[0], size, replace=False)
         chain = chain[indexes]
 
     individuals = []
@@ -486,14 +486,16 @@ def genRandomChoice(cache, chain):
     mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)
     mcmc_selected_score = numpy.array(mcmc_selected_score)
 
-    #set the upperbound of find outliers to 100% since we 
-    selected, bools = util.find_outliers(mcmc_selected_score, 10, 100)
+    #set the upperbound of find outliers to 100% since we don't need to get rid of good results only bad ones
+    selected, bools = util.find_outliers(mcmc_selected, 10, 90)
+
+    removeResultsOutliers(results, bools)
     
     return mcmc_selected[bools], mcmc_selected_transformed[bools], mcmc_selected_score[bools], results, times
 
-def genRandomChoiceNew(cache, chain):
-    if len(chain) > 1e2:
-        chain = sample_chain(chain, 100)
+def genRandomChoiceNew(cache, chain, size=500):
+    if len(chain) > size:
+        chain = sample_chain(chain, size)
 
     individuals = []
 
@@ -535,7 +537,22 @@ def genRandomChoiceNew(cache, chain):
                 times[key] = sim.root.output.solution.solution_times
 
         util.cleanupProcess(result)
-    return mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, results, times
+
+    mcmc_selected = numpy.array(mcmc_selected)
+    mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)
+    mcmc_selected_score = numpy.array(mcmc_selected_score)
+
+    #set the upperbound of find outliers to 100% since we don't need to get rid of good results only bad ones
+    selected, bools = util.find_outliers(mcmc_selected, 10, 90)
+
+    removeResultsOutliers(results, bools)
+    
+    return mcmc_selected[bools], mcmc_selected_transformed[bools], mcmc_selected_score[bools], results, times
+
+def removeResultsOutliers(results, bools):
+    for exp, comps in results.items():
+        for comp, data in comps.items():
+            comps[comp] = np.array(data)[bools]
 
 def sample_d(initial, samples):
     values,indices=np.histogram(initial,bins=100)
