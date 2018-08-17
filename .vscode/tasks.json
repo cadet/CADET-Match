@@ -8,6 +8,7 @@
             "type": "process",
             "command": "${config:python.pythonPath}",
             "args": [
+                "-m", "scoop", "-n", "4",
                 "${workspaceRoot}/CADETMatch/CADETMatch.py",
                 "/home/william/mcmc/MCMC_dextran.json", "1"
               ]

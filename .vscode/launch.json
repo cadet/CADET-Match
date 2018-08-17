@@ -9,7 +9,7 @@
             "type": "pythonExperimental",
             "request": "launch",
             "program": "${workspaceRoot}/CADETMatch/CADETMatch.py",
-            "console": "externalTerminal",
+            "console": "integratedTerminal",
             "args": [
                 "/home/william/mcmc/MCMC_dextran.json", "1"
               ]

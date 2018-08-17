@@ -317,7 +317,6 @@ def _get_lnprob(self, pos=None):
 
     return lnprob, blob
 
-
 #auto correlation support functions
 
 def autocorr_new(y, c=5.0):
@@ -397,16 +396,11 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx):
 def processChainForPlots(cache, chain):
     mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, results, times = genRandomChoice(cache, chain)
 
-    mcmc_selected_new, mcmc_selected_transformed_new, mcmc_selected_score_new, results_new, times_new = genRandomChoiceNew(cache, chain)
-
-
-    writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score,
-        mcmc_selected_new, mcmc_selected_transformed_new, mcmc_selected_score_new)
+    writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score)
 
     results, combinations = processResultsForPlotting(results, times)
-    results_new, combinations_new = processResultsForPlotting(results_new, times_new)
 
-    return results, combinations, results_new, combinations_new
+    return results, combinations
 
 def processResultsForPlotting(results, times):
     for expName, comps in list(results.items()):
@@ -493,97 +487,20 @@ def genRandomChoice(cache, chain, size=500):
     
     return mcmc_selected[bools], mcmc_selected_transformed[bools], mcmc_selected_score[bools], results, times
 
-def genRandomChoiceNew(cache, chain, size=500):
-    if len(chain) > size:
-        chain = sample_chain(chain, size)
-
-    individuals = []
-
-    for idx in range(len(chain)):
-        individuals.append(chain[idx,0:-1])
-
-    fitnesses = cache.toolbox.map(cache.toolbox.evaluate, individuals)
-
-    results = {}
-    times = {}
-
-    mcmc_selected = []
-    mcmc_selected_transformed = []
-    mcmc_selected_score = []
-
-    for (fit, csv_line, result) in fitnesses:
-
-        mcmc_selected_score.append(tuple(fit))
-        for value in result.values():
-            mcmc_selected_transformed.append(tuple(value['cadetValues']))
-            mcmc_selected.append(tuple(value['individual']))
-            break
-
-        
-        for key,value in result.items():
-            sims = results.get(key, {})
-
-            sim = value['simulation']
-            ncomp = sim.root.input.model.unit_002.ncomp
-
-            for i in range(ncomp):
-                comps = sims.get(i, [])
-                comps.append(sim.root.output.solution.unit_002["solution_inlet_comp_%03d" % i])
-                sims[i] = comps
-
-            results[key] = sims
-
-            if key not in times:
-                times[key] = sim.root.output.solution.solution_times
-
-        util.cleanupProcess(result)
-
-    mcmc_selected = numpy.array(mcmc_selected)
-    mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)
-    mcmc_selected_score = numpy.array(mcmc_selected_score)
-
-    #set the upperbound of find outliers to 100% since we don't need to get rid of good results only bad ones
-    selected, bools = util.find_outliers(mcmc_selected, 10, 90)
-
-    removeResultsOutliers(results, bools)
-    
-    return mcmc_selected[bools], mcmc_selected_transformed[bools], mcmc_selected_score[bools], results, times
-
 def removeResultsOutliers(results, bools):
     for exp, comps in results.items():
         for comp, data in comps.items():
             comps[comp] = np.array(data)[bools]
 
-def sample_d(initial, samples):
-    values,indices=np.histogram(initial,bins=100)
-    weights=values/np.sum(values)
-
-    #Below, 5 is the dimension of the returned array.
-    new_random=np.random.choice(indices[1:],samples,p=weights)
-    return new_random
-
-def sample_chain(chain, count):
-    temp = []
-    row, col = chain.shape
-    for i in range(col):
-        temp.append(sample_d(chain[:,i], count))
-    temp = np.array(temp)
-    return temp.transpose()
-
-def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score,
-        mcmc_selected_new, mcmc_selected_transformed_new, mcmc_selected_score_new):
+def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score):
     mcmc_h5 = Path(cache.settings['resultsDirMisc']) / "mcmc.h5"
     with h5py.File(mcmc_h5, 'a') as hf:
          hf.create_dataset("mcmc_selected", data=numpy.array(mcmc_selected), compression="gzip")
          hf.create_dataset("mcmc_selected_transformed", data=numpy.array(mcmc_selected_transformed), compression="gzip")
          hf.create_dataset("mcmc_selected_score", data=numpy.array(mcmc_selected_score), compression="gzip")
 
-         hf.create_dataset("mcmc_selected_new", data=numpy.array(mcmc_selected_new), compression="gzip")
-         hf.create_dataset("mcmc_selected_transformed_new", data=numpy.array(mcmc_selected_transformed_new), compression="gzip")
-         hf.create_dataset("mcmc_selected_score_new", data=numpy.array(mcmc_selected_score_new), compression="gzip")
-
 def plotTube(cache, chain):
-    results, combinations, results_new, combinations_new = processChainForPlots(cache, chain)
+    results, combinations = processChainForPlots(cache, chain)
 
     output_mcmc = cache.settings['resultsDirSpace'] / "mcmc"
     output_mcmc.mkdir(parents=True, exist_ok=True)
@@ -594,13 +511,6 @@ def plotTube(cache, chain):
     for expName, comps in list(results.items()):
         for compIdx, compValue in list(comps.items()):
             plot_mcmc(output_mcmc, compValue, expName, compIdx)
-
-    for expName,value in combinations_new.items():
-        plot_mcmc(output_mcmc, value, expName, "combine_new")
-
-    for expName, comps in list(results_new.items()):
-        for compIdx, compValue in list(comps.items()):
-            plot_mcmc(output_mcmc, compValue, expName, "%s_new" % compIdx)
 
 def plot_mcmc(output_mcmc, value, expName, name):
     data = value['data']
@@ -614,7 +524,7 @@ def plot_mcmc(output_mcmc, value, expName, name):
     plt.fill_between(times, mean - std, mean + std,
                 color='green', alpha=0.2)
     plt.fill_between(times, minValues, maxValues,
-                color='blue', alpha=0.2)
+                color='red', alpha=0.2)
     plt.savefig(str(output_mcmc / ("%s_%s.png" % (expName, name) ) ), bbox_inches='tight')
     plt.close()
 
