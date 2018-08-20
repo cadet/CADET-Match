@@ -839,13 +839,13 @@ def writeMetaFront(cache, meta_hof, path_meta_csv):
     new_data.to_excel(cache.settings['resultsDirMeta'] / 'results.xlsx', index=False)
 
 def processResultsGrad(save_name_base, individual, cache, results):
-    notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirGrad'], '%s_%s_GRAD.h5')
+    saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirGrad'], '%s_%s_GRAD.h5')
 
 def processResults(save_name_base, individual, cache, results):
-    notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirEvo'], '%s_%s_EVO.h5')
+    saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirEvo'], '%s_%s_EVO.h5')
  
 def processResultsMeta(save_name_base, individual, cache, results):
-    notDuplicate = saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirMeta'], '%s_%s_meta.h5')    
+    saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirMeta'], '%s_%s_meta.h5')    
 
 def cleanupProcess(results):
     #cleanup
