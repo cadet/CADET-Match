@@ -930,3 +930,15 @@ def find_outliers(data, lower_percent=5, upper_percent=95):
     selected = (data >= lb) & (data <= ub)
     bools = numpy.all(selected, 1)
     return selected, bools
+
+def findOutlets(simulation):
+    "find all the outlets from a simulation along with their number of components"
+    outlets = []
+    for key,value in simulation.root.input.model.items():
+        try:
+            unitType = value.get('unit_type', None)
+        except AttributeError:
+            unitType = None
+        if unitType == b'OUTLET':
+            outlets.append((key, value.ncomp))
+    return outlets

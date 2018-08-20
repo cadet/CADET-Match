@@ -11,7 +11,7 @@
             "program": "${workspaceRoot}/CADETMatch/CADETMatch.py",
             "console": "integratedTerminal",
             "args": [
-                "/home/william/mcmc/MCMC_dextran.json", "1"
+                "/home/william/mcmc/MCMC_dextran_test.json", "1"
               ]
         },
         {

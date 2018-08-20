@@ -403,31 +403,34 @@ def processChainForPlots(cache, chain):
     return results, combinations
 
 def processResultsForPlotting(results, times):
-    for expName, comps in list(results.items()):
-        for compIdx, compValue in list(comps.items()):
-            data = numpy.array(compValue)
-            results[expName][compIdx] = {}
-            results[expName][compIdx]['data'] = data
-            results[expName][compIdx]["mean"] = numpy.mean(data, 0)
-            results[expName][compIdx]["std"] = numpy.std(data, 0)
-            results[expName][compIdx]["min"] = numpy.min(data, 0)
-            results[expName][compIdx]["max"] = numpy.max(data, 0)
-            results[expName][compIdx]['time'] = times[expName]
+    for expName, units in list(results.items()):
+        for unitName, unit in list(units.items()):
+            for compIdx, compValue in list(unit.items()):
+                data = numpy.array(compValue)
+                results[expName][unitName][compIdx] = {}
+                results[expName][unitName][compIdx]['data'] = data
+                results[expName][unitName][compIdx]["mean"] = numpy.mean(data, 0)
+                results[expName][unitName][compIdx]["std"] = numpy.std(data, 0)
+                results[expName][unitName][compIdx]["min"] = numpy.min(data, 0)
+                results[expName][unitName][compIdx]["max"] = numpy.max(data, 0)
+                results[expName][unitName][compIdx]['time'] = times[expName]
 
     combinations = {}
-    for expName, comps in results.items():
-        data = numpy.zeros(comps[0]['data'].shape)
-        times = comps[0]['time']
-        for compIdx, compValue in list(comps.items()):
-            data = data + compValue['data']
-        temp = {}
-        temp['data'] = data
-        temp['time'] = times
-        temp["mean"] = numpy.mean(data, 0)
-        temp["std"] = numpy.std(data, 0)
-        temp["min"] = numpy.min(data, 0)
-        temp["max"] = numpy.max(data, 0)
-        combinations[expName] = temp
+    for expName, units in results.items():
+        for unitName, unit in list(units.items()):
+            data = numpy.zeros(unit[0]['data'].shape)
+            times = unit[0]['time']
+            for compIdx, compValue in list(unit.items()):
+                data = data + compValue['data']
+            temp = {}
+            temp['data'] = data
+            temp['time'] = times
+            temp["mean"] = numpy.mean(data, 0)
+            temp["std"] = numpy.std(data, 0)
+            temp["min"] = numpy.min(data, 0)
+            temp["max"] = numpy.max(data, 0)
+            comb_name = '%s_%s' % (expName, unitName)
+            combinations[comb_name] = temp
     return results, combinations
 
 def genRandomChoice(cache, chain, size=500):
@@ -462,17 +465,23 @@ def genRandomChoice(cache, chain, size=500):
             sims = results.get(key, {})
 
             sim = value['simulation']
-            ncomp = sim.root.input.model.unit_002.ncomp
 
-            for i in range(ncomp):
-                comps = sims.get(i, [])
-                comps.append(sim.root.output.solution.unit_002["solution_inlet_comp_%03d" % i])
-                sims[i] = comps
+            outlets = util.findOutlets(sim)
+
+            for outlet, ncomp in outlets:
+                units = sims.get(outlet, {})
+
+                for i in range(ncomp):
+                    comps = units.get(i, [])
+                    comps.append(sim.root.output.solution[outlet]["solution_inlet_comp_%03d" % i])
+                    units[i] = comps
+
+                sims[outlet] = units
+
+                if key not in times:
+                    times[key] = sim.root.output.solution.solution_times
 
             results[key] = sims
-
-            if key not in times:
-                times[key] = sim.root.output.solution.solution_times
 
         util.cleanupProcess(result)
 
@@ -488,9 +497,10 @@ def genRandomChoice(cache, chain, size=500):
     return mcmc_selected[bools], mcmc_selected_transformed[bools], mcmc_selected_score[bools], results, times
 
 def removeResultsOutliers(results, bools):
-    for exp, comps in results.items():
-        for comp, data in comps.items():
-            comps[comp] = np.array(data)[bools]
+    for exp, units in results.items():
+        for unitName, unit in units.items():
+            for comp, data in unit.items():
+                unit[comp] = np.array(data)[bools]
 
 def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score):
     mcmc_h5 = Path(cache.settings['resultsDirMisc']) / "mcmc.h5"
@@ -508,9 +518,12 @@ def plotTube(cache, chain):
     for expName,value in combinations.items():
         plot_mcmc(output_mcmc, value, expName, "combine")
 
-    for expName, comps in list(results.items()):
-        for compIdx, compValue in list(comps.items()):
-            plot_mcmc(output_mcmc, compValue, expName, compIdx)
+
+    for exp, units in results.items():
+        for unitName, unit in units.items():
+            for comp, data in unit.items():
+                expName = '%s_%s' % (exp, unitName)
+                plot_mcmc(output_mcmc, data, expName, comp)
 
 def plot_mcmc(output_mcmc, value, expName, name):
     data = value['data']
