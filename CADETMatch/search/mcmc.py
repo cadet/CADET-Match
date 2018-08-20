@@ -29,6 +29,8 @@ import numpy as np
 import pareto
 import modEnsemble
 
+import pickle
+
 name = "MCMC"
 
 class Container:
@@ -138,31 +140,63 @@ def run(cache, tools, creator):
         burn_seq = []
         chain_seq = []
 
-        for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(sobol, iterations=cache.settings.get('burnIn', 10000) )):
-            accept = np.mean(sampler.acceptance_fraction)
-            burn_seq.append(accept)
-            converge[:-1] = converge[1:]
-            converge[-1] = accept
-            writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
-            print(np.std(converge), np.mean(converge), np.std(converge)/5e-4)
-            if np.std(converge) < 5e-4:
-                print("burn in completed at iteration ", idx)
-                break
+        checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings['checkpointFile'])
 
-        sampler.reset()
+        checkpoint = getCheckPoint(checkpointFile,cache)
 
-        checkInterval = 25
-        mult = 500
-        for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(p, iterations=cache.settings.get('chainLength', 10000) )):
-            accept = np.mean(sampler.acceptance_fraction)
-            chain_seq.append(accept)
-            writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
-            if idx % checkInterval == 0:  
-                tau = autocorr_new(sampler.chain[:, :idx, 0].T)
-                print("Mean acceptance fraction: {1} {0:.3f} tau: {2}".format(accept, idx, tau))
-                if idx > (mult * tau):
-                    print("we have run long enough and can quit ", idx)
+        if checkpoint['state'] == 'burn_in':
+            tol = 5e-4
+            count = checkpoint['length_burn'] - checkpoint['idx_burn']
+            for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_burn'], checkpoint['ln_prob_burn'],
+                                    checkpoint['rstate_burn'], iterations=count ), start=checkpoint['idx_burn']):
+                accept = np.mean(sampler.acceptance_fraction)
+                burn_seq.append(accept)
+                converge[:-1] = converge[1:]
+                converge[-1] = accept
+                writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
+                print(idx, np.std(converge), np.mean(converge), np.std(converge)/tol)
+
+                checkpoint['p_burn'] = p
+                checkpoint['ln_prob_burn'] = ln_prob
+                checkpoint['rstate_burn'] = random_state
+                checkpoint['idx_burn'] = idx+1
+
+                with checkpointFile.open('wb')as cp_file:
+                    pickle.dump(checkpoint, cp_file)
+
+                if np.std(converge) < tol:
+                    print("burn in completed at iteration ", idx)
+                    checkpoint['state'] = 'chain'
+                    checkpoint['p_chain'] = p
+                    checkpoint['ln_prob_chain'] = None
+                    checkpoint['rstate_chain'] = None
+                    sampler.reset()
                     break
+            
+        if checkpoint['state'] == 'chain':
+            checkInterval = 25
+            mult = 500
+            count = checkpoint['length_chain'] - checkpoint['idx_chain']
+            for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_chain'], checkpoint['ln_prob_chain'],
+                                    checkpoint['rstate_chain'], iterations=count ), start=checkpoint['idx_chain']):
+                accept = np.mean(sampler.acceptance_fraction)
+                chain_seq.append(accept)
+                writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
+
+                checkpoint['p_chain'] = p
+                checkpoint['ln_prob_chain'] = ln_prob
+                checkpoint['rstate_chain'] = random_state
+                checkpoint['idx_chain'] = idx+1
+
+                with checkpointFile.open('wb')as cp_file:
+                    pickle.dump(checkpoint, cp_file)
+
+                if idx % checkInterval == 0:  
+                    tau = autocorr_new(sampler.chain[:, :idx, 0].T)
+                    print("Mean acceptance fraction: {1} {0:.3f} tau: {2}".format(accept, idx, tau))
+                    if idx > (mult * tau):
+                        print("we have run long enough and can quit ", idx)
+                        break
 
     chain = sampler.chain
     chain = chain[:, :idx, :]
@@ -172,6 +206,35 @@ def run(cache, tools, creator):
     plotTube(cache, chain)
     util.finish(cache)
     return numpy.mean(chain, 0)
+
+def getCheckPoint(checkpointFile, cache):
+    if checkpointFile.exists():
+        print("checkpoint file exists")
+        with checkpointFile.open('rb') as cp_file:
+            checkpoint = pickle.load(cp_file)
+    else:
+        print("checkpoint file does not exist")
+        parameters = len(cache.MIN_VALUE) + 1
+        populationSize = parameters * cache.settings['population']
+
+        #Population must be even
+        populationSize = populationSize + populationSize % 2  
+
+        checkpoint = {}
+        checkpoint['state'] = 'burn_in'
+        checkpoint['p_burn'] = SALib.sample.sobol_sequence.sample(populationSize, parameters)
+        checkpoint['ln_prob_burn'] = None
+        checkpoint['rstate_burn'] = None
+        checkpoint['idx_burn'] = 0
+        checkpoint['length_burn'] = cache.settings.get('burnIn', 10000)
+
+        checkpoint['p_chain'] = None
+        checkpoint['ln_prob_chain'] = None
+        checkpoint['rstate_chain'] = None
+        checkpoint['idx_chain'] = 0
+        checkpoint['length_chain'] = cache.settings.get('chainLength', 10000)
+    print(checkpoint)
+    return checkpoint
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
