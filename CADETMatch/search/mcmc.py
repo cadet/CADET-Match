@@ -148,8 +148,10 @@ def run(cache, tools, creator):
         if checkpoint['state'] == 'burn_in':
             tol = 5e-4
             count = checkpoint['length_burn'] - checkpoint['idx_burn']
+            start_time = time.time()
             for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_burn'], checkpoint['ln_prob_burn'],
                                     checkpoint['rstate_burn'], iterations=count ), start=checkpoint['idx_burn']):
+                scoop.logger.info("%s burn step time %s", idx, time.time() - start_time)
                 accept = np.mean(sampler.acceptance_fraction)
                 burn_seq.append(accept)
                 converge[:-1] = converge[1:]
@@ -173,13 +175,17 @@ def run(cache, tools, creator):
                     checkpoint['rstate_chain'] = None
                     sampler.reset()
                     break
+                scoop.logger.info("%s burn process time %s", idx, time.time() - start_time)
+                start_time = time.time()
             
         if checkpoint['state'] == 'chain':
             checkInterval = 25
             mult = 500
+            start_time = time.time()
             count = checkpoint['length_chain'] - checkpoint['idx_chain']
             for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_chain'], checkpoint['ln_prob_chain'],
                                     checkpoint['rstate_chain'], iterations=count ), start=checkpoint['idx_chain']):
+                scoop.logger.info("%s chain step time %s", idx, time.time() - start_time)
                 accept = np.mean(sampler.acceptance_fraction)
                 chain_seq.append(accept)
                 writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
@@ -198,6 +204,8 @@ def run(cache, tools, creator):
                     if idx > (mult * tau):
                         scoop.logger.info("we have run long enough and can quit %s", idx)
                         break
+                scoop.logger.info("%s chain process time %s", idx, time.time() - start_time)
+                start_time = time.time()
 
     chain = sampler.chain
     chain = chain[:, :idx, :]
@@ -291,14 +299,26 @@ def process(cache, halloffame, meta_hof, grad_hof, training, results, writer, cs
             ind = cache.toolbox.individual_guess(parameters)
             population.append(ind)
 
+    process_time = time.time()
+    total_time = time.time()
     stalled, stallWarn, progressWarn = util.process_population(cache.toolbox, cache, population, 
                                                           fitnesses, writer, csv_file, 
                                                           halloffame, meta_hof, process.gen, training)
+    process_time = time.time() - process_time
     
     avg, bestMin, bestProd = util.averageFitness(population, cache)
+
+    write_time = time.time()
     util.writeProgress(cache, process.gen, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, 
                        process.sim_start, process.generation_start, training)
+    write_time = time.time() - write_time
+
+    graph_time = time.time()
     util.graph_process(cache, process.gen)
+    graph_time = time.time() - graph_time
+    total_time = time.time() - total_time
+
+    scoop.logger.info("total time %s \tprocessing time %s \twrite time %s \tgraph_time %s", total_time, process_time, write_time, graph_time)
 
     process.gen += 1
     process.generation_start = time.time()

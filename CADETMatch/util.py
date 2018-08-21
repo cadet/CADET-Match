@@ -519,10 +519,14 @@ def fractionate(start_seq, stop_seq, times, values):
     return numpy.array(temp)
 
 def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, average_score, minimum_score, product_score, sim_start, generation_start, training=None):
+    total_time = time.time()
+    
     cpu_time = psutil.Process().cpu_times()
     now = time.time()
 
     results = Path(cache.settings['resultsDirBase'])
+
+    hof_time = time.time()
 
     hof = results / "hof.npy"
     meta_hof = results / "meta_hof.npy"
@@ -540,6 +544,10 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
     with grad_hof.open('wb') as hof_file:
         numpy.save(hof_file, data_grad)
+
+    hof_time = time.time() - hof_time
+
+    training_time = time.time()
 
     gen_data = numpy.array([generation, len(training['input'])]).reshape(1,2)
 
@@ -588,6 +596,10 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         training['results'] = {}
         training['times'] = {}
 
+    training_time = time.time() - training_time
+
+    progress_time = time.time()
+
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
@@ -628,6 +640,12 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                          cpu_time.user + cpu_time.system,
                          cache.lastProgressGeneration,
                          cache.generationsOfProgress])
+
+    progress_time = time.time() - progress_time
+
+    total_time = time.time() - total_time
+
+    scoop.logger.info("write breakdown total %s \t hof %s \t progress %s \t training %s", total_time, hof_time, progress_time, training_time)
 
 def metaCSV(cache):
     repeat = int(cache.settings['repeat'])
@@ -756,6 +774,9 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
     made_progress = False
 
+    process_time = time.time()
+    update_time = time.time()
+
     for ind, result in zip(population, fitnesses):
         fit, csv_line, results = result
         
@@ -782,7 +803,16 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
             cleanupProcess(results)
 
+    update_time = time.time() - update_time
+
+    csv_time = time.time()
+
     writer.writerows(csv_lines)
+
+    #flush before returning
+    csvfile.flush()
+
+    csv_time = time.time() - csv_time
 
     if made_progress:
         if generation != cache.lastProgressGeneration:
@@ -791,9 +821,6 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
     elif generation != cache.lastProgressGeneration:
         cache.generationsOfProgress = 0
     
-    #flush before returning
-    csvfile.flush()
-
     path_meta_csv = cache.settings['resultsDirMeta'] / 'results.csv'
     with path_meta_csv.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
@@ -805,6 +832,11 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
     stalled = (generation - cache.lastProgressGeneration) >= cache.stallGenerations
     stallWarn = (generation - cache.lastProgressGeneration) >= cache.stallCorrect
     progressWarn = cache.generationsOfProgress >= cache.progressCorrect
+
+    process_time = time.time() - process_time
+
+    scoop.logger.info("process breakdown total %s \t update %s \t csv %s", process_time, update_time, csv_time)
+
     return stalled, stallWarn, progressWarn
 
 def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, training=None):
