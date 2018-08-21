@@ -22,22 +22,12 @@ import scoop
 import logging
 
 from cache import cache
+import loggerwriter
 
 #due to how scoop works and the need to break things up into multiple processes it is hard to use class based systems
 #As a result most of the code is broken up into modules but is still based on pure functions
 
 #setup scoop logging for all processes
-
-class LoggerWriter:
-    def __init__(self, level):
-        self.level = level
-
-    def write(self, message):
-        if message != '\n':
-            self.level(message)
-
-    def flush(self):
-        self.level(sys.stderr)
 
 def main():
     setup(cache, sys.argv[1])
@@ -119,8 +109,8 @@ def setupLog(log_directory):
     # add the handlers to the logger
     logger.addHandler(fh)
 
-    sys.stdout = LoggerWriter(logger.debug)
-    sys.stderr = LoggerWriter(logger.warning)
+    #sys.stdout = loggerwriter.LoggerWriter(logger.debug)
+    #sys.stderr = loggerwriter.LoggerWriter(logger.warning)
 
 def createDirectories(cache, json_path):
     cache.settings['resultsDirBase'].mkdir(parents=True, exist_ok=True)

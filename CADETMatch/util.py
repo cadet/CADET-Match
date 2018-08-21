@@ -35,6 +35,7 @@ __logBase10of2_decim = decim.Decimal(2).log10()
 __logBase10of2 = float(__logBase10of2_decim)
 
 import SALib.sample.sobol_sequence
+import loggerwriter
 
 def smoothing_factor(y):
     return max(y)/1000000.0
@@ -885,25 +886,36 @@ def graph_process(cache, generation, last=0):
     cwd = str(Path(__file__).parent)
 
     if cache.graphSpearman:
-        subprocess.run([sys.executable, 'graph_spearman.py', str(cache.json_path), str(generation)], 
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
+        ret = subprocess.run([sys.executable, 'graph_spearman.py', str(cache.json_path), str(generation)], 
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
+        log_subprocess('graph_spearman.py', ret)
     
     if last or (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
-        subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
+        ret = subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
+        log_subprocess('generate_graphs.py', ret)
         cache.lastGraphTime = time.time()
     else:
         if (time.time() - cache.lastMetaTime) > cache.graphMetaTime:
-            subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '0'], 
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
+            ret = subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '0'], 
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
+            log_subprocess('generate_graphs.py', ret)
             cache.lastMetaTime = time.time()
+
+def log_subprocess(name, ret):
+    for line in ret.stdout.splitlines():
+        scoop.logger.info('%s stdout: %s', name, line)
+
+    for line in ret.stderr.splitlines():    
+        scoop.logger.info('%s stderr: %s', name, line)
 
 def finish(cache):
     graph_process(cache, "Last", last=True)
 
     cwd = str(Path(__file__).parent)
-    subprocess.run([sys.executable, 'video_spearman.py', str(cache.json_path)], 
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
+    ret = subprocess.run([sys.executable, 'video_spearman.py', str(cache.json_path)], 
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
+    log_subprocess('video_spearman.py', ret)
 
 def find_outliers(data, lower_percent=5, upper_percent=95):
     lb, ub = numpy.percentile(data, [lower_percent, upper_percent], 0)
