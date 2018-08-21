@@ -209,11 +209,9 @@ def run(cache, tools, creator):
 
 def getCheckPoint(checkpointFile, cache):
     if checkpointFile.exists():
-        print("checkpoint file exists")
         with checkpointFile.open('rb') as cp_file:
             checkpoint = pickle.load(cp_file)
     else:
-        print("checkpoint file does not exist")
         parameters = len(cache.MIN_VALUE) + 1
         populationSize = parameters * cache.settings['population']
 
@@ -233,7 +231,6 @@ def getCheckPoint(checkpointFile, cache):
         checkpoint['rstate_chain'] = None
         checkpoint['idx_chain'] = 0
         checkpoint['length_chain'] = cache.settings.get('chainLength', 10000)
-    print(checkpoint)
     return checkpoint
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):

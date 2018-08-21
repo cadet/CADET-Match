@@ -888,8 +888,9 @@ def graph_process(cache, generation, last=0):
 
     cwd = str(Path(__file__).parent)
 
-    subprocess.run([sys.executable, 'graph_spearman.py', str(cache.json_path), str(generation)], 
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
+    if cache.graphSpearman:
+        subprocess.run([sys.executable, 'graph_spearman.py', str(cache.json_path), str(generation)], 
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=cwd)
     
     if last or (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
         subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
