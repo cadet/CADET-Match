@@ -15,6 +15,7 @@ import csv
 import time
 import sys
 from cadet import Cadet
+import scoop
 
 class ConditionException(Exception):
     pass
@@ -72,7 +73,6 @@ def search(gradCheck, offspring, toolbox):
             fit = toolbox.evaluate(a)
             failed.append(0)
             a.fitness.values = fit
-            print(i.x, fit)
             temp.append(a)
     
     if temp:
@@ -81,7 +81,6 @@ def search(gradCheck, offspring, toolbox):
             gradCheck = 0.9 * bestMin
         #if len(temp) > 0 or all(failed):
         #    gradCheck = (1-gradCheck)/2.0 + gradCheck
-        print("Finished running on ", len(temp), " individuals new threshold", gradCheck)
     return gradCheck, temp
 
 def gradSearch(x):
@@ -92,12 +91,10 @@ def gradSearch(x):
         return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), kwargs={'cache':cache}, x_scale='jac')
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
-        print("Gradient Failure")
-        print(sys.exc_info()[0])
+        scoop.logger.error("Gradient Failure", exc_info=True)
         return None
     except ConditionException:
-        print("Condition Failure")
-        print(sys.exc_info()[0])
+        scoop.logger.error("Condition Failure", exc_info=True)
         return None
 
 def jacobian(x, cache):
@@ -105,7 +102,7 @@ def jacobian(x, cache):
     return jac.transpose()
 
 def fitness_sens(individual, cache):
-    print("Gradient Running for ", individual)
+    scoop.logger.debug('Gradient Running for %s', individual)
     scores = []
     error = 0.0
 
@@ -214,7 +211,7 @@ def runExperimentSens(individual, experiment, settings, target, jac):
     try:
         simulation.run(timeout = experiment['timeout'] * len(target['sensitivities']))
     except subprocess.TimeoutExpired:
-        print("Simulation Timed Out")
+        scoop.logger.warn("Simulation Timed Out %s", individual)
         return leave()
 
     #read sim data
@@ -224,9 +221,9 @@ def runExperimentSens(individual, experiment, settings, target, jac):
         times = simulation.root.output.solution.solution_times
     except KeyError:
         #sim must have failed
-        util.log(individual, "sim must have failed", path)
+        scoop.logger.error("%s sim must have failed %s", individual, path)
         return leave()
-    util.log("Everything ran fine")
+    scoop.logger.debug("Everything ran fine")
 
     gradient_components = experiment['gradient']['components']
     gradient_CSV = experiment['gradient']['CSV']

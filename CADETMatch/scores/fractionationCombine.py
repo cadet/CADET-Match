@@ -2,6 +2,7 @@ import util
 import score
 import numpy
 import pandas
+import scoop
 
 name = "fractionationCombine"
 adaptive = True
@@ -69,7 +70,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     smallestTime = min(data['Stop'] - data['Start'])
     abstolFraction = abstol * smallestTime
 
-    print('abstolFraction', abstolFraction)
+    scoop.log.debug('abstolFraction %s', abstolFraction)
 
     funcs = []
 

@@ -1,4 +1,3 @@
-
 import sys
 
 import evo
@@ -18,27 +17,39 @@ from deap import base
 
 #parallelization
 from scoop import futures
+import scoop
+
+import logging
 
 from cache import cache
 
 #due to how scoop works and the need to break things up into multiple processes it is hard to use class based systems
 #As a result most of the code is broken up into modules but is still based on pure functions
 
+#setup scoop logging for all processes
+
+class LoggerWriter:
+    def __init__(self, level):
+        self.level = level
+
+    def write(self, message):
+        if message != '\n':
+            self.level(message)
+
+    def flush(self):
+        self.level(sys.stderr)
+
 def main():
     setup(cache, sys.argv[1])
     #grad.setupTemplates(evo.settings, evo.target)
     hof = evo.run(cache)
-
-    #print("hall of fame")
-    #for i in hof:
-    #    print(i, type(i), i.fitness.values)
 
     if "repeat" in cache.settings:
         repeat = int(cache.settings['repeat'])
 
         for i in range(repeat):
             json_path = util.repeatSimulation(i)
-            print(json_path)
+            scoop.logger.info(json_path)
 
             setup(cache, json_path)
 
@@ -64,7 +75,7 @@ def main():
                 #copy csv files to a new directory with noise added
                 #put a new json file in the directory that points to the new csv files
                 json_path = util.copyCSVWithNoise(i, center, noise)
-                print(json_path)
+                scoop.logger.info(json_path)
 
                 setup(cache, json_path)
 
@@ -78,13 +89,11 @@ def main():
 
                 numpy_temp = numpy.array(temp)
                 cov = numpy.cov(numpy_temp.transpose())
-                print("in progress cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov))
-                print("in progress cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov), file=bootstrap.open('w'), flush=True)
+                scoop.logger.info("in progress cov %s data %s det %s", cov, numpy_temp, numpy.linalg.det(cov))
 
             numpy_temp = numpy.array(temp)
             cov = numpy.cov(numpy_temp.transpose())
-            print("final cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov))
-            print("final cov", cov, "data", numpy_temp, "det", numpy.linalg.det(cov), file=bootstrap.open('w'), flush=True)
+            scoop.logger.info("final cov %s data %s det %s", cov, numpy_temp, numpy.linalg.det(cov))
 
 def setup(cache, json_path):
     "run seutp for the current json_file"
@@ -96,6 +105,22 @@ def setup(cache, json_path):
     createErrorCSV(cache)
     setupTemplates(cache)
     setupDeap(cache)
+    setupLog(cache.settings['resultsDirLog'])
+
+def setupLog(log_directory):
+    logger = scoop.logger
+    logger.setLevel(logging.INFO)
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler(log_directory / "main.log")
+    fh.setLevel(logging.INFO)
+    # create formatter and add it to the handlers
+    #formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    #fh.setFormatter(formatter)
+    # add the handlers to the logger
+    logger.addHandler(fh)
+
+    sys.stdout = LoggerWriter(logger.debug)
+    sys.stderr = LoggerWriter(logger.warning)
 
 def createDirectories(cache, json_path):
     cache.settings['resultsDirBase'].mkdir(parents=True, exist_ok=True)
@@ -106,6 +131,7 @@ def createDirectories(cache, json_path):
     cache.settings['resultsDirProgress'].mkdir(parents=True, exist_ok=True)
     cache.settings['resultsDirMeta'].mkdir(parents=True, exist_ok=True)
     cache.settings['resultsDirTraining'].mkdir(parents=True, exist_ok=True)
+    cache.settings['resultsDirLog'].mkdir(parents=True, exist_ok=True)
 
     #copy simulation setting file to result base directory
     try:
@@ -194,5 +220,5 @@ def setupDeap(cache):
 if __name__ == "__main__":
     start = time.time()
     main()
-    print("System has finished")
-    print("The total runtime was %s seconds" % (time.time() - start))
+    scoop.logger.info('Sysem has finished')
+    scoop.logger.info("The total runtime was %s seconds" % (time.time() - start))

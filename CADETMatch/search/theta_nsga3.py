@@ -189,15 +189,8 @@ def niching_select(individuals, k):
     normalize_objectives(individuals, intercepts, ideal_point)
 
     reference_points = generate_reference_points(len(individuals[0].fitness.values))
-    print(len(reference_points))
 
     ref = numpy.array(reference_points)
-    print(ref.shape)
-
-    print(set(ref[:,0]))
-    print(set(ref[:,1]))
-    print(set(ref[:,2]))
-    print(set(ref[:,3]))
 
     associate(individuals, reference_points)
 

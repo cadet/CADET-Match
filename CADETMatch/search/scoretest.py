@@ -16,10 +16,8 @@ def run(cache, tools, creator):
         training = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}}
 
         if "seeds" in cache.settings:
-            print(cache.settings['seeds'])
             seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]
             pop.extend(seed_pop)
-            print(pop)
 
         hof = pareto.ParetoFront(similar=util.similar)
         meta_hof = pareto.ParetoFront(similar=util.similar)

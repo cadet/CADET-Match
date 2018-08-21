@@ -5,6 +5,7 @@ import scipy.interpolate
 import scipy.signal
 import numpy.linalg
 import calc_coeff
+import scoop
 
 def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
     corr = scipy.signal.correlate(exp_data_values, sim_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
@@ -35,8 +36,6 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
     diff_time = numpy.abs(exp_time_values[int(len(exp_time_values)/2)] - sim_time_values[int(len(exp_time_values)/2)])
 
     #assume time is monospaced
-    #print(index, index % len(exp_time_values))
-    #print(exp_time_values[index % len(exp_time_values)], exp_time_values[0])
     #diff_time = exp_time_values[index % len(exp_time_values)] - exp_time_values[0]
 
     sim_data_values_copy = numpy.roll(sim_data_values, shift=int(numpy.ceil(index)))
@@ -127,7 +126,7 @@ def value_function(peak_height, tolerance=1e-8, bottom_score = 0.01):
     a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
     
     if numpy.abs(peak_height) < tolerance:
-        print("peak height less than tolerance", tolerance, peak_height)
+        scoop.logger.warn("peak height less than tolerance %s %s", tolerance, peak_height)
         def wrapper(x):
             if numpy.abs(x) < tolerance:
                 return 1.0

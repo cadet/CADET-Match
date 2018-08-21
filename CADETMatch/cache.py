@@ -81,6 +81,7 @@ class Cache:
         self.settings['resultsDirSpace'] = Path(self.settings['resultsDir']) / "space"
         self.settings['resultsDirProgress'] = Path(self.settings['resultsDir']) / "progress"
         self.settings['resultsDirTraining'] = Path(self.settings['resultsDir']) / "training"
+        self.settings['resultsDirLog'] = Path(self.settings['resultsDir']) / "log"
         self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
 
         self.error_path = Path(cache.settings['resultsDirBase'], "error.csv")

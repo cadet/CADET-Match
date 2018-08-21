@@ -23,7 +23,6 @@ def searchRange(times, start_frac, stop_frac, CV_time):
     searchStart = max(searchStart, times[0])
     searchStop = min(searchStop, times[-1])
 
-    #print(CV_time, collectionStart, collectionStop, searchStart, searchStop)
     searchIndexStart = numpy.argmax( times[times <= searchStart])
     searchIndexStop = numpy.argmax( times[times <= searchStop])
     return searchIndexStart, searchIndexStop
@@ -68,22 +67,18 @@ def run(sim_data, feature):
     graph_exp = {}
 
     searchIndexStart, searchIndexStop = searchRange(times, start, stop, CV_time)
-    #print("searchIndexStart\t", searchIndexStart, "\tsearchIndexStop\t", searchIndexStop)
 
     for component, value_func in funcs:
         exp_values = numpy.array(data[str(component)])
         sim_value = simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component]
 
         rollLeft, rollRight, searchMax = rollRange(times, sim_value, searchIndexStart, searchIndexStop)
-        #print("rollLeft\t", rollLeft, "\trollRight\t", rollRight, "\tsearchMax\t", searchMax)
 
         bounds = find_bounds(times, sim_value)
         result = scipy.optimize.differential_evolution(goal, bounds = [bounds,], 
                                                        args = (exp_values, times, sim_value, start, stop))
-        #print(result)
 
         time_offset = times[int(abs(round(result.x[0])))]
-        #print("time_offset\t", time_offset)
         sim_data_value = numpy.roll(sim_value, int(result.x[0]))
         fracOffset = util.fractionate(start, stop, times, sim_data_value)
 

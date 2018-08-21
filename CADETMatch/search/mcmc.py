@@ -30,6 +30,7 @@ import pareto
 import modEnsemble
 
 import pickle
+import scoop
 
 name = "MCMC"
 
@@ -154,7 +155,7 @@ def run(cache, tools, creator):
                 converge[:-1] = converge[1:]
                 converge[-1] = accept
                 writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
-                print(idx, np.std(converge), np.mean(converge), np.std(converge)/tol)
+                scoop.logger.info('idx: %s std: %s mean: %s converge: %s', idx, np.std(converge), np.mean(converge), np.std(converge)/tol)
 
                 checkpoint['p_burn'] = p
                 checkpoint['ln_prob_burn'] = ln_prob
@@ -165,7 +166,7 @@ def run(cache, tools, creator):
                     pickle.dump(checkpoint, cp_file)
 
                 if np.std(converge) < tol:
-                    print("burn in completed at iteration ", idx)
+                    scoop.logger.info("burn in completed at iteration %s", idx)
                     checkpoint['state'] = 'chain'
                     checkpoint['p_chain'] = p
                     checkpoint['ln_prob_chain'] = None
@@ -193,9 +194,9 @@ def run(cache, tools, creator):
 
                 if idx % checkInterval == 0:  
                     tau = autocorr_new(sampler.chain[:, :idx, 0].T)
-                    print("Mean acceptance fraction: {1} {0:.3f} tau: {2}".format(accept, idx, tau))
+                    scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", idx, accept, tau)
                     if idx > (mult * tau):
-                        print("we have run long enough and can quit ", idx)
+                        scoop.logger.info("we have run long enough and can quit %s", idx)
                         break
 
     chain = sampler.chain
@@ -275,8 +276,7 @@ def process(cache, halloffame, meta_hof, grad_hof, training, results, writer, cs
     if 'generation_start' not in process.__dict__:
         process.generation_start = time.time()
 
-    print("Mean acceptance fraction: {0:.3f}"
-                .format(numpy.mean(sampler.acceptance_fraction)))
+    scoop.logger.info("Mean acceptance fraction: %0.3f", numpy.mean(sampler.acceptance_fraction))
 
     csv_lines = []
     meta_csv_lines = []
@@ -368,9 +368,10 @@ def _get_lnprob(self, pos=None):
     # Check for lnprob returning NaN.
     if np.any(np.isnan(lnprob)):
         # Print some debugging stuff.
-        print("NaN value of lnprob for parameters: ")
+        bad_pars = []
         for pars in p[np.isnan(lnprob)]:
-            print(pars)
+            bad_pars.append(pars)
+        scoop.logger.info("NaN value of lnprob for parameters: %s", bad_pars)
 
         # Finally raise exception.
         raise ValueError("lnprob returned NaN.")

@@ -142,5 +142,4 @@ def recursively_save( h5file, path, dic):
             recursively_save(h5file, path + key + '/', item)
         # other types cannot be saved and will result in an error
         else:
-            #print(item)
             raise ValueError('Cannot save %s/%s key with %s type.' % (path, key.upper(), type(item)))

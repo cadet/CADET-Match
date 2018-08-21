@@ -27,7 +27,6 @@ def run(cache, tools, creator):
         for part in swarm:
             fit, csv_line, results = cache.toolbox.evaluate(part)
             part.fitness.values = fit
-            print(fit, '\n')
 
             # Update swarm's attractors personal best and global best
             if not part.best or part.fitness > part.bestfit:

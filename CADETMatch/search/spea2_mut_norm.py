@@ -146,7 +146,6 @@ def selSPEA2(individuals, k):
 
         to_remove = trim_individuals(k, N, distances, sorted_indices)
 
-        #print("To remove = ", to_remove)
         for index in reversed(sorted(to_remove)):
             del chosen_indices[index]
     

@@ -172,7 +172,6 @@ def selSPEA2(individuals, k):
             # Remove corresponding individual from chosen_indices
             to_remove.append(min_pos)
             size -= 1
-        #print("To remove = ", to_remove)
         for index in reversed(sorted(to_remove)):
             del chosen_indices[index]
     

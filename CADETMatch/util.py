@@ -27,6 +27,8 @@ import random
 import calc_coeff
 import h5py
 
+import scoop
+
 import decimal as decim
 decim.getcontext().prec = 64
 __logBase10of2_decim = decim.Decimal(2).log10()
@@ -101,12 +103,6 @@ def sobolGenerator(icls, cache, n):
         return data
     else:
         return []
-
-print_log = 0
-
-def log(*args):
-    if print_log:
-        print(args)
 
 def product_score(values):
     values = numpy.array(values)
@@ -238,7 +234,7 @@ def convert_individual(individual, cache):
     return cadetValues
 
 def set_simulation(individual, simulation, settings, cache, fullPrecision):
-    log("individual", individual)
+    scoop.logger.debug("individual %s", individual)
 
     cadetValues = []
     cadetValuesKEQ = []
@@ -253,7 +249,7 @@ def set_simulation(individual, simulation, settings, cache, fullPrecision):
         cadetValuesKEQ.extend(headerValues)
         idx += count
 
-    log("finished setting hdf5")
+    scoop.logger.debug("finished setting hdf5")
     return cadetValues, cadetValuesKEQ
 
 def getBoundOffset(unit):
@@ -284,10 +280,10 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     try:
         simulation.run(timeout = timeout, check=True)
     except subprocess.TimeoutExpired:
-        print("Simulation Timed Out")
+        scoop.logger.warn("Simulation Timed Out")
         return leave()
     except subprocess.CalledProcessError as error:
-        print("The simulation failed")
+        scoop.logger.error("The simulation failed")
         logError(cache, cadetValuesKEQ, error)
         return leave()
 
@@ -296,10 +292,9 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
 
     simulationFailed = isinstance(simulation.root.output.solution.solution_times, Dict)
     if simulationFailed:
-        log(individual, "sim must have failed", path)
-        return leave()
-    log("Everything ran fine")
-
+        scoop.logger.error("%s sim must have failed %s", individual, path)
+        return leave() 
+    scoop.logger.debug('Everything ran fine')
 
     temp = {}
     temp['simulation'] = simulation
@@ -607,11 +602,13 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         data_prod = numpy.power(numpy.prod(data_meta, 1), 1.0/col)
         data_prod_mean = numpy.mean(data_prod)
         data_prod_best = numpy.max(data_prod)
+
+        line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.4f \tBest: %.4f \tMinimum Score: %.4f \tBest: %.4f \tProduct Score: %.4f \tBest: %.4f'
  
-        print("Generation: ", generation, "\tPopulation: ", len(population),
-              "\tAverage Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_mean_mean,4), RoundToSigFigs(data_mean_best,4)),
-              "\tMinimum Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_min_mean,4), RoundToSigFigs(data_min_best,4)),
-              "\tProduct Score: %.4f \tBest: %.4f" % (RoundToSigFigs(data_prod_mean,4), RoundToSigFigs(data_prod_best,4)))
+        scoop.logger.info(line_format, generation, len(population),
+              RoundToSigFigs(data_mean_mean,4), RoundToSigFigs(data_mean_best,4),
+              RoundToSigFigs(data_min_mean,4), RoundToSigFigs(data_min_best,4),
+              RoundToSigFigs(data_prod_mean,4), RoundToSigFigs(data_prod_best,4))
         
         writer.writerow([generation,
                          len(population),
@@ -801,7 +798,6 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
         writer.writerows(meta_csv_lines)
 
-    #print("Current front", len(halloffame))
     cleanupFront(cache, halloffame, meta_hof)
     writeMetaFront(cache, meta_hof, path_meta_csv)
 

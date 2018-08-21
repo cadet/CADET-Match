@@ -29,7 +29,6 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
     meta_csv_lines = []
 
     for i in newOffspring:
-        #print(i, dir(i))
         if i is None:
             #failed.append(1)
             pass
@@ -60,17 +59,14 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
 
             #failed.append(0)
             ind.fitness.values = fit
-            #print(i.x, fit)
             temp.append(ind)
     
     if temp:
         avg, bestMin, bestProd = util.averageFitness(temp, cache)
-        #print('avg', avg, 'bestMin', bestMin, 'bestProd', bestProd)
         if 0.9 * bestProd > gradCheck:
             gradCheck = 0.9 * bestProd
         #if len(temp) > 0 or all(failed):
         #    gradCheck = (1-gradCheck)/2.0 + gradCheck
-        #print("Finished running on ", len(temp), " individuals new threshold", gradCheck)
 
     writer.writerows(csv_lines)
     
@@ -82,7 +78,6 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
         writer.writerows(meta_csv_lines)
 
-    #print("Current front", len(halloffame))
     util.cleanupFront(cache, None, meta_hof, grad_hof)
     util.writeMetaFront(cache, meta_hof, path_meta_csv)
 
@@ -97,12 +92,9 @@ def gradSearch(x, json_path):
         val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE), 
             gtol=1e-14, ftol=1e-5, xtol=1e-14, diff_step=1e-7, x_scale="jac")
         #scores = fitness_sens(val.x, finished=1)
-        #print(val.x, numpy.exp(val.x), val.jac, scores, val.message)
         return val
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
-        #print("Gradient Failure")
-        #print(sys.exc_info()[0])
         return None
 
 def fitness_sens_grad(individual, finished=0):

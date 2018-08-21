@@ -22,6 +22,7 @@ from addict import Dict
 
 #parallelization
 from scoop import futures
+import scoop
 
 import os
 import h5py
@@ -34,7 +35,7 @@ def main():
     cache.setup(sys.argv[1])
     cache.progress_path = Path(cache.settings['resultsDirBase']) / "progress.csv"
 
-    print(os.getcwd())
+    scoop.logger.info("graphing directory %s", os.getcwd())
 
     fullGeneration = int(sys.argv[2])
 
@@ -357,7 +358,6 @@ def plot_3d(arg):
     directory = Path(directory_path)
 
     headers = dataframe.columns.values.tolist()
-    #print('3d', headers[c1], headers[c2], headers[score])
 
     scores = numpy.array(dataframe.iloc[:, score])
     scoreName = headers[score]
@@ -387,7 +387,6 @@ def plot_2d(arg):
     dataframe = pandas.read_csv(csv_path)
     directory = Path(directory_path)
     headers = dataframe.columns.values.tolist()
-    #print('2d', headers[c1], headers[score])
 
     scores = dataframe.iloc[:, score]
     scoreName = headers[score]
