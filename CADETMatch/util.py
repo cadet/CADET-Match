@@ -519,14 +519,10 @@ def fractionate(start_seq, stop_seq, times, values):
     return numpy.array(temp)
 
 def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, average_score, minimum_score, product_score, sim_start, generation_start, training=None):
-    total_time = time.time()
-    
     cpu_time = psutil.Process().cpu_times()
     now = time.time()
 
     results = Path(cache.settings['resultsDirBase'])
-
-    hof_time = time.time()
 
     hof = results / "hof.npy"
     meta_hof = results / "meta_hof.npy"
@@ -544,10 +540,6 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
     with grad_hof.open('wb') as hof_file:
         numpy.save(hof_file, data_grad)
-
-    hof_time = time.time() - hof_time
-
-    training_time = time.time()
 
     gen_data = numpy.array([generation, len(training['input'])]).reshape(1,2)
 
@@ -596,10 +588,6 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         training['results'] = {}
         training['times'] = {}
 
-    training_time = time.time() - training_time
-
-    progress_time = time.time()
-
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
@@ -631,12 +619,6 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                          cpu_time.user + cpu_time.system,
                          cache.lastProgressGeneration,
                          cache.generationsOfProgress])
-
-    progress_time = time.time() - progress_time
-
-    total_time = time.time() - total_time
-
-    scoop.logger.info("write breakdown total %.4f \t hof %.4f \t progress %.4f \t training %.4f", total_time, hof_time, progress_time, training_time)
 
 def metaCSV(cache):
     repeat = int(cache.settings['repeat'])
@@ -765,14 +747,6 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
     made_progress = False
 
-    process_time = time.time()
-    update_time = time.time()
-
-    training_time = 0
-    pareto_time = 0
-    meta_time = 0
-    clean_time = 0
-
     for ind, result in zip(population, fitnesses):
         fit, csv_line, results = result
         
@@ -783,41 +757,27 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
         ind_meta = toolbox.clone(ind)
         ind_meta.fitness.values = meta_calc(fit)
 
-        temp = time.time()
         update_training(cache, ind, fit, training, results)
-        training_time += (time.time() - temp)
 
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)
 
-            temp = time.time()
             onFront = updateParetoFront(halloffame, ind, cache)
             if onFront and not cache.metaResultsOnly:
                 processResults(save_name_base, ind, cache, results)
-            pareto_time += (time.time() - temp)
 
-            temp = time.time()
             onFrontMeta = updateParetoFront(meta_hof, ind_meta, cache)
             if onFrontMeta:
                 meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                 processResultsMeta(save_name_base, ind, cache, results)
                 made_progress = True
-            meta_time += (time.time() - temp)
 
-            temp = time.time()
             cleanupProcess(results)
-            clean_time += (time.time() - temp)
-
-    update_time = time.time() - update_time
-
-    csv_time = time.time()
 
     writer.writerows(csv_lines)
 
     #flush before returning
     csvfile.flush()
-
-    csv_time = time.time() - csv_time
 
     if made_progress:
         if generation != cache.lastProgressGeneration:
@@ -837,11 +797,6 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
     stalled = (generation - cache.lastProgressGeneration) >= cache.stallGenerations
     stallWarn = (generation - cache.lastProgressGeneration) >= cache.stallCorrect
     progressWarn = cache.generationsOfProgress >= cache.progressCorrect
-
-    process_time = time.time() - process_time
-
-    scoop.logger.info("process breakdown total %.4f \t update %.4f \t csv %.4f", process_time, update_time, csv_time)
-    scoop.logger.info("process breakdown training %.4f \t pareto %.4f \t meta %.4f \t clean %.4f", training_time, pareto_time, meta_time, clean_time)
 
     return stalled, stallWarn, progressWarn
 
