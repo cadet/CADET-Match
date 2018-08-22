@@ -38,3 +38,16 @@ class ParetoFront(tools.ParetoFront):
                 self.remove(i)
             if not is_dominated and not has_twin:
                 self.insert(ind)
+
+class DummyFront(tools.ParetoFront):
+    "Modification of the pareto front in DEAP that takes cache as an argument to update to use for similar comparison"
+
+    def __init__(self, similar=None):
+        "This is here for API compatibility, don't do anything"
+        if similar is None:
+            similar = eq
+        super().__init__(similar)
+
+    def update(self, population, cache):
+        "do not put anything in this front, it is just needed to maintain compatibility"
+        pass

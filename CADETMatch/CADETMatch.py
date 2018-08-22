@@ -109,8 +109,8 @@ def setupLog(log_directory):
     # add the handlers to the logger
     logger.addHandler(fh)
 
-    #sys.stdout = loggerwriter.LoggerWriter(logger.debug)
-    #sys.stderr = loggerwriter.LoggerWriter(logger.warning)
+    sys.stdout = loggerwriter.LoggerWriter(logger.debug)
+    sys.stderr = loggerwriter.LoggerWriter(logger.warning)
 
 def createDirectories(cache, json_path):
     cache.settings['resultsDirBase'].mkdir(parents=True, exist_ok=True)

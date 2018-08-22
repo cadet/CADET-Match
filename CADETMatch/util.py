@@ -533,8 +533,8 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
     grad_hof = results / "grad_hof.npy"
 
     data = numpy.array([i.fitness.values for i in halloffame])
-    data_meta = numpy.array([i.fitness.values for i in halloffame])
-    data_grad = numpy.array([i.fitness.values for i in halloffame])
+    data_meta = numpy.array([i.fitness.values for i in meta_halloffame])
+    data_grad = numpy.array([i.fitness.values for i in grad_halloffame])
 
     with hof.open('wb') as hof_file:
         numpy.save(hof_file, data)
@@ -603,25 +603,16 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        row, col = data.shape
-        data_mean = numpy.mean(data_meta, 1)
-        data_mean_mean = numpy.mean(data_mean)
-        data_mean_best = numpy.max(data_mean)
-
-        data_min = numpy.min(data_meta, 1)
-        data_min_mean = numpy.mean(data_min)
-        data_min_best = numpy.max(data_min)
-
-        data_prod = numpy.power(numpy.prod(data_meta, 1), 1.0/col)
-        data_prod_mean = numpy.mean(data_prod)
-        data_prod_best = numpy.max(data_prod)
+        #row, col = data.shape
+        meta_mean = numpy.mean(data_meta, 0)
+        meta_max = numpy.max(data_meta, 0)
 
         line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.4f \tBest: %.4f \tMinimum Score: %.4f \tBest: %.4f \tProduct Score: %.4f \tBest: %.4f'
  
         scoop.logger.info(line_format, generation, len(population),
-              RoundToSigFigs(data_mean_mean,4), RoundToSigFigs(data_mean_best,4),
-              RoundToSigFigs(data_min_mean,4), RoundToSigFigs(data_min_best,4),
-              RoundToSigFigs(data_prod_mean,4), RoundToSigFigs(data_prod_best,4))
+              RoundToSigFigs(meta_mean[2],4), RoundToSigFigs(meta_max[2],4),
+              RoundToSigFigs(meta_mean[1],4), RoundToSigFigs(meta_max[1],4),
+              RoundToSigFigs(meta_mean[0],4), RoundToSigFigs(meta_max[0],4))
         
         writer.writerow([generation,
                          len(population),
@@ -632,9 +623,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                          average_score,
                          minimum_score,
                          product_score,
-                         data_mean_mean,
-                         data_min_mean,
-                         data_prod_mean,
+                         meta_mean[2],
+                         meta_mean[1],
+                         meta_mean[0],
                          now - sim_start,
                          now - generation_start,
                          cpu_time.user + cpu_time.system,
@@ -645,7 +636,7 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
     total_time = time.time() - total_time
 
-    scoop.logger.info("write breakdown total %s \t hof %s \t progress %s \t training %s", total_time, hof_time, progress_time, training_time)
+    scoop.logger.info("write breakdown total %.4f \t hof %.4f \t progress %.4f \t training %.4f", total_time, hof_time, progress_time, training_time)
 
 def metaCSV(cache):
     repeat = int(cache.settings['repeat'])
@@ -777,6 +768,11 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
     process_time = time.time()
     update_time = time.time()
 
+    training_time = 0
+    pareto_time = 0
+    meta_time = 0
+    clean_time = 0
+
     for ind, result in zip(population, fitnesses):
         fit, csv_line, results = result
         
@@ -787,21 +783,30 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
         ind_meta = toolbox.clone(ind)
         ind_meta.fitness.values = meta_calc(fit)
 
+        temp = time.time()
         update_training(cache, ind, fit, training, results)
+        training_time += (time.time() - temp)
 
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)
+
+            temp = time.time()
             onFront = updateParetoFront(halloffame, ind, cache)
             if onFront and not cache.metaResultsOnly:
                 processResults(save_name_base, ind, cache, results)
+            pareto_time += (time.time() - temp)
 
+            temp = time.time()
             onFrontMeta = updateParetoFront(meta_hof, ind_meta, cache)
             if onFrontMeta:
                 meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                 processResultsMeta(save_name_base, ind, cache, results)
                 made_progress = True
+            meta_time += (time.time() - temp)
 
+            temp = time.time()
             cleanupProcess(results)
+            clean_time += (time.time() - temp)
 
     update_time = time.time() - update_time
 
@@ -835,7 +840,8 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
     process_time = time.time() - process_time
 
-    scoop.logger.info("process breakdown total %s \t update %s \t csv %s", process_time, update_time, csv_time)
+    scoop.logger.info("process breakdown total %.4f \t update %.4f \t csv %.4f", process_time, update_time, csv_time)
+    scoop.logger.info("process breakdown training %.4f \t pareto %.4f \t meta %.4f \t clean %.4f", training_time, pareto_time, meta_time, clean_time)
 
     return stalled, stallWarn, progressWarn
 

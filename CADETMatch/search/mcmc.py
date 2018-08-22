@@ -129,9 +129,9 @@ def run(cache, tools, creator):
         emcee.EnsembleSampler._get_lnprob = _get_lnprob
 
         training = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}}
-        halloffame = pareto.ParetoFront(similar=util.similar)
+        halloffame = pareto.DummyFront(similar=util.similar)
         meta_hof = pareto.ParetoFront(similar=util.similar)
-        grad_hof = pareto.ParetoFront(similar=util.similar)
+        grad_hof = pareto.DummyFront(similar=util.similar)
 
         def local(results):
             return process(cache, halloffame, meta_hof, grad_hof, training, results, writer, csvfile, sampler)
@@ -151,7 +151,7 @@ def run(cache, tools, creator):
             start_time = time.time()
             for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_burn'], checkpoint['ln_prob_burn'],
                                     checkpoint['rstate_burn'], iterations=count ), start=checkpoint['idx_burn']):
-                scoop.logger.info("%s burn step time %s", idx, time.time() - start_time)
+                scoop.logger.info("%s burn step time %.4f", idx, time.time() - start_time)
                 accept = np.mean(sampler.acceptance_fraction)
                 burn_seq.append(accept)
                 converge[:-1] = converge[1:]
@@ -175,7 +175,7 @@ def run(cache, tools, creator):
                     checkpoint['rstate_chain'] = None
                     sampler.reset()
                     break
-                scoop.logger.info("%s burn process time %s", idx, time.time() - start_time)
+                scoop.logger.info("%s burn process time %.4f", idx, time.time() - start_time)
                 start_time = time.time()
             
         if checkpoint['state'] == 'chain':
@@ -185,7 +185,7 @@ def run(cache, tools, creator):
             count = checkpoint['length_chain'] - checkpoint['idx_chain']
             for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_chain'], checkpoint['ln_prob_chain'],
                                     checkpoint['rstate_chain'], iterations=count ), start=checkpoint['idx_chain']):
-                scoop.logger.info("%s chain step time %s", idx, time.time() - start_time)
+                scoop.logger.info("%s chain step time %.4f", idx, time.time() - start_time)
                 accept = np.mean(sampler.acceptance_fraction)
                 chain_seq.append(accept)
                 writeMCMC(cache, sampler, burn_seq, chain_seq, idx)
@@ -204,7 +204,7 @@ def run(cache, tools, creator):
                     if idx > (mult * tau):
                         scoop.logger.info("we have run long enough and can quit %s", idx)
                         break
-                scoop.logger.info("%s chain process time %s", idx, time.time() - start_time)
+                scoop.logger.info("%s chain process time %.4f", idx, time.time() - start_time)
                 start_time = time.time()
 
     chain = sampler.chain
@@ -316,9 +316,10 @@ def process(cache, halloffame, meta_hof, grad_hof, training, results, writer, cs
     graph_time = time.time()
     util.graph_process(cache, process.gen)
     graph_time = time.time() - graph_time
+
     total_time = time.time() - total_time
 
-    scoop.logger.info("total time %s \tprocessing time %s \twrite time %s \tgraph_time %s", total_time, process_time, write_time, graph_time)
+    scoop.logger.info("total time %.4f \tprocessing time %.4f \twrite time %.4f \tgraph_time %.4f", total_time, process_time, write_time, graph_time)
 
     process.gen += 1
     process.generation_start = time.time()
@@ -366,7 +367,10 @@ def _get_lnprob(self, pos=None):
         p, idx = self.runtime_sortingfn(p)
 
     # Run the log-probability calculations (optionally in parallel).
+    simulation_time = time.time()
     results = list(M(self.lnprobfn, [p[i] for i in range(len(p))]))
+    simulation_time = time.time() - simulation_time
+    scoop.logger.info("Simulation time mcmc %.4f for %s items", simulation_time, len(results))
     results = self.process(results)
 
     try:

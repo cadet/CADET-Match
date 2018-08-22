@@ -408,7 +408,7 @@ def graphProgress(cache):
     
     df = pandas.read_csv(str(cache.progress_path))
 
-    hof = results / "hof.npy"
+    hof = results / "meta_hof.npy"
 
     with hof.open('rb') as hof_file:
         data = numpy.load(hof_file)
@@ -420,25 +420,6 @@ def graphProgress(cache):
          'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score', 'Population']
 
     list(futures.map(singleGraphProgress, itertools.product(x,y), itertools.repeat(df), itertools.repeat(output), itertools.repeat(sys.argv[1])))
-
-    row, col = data.shape
-    x_tick = numpy.array(range(col))
-    x = numpy.repeat(x_tick, row, 0)
-    x.shape = data.shape
-
-    fig = figure.Figure()
-    canvas = FigureCanvas(fig)
-    graph = fig.add_subplot(1, 1, 1)
-
-    graph.scatter(x, data)
-    headers = [i.replace('_', ' ') for i in cache.score_headers]
-    graph.set_xticks(x_tick)
-    graph.tick_params(labelrotation = 90)
-    graph.set_xticklabels(headers)
-    graph.set_ylim((0,1))
-
-    file_path = output / "scores.png"
-    fig.savefig(str(file_path), bbox_inches='tight')
 
 def singleGraphProgress(tup, df, output, json_path):
     if json_path != cache.json_path:
