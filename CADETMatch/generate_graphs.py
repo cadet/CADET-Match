@@ -56,7 +56,7 @@ def graphCorner(cache):
     trainingDir = Path(cache.settings['resultsDirTraining'])
     training_h5 = trainingDir / "training.h5"
 
-    miscDir = Path(cache.settings['resultsDirMisc'])
+    miscDir = Path(cache.settings['resultsDirMCMC'])
     mcmc_h5 = miscDir / "mcmc.h5"
 
     if mcmc_h5.exists():

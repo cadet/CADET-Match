@@ -26,11 +26,13 @@ import evo
 import cache
 
 import numpy as np
+import scipy.stats
 import pareto
 import modEnsemble
 
 import pickle
 import scoop
+import pandas
 
 name = "MCMC"
 
@@ -423,8 +425,8 @@ def next_pow_two(n):
 
 def writeMCMC(cache, sampler, burn_seq, chain_seq, idx):
     "write out the mcmc data so it can be plotted"
-    miscDir = Path(cache.settings['resultsDirMisc'])
-    mcmc_h5 = miscDir / "mcmc.h5"
+    mcmcDir = Path(cache.settings['resultsDirMCMC'])
+    mcmc_h5 = mcmcDir / "mcmc.h5"
 
     chain = sampler.chain
     chain = chain[:, :idx+1, :]
@@ -438,6 +440,12 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx):
     chain_transform[:,:,-1] = numpy.exp((container.maxLogVar - container.minLogVar) * chain_transform[:,:,-1] + container.minLogVar)
 
     flat_chain_transform = chain_transform.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
+
+    flat_interval = interval(flat_chain, cache)
+    flat_interval_transform = interval(flat_chain_transform, cache)
+
+    flat_interval.to_csv(mcmcDir / "interval.csv")
+    flat_interval_transform.to_csv(mcmcDir / "interval_transform.csv")
 
     with h5py.File(mcmc_h5, 'w') as hf:
         #if we don't have a file yet then we have to be doing burn in so no point in checking
@@ -553,7 +561,7 @@ def genRandomChoice(cache, chain, size=500):
     mcmc_selected_score = numpy.array(mcmc_selected_score)
 
     #set the upperbound of find outliers to 100% since we don't need to get rid of good results only bad ones
-    selected, bools = util.find_outliers(mcmc_selected, 10, 90)
+    selected, bools = util.find_outliers(mcmc_selected)
 
     removeResultsOutliers(results, bools)
     
@@ -566,7 +574,7 @@ def removeResultsOutliers(results, bools):
                 unit[comp] = np.array(data)[bools]
 
 def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score):
-    mcmc_h5 = Path(cache.settings['resultsDirMisc']) / "mcmc.h5"
+    mcmc_h5 = Path(cache.settings['resultsDirMCMC']) / "mcmc.h5"
     with h5py.File(mcmc_h5, 'a') as hf:
          hf.create_dataset("mcmc_selected", data=numpy.array(mcmc_selected), compression="gzip")
          hf.create_dataset("mcmc_selected_transformed", data=numpy.array(mcmc_selected_transformed), compression="gzip")
@@ -607,4 +615,27 @@ def plot_mcmc(output_mcmc, value, expName, name):
     plt.plot(times, data.transpose())
     plt.savefig(str(output_mcmc / ("%s_%s_lines.png" % (expName, name) ) ), bbox_inches='tight')
     plt.close()
+
+def interval(flat_chain, cache):
+    #https://stackoverflow.com/questions/15033511/compute-a-confidence-interval-from-sample-data
+
+    #remove the last column since it has the variance and we don't need it
+    flat_chain = flat_chain[:,:-1]
+
+    mean = np.mean(flat_chain,0)
+    sem = scipy.stats.sem(flat_chain)
+    lb_68, ub_68 = scipy.stats.t.interval(0.6827, len(flat_chain)-1, loc=mean, scale=sem)
+    lb_90, ub_90 = scipy.stats.t.interval(0.9, len(flat_chain)-1, loc=mean, scale=sem)
+    lb_95, ub_95 = scipy.stats.t.interval(0.9545, len(flat_chain)-1, loc=mean, scale=sem)
+    lb_99, ub_99 = scipy.stats.t.interval(0.9973, len(flat_chain)-1, loc=mean, scale=sem)
+
+    data = np.vstack( (lb_99, lb_95, lb_90, lb_68, mean, ub_68, ub_90, ub_95, ub_99) ).transpose()
+
+    data = util.RoundToSigFigs(data, cache.roundParameters)
+
+    pd = pandas.DataFrame(data, columns = ['lb 99', 'lb 95', 'lb 90', 'lb 68', 'mean', 'ub 68', 'ub 90', 'ub 95', 'ub 99'])
+
+    pd.insert(0, 'name', cache.parameter_headers_actual)
+    pd.set_index('name')
+    return pd
 
