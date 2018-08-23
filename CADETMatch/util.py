@@ -910,11 +910,8 @@ def finish(cache):
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
     log_subprocess('video_spearman.py', ret)
 
-def find_outliers(data, confidence = 0.99):
-    mean = numpy.mean(data,0)
-    sem = scipy.stats.sem(data)
-    lb, ub = scipy.stats.t.interval(confidence, len(data)-1, loc=mean, scale=sem)
-
+def find_outliers(data, lower_percent=5, upper_percent=95):
+    lb, ub = numpy.percentile(data, [lower_percent, upper_percent], 0)
     selected = (data >= lb) & (data <= ub)
     bools = numpy.all(selected, 1)
     return selected, bools

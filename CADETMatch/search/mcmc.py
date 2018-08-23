@@ -444,8 +444,8 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx):
     flat_interval = interval(flat_chain, cache)
     flat_interval_transform = interval(flat_chain_transform, cache)
 
-    flat_interval.to_csv(mcmcDir / "interval.csv")
-    flat_interval_transform.to_csv(mcmcDir / "interval_transform.csv")
+    flat_interval.to_csv(mcmcDir / "percentile.csv")
+    flat_interval_transform.to_csv(mcmcDir / "percentile_transform.csv")
 
     with h5py.File(mcmc_h5, 'w') as hf:
         #if we don't have a file yet then we have to be doing burn in so no point in checking
@@ -623,18 +623,16 @@ def interval(flat_chain, cache):
     flat_chain = flat_chain[:,:-1]
 
     mean = np.mean(flat_chain,0)
-    sem = scipy.stats.sem(flat_chain)
-    lb_68, ub_68 = scipy.stats.t.interval(0.6827, len(flat_chain)-1, loc=mean, scale=sem)
-    lb_90, ub_90 = scipy.stats.t.interval(0.9, len(flat_chain)-1, loc=mean, scale=sem)
-    lb_95, ub_95 = scipy.stats.t.interval(0.9545, len(flat_chain)-1, loc=mean, scale=sem)
-    lb_99, ub_99 = scipy.stats.t.interval(0.9973, len(flat_chain)-1, loc=mean, scale=sem)
 
-    data = np.vstack( (lb_99, lb_95, lb_90, lb_68, mean, ub_68, ub_90, ub_95, ub_99) ).transpose()
+    lb_5, ub_5 = numpy.percentile(flat_chain, [5, 95], 0)
+    lb_10, ub_10 = numpy.percentile(flat_chain, [10, 90], 0)
+    lb_25, ub_25 = numpy.percentile(flat_chain, [25, 75], 0)
+
+    data = np.vstack( (lb_5, lb_10, lb_25, mean, ub_25, ub_10, ub_5) ).transpose()
 
     data = util.RoundToSigFigs(data, cache.roundParameters)
 
-    pd = pandas.DataFrame(data, columns = ['lb 99', 'lb 95', 'lb 90', 'lb 68', 'mean', 'ub 68', 'ub 90', 'ub 95', 'ub 99'])
-
+    pd = pandas.DataFrame(data, columns = ['5', '10', '25', 'mean', '75', '90', '95'])
     pd.insert(0, 'name', cache.parameter_headers_actual)
     pd.set_index('name')
     return pd
