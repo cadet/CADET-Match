@@ -10,7 +10,7 @@
             "args": [
                 "-m", "scoop", "-n", "8",
                 "${workspaceRoot}/CADETMatch/CADETMatch.py",
-                "/home/william/CADET-Match/Examples/Example1/Dextran/NSGA2_dextran.json", "1"
+                "/home/william/dextran/NSGA3_dextran.json", "1"
               ]
         }
     ]

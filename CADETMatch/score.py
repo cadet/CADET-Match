@@ -10,7 +10,7 @@ import scoop
 def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
     corr = scipy.signal.correlate(exp_data_values, sim_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
 
-    index = numpy.argmax(corr)
+    index = numpy.argmax(corr) + 1
 
     score = corr[index]
 
@@ -25,7 +25,7 @@ def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
 def pearson(exp_time_values, sim_data_values, exp_data_values):
     corr = scipy.signal.correlate(exp_data_values, sim_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
 
-    index = numpy.argmax(corr)
+    index = numpy.argmax(corr) + 1
 
     score = corr[index]
 
