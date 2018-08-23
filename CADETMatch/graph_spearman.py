@@ -10,7 +10,10 @@ from matplotlib import colorbar
 from cache import cache
 
 from pathlib import Path
-import h5py
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore",category=FutureWarning)
+    import h5py
 import numpy
 import scipy.stats
 

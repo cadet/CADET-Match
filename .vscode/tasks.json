@@ -8,9 +8,9 @@
             "type": "process",
             "command": "${config:python.pythonPath}",
             "args": [
-                "-m", "scoop", "-n", "4",
+                "-m", "scoop", "-n", "8",
                 "${workspaceRoot}/CADETMatch/CADETMatch.py",
-                "/home/william/mcmc/MCMC_dextran_test.json", "1"
+                "/home/william/CADET-Match/Examples/Example1/Dextran/NSGA2_dextran.json", "1"
               ]
         }
     ]

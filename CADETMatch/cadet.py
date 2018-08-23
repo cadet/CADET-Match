@@ -4,7 +4,10 @@
 
 from addict import Dict
 
-import h5py
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore",category=FutureWarning)
+    import h5py
 import numpy
 import subprocess
 import pprint

@@ -1,5 +1,8 @@
 import shutil
-import h5py
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore",category=FutureWarning)
+    import h5py
 import util
 from pathlib import Path
 import evo

@@ -3,7 +3,10 @@ import pickle
 import util
 import numpy
 from pathlib import Path
-import h5py
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore",category=FutureWarning)
+    import h5py
 #import grad
 import time
 import csv

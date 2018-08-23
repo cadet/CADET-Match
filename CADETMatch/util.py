@@ -25,7 +25,10 @@ import psutil
 from scoop import futures
 import random
 import calc_coeff
-import h5py
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore",category=FutureWarning)
+    import h5py
 
 import scoop
 
