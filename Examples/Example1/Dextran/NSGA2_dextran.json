@@ -9,11 +9,14 @@
   "gradCheck": 0.9,
   "searchMethod": "NSGA2",
   "crossoverRate": 0.8,
-  "generations": 5,
-  "population": 10,
+  "generations": 100,
+  "population": 100,
+  "minPopulation": 50,
+  "maxPopulation":200,
   "roundParameters": 3,
   "roundScores": 3,
   "metaResultsOnly": 1,
+  "sobolGeneration":1,
   "stallGenerations": 10,
   "parameters": [
     {

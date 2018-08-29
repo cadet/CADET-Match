@@ -1,0 +1,87 @@
+{
+	"CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+    "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Fractionation",
+	"searchMethod": "NSGA3",
+	"resultsDir": "fit",
+	"CSV": "NSGA3.csv",
+	"crossoverRate": 0.8,
+	"checkpointFile": "check",
+	"stopAverage": 0.999,
+	"stopBest": 0.95,
+	"gradCheck": 1.0,
+	"generations": 100,
+    "population": 25,
+    "minPopulation": 25,
+    "maxPopulation":25,
+	"keep": 0.2,
+	"mutationRate": 0.05,
+	"stallGenerations": 20,
+	"stallCorrect": 5,
+	"progressCorrect": 5,
+	"metaResultsOnly": 1,
+	"roundScores": 3,
+	"roundParameters": 3,
+    "sobolGeneration":1,
+	"parameters": [
+		{
+			"transform": "norm_keq",
+			"component": 0,
+			"bound": 0,
+			"location": [
+				"/input/model/unit_001/adsorption/LIN_KA",
+				"/input/model/unit_001/adsorption/LIN_KD"
+			],
+			"minKA": 1e-05,
+			"maxKA": 100000.0,
+			"minKEQ": 0.001,
+			"maxKEQ": 1000.0
+		},
+		{
+			"transform": "norm_keq",
+			"component": 1,
+			"bound": 0,
+			"location": [
+				"/input/model/unit_001/adsorption/LIN_KA",
+				"/input/model/unit_001/adsorption/LIN_KD"
+			],
+			"minKA": 1e-05,
+			"maxKA": 100000.0,
+			"minKEQ": 0.001,
+			"maxKEQ": 1000.0
+		}
+	],
+	"experiments": [
+		{
+			"CSV": "linear2_pulse_c1.csv",
+			"HDF5": "linear2_pulse.h5",
+			"name": "main",
+			"timeout": 20,
+			"features": [
+				{
+					"name": "PulseComb",
+					"type": "similarityHybrid2",
+					"CSV": "linear2_pulse_comb.csv",
+					"isotherm": [
+						"/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
+						"/output/solution/unit_001/SOLUTION_OUTLET_COMP_001"
+					]
+				},
+				{
+					"name": "DerivComb",
+					"type": "derivative_similarity_hybrid2",
+					"CSV": "linear2_pulse_comb.csv",
+					"isotherm": [
+						"/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
+						"/output/solution/unit_001/SOLUTION_OUTLET_COMP_001"
+					]
+				},
+				{
+					"name": "Fraction",
+					"type": "fractionationSlide",
+					"csv": "linear_fraction.csv",
+					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001"
+				}
+			]
+		}
+	]
+}
