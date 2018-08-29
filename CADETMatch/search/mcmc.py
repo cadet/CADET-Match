@@ -564,7 +564,7 @@ def genRandomChoice(cache, chain, size=500):
     mcmc_selected_score = numpy.array(mcmc_selected_score)
 
     #set the upperbound of find outliers to 100% since we don't need to get rid of good results only bad ones
-    selected, bools = util.find_outliers(mcmc_selected)
+    selected, bools = util.find_outliers(mcmc_selected, 10, 90)
 
     removeResultsOutliers(results, bools)
     

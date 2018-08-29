@@ -913,7 +913,7 @@ def finish(cache):
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
     log_subprocess('video_spearman.py', ret)
 
-def find_outliers(data, lower_percent=5, upper_percent=95):
+def find_outliers(data, lower_percent=10, upper_percent=90):
     lb, ub = numpy.percentile(data, [lower_percent, upper_percent], 0)
     selected = (data >= lb) & (data <= ub)
     bools = numpy.all(selected, 1)
