@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\MSSMA\MSSMA_NSGA3.json" 0</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\NSGA3_dextran.json" 0</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -166,13 +166,13 @@
     <Compile Include="search\multistart.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\nsga2_mut.py">
+    <Compile Include="search\retired\nsga2_mut.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\nsga2_mut_adapt.py">
+    <Compile Include="search\retired\nsga2_mut_adapt.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\nsga2_mut_norm.py">
+    <Compile Include="search\retired\nsga2_mut_norm.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\retired\multiswarm.py">
@@ -193,22 +193,22 @@
     <Compile Include="search\retired\spea2a.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\spea2_mut_norm_fit3.py">
+    <Compile Include="search\retired\spea2_mut_norm_fit3.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\spea2_mut.py">
+    <Compile Include="search\retired\spea2_mut.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\spea2_mut_adapt.py">
+    <Compile Include="search\retired\spea2_mut_adapt.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\spea2_mut_norm.py">
+    <Compile Include="search\retired\spea2_mut_norm.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\spea2_mut_norm_fit2.py">
+    <Compile Include="search\retired\spea2_mut_norm_fit2.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\theta_nsga3.py">
+    <Compile Include="search\retired\theta_nsga3.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\__init__.py">

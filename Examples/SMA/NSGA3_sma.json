@@ -1,21 +1,25 @@
 {
-  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
-  "baseDir": "F:/Examples/Example2/Isotherm",
+	"CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+    "baseDir": "F:/Examples/SMA",
   "resultsDir": "fit/",
-  "CSV": "isotherm_NSGA2.csv",
+  "CSV": "isotherm_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 0.999,
   "stopBest": 0.999,
-  "gradCheck": 0.9,
-  "searchMethod": "NSGA2_mut_adapt",
+  "gradCheck": 1.0,
+  "searchMethod": "NSGA3",
+  "mutationRate": 0.05,
   "crossoverRate": 0.8,
   "generations": 100,
   "population": 100,
+  "minPopulation": 50,
+  "maxPopulation":200,
   "roundParameters": 3,
   "roundScores": 3,
   "metaResultsOnly": 1,
+  "sobolGeneration":1,
   "stallGenerations": 10,
-  "parameters": [
+	"parameters": [
 		{
 			"transform": "norm_keq",
 			"component": 1,
@@ -48,23 +52,10 @@
 	],
 	"experiments": [
 		{
-			"CSV": "break.csv",
-			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
-			"HDF5": "break.h5",
-			"name": "break",
-			"timeout": 13.23845386505127,
-			"features": [
-				{
-					"name": "Pulse",
-					"type": "breakthroughHybrid2"
-				}
-			]
-		},
-        {
 			"CSV": "pulse.csv",
 			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001",
 			"HDF5": "pulse.h5",
-			"name": "pulse",
+			"name": "main",
 			"timeout": 32.43798017501831,
 			"features": [
 				{

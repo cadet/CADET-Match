@@ -24,6 +24,9 @@ scoop
 psutil
 	conda install -c anaconda psutil
 
+openpyxl
+	conda install -c anaconda openpyxl
+
 
 If Anaconda is not used then also install
 

@@ -1,19 +1,25 @@
 {
-    "baseDir": "F:/Examples/SMA_BREAK",
-	"crossoverRate": 0.8,
-	"checkpointFile": "check",
-	"stopAverage": 0.999,
-	"stopBest": 0.95,
-	"keepTop": 0.995,
-	"gradCheck": 1.0,
-	"generations": 100,
-	"keep": 0.2,
-	"mutationRate": 0.05,
-    "roundParameters": 3,
-    "roundScores": 3,
-    "metaResultsOnly": 1,
-    "stallGenerations": 10,
-	"parameters": [
+  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+  "baseDir": "F:/Examples/Example2/Isotherm",
+  "resultsDir": "fit/",
+  "CSV": "isotherm_NSGA3.csv",
+  "checkpointFile": "check",
+  "stopAverage": 0.999,
+  "stopBest": 0.999,
+  "gradCheck": 1.0,
+  "searchMethod": "NSGA3",
+  "mutationRate": 0.05,
+  "crossoverRate": 0.8,
+  "generations": 100,
+  "population": 100,
+  "minPopulation": 50,
+  "maxPopulation":200,
+  "roundParameters": 3,
+  "roundScores": 3,
+  "metaResultsOnly": 1,
+  "sobolGeneration":1,
+  "stallGenerations": 10,
+  "parameters": [
 		{
 			"transform": "norm_keq",
 			"component": 1,
@@ -44,7 +50,6 @@
 			"max": 100.0
 		}
 	],
-	"population": 100,
 	"experiments": [
 		{
 			"CSV": "break.csv",
@@ -76,9 +81,5 @@
 				}
 			]
 		}
-	],
-	"CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
-	"searchMethod": "NSGA2_mut_adapt",
-	"resultsDir": "fit",
-	"CSV": "sma_NSGA2.csv"
+	]
 }

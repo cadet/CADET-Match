@@ -68,8 +68,6 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     max_time = selectedTimes[max_index]
     max_value = selectedValues[max_index]
 
-    scoop.logger.info("setup %s  %s  %s", max(selectedValues), max_value, max(selectedValues)/max_value)
-
     min_index = numpy.argmax(selectedValues >= 5e-3*max_value)
     min_time = selectedTimes[min_index]
     min_value = selectedValues[min_index]

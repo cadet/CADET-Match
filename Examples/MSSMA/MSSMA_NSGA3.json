@@ -6,7 +6,7 @@
   "checkpointFile": "check",
   "stopAverage": 0.999,
   "stopBest": 0.999,
-  "gradCheck": 0.9,
+  "gradCheck": 1.0,
   "searchMethod": "NSGA3",
   "crossoverRate": 0.8,
 	"generations": 100,
