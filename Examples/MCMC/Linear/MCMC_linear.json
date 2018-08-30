@@ -1,0 +1,50 @@
+{
+  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+  "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Linear",
+  "resultsDir": "fit/",
+  "CSV": "linear_MCMC.csv",
+  "checkpointFile": "check",
+  "searchMethod": "MCMC",
+  "population": 100,
+  "roundParameters": 6,
+  "roundScores": 6,
+  "metaResultsOnly": 1,
+  "sobolGeneration":1,
+  "scoreMCMC":"score",
+  "graphSpearman": 0,
+  "normalizeOutput":1,
+	"parameters": [
+		{
+			"transform": "norm_keq",
+			"component": 0,
+			"bound": 0,
+			"location": [
+				"/input/model/unit_001/adsorption/LIN_KA",
+				"/input/model/unit_001/adsorption/LIN_KD"
+			],
+			"minKA": 1e-8,
+			"maxKA": 1e8,
+			"minKEQ": 0.0001,
+			"maxKEQ": 10000.0
+		}
+	],
+	"experiments": [
+		{
+			"CSV": "F:/CADET_ParameterEstimation/adsorption/lrmp/linear/linear_pulse.csv",
+			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
+			"HDF5": "F:/CADET_ParameterEstimation/adsorption/lrmp/linear/linear_pulse.h5",
+			"name": "main",
+			"timeout": 3.785061836242676,
+			"features": [
+				{
+					"name": "Pulse",
+					"type": "similarityHybrid2"
+				},
+				{
+					"name": "Deriv",
+					"type": "derivative_similarity_hybrid2"
+				}
+			]
+		}
+	]
+}

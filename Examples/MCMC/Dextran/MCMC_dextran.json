@@ -1,0 +1,49 @@
+{
+  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+  "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
+  "resultsDir": "fit/",
+  "CSV": "dextran_MCMC.csv",
+  "checkpointFile": "check",
+  "searchMethod": "MCMC",
+  "population": 100,
+  "roundParameters": 6,
+  "roundScores": 6,
+  "metaResultsOnly": 1,
+  "sobolGeneration":1,
+  "scoreMCMC":"score",
+  "graphSpearman": 0,
+  "normalizeOutput":1,
+  "parameters": [
+    {
+      "transform": "norm_log",
+      "component": -1,
+      "bound": -1,
+      "location": "/input/model/unit_001/COL_DISPERSION",
+      "min": 1e-12,
+      "max": 1.0
+    },
+    {
+      "transform": "norm",
+      "component": -1,
+      "bound": -1,
+      "location": "/input/model/unit_001/COL_POROSITY",
+      "min": 0.1,
+      "max": 0.9
+    }
+  ],
+  "experiments": [
+    {
+      "CSV": "dextran_pulse.csv",
+      "isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
+      "HDF5": "dextran_pulse.h5",
+      "name": "main",
+      "timeout": 3.4842967987060547,
+      "features": [
+        {
+          "name": "Dextran",
+          "type": "dextranHybrid2"
+        }
+      ]
+    }
+  ]
+}
