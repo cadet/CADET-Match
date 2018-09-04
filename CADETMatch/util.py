@@ -343,15 +343,23 @@ def repeatSimulation(idx):
     with settings_file.open() as json_data:
         settings = json.load(json_data)
 
-        baseDir = Path(settings['resultsDir']) / str(idx)
-        baseDir.mkdir(parents=True, exist_ok=True)
+        baseDir = settings.get('baseDir', None)
+        if baseDir is not None:
+            baseDir = Path(baseDir)
+            settings['resultsDir'] = baseDir / settings['resultsDir']
 
-        settings['resultsDirOriginal'] = settings['resultsDir']
-        settings['resultsDir'] = str(baseDir)
+        resultDir = Path(settings['resultsDir']) / str(idx)
+        resultDir.mkdir(parents=True, exist_ok=True)
 
-        new_settings_file = baseDir / settings_file.name
+        settings['resultsDirOriginal'] = settings['resultsDir'].as_posix()
+        settings['resultsDir'] = resultDir.as_posix()
+
+        if baseDir is not None:
+            settings['baseDir'] = baseDir.as_posix()
+
+        new_settings_file = resultDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:
-            json.dump(settings, json_data)
+            json.dump(settings, json_data, indent=4, sort_keys=True)
         return new_settings_file
 
 def copyCSVWithNoise(idx, center, noise):

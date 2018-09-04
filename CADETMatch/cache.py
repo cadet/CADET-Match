@@ -8,6 +8,7 @@ import numpy
 
 import plugins
 import os
+import scoop
 
 class Cache:
     def __init__(self):
@@ -60,6 +61,7 @@ class Cache:
         baseDir = self.settings.get('baseDir', None)
         if baseDir is not None:
             os.chdir(baseDir)
+            self.settings['resultsDir'] = Path(baseDir) / self.settings['resultsDir']
 
         Cadet.cadet_path = self.settings['CADETPath']
 
