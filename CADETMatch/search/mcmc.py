@@ -53,15 +53,16 @@ container = Container(1e-10, 1e-1)
 
 def log_prior(theta, cache):
     # Create flat distributions.
-    individual = theta[:-1]
-    error = theta[-1]
-    lower_bound = numpy.array(cache.MIN_VALUE)
-    upper_bound = numpy.array(cache.MAX_VALUE)
-    if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound) and 0 <= error <= 1:
-    #if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound):
-        return 0.0
-    else:
-        return -numpy.inf
+    return 0.0
+    
+    #individual = theta[:-1]
+    #error = theta[-1]
+    #lower_bound = numpy.array(cache.MIN_VALUE)
+    #upper_bound = numpy.array(cache.MAX_VALUE)
+    #if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound) and 0 <= error <= 1:
+    #    return 0.0
+    #else:
+    #    return -numpy.inf
 
 def log_likelihood(theta, json_path):
     individual = theta[:-1]
@@ -132,6 +133,8 @@ def run(cache, tools, creator):
 
         sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox)
         emcee.EnsembleSampler._get_lnprob = _get_lnprob
+        emcee.EnsembleSampler._propose_stretch = _propose_stretch
+
 
         training = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}}
         halloffame = pareto.DummyFront(similar=util.similar)
@@ -640,3 +643,51 @@ def interval(flat_chain, cache):
     pd.set_index('name')
     return pd
 
+def _propose_stretch(self, p0, p1, lnprob0):
+        """
+        Propose a new position for one sub-ensemble given the positions of
+        another.
+
+        :param p0:
+            The positions from which to jump.
+
+        :param p1:
+            The positions of the other ensemble.
+
+        :param lnprob0:
+            The log-probabilities at ``p0``.
+
+        This method returns:
+
+        * ``q`` - The new proposed positions for the walkers in ``ensemble``.
+
+        * ``newlnprob`` - The vector of log-probabilities at the positions
+          given by ``q``.
+
+        * ``accept`` - A vector of type ``bool`` indicating whether or not
+          the proposed position for each walker should be accepted.
+
+        * ``blob`` - The new meta data blobs or ``None`` if nothing was
+          returned by ``lnprobfn``.
+
+        """
+        s = np.atleast_2d(p0)
+        Ns = len(s)
+        c = np.atleast_2d(p1)
+        Nc = len(c)
+
+        # Generate the vectors of random numbers that will produce the
+        # proposal.
+        zz = ((self.a - 1.) * self._random.rand(Ns) + 1) ** 2. / self.a
+        rint = self._random.randint(Nc, size=(Ns,))
+
+        # Calculate the proposed positions and the log-probability there.
+        q = (c[rint] - zz[:, np.newaxis] * (c[rint] - s)) % 1
+        
+        newlnprob, blob = self._get_lnprob(q)
+
+        # Decide whether or not the proposals should be accepted.
+        lnpdiff = (self.dim - 1.) * np.log(zz) + newlnprob - lnprob0
+        accept = (lnpdiff > np.log(self._random.rand(len(lnpdiff))))
+
+        return q, newlnprob, accept, blob

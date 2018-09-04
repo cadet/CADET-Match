@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\MCMC\FractionationSMA\MCMC_combine_fraction.json" 0</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\SMA\SPEA2_sma.json" 0</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -155,6 +155,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\sse.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\width.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\__init__.py">

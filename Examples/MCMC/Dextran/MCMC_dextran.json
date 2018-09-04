@@ -5,7 +5,7 @@
   "CSV": "dextran_MCMC.csv",
   "checkpointFile": "check",
   "searchMethod": "MCMC",
-  "population": 100,
+  "population": 200,
   "roundParameters": 6,
   "roundScores": 6,
   "metaResultsOnly": 1,

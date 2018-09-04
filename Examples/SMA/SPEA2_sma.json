@@ -1,13 +1,13 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/SMA",
-  "resultsDir": "fit/",
+  "resultsDir": "fit_2/",
   "CSV": "isotherm_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 0.999,
   "stopBest": 0.999,
   "gradCheck": 1.0,
-  "searchMethod": "NSGA3",
+  "searchMethod": "SPEA2",
   "mutationRate": 0.05,
   "crossoverRate": 0.8,
   "generations": 100,
@@ -19,6 +19,7 @@
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 10,
+  "keep":0.2,
 	"parameters": [
 		{
 			"transform": "norm_keq",
