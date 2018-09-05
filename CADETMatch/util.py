@@ -563,6 +563,8 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 hf.create_dataset("input", data=result_data['input'], maxshape=(None, len(result_data['input'][0])), compression="gzip")
                 hf.create_dataset("output", data=result_data['output'], maxshape=(None, len(result_data['output'][0])), compression="gzip")
                 hf.create_dataset("output_meta", data=result_data['output_meta'], maxshape=(None, len(result_data['output_meta'][0])), compression="gzip")
+                hf.create_dataset("input_transform", data=result_data['input_transform'], maxshape=(None, len(result_data['input_transform'][0])), compression="gzip")
+                hf.create_dataset("input_transform_extended", data=result_data['input_transform_extended'], maxshape=(None, len(result_data['input_transform_extended'][0])), compression="gzip")
                 hf.create_dataset("generation", data=gen_data, maxshape=(None, 2), compression="gzip")
                 
                 if cache.fullTrainingData:
@@ -583,6 +585,12 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 hf["output_meta"].resize((hf["output_meta"].shape[0] + len(result_data['output_meta'])), axis = 0)
                 hf["output_meta"][-len(result_data['output_meta']):] = result_data['output_meta']
 
+                hf["input_transform"].resize((hf["input_transform"].shape[0] + len(result_data['input_transform'])), axis = 0)
+                hf["input_transform"][-len(result_data['input_transform']):] = result_data['input_transform']
+
+                hf["input_transform_extended"].resize((hf["input_transform_extended"].shape[0] + len(result_data['input_transform_extended'])), axis = 0)
+                hf["input_transform_extended"][-len(result_data['input_transform_extended']):] = result_data['input_transform_extended']
+
                 hf["generation"].resize((hf["generation"].shape[0] + 1), axis = 0)
                 hf["generation"][-1] = gen_data
                 
@@ -595,6 +603,8 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         result_data['input'] = []
         result_data['output'] = []
         result_data['output_meta'] = []
+        result_data['input_transform'] = []
+        result_data['input_transform_extended'] = []
         result_data['results'] = {}
         result_data['times'] = {}
 
@@ -721,6 +731,13 @@ def update_result_data(cache, ind, fit, result_data, results):
         result_data['input'].append(tuple(ind))
         result_data['output'].append(tuple(fit))
         result_data['output_meta'].append(tuple(meta_calc(fit)))
+
+        for result in results.values():
+            result_data['input_transform'].append(tuple(result['cadetValues']))
+            result_data['input_transform_extended'].append(tuple(result['cadetValuesKEQ']))
+
+            #All results have the same parameter set so we only need the first one
+            break
 
         if cache.fullTrainingData:
             if 'results' not in result_data:
