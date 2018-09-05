@@ -23,6 +23,7 @@ import logging
 
 from cache import cache
 import loggerwriter
+import h5py
 
 #due to how scoop works and the need to break things up into multiple processes it is hard to use class based systems
 #As a result most of the code is broken up into modules but is still based on pure functions
@@ -33,6 +34,8 @@ def main():
     setup(cache, sys.argv[1])
     #grad.setupTemplates(evo.settings, evo.target)
     hof = evo.run(cache)
+
+    find_percentile(cache)
 
     if "repeat" in cache.settings:
         repeat = int(cache.settings['repeat'])
@@ -212,3 +215,20 @@ if __name__ == "__main__":
     main()
     scoop.logger.info('Sysem has finished')
     scoop.logger.info("The total runtime was %s seconds" % (time.time() - start))
+
+def find_percentile(cache):
+    "find the percentile boundaries for the input variables"
+    resultDir = Path(cache.settings['resultsDir'])
+    result_h5 = resultDir / "result.h5"
+
+    with h5py.File(result_h5, 'r') as hf:
+        data = hf["input_transform"][:]
+        score = hf["output_meta"][:]
+
+        best_min = numpy.max(score[:,0])
+
+        data = data[score[:,0] > 0.8 * best_min,:]
+
+        lb, ub = numpy.percentile(data, [10, 90], 0)
+
+        scoop.logger.info('lb %s  ub %s', lb, ub)
