@@ -39,7 +39,7 @@ def generate_reference_points(num_objs, num_divisions_per_obj=4):
     `jMetal NSGA-III implementation <https://github.com/jMetal/jMetal>`_.
     '''
 
-    sobol = SALib.sample.sobol_sequence.sample(100 * num_objs, num_objs)
+    sobol = SALib.sample.sobol_sequence.sample(200 * num_objs, num_objs)
     data = np.apply_along_axis(list, 1, sobol)
     data = list(map(ReferencePoint, data))
     return data

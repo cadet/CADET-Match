@@ -5,7 +5,7 @@
   "CSV": "nonbinding_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 0.999,
-  "stopBest": 0.999,
+  "stopBest": 0.98,
   "gradCheck": 1.0,
   "searchMethod": "NSGA3",
   "mutationRate": 0.05,
