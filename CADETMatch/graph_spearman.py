@@ -23,12 +23,12 @@ def main():
 
     generation = sys.argv[2]
 
-    training_path = Path(cache.settings['resultsDirBase']) / "training" / "training.h5"
+    result_path = Path(cache.settings['resultsDirBase']) / "result.h5"
     output_spear = cache.settings['resultsDirSpace'] / "spearman"
 
     output_spear.mkdir(parents=True, exist_ok=True)
 
-    with h5py.File(training_path) as h5:
+    with h5py.File(result_path) as h5:
         data_output = h5['/output'].value
         data_generation = h5['/generation'].value
         

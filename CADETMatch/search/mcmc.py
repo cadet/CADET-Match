@@ -136,13 +136,13 @@ def run(cache, tools, creator):
         emcee.EnsembleSampler._propose_stretch = _propose_stretch
 
 
-        training = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}}
+        result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}}
         halloffame = pareto.DummyFront(similar=util.similar)
         meta_hof = pareto.ParetoFront(similar=util.similar)
         grad_hof = pareto.DummyFront(similar=util.similar)
 
         def local(results):
-            return process(cache, halloffame, meta_hof, grad_hof, training, results, writer, csvfile, sampler)
+            return process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csvfile, sampler)
         sampler.process = local
 
         converge = np.random.rand(50)
@@ -274,7 +274,7 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register('map', map_function)
 
-def process(cache, halloffame, meta_hof, grad_hof, training, results, writer, csv_file, sampler):
+def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csv_file, sampler):
     if 'gen' not in process.__dict__:
         process.gen = 0
 
@@ -301,12 +301,12 @@ def process(cache, halloffame, meta_hof, grad_hof, training, results, writer, cs
 
     stalled, stallWarn, progressWarn = util.process_population(cache.toolbox, cache, population, 
                                                           fitnesses, writer, csv_file, 
-                                                          halloffame, meta_hof, process.gen, training)
+                                                          halloffame, meta_hof, process.gen, result_data)
     
     avg, bestMin, bestProd = util.averageFitness(population, cache)
 
     util.writeProgress(cache, process.gen, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, 
-                       process.sim_start, process.generation_start, training)
+                       process.sim_start, process.generation_start, result_data)
 
     util.graph_process(cache, process.gen)
 

@@ -82,7 +82,6 @@ class Cache:
         self.settings['resultsDirMisc'] = Path(self.settings['resultsDir']) / "misc"
         self.settings['resultsDirSpace'] = Path(self.settings['resultsDir']) / "space"
         self.settings['resultsDirProgress'] = Path(self.settings['resultsDir']) / "progress"
-        self.settings['resultsDirTraining'] = Path(self.settings['resultsDir']) / "training"
         self.settings['resultsDirLog'] = Path(self.settings['resultsDir']) / "log"
         self.settings['resultsDirMCMC'] = Path(self.settings['resultsDir']) / "mcmc"
         self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])

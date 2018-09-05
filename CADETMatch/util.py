@@ -529,7 +529,7 @@ def fractionate(start_seq, stop_seq, times, values):
         temp.append(numpy.trapz(local_values, local_times)/ (stop - start))
     return numpy.array(temp)
 
-def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, average_score, minimum_score, product_score, sim_start, generation_start, training=None):
+def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, average_score, minimum_score, product_score, sim_start, generation_start, result_data=None):
     cpu_time = psutil.Process().cpu_times()
     now = time.time()
 
@@ -552,52 +552,51 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
     with grad_hof.open('wb') as hof_file:
         numpy.save(hof_file, data_grad)
 
-    gen_data = numpy.array([generation, len(training['input'])]).reshape(1,2)
+    gen_data = numpy.array([generation, len(result_data['input'])]).reshape(1,2)
 
-    if training is not None:
-        trainingDir = Path(cache.settings['resultsDirTraining'])
+    if result_data is not None:
+        resultDir = Path(cache.settings['resultsDir'])
+        result_h5 = resultDir / "result.h5"
 
-        training_h5 = trainingDir / "training.h5"
-
-        if not training_h5.exists():
-            with h5py.File(training_h5, 'w') as hf:
-                hf.create_dataset("input", data=training['input'], maxshape=(None, len(training['input'][0])), compression="gzip")
-                hf.create_dataset("output", data=training['output'], maxshape=(None, len(training['output'][0])), compression="gzip")
-                hf.create_dataset("output_meta", data=training['output_meta'], maxshape=(None, len(training['output_meta'][0])), compression="gzip")
+        if not result_h5.exists():
+            with h5py.File(result_h5, 'w') as hf:
+                hf.create_dataset("input", data=result_data['input'], maxshape=(None, len(result_data['input'][0])), compression="gzip")
+                hf.create_dataset("output", data=result_data['output'], maxshape=(None, len(result_data['output'][0])), compression="gzip")
+                hf.create_dataset("output_meta", data=result_data['output_meta'], maxshape=(None, len(result_data['output_meta'][0])), compression="gzip")
                 hf.create_dataset("generation", data=gen_data, maxshape=(None, 2), compression="gzip")
                 
                 if cache.fullTrainingData:
 
-                    for filename, chroma in training['results'].items():
+                    for filename, chroma in result_data['results'].items():
                         hf.create_dataset(filename, data=chroma, maxshape=(None, len(chroma[0])), compression="gzip")
 
-                    for filename, chroma in training['times'].items():
+                    for filename, chroma in result_data['times'].items():
                         hf.create_dataset(filename, data=chroma)
         else:
-            with h5py.File(training_h5, 'a') as hf:
-                hf["input"].resize((hf["input"].shape[0] + len(training['input'])), axis = 0)
-                hf["input"][-len(training['input']):] = training['input']
+            with h5py.File(result_h5, 'a') as hf:
+                hf["input"].resize((hf["input"].shape[0] + len(result_data['input'])), axis = 0)
+                hf["input"][-len(result_data['input']):] = result_data['input']
 
-                hf["output"].resize((hf["output"].shape[0] + len(training['output'])), axis = 0)
-                hf["output"][-len(training['output']):] = training['output']
+                hf["output"].resize((hf["output"].shape[0] + len(result_data['output'])), axis = 0)
+                hf["output"][-len(result_data['output']):] = result_data['output']
 
-                hf["output_meta"].resize((hf["output_meta"].shape[0] + len(training['output_meta'])), axis = 0)
-                hf["output_meta"][-len(training['output_meta']):] = training['output_meta']
+                hf["output_meta"].resize((hf["output_meta"].shape[0] + len(result_data['output_meta'])), axis = 0)
+                hf["output_meta"][-len(result_data['output_meta']):] = result_data['output_meta']
 
                 hf["generation"].resize((hf["generation"].shape[0] + 1), axis = 0)
                 hf["generation"][-1] = gen_data
                 
                 if cache.fullTrainingData:
 
-                    for filename, chroma in training['results'].items():
+                    for filename, chroma in result_data['results'].items():
                         hf[filename].resize((hf[filename].shape[0] + len(chroma)), axis = 0)
                         hf[filename][-len(chroma):] = chroma
 
-        training['input'] = []
-        training['output'] = []
-        training['output_meta'] = []
-        training['results'] = {}
-        training['times'] = {}
+        result_data['input'] = []
+        result_data['output'] = []
+        result_data['output_meta'] = []
+        result_data['results'] = {}
+        result_data['times'] = {}
 
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
@@ -717,18 +716,18 @@ def meta_calc(scores):
             numpy.sum(scores)/len(scores), 
             numpy.linalg.norm(scores)/numpy.sqrt(len(scores))]
 
-def update_training(cache, ind, fit, training, results):
-    if training is not None and results is not None:
-        training['input'].append(tuple(ind))
-        training['output'].append(tuple(fit))
-        training['output_meta'].append(tuple(meta_calc(fit)))
+def update_result_data(cache, ind, fit, result_data, results):
+    if result_data is not None and results is not None:
+        result_data['input'].append(tuple(ind))
+        result_data['output'].append(tuple(fit))
+        result_data['output_meta'].append(tuple(meta_calc(fit)))
 
         if cache.fullTrainingData:
-            if 'results' not in training:
-                training['results'] = {}
+            if 'results' not in result_data:
+                result_data['results'] = {}
 
-            if 'times' not in training:
-                training['times'] = {}
+            if 'times' not in result_data:
+                result_data['times'] = {}
 
             for experimentName, experiment in results.items():
                 sim = experiment['simulation']
@@ -736,8 +735,8 @@ def update_training(cache, ind, fit, training, results):
 
                 timeName = '%s_time' % experimentName
 
-                if timeName not in training['times']:
-                    training['times'][timeName] = times
+                if timeName not in result_data['times']:
+                    result_data['times'][timeName] = times
 
                 for unitName, unit in sim.root.output.solution.items():
                     if unitName.startswith('unit_') and sim.root.input.model[unitName].unit_type == b'OUTLET':
@@ -747,12 +746,12 @@ def update_training(cache, ind, fit, training, results):
 
                                 name = '%s_%s_%s' % (experimentName, unitName, comp)
 
-                                if name not in training['results']:
-                                    training['results'][name] = []
+                                if name not in result_data['results']:
+                                    result_data['results'][name] = []
 
-                                training['results'][name].append(tuple(solution))
+                                result_data['results'][name].append(tuple(solution))
 
-def process_population(toolbox, cache, population, fitnesses, writer, csvfile, halloffame, meta_hof, generation, training=None):
+def process_population(toolbox, cache, population, fitnesses, writer, csvfile, halloffame, meta_hof, generation, result_data=None):
     csv_lines = []
     meta_csv_lines = []
 
@@ -768,7 +767,7 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
         ind_meta = toolbox.clone(ind)
         ind_meta.fitness.values = meta_calc(fit)
 
-        update_training(cache, ind, fit, training, results)
+        update_result_data(cache, ind, fit, result_data, results)
 
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)
@@ -811,10 +810,10 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
     return stalled, stallWarn, progressWarn
 
-def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, training=None):
+def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, result_data=None):
     fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
 
-    return process_population(toolbox, cache, invalid_ind, fitnesses, writer, csvfile, halloffame, meta_hof, generation, training)
+    return process_population(toolbox, cache, invalid_ind, fitnesses, writer, csvfile, halloffame, meta_hof, generation, result_data)
 
 def updateParetoFront(halloffame, offspring, cache):
     before = set(map(tuple, halloffame.items))

@@ -56,8 +56,8 @@ def graphCorner(cache):
     headers = list(cache.parameter_headers_actual)
     headers = [header.split()[0] for header in headers]
     
-    trainingDir = Path(cache.settings['resultsDirTraining'])
-    training_h5 = trainingDir / "training.h5"
+    resultDir = Path(cache.settings['resultsDir'])
+    result_h5 = resultDir / "result.h5"
 
     miscDir = Path(cache.settings['resultsDirMCMC'])
     mcmc_h5 = miscDir / "mcmc.h5"
@@ -110,7 +110,7 @@ def graphCorner(cache):
 
     else:
         data = {}
-        with h5py.File(training_h5, 'r') as h5:
+        with h5py.File(result_h5, 'r') as h5:
             for key in h5.keys():
                 data[key] = h5[key].value
 

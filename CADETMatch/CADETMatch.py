@@ -120,7 +120,6 @@ def createDirectories(cache, json_path):
     cache.settings['resultsDirEvo'].mkdir(parents=True, exist_ok=True)
     cache.settings['resultsDirProgress'].mkdir(parents=True, exist_ok=True)
     cache.settings['resultsDirMeta'].mkdir(parents=True, exist_ok=True)
-    cache.settings['resultsDirTraining'].mkdir(parents=True, exist_ok=True)
     cache.settings['resultsDirLog'].mkdir(parents=True, exist_ok=True)
     cache.settings['resultsDirMCMC'].mkdir(parents=True, exist_ok=True)
 
