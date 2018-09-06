@@ -95,3 +95,7 @@ def getHeaders(parameter):
 
 def getHeadersActual(parameter):
     return getHeaders(parameter)
+
+def setBounds(parameter, lb, ub):
+    parameter['min'] = lb[0]
+    parameter['max'] = ub[0]

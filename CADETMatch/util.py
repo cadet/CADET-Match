@@ -362,6 +362,47 @@ def repeatSimulation(idx):
             json.dump(settings, json_data, indent=4, sort_keys=True)
         return new_settings_file
 
+def setupMCMC(cache, lb, ub):
+    "read the original json file and make an mcmc file based on it with new boundaries"
+    settings_file = Path(sys.argv[1])
+    with settings_file.open() as json_data:
+        settings = json.load(json_data)
+
+        baseDir = settings.get('baseDir', None)
+        if baseDir is not None:
+            baseDir = Path(baseDir)
+            settings['resultsDir'] = baseDir / settings['resultsDir']
+
+        resultDir = Path(settings['resultsDir']) / "mcmc_refine"
+        resultDir.mkdir(parents=True, exist_ok=True)
+
+        settings['resultsDirOriginal'] = settings['resultsDir'].as_posix()
+        settings['resultsDir'] = resultDir.as_posix()
+
+        if baseDir is not None:
+            settings['baseDir'] = baseDir.as_posix()
+
+        idx = 0
+        for parameter in settings['parameters']:
+            transform = cache.transforms[parameter['transform']]
+            count = transform.count
+            scoop.logger.warn('%s %s %s', idx, count, transform)
+            lb_local = lb[idx:idx+count]
+            ub_local = ub[idx:idx+count]
+            transform.setBounds(parameter, lb_local, ub_local)
+            idx = idx + count
+
+        settings['searchMethod'] = 'MCMC'
+        settings['scoreMCMC'] = "score"
+        settings['graphSpearman'] = 0
+        settings['roundScores'] = max(6, settings['roundScores'])
+        settings['roundParameters'] = max(6, settings['roundParameters'])
+
+        new_settings_file = resultDir / settings_file.name
+        with new_settings_file.open(mode="w") as json_data:
+            json.dump(settings, json_data, indent=4, sort_keys=True)
+        return new_settings_file
+
 def copyCSVWithNoise(idx, center, noise):
     "read the original json file and create a new set of simulation data and simulation file in a subdirectory with noise"
     settings_file = Path(sys.argv[1])

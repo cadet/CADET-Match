@@ -35,7 +35,7 @@ def main():
     #grad.setupTemplates(evo.settings, evo.target)
     hof = evo.run(cache)
 
-    find_percentile(cache)
+    continue_mcmc(cache)
 
     if "repeat" in cache.settings:
         repeat = int(cache.settings['repeat'])
@@ -227,8 +227,21 @@ def find_percentile(cache):
 
         best_min = numpy.max(score[:,0])
 
-        data = data[score[:,0] > 0.8 * best_min,:]
+        data = data[score[:,0] > 0.9 * best_min,:]
 
-        lb, ub = numpy.percentile(data, [10, 90], 0)
+        lb, ub = numpy.percentile(data, [5, 95], 0)
 
         scoop.logger.info('lb %s  ub %s', lb, ub)
+
+        return lb, ub
+
+def continue_mcmc(cache):
+    if cache.continueMCMC:
+        lb, ub = find_percentile(cache)
+
+        json_path = util.setupMCMC(cache, lb, ub)
+        scoop.logger.info(json_path)
+
+        setup(cache, json_path)
+
+        hof = evo.run(cache)

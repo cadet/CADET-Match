@@ -5,13 +5,13 @@
   "CSV": "nonbinding_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 0.999,
-  "stopBest": 0.98,
+  "stopBest": 0.99,
   "gradCheck": 1.0,
   "searchMethod": "NSGA3",
   "mutationRate": 0.05,
   "crossoverRate": 0.8,
   "generations": 100,
-  "population": 50,
+  "population": 100,
   "minPopulation": 50,
   "maxPopulation":200,
   "roundParameters": 3,
@@ -19,6 +19,7 @@
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 10,
+  "continueMCMC":1,
 	"parameters": [
 		{
 			"transform": "norm_log",

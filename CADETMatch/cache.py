@@ -41,6 +41,7 @@ class Cache:
         self.normalizeOutput = False
         self.sobolGeneration = False
         self.graphSpearman = True
+        self.continueMCMC = False
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
                                  'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score',
@@ -103,6 +104,8 @@ class Cache:
         self.sobolGeneration = bool(self.settings.get('soboloGeneration', False))
         self.graphSpearman = bool(self.settings.get('graphSpearman', True))
         self.scoreMCMC = self.settings.get('scoreMCMC', "sse")
+
+        self.continueMCMC = bool(self.settings.get('continueMCMC', False))
         
     def setupSettings(self):
         settings_file = Path(self.json_path)

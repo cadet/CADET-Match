@@ -82,3 +82,9 @@ def getHeadersActual(parameter):
     headers.append("%s Comp:%s Bound:%s" % (nameNu, comp, bound))
     headers.append("%s+%s Comp:%s Bound:%s" % (nameNu, nameSigma, comp, bound))
     return headers
+
+def setBounds(parameter, lb, ub):
+    parameter['minNu'] = lb[0]
+    parameter['maxNu'] = ub[0]
+    parameter['minSigma'] = lb[1] - lb[0]
+    parameter['maxSigma'] = ub[1] - ub[0]

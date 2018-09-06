@@ -98,3 +98,9 @@ def getHeadersActual(parameter):
     headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
     headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
     return headers
+
+def setBounds(parameter, lb, ub):
+    parameter['minKA'] = lb[0]
+    parameter['maxKA'] = ub[0]
+    parameter['minKEQ'] = lb[1]
+    parameter['maxKEQ'] = ub[1]

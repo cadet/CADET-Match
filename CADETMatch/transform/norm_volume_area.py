@@ -86,3 +86,9 @@ def getHeadersActual(parameter):
     headers.append("Volume Comp:%s Bound:%s" % (comp, bound))
     headers.append("Area Comp:%s Bound:%s" % (comp, bound))
     return headers
+
+def setBounds(parameter, lb, ub):
+    parameter['minVolume'] = lb[0]
+    parameter['maxVolume'] = ub[0]
+    parameter['minArea'] = lb[1]
+    parameter['maxArea'] = ub[1]
