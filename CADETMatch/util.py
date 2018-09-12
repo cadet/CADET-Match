@@ -85,6 +85,12 @@ def find_breakthrough(times, data):
     selected_times = times[selected]
     return (selected_times[0], max(data)), (selected_times[-1], max(data))
 
+def roundParameter(value, cache):
+    if cache.roundParameters is not None:
+        return RoundToSigFigs(value, cache.roundParameters)
+    else:
+        return value
+
 def generateIndividual(icls, size, imin, imax, cache):
     if cache.roundParameters is not None:
         return icls(RoundToSigFigs(numpy.random.uniform(imin, imax), cache.roundParameters))
@@ -393,10 +399,13 @@ def setupMCMC(cache, lb, ub):
             idx = idx + count
 
         settings['searchMethod'] = 'MCMC'
-        settings['scoreMCMC'] = "score"
         settings['graphSpearman'] = 0
-        settings['roundScores'] = max(6, settings['roundScores'])
-        settings['roundParameters'] = max(6, settings['roundParameters'])
+
+        if settings.get('roundScores', None):
+            settings['roundScores'] = max(6, settings['roundScores'])
+
+        if settings.get('roundParameters', None):
+            settings['roundParameters'] = max(6, settings['roundParameters'])
 
         new_settings_file = resultDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:

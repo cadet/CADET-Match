@@ -106,6 +106,9 @@ class Cache:
         self.scoreMCMC = self.settings.get('scoreMCMC', "sse")
 
         self.continueMCMC = bool(self.settings.get('continueMCMC', False))
+
+        if "MCMCpopulation" not in self.settings:
+            self.settings['MCMCpopulation'] = self.settings['population']
         
     def setupSettings(self):
         settings_file = Path(self.json_path)

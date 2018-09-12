@@ -14,9 +14,9 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\NonBindingProtein\NSGA3_protein.json" 0</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\MCMC\NonBinding\MCMC_protein_opt.json" 0</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>-m scoop -n 1</InterpreterArguments>
+    <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -167,6 +167,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\multistart.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\retired\mcmc_old.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\retired\nsga2_mut.py">

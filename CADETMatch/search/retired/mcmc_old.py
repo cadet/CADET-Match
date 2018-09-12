@@ -65,16 +65,63 @@ class Container:
 
 container = Container(1e-10, 1e-1)
 
+def log_prior(theta, cache):
+    # Create flat distributions.
+    return 0.0
+    
+    #individual = theta[:-1]
+    #error = theta[-1]
+    #lower_bound = numpy.array(cache.MIN_VALUE)
+    #upper_bound = numpy.array(cache.MAX_VALUE)
+    #if numpy.all(individual >= lower_bound) and numpy.all(individual <= upper_bound) and 0 <= error <= 1:
+    #    return 0.0
+    #else:
+    #    return -numpy.inf
+
 def log_likelihood(theta, json_path,multiplier):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path, False)
     
-    individual = theta
+    individual = theta[:-1]
+
+    if cache.cache.scoreMCMC in ('score2', 'score3'):
+        individual = theta
+    else:
+        individual = theta[:-1]
 
     scores, csv_record, results = evo.fitness(individual, json_path)
+    #error = theta[-1]
+    error = numpy.exp((container.maxLogVar - container.minLogVar) * theta[-1] + container.minLogVar)
+    count = sum([i['error_count'] for i in results.values()])
+    sse = sum([i['error'] for i in results.values()])
 
-    norm = numpy.linalg.norm(scores)/numpy.sqrt(len(scores))
-    score = -multiplier * (1.0 - norm)
+    if cache.cache.scoreMCMC == 'score':
+        score = -0.5 * (len(scores) * np.log(2 * numpy.pi * error ** 2) + sum([1.0 - i for i in scores]) / (error ** 2) )
+
+    if cache.cache.scoreMCMC == 'score2':
+        #works need something more stable with more scores
+        #score = -0.5 * sum([1.0 - i for i in scores])*1e1
+
+        norm = numpy.linalg.norm(scores)/numpy.sqrt(len(scores))
+        score = -multiplier * (1.0 - norm)
+
+    if cache.cache.scoreMCMC == 'score3':
+        #works need something more stable with more scores
+        score = -0.5 * sum([(1.0 - i)**2 for i in scores])/1e-5
+
+    if cache.cache.scoreMCMC == 'sse':
+        #sse
+        score = -0.5 * (count * np.log(2 * numpy.pi * error ** 2) + sse / (error ** 2) )
+
+    if cache.cache.scoreMCMC == 'min':
+        #min
+        min_score = min(scores)
+        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - min_score) / (error ** 2) )
+
+    if cache.cache.scoreMCMC == 'product':
+        #prod
+        prod_score = numpy.product(scores)
+        score = -0.5 * (1.0 * np.log(2 * numpy.pi * error ** 2) + (1.0 - prod_score) / (error ** 2) )
 
     return score, scores, csv_record, results 
 
@@ -82,25 +129,37 @@ def log_posterior(theta, json_path, multiplier):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path)
 
-    try:
-        ll, scores, csv_record, results = log_likelihood(theta, json_path, multiplier)
-        return ll, theta, scores, csv_record, results
-    except:
-        # if model does not converge:
+    lp = log_prior(theta, cache.cache)
+    # only compute model if likelihood of the prior is not - infinity
+    if not numpy.isfinite(lp):
         return -numpy.inf, None, None, None, None
+    #try:
+    ll, scores, csv_record, results = log_likelihood(theta, json_path, multiplier)
+    return lp + ll, theta, scores, csv_record, results
+    #except:
+        # if model does not converge:
+    #    return -numpy.inf, None, None, None, None
 
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
 
-    parameters = len(cache.MIN_VALUE)
-    
+    if cache.scoreMCMC != 'sse':
+        container.set(1e-4, 1e4)
+
+    if cache.scoreMCMC in ('score2', 'score3'):
+        parameters = len(cache.MIN_VALUE)
+    else:
+        parameters = len(cache.MIN_VALUE) + 1
     populationSize = parameters * cache.settings['MCMCpopulation']
 
     #Population must be even
     populationSize = populationSize + populationSize % 2  
 
     sobol = SALib.sample.sobol_sequence.sample(populationSize, parameters)
+
+    #correct the last column to be in our error range
+    #sobol[:,-1] = (maxLogVar - minLogVar) * sobol[:,-1] + minLogVar
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
@@ -151,6 +210,7 @@ def run(cache, tools, creator):
 
                 if idx % convergence_check_interval == 0 and idx >= convergence_check_interval:
                     accept = np.mean(converge)
+                    scoop.logger.info("accept %s", accept)
                     if accept > 0.5:
                         container.raise_multiplier(sampler)
                         scoop.logger.info("raising multipler %s", container.multiplier)
@@ -206,8 +266,11 @@ def getCheckPoint(checkpointFile, cache):
         with checkpointFile.open('rb') as cp_file:
             checkpoint = pickle.load(cp_file)
     else:
-        parameters = len(cache.MIN_VALUE)
-        
+        if cache.scoreMCMC in ('score2', 'score3'):
+            parameters = len(cache.MIN_VALUE)
+        else:
+            parameters = len(cache.MIN_VALUE) + 1
+
         populationSize = parameters * cache.settings['MCMCpopulation']
 
         #Population must be even
@@ -428,7 +491,15 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx, parameters):
     chain_transform = numpy.array(chain)
     for walker in range(chain_shape[0]):
         for position in range(chain_shape[1]):
-            chain_transform[walker, position,:] = util.convert_individual(chain_transform[walker, position, :], cache)
+            if cache.scoreMCMC in ('score2', 'score3'):
+                chain_transform[walker, position,:] = util.convert_individual(chain_transform[walker, position, :], cache)
+            else:
+                chain_transform[walker, position,:-1] = util.convert_individual(chain_transform[walker, position, :-1], cache)
+    
+    if cache.scoreMCMC in ('score2', 'score3'):
+        pass
+    else:
+        chain_transform[:,:,-1] = numpy.exp((container.maxLogVar - container.minLogVar) * chain_transform[:,:,-1] + container.minLogVar)
 
     flat_chain_transform = chain_transform.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 
@@ -506,7 +577,8 @@ def genRandomChoice(cache, chain, size=500):
         if cache.scoreMCMC in ('score2', 'score3'):
             individuals.append(chain[idx,:])
         else:
-            individuals.append(chain[idx,0:-1]) 
+            individuals.append(chain[idx,0:-1])
+        
 
     fitnesses = cache.toolbox.map(cache.toolbox.evaluate, individuals)
 
@@ -524,7 +596,8 @@ def genRandomChoice(cache, chain, size=500):
             mcmc_selected_transformed.append(tuple(value['cadetValues']))
             mcmc_selected.append(tuple(value['individual']))
             break
-  
+
+        
         for key,value in result.items():
             sims = results.get(key, {})
 
@@ -582,6 +655,7 @@ def plotTube(cache, chain):
     for expName,value in combinations.items():
         plot_mcmc(output_mcmc, value, expName, "combine")
 
+
     for exp, units in results.items():
         for unitName, unit in units.items():
             for comp, data in unit.items():
@@ -610,6 +684,12 @@ def plot_mcmc(output_mcmc, value, expName, name):
 
 def interval(flat_chain, cache):
     #https://stackoverflow.com/questions/15033511/compute-a-confidence-interval-from-sample-data
+
+    #remove the last column since it has the variance and we don't need it
+    if cache.scoreMCMC in ('score2', 'score3'):
+        pass
+    else:
+        flat_chain = flat_chain[:,:-1]
 
     mean = np.mean(flat_chain,0)
 

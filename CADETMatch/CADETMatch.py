@@ -106,9 +106,7 @@ def setupLog(log_directory):
     # create file handler which logs even debug messages
     fh = logging.FileHandler(log_directory / "main.log")
     fh.setLevel(logging.INFO)
-    # create formatter and add it to the handlers
-    #formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    #fh.setFormatter(formatter)
+
     # add the handlers to the logger
     logger.addHandler(fh)
 
@@ -222,7 +220,7 @@ def find_percentile(cache):
     result_h5 = resultDir / "result.h5"
 
     with h5py.File(result_h5, 'r') as hf:
-        data = hf["input_transform"][:]
+        data = hf["input"][:]
         score = hf["output_meta"][:]
 
         best_min = numpy.max(score[:,0])
@@ -231,9 +229,13 @@ def find_percentile(cache):
 
         lb, ub = numpy.percentile(data, [5, 95], 0)
 
-        scoop.logger.info('lb %s  ub %s', lb, ub)
+        lb_trans = util.convert_individual(lb, cache)
+        ub_trans = util.convert_individual(ub, cache)
 
-        return lb, ub
+        scoop.logger.info('lb %s  ub %s', lb, ub)
+        scoop.logger.info('lb_trans %s  ub_trans %s', lb_trans, ub_trans)
+
+        return lb_trans, ub_trans
 
 def continue_mcmc(cache):
     if cache.continueMCMC:
