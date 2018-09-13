@@ -231,6 +231,7 @@ def saveExperiments(save_name_base, settings, target, results, directory, file_p
 
 def convert_individual(individual, cache):
     cadetValues = []
+    cadetValuesExtended = []
 
     idx = 0
     for parameter in cache.settings['parameters']:
@@ -239,9 +240,10 @@ def convert_individual(individual, cache):
         seq = individual[idx:idx+count]
         values, headerValues = cache.transforms[transform].untransform(seq, cache, parameter, False)
         cadetValues.extend(values)
+        cadetValuesExtended.extend(headerValues)
         idx += count
 
-    return cadetValues
+    return cadetValues, cadetValuesExtended
 
 def set_simulation(individual, simulation, settings, cache, fullPrecision):
     scoop.logger.debug("individual %s", individual)
@@ -391,7 +393,7 @@ def setupMCMC(cache, lb, ub):
         idx = 0
         for parameter in settings['parameters']:
             transform = cache.transforms[parameter['transform']]
-            count = transform.count
+            count = transform.count_extended
             scoop.logger.warn('%s %s %s', idx, count, transform)
             lb_local = lb[idx:idx+count]
             ub_local = ub[idx:idx+count]
@@ -462,8 +464,8 @@ def bestMinScore(hof):
 
 def similar(a, b, cache):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
-    a = numpy.array(convert_individual(a,cache))
-    b = numpy.array(convert_individual(b,cache))
+    a = numpy.array(convert_individual(a,cache)[0])
+    b = numpy.array(convert_individual(b,cache)[0])
     diff = numpy.abs((a-b)/a)
     return numpy.all(diff < 1e-3)
 

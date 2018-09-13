@@ -428,7 +428,7 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx, parameters):
     chain_transform = numpy.array(chain)
     for walker in range(chain_shape[0]):
         for position in range(chain_shape[1]):
-            chain_transform[walker, position,:] = util.convert_individual(chain_transform[walker, position, :], cache)
+            chain_transform[walker, position,:] = util.convert_individual(chain_transform[walker, position, :], cache)[0]
 
     flat_chain_transform = chain_transform.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 

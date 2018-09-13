@@ -3,6 +3,7 @@ import numpy
 
 name = "norm_nu_sigma"
 count = 2
+count_extended = 3
 
 def getUnit(location):
     return location.split('/')[3]
@@ -91,5 +92,5 @@ def getHeadersActual(parameter):
 def setBounds(parameter, lb, ub):
     parameter['minNu'] = lb[0]
     parameter['maxNu'] = ub[0]
-    parameter['minSigma'] = lb[1] - lb[0]
-    parameter['maxSigma'] = ub[1] - ub[0]
+    parameter['minSigma'] = lb[1]
+    parameter['maxSigma'] = ub[1]

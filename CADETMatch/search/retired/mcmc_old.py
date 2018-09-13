@@ -492,9 +492,9 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx, parameters):
     for walker in range(chain_shape[0]):
         for position in range(chain_shape[1]):
             if cache.scoreMCMC in ('score2', 'score3'):
-                chain_transform[walker, position,:] = util.convert_individual(chain_transform[walker, position, :], cache)
+                chain_transform[walker, position,:] = util.convert_individual(chain_transform[walker, position, :], cache)[0]
             else:
-                chain_transform[walker, position,:-1] = util.convert_individual(chain_transform[walker, position, :-1], cache)
+                chain_transform[walker, position,:-1] = util.convert_individual(chain_transform[walker, position, :-1], cache)[0]
     
     if cache.scoreMCMC in ('score2', 'score3'):
         pass

@@ -3,6 +3,7 @@ import numpy
 
 name = "norm_keq"
 count = 2
+count_extended = 3
 
 def getUnit(location):
     return location[0].split('/')[3]
@@ -102,5 +103,5 @@ def getHeadersActual(parameter):
 def setBounds(parameter, lb, ub):
     parameter['minKA'] = lb[0]
     parameter['maxKA'] = ub[0]
-    parameter['minKEQ'] = lb[1]
-    parameter['maxKEQ'] = ub[1]
+    parameter['minKEQ'] = lb[2]
+    parameter['maxKEQ'] = ub[2]

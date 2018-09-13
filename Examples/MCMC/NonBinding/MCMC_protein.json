@@ -10,7 +10,6 @@
   "roundScores": 6,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "scoreMCMC":"score",
   "graphSpearman": 0,
   "normalizeOutput":1,
 	"parameters": [

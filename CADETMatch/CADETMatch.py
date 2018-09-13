@@ -223,14 +223,15 @@ def find_percentile(cache):
         data = hf["input"][:]
         score = hf["output_meta"][:]
 
-        best_min = numpy.max(score[:,0])
+        #product min average norm
+        best_norm = numpy.max(score[:,3])
 
-        data = data[score[:,0] > 0.9 * best_min,:]
+        data = data[score[:,0] > 0.9 * best_norm,:]
 
         lb, ub = numpy.percentile(data, [5, 95], 0)
 
-        lb_trans = util.convert_individual(lb, cache)
-        ub_trans = util.convert_individual(ub, cache)
+        lb_trans = util.convert_individual(lb, cache)[1]
+        ub_trans = util.convert_individual(ub, cache)[1]
 
         scoop.logger.info('lb %s  ub %s', lb, ub)
         scoop.logger.info('lb_trans %s  ub_trans %s', lb_trans, ub_trans)

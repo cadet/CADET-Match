@@ -3,6 +3,7 @@ import numpy
 
 name = "norm_log"
 count = 1
+count_extended = 1
 
 def getUnit(location):
     return location.split('/')[3]

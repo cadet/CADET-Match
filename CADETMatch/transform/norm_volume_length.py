@@ -3,6 +3,7 @@ import numpy
 
 name = "norm_volume_length"
 count = 2
+count_extended = 3
 
 def getUnit(location):
     return location.split('/')[3]
@@ -88,7 +89,7 @@ def getHeadersActual(parameter):
     return headers
 
 def setBounds(parameter, lb, ub):
-    parameter['minVolume'] = lb[0]
-    parameter['maxVolume'] = ub[0]
+    parameter['minVolume'] = lb[2]
+    parameter['maxVolume'] = ub[2]
     parameter['minLength'] = lb[1]
     parameter['maxLength'] = ub[1]

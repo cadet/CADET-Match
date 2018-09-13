@@ -17,7 +17,6 @@
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 20,
-  "scoreMCMC": "score2",
   "MCMCpopulation": 25,
   "continueMCMC": 1,
 	"parameters": [
