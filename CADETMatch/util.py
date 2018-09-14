@@ -403,11 +403,11 @@ def setupMCMC(cache, lb, ub):
         settings['searchMethod'] = 'MCMC'
         settings['graphSpearman'] = 0
 
-        if settings.get('roundScores', None):
-            settings['roundScores'] = max(6, settings['roundScores'])
+        if 'roundScores' in settings:
+            del settings['roundScores']
 
-        if settings.get('roundParameters', None):
-            settings['roundParameters'] = max(6, settings['roundParameters'])
+        if 'roundParameters' in settings:
+            del settings['roundParameters']
 
         new_settings_file = resultDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:
