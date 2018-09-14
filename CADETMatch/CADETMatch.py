@@ -226,7 +226,7 @@ def find_percentile(cache):
         #product min average norm
         best_norm = numpy.max(score[:,3])
 
-        data = data[score[:,0] > 0.9 * best_norm,:]
+        data = data[score[:,3] > 0.9 * best_norm,:]
 
         lb, ub = numpy.percentile(data, [5, 95], 0)
 

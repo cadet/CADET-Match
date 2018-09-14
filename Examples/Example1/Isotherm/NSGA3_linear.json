@@ -1,6 +1,6 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
-  "baseDir": "F:/Examples/Example1/Isotherm",
+  "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Isotherm",
   "resultsDir": "fit/",
   "CSV": "isotherm_NSGA3.csv",
   "checkpointFile": "check",
@@ -22,6 +22,8 @@
 	"roundScores": 3,
 	"roundParameters": 3,
     "sobolGeneration":1,
+      "MCMCpopulation": 25,
+  "continueMCMC": 1,
 	"parameters": [
 		{
 			"transform": "norm_keq",
@@ -39,9 +41,9 @@
 	],
 	"experiments": [
 		{
-			"CSV": "F:/CADET_ParameterEstimation/adsorption/lrmp/linear/linear_pulse.csv",
+			"CSV": "linear_pulse.csv",
 			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
-			"HDF5": "F:/CADET_ParameterEstimation/adsorption/lrmp/linear/linear_pulse.h5",
+			"HDF5": "linear_pulse.h5",
 			"name": "main",
 			"timeout": 3.785061836242676,
 			"features": [

@@ -63,8 +63,6 @@ def graphCorner(cache):
     mcmc_h5 = miscDir / "mcmc.h5"
 
     if mcmc_h5.exists():
-        headers.append('variance')
-
         data = {}
         with h5py.File(mcmc_h5, 'r') as h5:
             for key in h5.keys():

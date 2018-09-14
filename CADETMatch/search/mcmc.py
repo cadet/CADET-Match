@@ -54,12 +54,12 @@ class Container:
         self.multiplier = multiplier
 
     def lower_multiplier(self, sampler):
-        self.multiplier = max(10, self.multiplier - 50)
+        self.multiplier = max(10, self.multiplier * 0.5)
         #self.multiplier = 1
         sampler.args[1] = self.multiplier
 
     def raise_multiplier(self, sampler):
-        self.multiplier += 50
+        self.multiplier *= 2.0
         #self.multiplier = 1000
         sampler.args[1] = self.multiplier
 
