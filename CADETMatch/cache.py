@@ -101,7 +101,7 @@ class Cache:
 
         self.fullTrainingData = int(self.settings.get('fullTrainingData', 0))
 
-        self.sobolGeneration = bool(self.settings.get('soboloGeneration', False))
+        self.sobolGeneration = bool(self.settings.get('soboloGeneration', False)) or bool(self.settings.get('sobolGeneration', False))
         self.graphSpearman = bool(self.settings.get('graphSpearman', True))
         self.scoreMCMC = self.settings.get('scoreMCMC', "sse")
 

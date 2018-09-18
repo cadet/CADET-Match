@@ -19,6 +19,8 @@
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 10,
+   "MCMCpopulation": 25,
+  "continueMCMC": 1,
   "parameters": [
 		{
 			"transform": "norm_keq",

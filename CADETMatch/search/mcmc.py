@@ -503,10 +503,7 @@ def genRandomChoice(cache, chain, size=500):
     individuals = []
 
     for idx in range(len(chain)):
-        if cache.scoreMCMC in ('score2', 'score3'):
-            individuals.append(chain[idx,:])
-        else:
-            individuals.append(chain[idx,0:-1]) 
+        individuals.append(chain[idx,:])
 
     fitnesses = cache.toolbox.map(cache.toolbox.evaluate, individuals)
 
@@ -613,15 +610,13 @@ def interval(flat_chain, cache):
 
     mean = np.mean(flat_chain,0)
 
-    lb_5, ub_5 = numpy.percentile(flat_chain, [5, 95], 0)
-    lb_10, ub_10 = numpy.percentile(flat_chain, [10, 90], 0)
-    lb_25, ub_25 = numpy.percentile(flat_chain, [25, 75], 0)
+    percentile = numpy.percentile(flat_chain, [5, 10, 25, 50, 75, 90, 95], 0)
 
-    data = np.vstack( (lb_5, lb_10, lb_25, mean, ub_25, ub_10, ub_5) ).transpose()
+    data = np.vstack( (mean, percentile) ).transpose()
 
     data = util.roundParameter(data, cache)
 
-    pd = pandas.DataFrame(data, columns = ['5', '10', '25', 'mean', '75', '90', '95'])
+    pd = pandas.DataFrame(data, columns = ['mean', '5', '10', '25', '50', '75', '90', '95'])
     pd.insert(0, 'name', cache.parameter_headers_actual)
     pd.set_index('name')
     return pd
