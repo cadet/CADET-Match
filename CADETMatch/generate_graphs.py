@@ -115,32 +115,35 @@ def graphCorner(cache):
         if len(data['input']) > 1e5:
             indexes = numpy.random.choice(data['input'].shape[0], int(1e5), replace=False)
             data_input = data['input'][indexes]
+            data_input_transform = data['input_transform'][indexes]
             weight_min = data['output_meta'][indexes,1]
             weight_prod = data['output_meta'][indexes,2]
             weight_norm = data['output_meta'][indexes,3]
         else:
             data_input = data['input']
+            data_input_transform = data['input_transform']
             weight_min = data['output_meta'][:,1]
             weight_prod = data['output_meta'][:,2]
             weight_norm = data['output_meta'][:,3]
 
         out_dir = cache.settings['resultsDirProgress']
 
-        fig = corner.corner(data_input, quantiles=(0.16, 0.5, 0.84),
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
-        fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
+        create_corner(out_dir, "corner.png", headers, data_input, weights=None)
+        create_corner(out_dir, "corner_min.png", headers, data_input, weights=weight_min)
+        create_corner(out_dir, "corner_prod.png", headers, data_input, weights=weight_prod)
+        create_corner(out_dir, "corner_norm.png", headers, data_input, weights=weight_norm)
 
-        fig = corner.corner(data_input, quantiles=(0.16, 0.5, 0.84), weights=weight_min,
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
-        fig.savefig(str(out_dir / "corner_min.png"), bbox_inches='tight')
+        #transformed entries
+        create_corner(out_dir, "corner_transform.png", headers, data_input_transform, weights=None)
+        create_corner(out_dir, "corner_min_transform.png", headers, data_input_transform, weights=weight_min)
+        create_corner(out_dir, "corner_prod_transform.png", headers, data_input_transform, weights=weight_prod)
+        create_corner(out_dir, "corner_norm_transform.png", headers, data_input_transform, weights=weight_norm)
 
-        fig = corner.corner(data_input, quantiles=(0.16, 0.5, 0.84), weights=weight_prod,
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
-        fig.savefig(str(out_dir / "corner_prod.png"), bbox_inches='tight')
-
-        fig = corner.corner(data_input, quantiles=(0.16, 0.5, 0.84), weights=weight_norm,
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
-        fig.savefig(str(out_dir / "corner_norm.png"), bbox_inches='tight')
+def create_corner(dir, filename, headers, data, weights=None):
+    if weights is None or numpy.max(weights) > numpy.min(weights):
+        fig = corner.corner(data, quantiles=(0.16, 0.5, 0.84), weights=weights,
+            show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
+        fig.savefig(str(dir / filename), bbox_inches='tight')
 
 def graphExperiments(cache):
     directory = Path(cache.settings['resultsDirEvo'])
