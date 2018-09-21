@@ -126,6 +126,14 @@ def graphCorner(cache):
             weight_prod = data['output_meta'][:,2]
             weight_norm = data['output_meta'][:,3]
 
+        greater_than_zero = weight_min > 0
+
+        data_input = data_input[greater_than_zero]
+        data_input_transform = data_input_transform[greater_than_zero]
+        weight_min = weight_min[greater_than_zero]
+        weight_prod = weight_prod[greater_than_zero]
+        weight_norm = weight_norm[greater_than_zero]
+
         out_dir = cache.settings['resultsDirProgress']
 
         create_corner(out_dir, "corner.png", headers, data_input, weights=None)
