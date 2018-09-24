@@ -119,20 +119,25 @@ def graphCorner(cache):
             weight_min = data['output_meta'][indexes,1]
             weight_prod = data['output_meta'][indexes,2]
             weight_norm = data['output_meta'][indexes,3]
+            all_scores = data['output'][indexes]
         else:
             data_input = data['input']
             data_input_transform = data['input_transform']
             weight_min = data['output_meta'][:,1]
             weight_prod = data['output_meta'][:,2]
             weight_norm = data['output_meta'][:,3]
+            all_scores = data['output']
 
-        greater_than_zero = weight_min > 0
+        max_scores = numpy.max(all_scores, 1)
+        acceptable = max_scores > 0.01
 
-        data_input = data_input[greater_than_zero]
-        data_input_transform = data_input_transform[greater_than_zero]
-        weight_min = weight_min[greater_than_zero]
-        weight_prod = weight_prod[greater_than_zero]
-        weight_norm = weight_norm[greater_than_zero]
+        scoop.logger.info("graphing remove %s points", len(max_scores) - numpy.sum(acceptable))
+
+        data_input = data_input[acceptable]
+        data_input_transform = data_input_transform[acceptable]
+        weight_min = weight_min[acceptable]
+        weight_prod = weight_prod[acceptable]
+        weight_norm = weight_norm[acceptable]
 
         out_dir = cache.settings['resultsDirProgress']
 
@@ -148,10 +153,11 @@ def graphCorner(cache):
         create_corner(out_dir, "corner_norm_transform.png", headers, data_input_transform, weights=weight_norm)
 
 def create_corner(dir, filename, headers, data, weights=None):
-    if weights is None or numpy.max(weights) > numpy.min(weights):
-        fig = corner.corner(data, quantiles=(0.16, 0.5, 0.84), weights=weights,
-            show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
-        fig.savefig(str(dir / filename), bbox_inches='tight')
+    if  numpy.all(numpy.min(data,0) < numpy.max(data,0)):
+        if weights is None or numpy.max(weights) > numpy.min(weights):
+            fig = corner.corner(data, quantiles=(0.16, 0.5, 0.84), weights=weights,
+                show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
+            fig.savefig(str(dir / filename), bbox_inches='tight')
 
 def graphExperiments(cache):
     directory = Path(cache.settings['resultsDirEvo'])
