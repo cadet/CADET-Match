@@ -19,6 +19,8 @@
   "stallGenerations": 20,
   "MCMCpopulation": 25,
   "continueMCMC": 1,
+  "roundParameters": 3,
+  "roundScores": 3,
   "parameters": [
     {
       "transform": "norm_log",

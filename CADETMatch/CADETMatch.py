@@ -206,7 +206,12 @@ def setupDeap(cache):
     searchMethod = cache.settings.get('searchMethod', 'SPEA2')
     cache.toolbox = base.Toolbox()
 
-    cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, futures.map, creator, base, tools)
+    if scoop.SIZE == 1:
+        map_function = map
+    else:
+        map_function = futures.map
+
+    cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, map_function, creator, base, tools)
 
 if __name__ == "__main__":
     start = time.time()
