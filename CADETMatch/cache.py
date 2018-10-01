@@ -106,6 +106,7 @@ class Cache:
         self.scoreMCMC = self.settings.get('scoreMCMC', "sse")
 
         self.continueMCMC = bool(self.settings.get('continueMCMC', False))
+        self.MCMCTauMult = int(self.settings.get('MCMCTauMult', 500))
 
         if "MCMCpopulation" not in self.settings:
             self.settings['MCMCpopulation'] = self.settings['population']

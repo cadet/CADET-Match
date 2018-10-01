@@ -1,7 +1,7 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
-  "resultsDir": "fit_norm_opt/",
+  "resultsDir": "fit_norm_opt_3_500/",
   "CSV": "dextran_MCMC.csv",
   "checkpointFile": "check",
   "searchMethod": "NSGA3",

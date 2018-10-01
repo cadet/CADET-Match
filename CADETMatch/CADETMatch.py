@@ -206,7 +206,7 @@ def setupDeap(cache):
     searchMethod = cache.settings.get('searchMethod', 'SPEA2')
     cache.toolbox = base.Toolbox()
 
-    if scoop.SIZE == 1:
+    if getattr(scoop, 'SIZE', 1) == 1:
         map_function = map
     else:
         map_function = futures.map

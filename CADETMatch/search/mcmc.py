@@ -74,7 +74,7 @@ def log_likelihood(theta, json_path,multiplier):
     scores, csv_record, results = evo.fitness(individual, json_path)
 
     norm = numpy.linalg.norm(scores)/numpy.sqrt(len(scores))
-    score = -multiplier * (1.0 - norm)
+    score = -multiplier * ((1.0 - norm)**3)
 
     return score, scores, csv_record, results 
 
@@ -169,7 +169,7 @@ def run(cache, tools, creator):
             
         if checkpoint['state'] == 'chain':
             checkInterval = 25
-            mult = 500
+            mult = cache.MCMCTauMult
             count = checkpoint['length_chain'] - checkpoint['idx_chain']
             for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_chain'], checkpoint['ln_prob_chain'],
                                     checkpoint['rstate_chain'], iterations=count ), start=checkpoint['idx_chain']):
@@ -185,7 +185,7 @@ def run(cache, tools, creator):
                 with checkpointFile.open('wb')as cp_file:
                     pickle.dump(checkpoint, cp_file)
 
-                if idx % checkInterval == 0 and idx >= 100:  
+                if idx % checkInterval == 0 and idx >= 200:  
                     tau = autocorr_new(sampler.chain[:, :idx, 0].T)
                     scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", idx, accept, tau)
                     if idx > (mult * tau):

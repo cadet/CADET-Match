@@ -8,8 +8,18 @@ name = "fractionationSlide"
 adaptive = True
 badScore = 0
 
+def roll(x, offset):
+    if offset > 0:
+        temp = numpy.pad(x,(offset,0), mode='constant')
+        return temp[:-offset]
+    elif offset < 0:
+        temp = numpy.pad(x,(0,numpy.abs(offset)), mode='constant')
+        return temp[numpy.abs(offset):]
+    else:
+        return x
+
 def goal(offset, frac_exp, sim_data_time, sim_data_value, start, stop):
-    sim_data_value = numpy.roll(sim_data_value, int(offset))
+    sim_data_value = roll(sim_data_value, int(offset))
     frac_sim = util.fractionate(start, stop, sim_data_time, sim_data_value)
     return numpy.sum((frac_exp-frac_sim)**2)
 
@@ -79,8 +89,11 @@ def run(sim_data, feature):
                                                        args = (exp_values, times, sim_value, start, stop))
 
         time_offset = times[int(abs(round(result.x[0])))]
-        sim_data_value = numpy.roll(sim_value, int(result.x[0]))
+        sim_data_value = roll(sim_value, int(result.x[0]))
         fracOffset = util.fractionate(start, stop, times, sim_data_value)
+
+        #sim_data_value = numpy.roll(sim_value, int(result.x[0]))
+        #fracOffset = util.fractionate(start, stop, times, sim_value)
 
         #score_corr, diff_time = score.cross_correlate(time_center, fracOffset, exp_values)
 
