@@ -140,6 +140,9 @@ def value_function(peak_height, tolerance=1e-8, bottom_score = 0.01):
     return wrapper
 
 def pear_corr(cr):
+    #handle the case where a nan is returned
+    if numpy.isnan(cr):
+        return 0.0
     if cr < 0.5:
         out = 1.0/3.0 * cr + 1.0/3.0
     else:

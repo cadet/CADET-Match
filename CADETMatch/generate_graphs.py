@@ -79,11 +79,11 @@ def graphCorner(cache):
         out_dir = cache.settings['resultsDirProgress']
 
         fig = corner.corner(chain, quantiles=(0.16, 0.5, 0.84),
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=20)
         fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
 
         fig = corner.corner(chain_transform, quantiles=(0.16, 0.5, 0.84),
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
+                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=20)
         fig.savefig(str(out_dir / "corner_transform.png"), bbox_inches='tight')
 
         if 'burn_in_acceptance' in data:
@@ -156,7 +156,7 @@ def create_corner(dir, filename, headers, data, weights=None):
     if  numpy.all(numpy.min(data,0) < numpy.max(data,0)):
         if weights is None or numpy.max(weights) > numpy.min(weights):
             fig = corner.corner(data, quantiles=(0.16, 0.5, 0.84), weights=weights,
-                show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=100)
+                show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=20)
             fig.savefig(str(dir / filename), bbox_inches='tight')
 
 def graphExperiments(cache):

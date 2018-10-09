@@ -1,14 +1,14 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
-  "resultsDir": "fit_norm_300/",
+  "resultsDir": "fit_1_10000/",
   "CSV": "dextran_MCMC.csv",
   "checkpointFile": "check",
   "searchMethod": "MCMC",
   "population": 50,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "scoreMCMC":"score2",
+  "scoreMCMC":"score",
   "graphSpearman": 0,
   "normalizeOutput":1,
   "parameters": [

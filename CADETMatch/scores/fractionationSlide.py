@@ -92,11 +92,6 @@ def run(sim_data, feature):
         sim_data_value = roll(sim_value, int(result.x[0]))
         fracOffset = util.fractionate(start, stop, times, sim_data_value)
 
-        #sim_data_value = numpy.roll(sim_value, int(result.x[0]))
-        #fracOffset = util.fractionate(start, stop, times, sim_value)
-
-        #score_corr, diff_time = score.cross_correlate(time_center, fracOffset, exp_values)
-
         value_score = value_func(max(fracOffset))
         pear = score.pear_corr(scipy.stats.pearsonr(exp_values, fracOffset)[0])
         time_score = timeFunc(time_offset)
