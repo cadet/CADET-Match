@@ -54,7 +54,7 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
 
-    cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=1.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
+    cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=2.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
 
     #if cache.adaptive:
     #    cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))

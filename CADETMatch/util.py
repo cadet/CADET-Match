@@ -469,19 +469,22 @@ def similar(a, b, cache):
     diff = numpy.abs((a-b)/a)
     return numpy.all(diff < 1e-3)
 
+def RoundChild(cache, child):
+    if cache.roundParameters is not None:
+        temp = RoundToSigFigs(child, cache.roundParameters)
+    else:
+        temp = numpy.array(child)
+    if all(child == temp):
+        pass
+    else:
+        for idx, i in enumerate(temp):
+            child[idx] = i
+        del child.fitness.values
+
 def RoundOffspring(cache, offspring, hof):
     for child in offspring:
-        if cache.roundParameters is not None:
-            temp = RoundToSigFigs(child, cache.roundParameters)
-        else:
-            temp = numpy.array(child)
-        if all(child == temp):
-            pass
-        else:
-            for idx, i in enumerate(temp):
-                child[idx] = i
-            del child.fitness.values
-
+        RoundChild(cache, child)
+        
     #make offspring unique
     unique = set()
     new_offspring = []
@@ -492,6 +495,7 @@ def RoundOffspring(cache, offspring, hof):
             unique.add(key)
 
     #population size needs to remain the same so add more children randomly if we have removed duplicates
+    scoop.logger.info("had to create %s new offspring", len(offspring) - len(new_offspring))
     while len(new_offspring) < len(offspring):
         if len(hof):
             ind = hof[random.sample(range(len(hof)), 1)[0]]
@@ -667,12 +671,21 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         meta_mean = numpy.mean(data_meta, 0)
         meta_max = numpy.max(data_meta, 0)
 
-        line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.4f \tBest: %.4f \tMinimum Score: %.4f \tBest: %.4f \tProduct Score: %.4f \tBest: %.4f'
+        population_average = numpy.mean(data)
+        population_average_best = numpy.max(numpy.mean(data, 1))
+
+        population_min = numpy.min(data)
+        population_min_best = numpy.max(numpy.min(data, 1))
+
+        population_product = numpy.prod(data)**(1.0/data.size)
+        population_product_best = numpy.max(numpy.prod(data,1)**(1.0/data.shape[1]))
+
+        line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.3f \tBest: %.3f \tMinimum Score: %.3f \tBest: %.3f \tProduct Score: %.3f \tBest: %.3f'
  
         scoop.logger.info(line_format, generation, len(population),
-              RoundToSigFigs(meta_mean[2],4), RoundToSigFigs(meta_max[2],4),
-              RoundToSigFigs(meta_mean[1],4), RoundToSigFigs(meta_max[1],4),
-              RoundToSigFigs(meta_mean[0],4), RoundToSigFigs(meta_max[0],4))
+              RoundToSigFigs(population_average,3), RoundToSigFigs(population_average_best,3),
+              RoundToSigFigs(population_min,3), RoundToSigFigs(population_min_best,3),
+              RoundToSigFigs(population_product,3), RoundToSigFigs(population_product_best,3))
         
         writer.writerow([generation,
                          len(population),

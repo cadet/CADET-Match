@@ -40,7 +40,7 @@ import pandas
 name = "MCMC"
 
 class Container:
-    def __init__(self, minVar, maxVar, multiplier=100):
+    def __init__(self, minVar, maxVar, multiplier=1000):
         self.set(minVar, maxVar)
         self.multiplier = multiplier
 
