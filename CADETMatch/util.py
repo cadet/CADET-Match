@@ -671,21 +671,25 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         meta_mean = numpy.mean(data_meta, 0)
         meta_max = numpy.max(data_meta, 0)
 
-        population_average = numpy.mean(data)
-        population_average_best = numpy.max(numpy.mean(data, 1))
+        if len(data):
 
-        population_min = numpy.min(data)
-        population_min_best = numpy.max(numpy.min(data, 1))
+            population_average = numpy.mean(data)
+            population_average_best = numpy.max(numpy.mean(data, 1))
 
-        population_product = numpy.prod(data)**(1.0/data.size)
-        population_product_best = numpy.max(numpy.prod(data,1)**(1.0/data.shape[1]))
+            population_min = numpy.min(data)
+            population_min_best = numpy.max(numpy.min(data, 1))
 
-        line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.3f \tBest: %.3f \tMinimum Score: %.3f \tBest: %.3f \tProduct Score: %.3f \tBest: %.3f'
+            population_product = numpy.prod(data)**(1.0/data.size)
+            population_product_best = numpy.max(numpy.prod(data,1)**(1.0/data.shape[1]))
+
+            line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.3f \tBest: %.3f \tMinimum Score: %.3f \tBest: %.3f \tProduct Score: %.3f \tBest: %.3f'
  
-        scoop.logger.info(line_format, generation, len(population),
-              RoundToSigFigs(population_average,3), RoundToSigFigs(population_average_best,3),
-              RoundToSigFigs(population_min,3), RoundToSigFigs(population_min_best,3),
-              RoundToSigFigs(population_product,3), RoundToSigFigs(population_product_best,3))
+            scoop.logger.info(line_format, generation, len(population),
+                  RoundToSigFigs(population_average,3), RoundToSigFigs(population_average_best,3),
+                  RoundToSigFigs(population_min,3), RoundToSigFigs(population_min_best,3),
+                  RoundToSigFigs(population_product,3), RoundToSigFigs(population_product_best,3))
+        else:
+            scoop.logger.info("Generation: %s \tPopulation: %s \t No Stats Avaialable", generation, len(population))
         
         writer.writerow([generation,
                          len(population),
