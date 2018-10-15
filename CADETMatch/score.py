@@ -7,15 +7,27 @@ import numpy.linalg
 import calc_coeff
 import scoop
 
+def roll(x, shift):
+    if shift > 0:
+        temp = numpy.pad(x,(shift,0), mode='constant')
+        return temp[:-shift]
+    elif shift < 0:
+        temp = numpy.pad(x,(0,numpy.abs(shift)), mode='constant')
+        return temp[numpy.abs(shift):]
+    else:
+        return x
+
 def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
     corr = scipy.signal.correlate(exp_data_values, sim_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
 
     #need +1 due to how correlate works
     index = numpy.argmax(corr) + 1
 
+    roll_index = index - len(exp_time_values)
+
     score = corr[index]
 
-    sim_time_values = numpy.roll(exp_time_values, shift=int(numpy.ceil(index)))
+    sim_time_values = roll(exp_time_values, shift=int(numpy.ceil(roll_index)))
 
     diff_time = numpy.abs(exp_time_values[int(len(exp_time_values)/2)] - sim_time_values[int(len(exp_time_values)/2)])
 
@@ -27,15 +39,17 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
     #need +1 due to how correlate works
     index = numpy.argmax(corr) + 1
 
+    roll_index = index - len(exp_time_values)
+
     score = corr[index]
 
     endTime = exp_time_values[-1]
 
-    sim_time_values = numpy.roll(exp_time_values, shift=int(numpy.ceil(index)))
+    sim_time_values = roll(exp_time_values, shift=int(numpy.ceil(roll_index)))
 
     diff_time = numpy.abs(exp_time_values[int(len(exp_time_values)/2)] - sim_time_values[int(len(exp_time_values)/2)])
 
-    sim_data_values_copy = numpy.roll(sim_data_values, shift=int(numpy.ceil(index)))
+    sim_data_values_copy = roll(sim_data_values, shift=int(numpy.ceil(roll_index)))
 
     pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
 

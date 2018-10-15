@@ -16,12 +16,12 @@ def run(sim_data, feature):
     max_value = feature['max_value']
 
     selected = feature['selected']
-    
-    
+        
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
 
-    if max(sim_data_values) < max_value: #the system has no point higher than the value we are looking for, this is a failure
-        return failure
+    if max(sim_data_values) < max_value: #the system has no point higher than the value we are looking for
+        #remove hard failure
+        max_value = max(sim_data_values)
 
     exp_time_values = exp_time_values[selected]
     exp_data_zero = feature['exp_data_zero']
@@ -30,7 +30,7 @@ def run(sim_data, feature):
     max_index = numpy.argmax(sim_data_values >= max_value)
 
     sim_data_zero = numpy.zeros(len(sim_data_values))
-    sim_data_zero[min_index:max_index+1] = sim_data_values[min_index:max_index+1]
+    sim_data_zero[min_index:max_index] = sim_data_values[min_index:max_index]
 
     pearson, diff_time = score.pearson(exp_time_values, sim_data_zero, exp_data_zero)
 
@@ -62,6 +62,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     #change the stop point to be where the max positive slope is along the searched interval
     exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, selectedValues, s=util.smoothing_factor(selectedValues), k=1).derivative(1)
+
     values = exp_spline(selectedTimes)
     
     max_index = numpy.argmax(values)

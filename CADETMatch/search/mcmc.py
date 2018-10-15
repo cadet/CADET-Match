@@ -40,7 +40,7 @@ import pandas
 name = "MCMC"
 
 class Container:
-    def __init__(self, minVar, maxVar, multiplier=1000):
+    def __init__(self, minVar, maxVar, multiplier=1):
         self.set(minVar, maxVar)
         self.multiplier = multiplier
 
@@ -76,7 +76,13 @@ def log_likelihood(theta, json_path,multiplier):
     scores, csv_record, results = evo.fitness(individual, json_path)
 
     norm = numpy.linalg.norm(scores)/numpy.sqrt(len(scores))
-    score = -multiplier * ((1.0 - norm))
+    #score = -multiplier * ((1.0 - norm))
+    
+    if norm < 1e-6:
+        score = numpy.log(1.0-norm)
+    else:
+        score = -numpy.inf
+    
 
     return score, scores, csv_record, results 
 
