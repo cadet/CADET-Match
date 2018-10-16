@@ -78,7 +78,7 @@ def run(sim_data, feature):
         result = scipy.optimize.differential_evolution(goal, bounds = [bounds,], 
                                                        args = (exp_values, times, sim_value, start, stop))
 
-        time_offset = times[int(abs(round(result.x[0])))]
+        time_offset = times[int(abs(result.x[0]))]
         sim_data_value = score.roll(sim_value, int(result.x[0]))
         fracOffset = util.fractionate(start, stop, times, sim_data_value)
 

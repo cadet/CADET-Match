@@ -72,8 +72,6 @@ def find_peak(times, data):
     "Return tuples of (times,data) for the peak we need"
     #[highs, lows] = peakdetect.peakdetect(data, times, 1)
 
-    #return find_extreme(highs), find_extreme(lows)
-
     minIdx = numpy.argmin(data)
     maxIdx = numpy.argmax(data)
 
