@@ -203,7 +203,7 @@ def runExperimentSens(individual, experiment, settings, target, jac):
     simulation.filename = path
 
     simulation.root.input.solver.nthreads = 1
-    cadetValues, cadetValuesKEQ = util.set_simulation(individual, simulation, evo.settings)
+    cadetValues, cadetValuesKEQ = util.set_simulation(individual, simulation, evo.settings, experiment)
 
     simulation.save()
 

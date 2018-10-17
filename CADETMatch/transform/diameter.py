@@ -23,7 +23,7 @@ def untransform(seq, cache, parameter, fullPrecision=False):
     headerValues = [seq[0], values[0]]
     return values, headerValues
 
-def setSimulation(sim, parameter, seq, cache, fullPrecision=False):
+def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
     values, headerValues = untransform(seq, cache, parameter, fullPrecision)
 
     location = parameter['location']

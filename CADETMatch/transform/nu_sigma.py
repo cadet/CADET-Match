@@ -16,7 +16,7 @@ def untransform(seq, cache, parameter, fullPrecision=False):
     headerValues = [values[0], values[1], values[0]+values[1]]
     return values, headerValues
 
-def setSimulation(sim, parameter, seq, cache, fullPrecision=False):
+def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
     values, headerValues = untransform(seq, cache, parameter, fullPrecision)
     nu_location = parameter['nu_location']
     sigma_location = parameter['sigma_location']

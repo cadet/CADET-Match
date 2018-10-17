@@ -243,7 +243,7 @@ def convert_individual(individual, cache):
 
     return cadetValues, cadetValuesExtended
 
-def set_simulation(individual, simulation, settings, cache, fullPrecision):
+def set_simulation(individual, simulation, settings, cache, fullPrecision, experiment):
     scoop.logger.debug("individual %s", individual)
 
     cadetValues = []
@@ -254,7 +254,7 @@ def set_simulation(individual, simulation, settings, cache, fullPrecision):
         transform = parameter['transform']
         count = cache.transforms[transform].count
         seq = individual[idx:idx+count]
-        values, headerValues = cache.transforms[transform].setSimulation(simulation, parameter, seq, cache, fullPrecision)
+        values, headerValues = cache.transforms[transform].setSimulation(simulation, parameter, seq, cache, experiment, fullPrecision)
         cadetValues.extend(values)
         cadetValuesKEQ.extend(headerValues)
         idx += count
@@ -279,7 +279,7 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     simulation.filename = path
 
     simulation.root.input.solver.nthreads = int(settings.get('nThreads', 1))
-    cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings, cache, fullPrecision)
+    cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings, cache, fullPrecision, experiment)
 
     simulation.save()
 
