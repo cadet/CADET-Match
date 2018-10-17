@@ -1,0 +1,84 @@
+{
+  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+  "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example_linear_transform",
+  "resultsDir": "fit_full/",
+  "CSV": "dextran_NSGA3.csv",
+  "checkpointFile": "check",
+  "stopAverage": 0.999,
+  "stopBest": 0.999,
+  "gradCheck": 1.0,
+  "searchMethod": "NSGA3",
+  "mutationRate": 0.2,
+  "keep":0.2,
+  "crossoverRate": 0.8,
+  "generations": 100,
+  "population": 100,
+  "minPopulation": 100,
+  "maxPopulation":100,
+  "roundParameters": 3,
+  "roundScores": 3,
+  "metaResultsOnly": 1,
+  "sobolGeneration":1,
+  "stallGenerations": 5,
+  "parameters": [
+    {
+      "transform": "norm_log",
+      "component": -1,
+      "bound": -1,
+      "location": "/input/model/unit_001/COL_DISPERSION",
+      "min": 1e-12,
+      "max": 1.0
+    },
+    {
+      "transform": "norm_linear",
+      "component": -1,
+      "bound": -1,
+      "location": "/input/model/unit_001/COL_POROSITY",
+      "minLower": 0.1,
+      "maxLower": 0.9,
+      "minUpper": 0.1,
+      "maxUpper": 0.9,
+      "minX": 0.0,
+      "maxX": 1.0,
+      "x_name": "x"
+    }
+  ],
+  "experiments": [
+    {
+      "CSV": "dextran_pulse_low.csv",
+      "isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
+      "HDF5": "dextran_pulse_low.h5",
+      "name": "low",
+      "timeout": 3.4842967987060547,
+      "x": 0.0,
+      "features": [
+        {
+            "name": "Pulse",
+            "type": "similarityHybrid2"
+        },
+        {
+            "name": "Deriv",
+            "type": "derivative_similarity_hybrid2"
+        }
+      ]
+    },
+    {
+      "CSV": "dextran_pulse_high.csv",
+      "isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
+      "HDF5": "dextran_pulse_high.h5",
+      "name": "high",
+      "timeout": 3.4842967987060547,
+      "x": 1.0,
+      "features": [
+        {
+            "name": "Pulse",
+            "type": "similarityHybrid2"
+        },
+        {
+            "name": "Deriv",
+            "type": "derivative_similarity_hybrid2"
+        }
+      ]
+    }
+  ]
+}
