@@ -21,7 +21,8 @@
   "continueMCMC": 1,
   "roundParameters": 3,
   "roundScores": 3,
-  "graphMetaTime": 30,
+  "graphMetaTime": 60,
+  "normalizeOutput": 1,
   "parameters": [
     {
       "transform": "norm_log",

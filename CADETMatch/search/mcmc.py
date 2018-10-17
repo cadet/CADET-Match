@@ -54,13 +54,11 @@ class Container:
         self.multiplier = multiplier
 
     def lower_multiplier(self, sampler):
-        return None
         self.multiplier = max(10, self.multiplier * 0.5)
         #self.multiplier = 1
         sampler.args[1] = self.multiplier
 
     def raise_multiplier(self, sampler):
-        return None
         self.multiplier *= 2.0
         #self.multiplier = 1000
         sampler.args[1] = self.multiplier
@@ -76,14 +74,9 @@ def log_likelihood(theta, json_path,multiplier):
     scores, csv_record, results = evo.fitness(individual, json_path)
 
     norm = numpy.linalg.norm(scores)/numpy.sqrt(len(scores))
-    #score = -multiplier * ((1.0 - norm))
+    score = -multiplier * ((1.0 - norm))
 
-    score = -100 * sum([(1.0 - i)**2 for i in scores])
-    
-    #score = numpy.log(1.0-norm)
-    #else:
-    #    score = -numpy.inf
-    
+    #score = -100 * sum([(1.0 - i)**2 for i in scores])
 
     return score, scores, csv_record, results 
 
@@ -160,10 +153,10 @@ def run(cache, tools, creator):
 
                 if idx % convergence_check_interval == 0 and idx >= convergence_check_interval:
                     accept = np.mean(converge)
-                    if accept > 0.5:
+                    if accept > 0.4:
                         container.raise_multiplier(sampler)
                         scoop.logger.info("raising multipler %s", container.multiplier)
-                    if accept < 0.3:
+                    if accept < 0.25:
                         container.lower_multiplier(sampler)
                         scoop.logger.info("lowering multipler %s", container.multiplier)
 
