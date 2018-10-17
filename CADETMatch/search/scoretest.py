@@ -3,6 +3,8 @@ import pareto
 import csv
 from pathlib import Path
 import time
+import jacobian
+import scoop
 
 name = 'ScoreTest'
 
@@ -25,6 +27,11 @@ def run(cache, tools, creator):
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
         stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof, -1, result_data)
+
+        if cache.settings.get('condTest' , None):
+            for ind in invalid_ind:
+                J = jacobian.jac(ind, cache)
+                scoop.logger.info('%s %s', ind, J)
         
         avg, bestMin, bestProd = util.averageFitness(pop, cache)
         
