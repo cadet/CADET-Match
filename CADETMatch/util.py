@@ -669,7 +669,7 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         meta_mean = numpy.mean(data_meta, 0)
         meta_max = numpy.max(data_meta, 0)
 
-        if len(data):
+        if len(data) and data.ndim > 1:
 
             population_average = numpy.mean(data)
             population_average_best = numpy.max(numpy.mean(data, 1))

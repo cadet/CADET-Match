@@ -1,5 +1,10 @@
 import util
 import random
+from pathlib import Path
+import csv
+import pareto
+import scoop
+import time
 
 name = "Multistart"
 
@@ -10,6 +15,8 @@ def run(cache, tools, creator):
     parameters = len(cache.MIN_VALUE)
 
     LAMBDA = parameters * cache.settings['population']
+    sim_start = generation_start = time.time()
+    result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[]}
 
     pop = cache.toolbox.population(n=LAMBDA)
 
@@ -22,13 +29,28 @@ def run(cache, tools, creator):
 
     gradCheck = cache.badScore
 
+    hof = pareto.ParetoFront(similar=util.similar)
+    meta_hof = pareto.ParetoFront(similar=util.similar)
+    grad_hof = pareto.ParetoFront(similar=util.similar)
+
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, pop, cache, writer, csvfile, halloffame, meta_hof, -1, check_all=True)
+        scoop.logger.info("Population %s", pop)
 
-        hof.update(newChildren)
+        gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, pop, cache, writer, csvfile, hof, meta_hof, -1, check_all=True)
+
+        stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, newChildren, writer, csvfile, hof, meta_hof, -1, result_data)
+
+        scoop.logger.info("gradCheck %s", gradCheck)
+        scoop.logger.info("newChildren %s", newChildren)
+
+        avg, bestMin, bestProd = util.averageFitness(newChildren, cache)
+        
+        util.writeProgress(cache, -1, newChildren, hof, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
+        
+        util.finish(cache)
 
         return hof
 
