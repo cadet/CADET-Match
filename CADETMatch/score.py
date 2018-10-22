@@ -78,11 +78,13 @@ def time_function_decay(CV_time, peak_time, diff_input=False):
     return wrapper
 
 def time_function(CV_time, peak_time, diff_input=False):
-    x_lin = numpy.array([0, CV_time])
-    y_lin = numpy.array([1, 0.0])
+    x_lin = numpy.array([0, 4*CV_time])
+    #y_lin = numpy.array([1, 0.0])
 
-    #a, b = calc_coeff.exponential_coeff(x_lin[0], y_lin[0], x_lin[1], y_lin[1])
-    a, b = calc_coeff.linear_coeff(x_lin[0], y_lin[0], x_lin[1], y_lin[1])
+    y_lin = numpy.array([1, 0.05])
+
+    a, b = calc_coeff.exponential_coeff(x_lin[0], y_lin[0], x_lin[1], y_lin[1])
+    #a, b = calc_coeff.linear_coeff(x_lin[0], y_lin[0], x_lin[1], y_lin[1])
 
     def wrapper(x):
 
@@ -92,8 +94,8 @@ def time_function(CV_time, peak_time, diff_input=False):
             diff = numpy.abs(x - peak_time)
 
         #if diff < CV_time/2.0:
-        value = max(0.0, calc_coeff.linear(diff, a, b))
-        #value = max(0.0, calc_coeff.exponential(diff, a, b))
+        #value = max(0.0, calc_coeff.linear(diff, a, b))
+        value = max(0.0, calc_coeff.exponential(diff, a, b))
 
         return value
 
@@ -128,13 +130,13 @@ def time_function2(CV_time, peak_time, diff_input=False):
 
     return wrapper
 
-def value_function(peak_height, tolerance=1e-8, bottom_score = 0.01):
+def value_function(peak_height, tolerance=1e-8, bottom_score = 0.05):
     #if the peak height is 0 or less than the tolerance it needs to be treated as a special case to prevent divide by zero problems
     x = numpy.array([0.0, 1.0])
     y = numpy.array([1.0, bottom_score])
 
-    #a, b = calc_coeff.exponential_coeff(x[0], y[0], x[1], y[1])
-    a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
+    a, b = calc_coeff.exponential_coeff(x[0], y[0], x[1], y[1])
+    #a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
     
     if numpy.abs(peak_height) < tolerance:
         scoop.logger.warn("peak height less than tolerance %s %s", tolerance, peak_height)
@@ -143,13 +145,13 @@ def value_function(peak_height, tolerance=1e-8, bottom_score = 0.01):
                 return 1.0
             else:
                 diff = numpy.abs(x-tolerance)/numpy.abs(tolerance)
-                #return max(0, calc_coeff.exponential(diff, a, b))
-                return max(0, calc_coeff.linear(diff, a, b))
+                return max(0, calc_coeff.exponential(diff, a, b))
+                #return max(0, calc_coeff.linear(diff, a, b))
     else:
         def wrapper(x):
             diff = numpy.abs(x-peak_height)/numpy.abs(peak_height)
-            #return max(0, calc_coeff.exponential(diff, a, b))
-            return max(0, calc_coeff.linear(diff, a, b))
+            return max(0, calc_coeff.exponential(diff, a, b))
+            #return max(0, calc_coeff.linear(diff, a, b))
 
     return wrapper
 
