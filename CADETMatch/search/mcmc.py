@@ -37,6 +37,8 @@ import pickle
 import scoop
 import pandas
 
+import kde_generator
+
 name = "MCMC"
 
 class Container:
@@ -103,6 +105,8 @@ def run(cache, tools, creator):
     populationSize = populationSize + populationSize % 2  
 
     sobol = SALib.sample.sobol_sequence.sample(populationSize, parameters)
+    
+    kde = kde_generator.getKDE(cache)
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:

@@ -35,6 +35,7 @@
       "CSV": "dextran_pulse.csv",
       "isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
       "HDF5": "dextran_pulse.h5",
+      "reference": "dextran_pulse.h5",
       "name": "main",
       "timeout": 3.4842967987060547,
       "features": [
