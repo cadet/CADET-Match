@@ -12,18 +12,23 @@ import score
 from cadet import Cadet
 from pathlib import Path
 import numpy
+import scoop
+import sys
+from sklearn.neighbors.kde import KernelDensity
 
 def getKDE(cache):
     scores = generate_data(cache)
 
+    kde = KernelDensity(kernel='gaussian', bandwidth=0.2).fit(scores)
+
     #do kde stuff
     #return kde
-    return None
+    return kde
 
 def generate_data(cache):
     reference_result = setupReferenceResult(cache)
 
-    variations = 5
+    variations = 200
 
     temp = [reference_result]
     for i in range(variations):
@@ -32,6 +37,12 @@ def generate_data(cache):
     scores = []
     for first,second in itertools.combinations(temp, 2):
         scores.append(score_sim(first, second, cache))
+
+    scoop.logger.info("scores %s", scores)
+
+    scores = numpy.array(scores)
+    numpy.save('scores.npy', scores)
+    sys.exit()
 
     return scores
 
@@ -42,6 +53,7 @@ def setupReferenceResult(cache):
         templatePath = experiment['reference']
         templateSim = Cadet()
         templateSim.filename = templatePath
+        templateSim.run()
         templateSim.load()
         
         results[experiment['name']] = {'simulation':templateSim}
@@ -69,7 +81,6 @@ def pump_delay(tempSim):
     "assume flat random from 0 to 60s"
     "assume data is mono-spaced in time"
     "time is column 0 and values is column 1"
-    return None
     times = tempSim.root.output.solution.solution_times
 
     delay = numpy.random.uniform(0.0, 60.0, 1)
@@ -89,18 +100,16 @@ def pump_flow(tempSim):
 def base_noise(tempSim):
     "add random noise based on baseline noise"
     "based on looking at experimental data"
-    return None
     times = tempSim.root.output.solution.solution_times
-
-    noise = numpy.random.normal(0.0, 3e-5, len(times))
+    
+    noise = numpy.random.normal(0.0, 1e-4, len(times))
 
     for (unitName, solutionName), outlet in get_outputs(tempSim):
-        tempSim.root.output.solution[unitName][solutionName] = outlet + noise
+        tempSim.root.output.solution[unitName][solutionName] = outlet + noise * max(outlet)
 
 def signal_noise(tempSim):
     "add noise to the signal"
     "based on looking at experimental error about +/- .5%"
-    return None
     times = tempSim.root.output.solution.solution_times
 
     noise = numpy.random.normal(1.0, 0.003, len(times))
@@ -125,11 +134,19 @@ def score_sim(first,second, cache):
     "score first vs second simulation"
     target = {}
     for experiment in cache.settings['experiments']:
-        target[experiment["name"]] = cache.setupExperiment(experiment, first[experiment["name"]]['simulation'])
+        target[experiment["name"]] = cache.setupExperiment(experiment, first[experiment["name"]]['simulation'], dataFromSim=1)
 
     score_sim = []
+    diff = 0
     for experimentName in cache.settings['experiments']:
         experimentName = experiment['name']
+
+        firstSim = first[experimentName]['simulation']
+        secondSim = second[experimentName]['simulation']
+        for (unitName, solutionName), outlet in get_outputs(firstSim):
+            outlet_second = secondSim.root.output.solution[unitName][solutionName]
+            diff = diff + numpy.sum( (outlet-outlet_second)**2 )
+            a = 1
 
         for feature in experiment['features']:
             featureType = feature['type']

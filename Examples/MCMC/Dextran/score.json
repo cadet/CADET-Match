@@ -11,7 +11,7 @@
   "scoreMCMC":"score",
   "graphSpearman": 0,
   "normalizeOutput":1,
-  "condTest": 1,
+  "condTest": 0,
   "seeds": [
         [3e-7, 0.4],
         [1e-6, 0.3],

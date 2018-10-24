@@ -19,6 +19,11 @@ def run(sim_data, feature):
         
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
 
+    diff = feature['value'] - sim_data_values
+
+    sse = numpy.sum(diff)
+    norm = numpy.linalg.norm(diff)
+
     if max(sim_data_values) < max_value: #the system has no point higher than the value we are looking for
         #remove hard failure
         max_value = max(sim_data_values)
@@ -30,7 +35,7 @@ def run(sim_data, feature):
     max_index = numpy.argmax(sim_data_values >= max_value)
 
     sim_data_zero = numpy.zeros(len(sim_data_values))
-    sim_data_zero[min_index:max_index] = sim_data_values[min_index:max_index]
+    sim_data_zero[min_index:max_index+1] = sim_data_values[min_index:max_index+1]
 
     pearson, diff_time = score.pearson(exp_time_values, sim_data_zero, exp_data_zero)
 

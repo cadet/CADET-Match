@@ -199,7 +199,7 @@ class Cache:
         else:
             self.target['sensitivities'] = []
 
-    def setupExperiment(self, experiment, sim=None):
+    def setupExperiment(self, experiment, sim=None, dataFromSim=0):
         temp = {}
         
         if sim is None:
@@ -245,7 +245,10 @@ class Cache:
         else:
             CV_time = (area * length) / flow
 
-        if 'CSV' in experiment:
+        if dataFromSim:
+            temp['time'], temp['value'] = get_times_values(sim, {'isotherm':experiment['isotherm']})
+
+        elif 'CSV' in experiment:
             data = numpy.loadtxt(experiment['CSV'], delimiter=',')
 
             temp['time'] = data[:, 0]
@@ -258,12 +261,15 @@ class Cache:
             temp[featureName] = {}
 
             if 'CSV' in feature:
-                dataLocal = numpy.loadtxt(feature['CSV'], delimiter=',')
-                temp[featureName]['time'] = dataLocal[:, 0]
-                temp[featureName]['value'] = dataLocal[:, 1]
+                if dataFromSim:
+                    temp[featureName]['time'], temp[featureName]['value'] = get_times_values(sim, {'isotherm':feature['isotherm']})
+                else:
+                    dataLocal = numpy.loadtxt(feature['CSV'], delimiter=',')
+                    temp[featureName]['time'] = dataLocal[:, 0]
+                    temp[featureName]['value'] = dataLocal[:, 1]
             else:
-                temp[featureName]['time'] = data[:, 0]
-                temp[featureName]['value'] = data[:, 1]
+                temp[featureName]['time'] = temp['time']
+                temp[featureName]['value'] = temp['value']
 
             if self.normalizeOutput:
                 temp[featureName]['factor'] = 1.0/numpy.max(temp[featureName]['value'])
@@ -308,3 +314,16 @@ class Cache:
             self.transform.extend(self.transforms[transform].transform(parameter))
 
 cache = Cache()
+
+
+def get_times_values(simulation, target):
+    "simplified version of the function so that util does not have to be imported"
+    times = simulation.root.output.solution.solution_times
+    isotherm = target['isotherm']
+
+    if isinstance(isotherm, list):
+        values = numpy.sum([simulation[i] for i in isotherm], 0)
+    else:
+        values = simulation[isotherm]
+        
+    return times, values
