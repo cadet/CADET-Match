@@ -69,6 +69,7 @@ def pump_delay(tempSim):
     "assume flat random from 0 to 60s"
     "assume data is mono-spaced in time"
     "time is column 0 and values is column 1"
+    return None
     times = tempSim.root.output.solution.solution_times
 
     delay = numpy.random.uniform(0.0, 60.0, 1)
@@ -88,6 +89,7 @@ def pump_flow(tempSim):
 def base_noise(tempSim):
     "add random noise based on baseline noise"
     "based on looking at experimental data"
+    return None
     times = tempSim.root.output.solution.solution_times
 
     noise = numpy.random.normal(0.0, 3e-5, len(times))
@@ -98,6 +100,7 @@ def base_noise(tempSim):
 def signal_noise(tempSim):
     "add noise to the signal"
     "based on looking at experimental error about +/- .5%"
+    return None
     times = tempSim.root.output.solution.solution_times
 
     noise = numpy.random.normal(1.0, 0.003, len(times))
@@ -120,18 +123,19 @@ def quantize_delay(delay, interval):
 
 def score_sim(first,second, cache):
     "score first vs second simulation"
-    diff = 0.0
+    target = {}
+    for experiment in cache.settings['experiments']:
+        target[experiment["name"]] = cache.setupExperiment(experiment, first[experiment["name"]]['simulation'])
 
-    experiments = cache.settings['experiments']
+    score_sim = []
+    for experimentName in cache.settings['experiments']:
+        experimentName = experiment['name']
 
-    for experiment in experiments:
-        self.target[experiment["name"]] = self.setupExperiment(experiment)
+        for feature in experiment['features']:
+            featureType = feature['type']
+            featureName = feature['name']
+            if featureType in cache.scores:
+                scores, sse, sse_count = cache.scores[featureType].run(second[experimentName], target[experiment['name']][featureName])
+                score_sim.extend(scores)
 
-    for experimentName in first.keys():
-        firstSim = first[experimentName]['simulation']
-        secondSim = second[experimentName]['simulation']
-
-        for (unitName, solutionName), outlet in get_outputs(firstSim):
-            outlet_second = secondSim.root.output.solution[unitName][solutionName]
-            diff = diff + numpy.sum( (outlet-outlet_second)**2 )
-    return diff
+    return score_sim

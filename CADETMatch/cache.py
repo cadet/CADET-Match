@@ -199,12 +199,13 @@ class Cache:
         else:
             self.target['sensitivities'] = []
 
-    def setupExperiment(self, experiment):
+    def setupExperiment(self, experiment, sim=None):
         temp = {}
-
-        sim = Cadet()
-        sim.filename = Path(experiment['HDF5'])
-        sim.load()
+        
+        if sim is None:
+            sim = Cadet()
+            sim.filename = Path(experiment['HDF5'])
+            sim.load()
 
         abstol = sim.root.input.solver.time_integrator.abstol
 
