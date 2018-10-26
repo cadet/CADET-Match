@@ -270,3 +270,10 @@ __pycache__/
 /CADETMatch/cadet_trace
 .vscode/launch.json
 .vscode/tasks.json
+/Examples/MCMC/Dextran/dextran_scores_1a.npy
+/Examples/MCMC/Dextran/dextran_scores_1b.npy
+/Examples/MCMC/Dextran/dextran_scores_2a.npy
+/Examples/MCMC/Dextran/dextran_scores_2b.npy
+/Examples/MCMC/Dextran/dextran_scores_4a.npy
+/Examples/MCMC/Dextran/dextran_scores_4b.npy
+/Examples/MCMC/Dextran/dextran_scores_used.npy
