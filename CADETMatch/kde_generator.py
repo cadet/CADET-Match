@@ -28,11 +28,11 @@ def getKDE(scores):
 def generate_data(cache):
     reference_result = setupReferenceResult(cache)
 
-    variations = 400
+    variations = cache.settings['kde']['variations']
 
     temp = [reference_result]
     for i in range(variations):
-        temp.append(mutate(reference_result))
+        temp.append(mutate(cache, reference_result))
 
     scores = []
     for first,second in itertools.combinations(temp, 2):
@@ -58,22 +58,22 @@ def setupReferenceResult(cache):
     return results
 
 
-def mutate(reference_result):
+def mutate(cache, reference_result):
     "generate variations of the data with different types of noise"
     result = {}
 
     for key,value in reference_result.items():
         tempSim = Cadet(value['simulation'].root.copy())
 
-        pump_delay(tempSim)
-        #pump_flow(tempSim)
-        base_noise(tempSim)
-        signal_noise(tempSim)
+        pump_delay(cache, tempSim)
+        #pump_flow(cache, tempSim)
+        base_noise(cache, tempSim)
+        signal_noise(cache, tempSim)
 
         result[key] = {'simulation':tempSim}
     return result
 
-def pump_delay(tempSim):
+def pump_delay(cache, tempSim):
     "systemic error related to delays in the pump"
     "assume flat random from 0 to 60s"
     "assume data is mono-spaced in time"
@@ -82,38 +82,48 @@ def pump_delay(tempSim):
 
     #delay = numpy.random.uniform(0.0, 60.0, 1)
 
-    delay = numpy.abs(numpy.random.normal(0.0, 3.0, 1))
+    pump_mean = cache.settings['kde']['pump_delay_mean']
+    pump_std = cache.settings['kde']['pump_delay_std']
+
+    delay = -1
+    while delay < 0:
+        delay = numpy.random.normal(pump_mean, pump_std, 1)
+
     interval = times[1] - times[0]
     delay = quantize_delay(delay[0], interval)
 
     for (unitName, solutionName), outlet in get_outputs(tempSim):
         tempSim.root.output.solution[unitName][solutionName] = score.roll(outlet, delay)
 
-def pump_flow(tempSim):
+def pump_flow(cache, tempSim):
     "random noise related to the pump flow rate"
     "assume 5% margin of error but no other changes to chromatogram"
     "assume change is small enough that the chromatogram shape does not change"
     "can't currently model this without simulation work"
     pass
 
-def base_noise(tempSim):
+def base_noise(cache, tempSim):
     "add random noise based on baseline noise"
     "based on looking at experimental data"
     times = tempSim.root.output.solution.solution_times
     
-    noise = numpy.random.normal(0.0, 1e-4, len(times))
+    noise_std = cache.settings['kde']['base_noise_std']
+
+    noise = numpy.random.normal(0.0, noise_std, len(times))
 
     for (unitName, solutionName), outlet in get_outputs(tempSim):
         tempSim.root.output.solution[unitName][solutionName] = outlet + noise * max(outlet)
 
-def signal_noise(tempSim):
+def signal_noise(cache, tempSim):
     "add noise to the signal"
     "based on looking at experimental error about +/- .5%"
     times = tempSim.root.output.solution.solution_times
 
     #0.003 base on experiments
 
-    noise = numpy.random.normal(1.0, 0.005, len(times))
+    noise_std = cache.settings['kde']['signal_noise_std']
+
+    noise = numpy.random.normal(1.0, noise_std, len(times))
 
     for (unitName, solutionName), outlet in get_outputs(tempSim):
         tempSim.root.output.solution[unitName][solutionName] = outlet * noise

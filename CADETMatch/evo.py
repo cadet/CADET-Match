@@ -44,6 +44,10 @@ def fitness(individual, json_path):
     else:
         scores = scores
 
+    power = float(cache.cache.settings['kde']['power'])
+
+    scores = [i**power for i in scores]
+
     #human scores
     humanScores = numpy.array( [util.product_score(scores), 
                                 min(scores), sum(scores)/len(scores), 

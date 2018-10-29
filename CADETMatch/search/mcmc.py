@@ -95,12 +95,12 @@ def log_posterior(theta, json_path, multiplier, kde_scores):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path)
 
-    try:
-        ll, scores, csv_record, results = log_likelihood(theta, json_path, multiplier, kde_scores)
-        return ll, theta, scores, csv_record, results
-    except:
-        # if model does not converge:
-        return -numpy.inf, None, None, None, None
+    #try:
+    ll, scores, csv_record, results = log_likelihood(theta, json_path, multiplier, kde_scores)
+    return ll, theta, scores, csv_record, results
+    #except:
+    #    # if model does not converge:
+    #    return -numpy.inf, None, None, None, None
 
 def run(cache, tools, creator):
     "run the parameter estimation"
