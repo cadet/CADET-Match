@@ -16,10 +16,10 @@
   {
       "power": 2,
       "variations": 10,
-      "pump_delay_mean": 0,
-      "pump_delay_std": 3,
-      "base_noise_std": 1e-4,
-      "signal_noise_std": 0.005      
+      "pump_delay_mean": 10,
+      "pump_delay_std": 7,
+      "base_noise_std": 1e-5,
+      "signal_noise_std": 0.001      
   },
   "parameters": [
     {
@@ -49,9 +49,13 @@
       "timeout": 3.4842967987060547,
       "features": [
         {
-          "name": "Dextran",
-          "type": "dextranHybrid2"
-        }
+					"name": "Pulse",
+					"type": "similarityHybridDecay2"
+				},
+				{
+					"name": "Deriv",
+					"type": "derivative_similarity_hybrid2"
+				}
       ]
     }
   ]

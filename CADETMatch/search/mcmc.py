@@ -69,12 +69,12 @@ class Container:
 
 container = Container(1e-10, 1e-1)
 
-def log_likelihood(theta, json_path,multiplier, kde_scores):
+def log_likelihood(theta, json_path,multiplier, kde_scores, kde_bw):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path, False)
 
     if 'kde' not in log_likelihood.__dict__:
-        log_likelihood.kde = kde_generator.getKDE(kde_scores)
+        log_likelihood.kde = kde_generator.getKDE(cache.cache, kde_scores, kde_bw)
     
     individual = theta
 
@@ -91,12 +91,12 @@ def log_likelihood(theta, json_path,multiplier, kde_scores):
 
     return score, scores, csv_record, results 
 
-def log_posterior(theta, json_path, multiplier, kde_scores):
+def log_posterior(theta, json_path, multiplier, kde_scores, kde_bw):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path)
 
     #try:
-    ll, scores, csv_record, results = log_likelihood(theta, json_path, multiplier, kde_scores)
+    ll, scores, csv_record, results = log_likelihood(theta, json_path, multiplier, kde_scores, kde_bw)
     return ll, theta, scores, csv_record, results
     #except:
     #    # if model does not converge:
@@ -115,13 +115,13 @@ def run(cache, tools, creator):
 
     sobol = SALib.sample.sobol_sequence.sample(populationSize, parameters)
     
-    kde_scores = kde_generator.generate_data(cache)
+    kde_scores, kde_bw = kde_generator.generate_data(cache)
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path, container.multiplier, kde_scores], pool=cache.toolbox, a=2.0)
+        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path, container.multiplier, kde_scores, kde_bw], pool=cache.toolbox, a=2.0)
         emcee.EnsembleSampler._get_lnprob = _get_lnprob
         emcee.EnsembleSampler._propose_stretch = _propose_stretch
 

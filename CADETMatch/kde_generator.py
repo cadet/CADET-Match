@@ -16,10 +16,21 @@ import scoop
 import sys
 from sklearn.neighbors.kde import KernelDensity
 
-def getKDE(scores):
+from sklearn.grid_search import RandomizedSearchCV
+bandwidths = 10 ** np.linspace(-3, -1, 20)
+
+def get_bandwidth(scores):
+    grid = RandomizedSearchCV(KernelDensity(kernel='gaussian'),
+                        {'bandwidth': bandwidths}, n_jobs =-1)
+    grid.fit(scores);
+    return grid.best_params_['bandwidth']
+
+def getKDE(cache, scores, bw):
     #scores = generate_data(cache)
 
-    kde = KernelDensity(kernel='gaussian', bandwidth=0.2).fit(scores)
+    kde = KernelDensity(kernel='gaussian', bandwidth=bw).fit(scores)
+
+    plotKDE(cache, kde, scores)
 
     #do kde stuff
     #return kde
@@ -34,14 +45,24 @@ def generate_data(cache):
     for i in range(variations):
         temp.append(mutate(cache, reference_result))
 
+    plotVariations(cache, temp)
+
     scores = []
     for first,second in itertools.combinations(temp, 2):
         scores.append(score_sim(first, second, cache))
 
     scores = numpy.array(scores)
-    numpy.save('dextran_scores_used.npy', scores)
+    #numpy.save('dextran_scores_used.npy', scores)
 
-    return scores
+    bandwidth = get_bandwidth(scores)
+
+    return scores, bandwidth
+
+def plotVariations(cache, temp):
+    return None
+
+def plotKDE(cache, kde, scores):
+    return None
 
 def setupReferenceResult(cache):
     results = {}
