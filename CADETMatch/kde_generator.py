@@ -39,7 +39,10 @@ def getKDE(cache, scores, bw):
 def generate_data(cache):
     reference_result = setupReferenceResult(cache)
 
-    variations = cache.settings['kde']['variations']
+    try:
+        variations = cache.settings['kde']['variations']
+    except KeyError:
+        variations = 100
 
     temp = [reference_result]
     for i in range(variations):
@@ -102,9 +105,16 @@ def pump_delay(cache, tempSim):
     times = tempSim.root.output.solution.solution_times
 
     #delay = numpy.random.uniform(0.0, 60.0, 1)
+    
+    try:
+        pump_mean = cache.settings['kde']['pump_delay_mean']
+    except KeyError:
+        pump_mean = 0.0
 
-    pump_mean = cache.settings['kde']['pump_delay_mean']
-    pump_std = cache.settings['kde']['pump_delay_std']
+    try:
+        pump_std = cache.settings['kde']['pump_delay_std']
+    except KeyError:
+        pump_std = 1.0
 
     delay = -1
     while delay < 0:
@@ -128,7 +138,10 @@ def base_noise(cache, tempSim):
     "based on looking at experimental data"
     times = tempSim.root.output.solution.solution_times
     
-    noise_std = cache.settings['kde']['base_noise_std']
+    try:
+        noise_std = cache.settings['kde']['base_noise_std']
+    except KeyError:
+        noise_std = 1e-7
 
     noise = numpy.random.normal(0.0, noise_std, len(times))
 
@@ -142,7 +155,10 @@ def signal_noise(cache, tempSim):
 
     #0.003 base on experiments
 
-    noise_std = cache.settings['kde']['signal_noise_std']
+    try:
+        noise_std = cache.settings['kde']['signal_noise_std']
+    except KeyError:
+        noise_std = 0.003
 
     noise = numpy.random.normal(1.0, noise_std, len(times))
 

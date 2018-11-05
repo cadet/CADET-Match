@@ -44,7 +44,10 @@ def fitness(individual, json_path):
     else:
         scores = scores
 
-    power = float(cache.cache.settings['kde']['power'])
+    try:
+        power = float(cache.cache.settings['kde']['power'])
+    except KeyError:
+        power = 1
 
     scores = [i**power for i in scores]
 
