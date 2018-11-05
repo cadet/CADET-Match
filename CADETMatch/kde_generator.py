@@ -16,7 +16,8 @@ import scoop
 import sys
 from sklearn.neighbors.kde import KernelDensity
 
-from sklearn.grid_search import RandomizedSearchCV
+from sklearn.model_selection import RandomizedSearchCV
+
 bandwidths = 10 ** np.linspace(-3, -1, 20)
 
 def get_bandwidth(scores):

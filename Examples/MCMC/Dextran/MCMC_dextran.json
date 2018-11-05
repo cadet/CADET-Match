@@ -14,10 +14,10 @@
   "graphMetaTime": 30,
   "kde": 
   {
-      "power": 2,
-      "variations": 10,
-      "pump_delay_mean": 10,
-      "pump_delay_std": 7,
+      "power": 1,
+      "variations": 100,
+      "pump_delay_mean": 2,
+      "pump_delay_std": 1,
       "base_noise_std": 1e-5,
       "signal_noise_std": 0.001      
   },
