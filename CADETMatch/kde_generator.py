@@ -15,16 +15,23 @@ import numpy
 import scoop
 import sys
 from sklearn.neighbors.kde import KernelDensity
+from sklearn.model_selection import cross_val_score
 
-from sklearn.model_selection import RandomizedSearchCV
+import scipy.optimize
 
-bandwidths = 10 ** np.linspace(-3, -1, 20)
+def bandwidth_score(bw, data):
+    bandwidth = 10**bw[0]
+    kde_bw = KernelDensity(kernel='gaussian', bandwidth=bandwidth, atol=1e-5, rtol=1e-5)
+    scores = cross_val_score(kde_bw, data, cv=3)
+    return -max(scores)
 
 def get_bandwidth(scores):
-    grid = RandomizedSearchCV(KernelDensity(kernel='gaussian'),
-                        {'bandwidth': bandwidths}, n_jobs =-1)
-    grid.fit(scores);
-    return grid.best_params_['bandwidth']
+
+    result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-5, 1),], 
+                                               args = (scores,))
+    bandwidth = 10**result.x[0]
+    scoop.logger.info("selected bandwidth %s", bandwidth)
+    return bandwidth
 
 def getKDE(cache, scores, bw):
     #scores = generate_data(cache)
