@@ -17,11 +17,16 @@ import sys
 from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import cross_val_score
 
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore",category=FutureWarning)
+    import h5py
+
 import scipy.optimize
 
 def bandwidth_score(bw, data):
     bandwidth = 10**bw[0]
-    kde_bw = KernelDensity(kernel='gaussian', bandwidth=bandwidth, atol=1e-5, rtol=1e-5)
+    kde_bw = KernelDensity(kernel='exponential', bandwidth=bandwidth, atol=1e-5, rtol=1e-5)
     scores = cross_val_score(kde_bw, data, cv=3)
     return -max(scores)
 
@@ -36,7 +41,7 @@ def get_bandwidth(scores):
 def getKDE(cache, scores, bw):
     #scores = generate_data(cache)
 
-    kde = KernelDensity(kernel='gaussian', bandwidth=bw).fit(scores)
+    kde = KernelDensity(kernel='exponential', bandwidth=bw).fit(scores)
 
     plotKDE(cache, kde, scores)
 
@@ -63,11 +68,62 @@ def generate_data(cache):
         scores.append(score_sim(first, second, cache))
 
     scores = numpy.array(scores)
-    #numpy.save('dextran_scores_used.npy', scores)
+
+    mcmcDir = Path(cache.settings['resultsDirMCMC'])
+    save_scores = mcmcDir / 'scores_used.npy'
+
+    numpy.save(save_scores, scores)
 
     bandwidth = get_bandwidth(scores)
 
+    writeVariations(cache, scores, bandwidth, temp)
+
     return scores, bandwidth
+
+def writeVariations(cache, scores, bandwidth, simulations):
+
+    mcmcDir = Path(cache.settings['resultsDirMCMC'])
+
+    mcmc_kde = mcmcDir / 'mcmc_kde.h5'
+
+    bandwidth = numpy.array(bandwidth, dtype="f8")
+
+    data, times = getData(simulations)
+
+    with h5py.File(mcmc_kde, 'w') as hf:
+        hf.create_dataset("bandwidth", data=bandwidth, maxshape=tuple(None for i in range(bandwidth.ndim)), fillvalue=[0])
+
+        hf.create_dataset("scores", data=scores, maxshape=(None, len(scores[0])), compression="gzip")
+
+        for name, value in times.items():
+            hf.create_dataset(name, data=value, maxshape=(None,), compression="gzip")
+
+        for name, value in data.items():
+            hf.create_dataset(name, data=value, maxshape=(None, len(value[0])), compression="gzip")
+
+def getData(simulaltions):
+
+    data = {}
+    times = {}
+
+    for sim in simulaltions:
+        for experimentName, experiment in sim.items():
+            simulation = experiment['simulation']
+
+            key = '%s_%s' % (experimentName, "times")
+            if key not in data:
+                times[key] = simulation.root.output.solution.solution_times
+
+            for ((unitName, solutionName), solution) in get_outputs(simulation):
+                key = '%s_%s_%s' % (experimentName, unitName, solutionName)
+                if key not in data:
+                    data[key] = []
+                data[key].append(solution)
+
+    for key,value in data.items():
+        data[key] = numpy.array(value)
+
+    return data, times
 
 def plotVariations(cache, temp):
     return None
