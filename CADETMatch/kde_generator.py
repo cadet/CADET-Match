@@ -24,19 +24,20 @@ with warnings.catch_warnings():
 
 import scipy.optimize
 
-def bandwidth_score(bw, data):
+def bandwidth_score(bw, data, store):
     bandwidth = 10**bw[0]
     kde_bw = KernelDensity(kernel='exponential', bandwidth=bandwidth, atol=1e-5, rtol=1e-5)
     scores = cross_val_score(kde_bw, data, cv=3)
+    store.append( [bandwidth, -max(scores)] )
     return -max(scores)
 
 def get_bandwidth(scores):
-
+    store = []
     result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-5, 1),], 
-                                               args = (scores,))
+                                               args = (scores,store,))
     bandwidth = 10**result.x[0]
     scoop.logger.info("selected bandwidth %s", bandwidth)
-    return bandwidth
+    return bandwidth, store
 
 def getKDE(cache, scores, bw):
     #scores = generate_data(cache)
@@ -74,13 +75,13 @@ def generate_data(cache):
 
     numpy.save(save_scores, scores)
 
-    bandwidth = get_bandwidth(scores)
+    bandwidth, store = get_bandwidth(scores)
 
-    writeVariations(cache, scores, bandwidth, temp)
+    writeVariations(cache, scores, bandwidth, temp, store)
 
     return scores, bandwidth
 
-def writeVariations(cache, scores, bandwidth, simulations):
+def writeVariations(cache, scores, bandwidth, simulations, store):
 
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
 
@@ -90,10 +91,14 @@ def writeVariations(cache, scores, bandwidth, simulations):
 
     data, times = getData(simulations)
 
+    store = numpy.array(store)
+
     with h5py.File(mcmc_kde, 'w') as hf:
         hf.create_dataset("bandwidth", data=bandwidth, maxshape=tuple(None for i in range(bandwidth.ndim)), fillvalue=[0])
 
         hf.create_dataset("scores", data=scores, maxshape=(None, len(scores[0])), compression="gzip")
+
+        hf.create_dataset("bandwidth_scores", data=store, maxshape=(None,2), compression="gzip")
 
         for name, value in times.items():
             hf.create_dataset(name, data=value, maxshape=(None,), compression="gzip")
