@@ -24,6 +24,10 @@ with warnings.catch_warnings():
 
 import scipy.optimize
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 def bandwidth_score(bw, data, store):
     bandwidth = 10**bw[0]
     kde_bw = KernelDensity(kernel='exponential', bandwidth=bandwidth, atol=1e-5, rtol=1e-5)
@@ -31,12 +35,28 @@ def bandwidth_score(bw, data, store):
     store.append( [bandwidth, -max(scores)] )
     return -max(scores)
 
-def get_bandwidth(scores):
+def get_bandwidth(scores, cache):
     store = []
     result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-5, 1),], 
                                                args = (scores,store,))
     bandwidth = 10**result.x[0]
     scoop.logger.info("selected bandwidth %s", bandwidth)
+
+    store = numpy.array(store)
+
+    mcmcDir = Path(cache.settings['resultsDirMCMC'])
+    plt.scatter(numpy.log10(store[:,0]), store[:,1])
+    plt.xlabel('bandwidth')
+    plt.ylabel('cross_val_score')
+    plt.savefig(str(mcmcDir / "log_bandwidth.png" ), bbox_inches='tight')
+    plt.close()
+
+    plt.scatter(store[:,0], store[:,1])
+    plt.xlabel('bandwidth')
+    plt.ylabel('cross_val_score')
+    plt.savefig(str(mcmcDir / "bandwidth.png" ), bbox_inches='tight')
+    plt.close()
+
     return bandwidth, store
 
 def getKDE(cache, scores, bw):
@@ -75,7 +95,7 @@ def generate_data(cache):
 
     numpy.save(save_scores, scores)
 
-    bandwidth, store = get_bandwidth(scores)
+    bandwidth, store = get_bandwidth(scores, cache)
 
     writeVariations(cache, scores, bandwidth, temp, store)
 
@@ -131,7 +151,36 @@ def getData(simulaltions):
     return data, times
 
 def plotVariations(cache, temp):
-    return None
+
+    data, times = getData(temp)
+
+    mcmcDir = Path(cache.settings['resultsDirMCMC'])
+
+    for key,value in data.items():
+        experiment = key.split('_unit', maxsplit=1)[0]
+
+        time = times['%s_times' % experiment]
+
+        mean = numpy.mean(value, 0)
+        std = numpy.std(value, 0)
+        minValues = numpy.min(value, 0)
+        maxValues = numpy.max(value, 0)
+
+        plt.plot(time, mean)
+        plt.fill_between(time, mean - std, mean + std,
+                    color='green', alpha=0.2)
+        plt.fill_between(time, minValues, maxValues,
+                    color='red', alpha=0.2)
+        plt.xlabel('time(s)')
+        plt.ylabel('conc mol/m^3')
+        plt.savefig(str(mcmcDir / ("%s.png" % key ) ), bbox_inches='tight')
+        plt.close()
+
+        plt.plot(time, value.transpose())
+        plt.xlabel('time(s)')
+        plt.ylabel('conc mol/m^3')
+        plt.savefig(str(mcmcDir / ("%s_lines.png" % key ) ), bbox_inches='tight')
+        plt.close()
 
 def plotKDE(cache, kde, scores):
     return None
