@@ -51,19 +51,23 @@ def find_extreme(seq):
 
 def get_times_values(simulation, target, selected = None):
 
-    times = simulation.root.output.solution.solution_times
+    try:
+        times = simulation.root.output.solution.solution_times
 
-    isotherm = target['isotherm']
+        isotherm = target['isotherm']
 
-    if isinstance(isotherm, list):
-        values = numpy.sum([simulation[i] for i in isotherm], 0) * target['factor']
-    else:
-        values = simulation[isotherm] * target['factor']
+        if isinstance(isotherm, list):
+            values = numpy.sum([simulation[i] for i in isotherm], 0) 
+        else:
+            values = simulation[isotherm]
+    except (AttributeError, KeyError):
+        times = simulation[:,0]
+        values = simulation[:,1]
     
     if selected is None:
         selected = target['selected']
 
-    return times[selected], values[selected]
+    return times[selected], values[selected]* target['factor']
 
 def sse(data1, data2):
     return numpy.sum( (data1 - data2)**2 )

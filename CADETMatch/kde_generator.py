@@ -16,6 +16,7 @@ import scoop
 import sys
 from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import cross_val_score
+import copy
 
 import warnings
 with warnings.catch_warnings():
@@ -37,7 +38,7 @@ def bandwidth_score(bw, data, store):
 
 def get_bandwidth(scores, cache):
     store = []
-    result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-5, 1),], 
+    result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-8, 1),], 
                                                args = (scores,store,))
     bandwidth = 10**result.x[0]
     scoop.logger.info("selected bandwidth %s", bandwidth)
@@ -126,24 +127,38 @@ def writeVariations(cache, scores, bandwidth, simulations, store):
         for name, value in data.items():
             hf.create_dataset(name, data=value, maxshape=(None, len(value[0])), compression="gzip")
 
-def getData(simulaltions):
+def getData(variations):
 
     data = {}
     times = {}
 
-    for sim in simulaltions:
-        for experimentName, experiment in sim.items():
-            simulation = experiment['simulation']
+    for variation in variations:
+        for experiment in variation:
+            name = experiment['name']
 
-            key = '%s_%s' % (experimentName, "times")
-            if key not in data:
-                times[key] = simulation.root.output.solution.solution_times
+            if 'data' in experiment:
+                experiment_data = experiment['data']
 
-            for ((unitName, solutionName), solution) in get_outputs(simulation):
-                key = '%s_%s_%s' % (experimentName, unitName, solutionName)
+                key = '%s_%s' % (name, "times")
+                if key not in data:
+                    times[key] = experiment_data[:,0]
+
+                key = name
                 if key not in data:
                     data[key] = []
-                data[key].append(solution)
+
+                data[key].append(experiment_data[:,1])
+
+            for feature in experiment['features']:
+                feature_name = feature['name']
+                
+                if 'data' in feature:
+                    experiment_data = feature['data']
+
+                    key = '%s_%s' % (name, feature_name)
+                    if key not in data:
+                        data[key] = []
+                    data[key].append(experiment_data[:,1])
 
     for key,value in data.items():
         data[key] = numpy.array(value)
@@ -186,63 +201,97 @@ def plotKDE(cache, kde, scores):
     return None
 
 def setupReferenceResult(cache):
-    results = {}
-    for experiment in cache.settings['experiments']:
+    #results = {}
+    
+    #for experiment in cache.settings['experiments']:
         
-        templatePath = experiment['reference']
-        templateSim = Cadet()
-        templateSim.filename = templatePath
-        templateSim.run()
-        templateSim.load()
+    #    templatePath = experiment['reference']
+    #    templateSim = Cadet()
+    #    templateSim.filename = templatePath
+    #    templateSim.run()
+    #    templateSim.load()
         
-        results[experiment['name']] = {'simulation':templateSim}
+    #    results[experiment['name']] = {'simulation':templateSim}
 
-    return results
+    temp = []
+    for experiment in cache.settings['experiments']:
+        temp_exp = dict(experiment)
+
+        if 'CSV' in temp_exp:
+            temp_exp['data'] = numpy.loadtxt(temp_exp['CSV'], delimiter=',')
+
+        for feature in temp_exp['features']:
+            if 'CSV' in feature:
+                feature['data'] = numpy.loadtxt(feature['CSV'], delimiter=',')
+        temp.append(temp_exp)
+
+    return temp
 
 
 def mutate(cache, reference_result):
     "generate variations of the data with different types of noise"
-    result = {}
+    result = []
 
-    for key,value in reference_result.items():
-        tempSim = Cadet(value['simulation'].root.copy())
+    for experiment in reference_result:
+        experiment_temp = copy.deepcopy(experiment)
 
-        pump_delay(cache, tempSim)
-        #pump_flow(cache, tempSim)
-        base_noise(cache, tempSim)
-        signal_noise(cache, tempSim)
+        pump_delay_time = None
 
-        result[key] = {'simulation':tempSim}
+        if 'data' in experiment_temp:
+            data = experiment_temp['data']
+            
+            pump_delay_time = pump_delay(cache, data, pump_delay_time)
+
+            #pump_flow(cache, data)
+            base_noise(cache, data)
+            signal_noise(cache, data)
+
+            experiment_temp['data'] = data
+
+        for feature in experiment_temp['features']:
+            if 'data' in feature:
+                data = feature['data']
+            
+                pump_delay_time = pump_delay(cache, data, pump_delay_time)
+                #pump_flow(cache, data)
+                base_noise(cache, data)
+                signal_noise(cache, data)
+                feature['data'] = data
+        
+        result.append(experiment_temp)
+
     return result
 
-def pump_delay(cache, tempSim):
+def pump_delay(cache, data, pump_delay_time=None):
     "systemic error related to delays in the pump"
-    "assume flat random from 0 to 60s"
     "assume data is mono-spaced in time"
     "time is column 0 and values is column 1"
-    times = tempSim.root.output.solution.solution_times
+    times = data[:,0]
 
     #delay = numpy.random.uniform(0.0, 60.0, 1)
-    
-    try:
-        pump_mean = cache.settings['kde']['pump_delay_mean']
-    except KeyError:
-        pump_mean = 0.0
+    if pump_delay_time is not None:
+        dely = pump_delay_time
+    else:
+        try:
+            pump_mean = cache.settings['kde']['pump_delay_mean']
+        except KeyError:
+            pump_mean = 0.0
 
-    try:
-        pump_std = cache.settings['kde']['pump_delay_std']
-    except KeyError:
-        pump_std = 1.0
-
-    delay = -1
-    while delay < 0:
-        delay = numpy.random.normal(pump_mean, pump_std, 1)
+        try:
+            pump_std = cache.settings['kde']['pump_delay_std']
+        except KeyError:
+            pump_std = 1.0
+            
+        delay = -1
+        while delay < 0:
+            delay = numpy.random.normal(pump_mean, pump_std, 1)
 
     interval = times[1] - times[0]
     delay = quantize_delay(delay[0], interval)
 
-    for (unitName, solutionName), outlet in get_outputs(tempSim):
-        tempSim.root.output.solution[unitName][solutionName] = score.roll(outlet, delay)
+    data[:,1] = score.roll(data[:,1], delay)
+
+    return delay
 
 def pump_flow(cache, tempSim):
     "random noise related to the pump flow rate"
@@ -251,10 +300,10 @@ def pump_flow(cache, tempSim):
     "can't currently model this without simulation work"
     pass
 
-def base_noise(cache, tempSim):
+def base_noise(cache, data):
     "add random noise based on baseline noise"
     "based on looking at experimental data"
-    times = tempSim.root.output.solution.solution_times
+    times = data[:,0]
     
     try:
         noise_std = cache.settings['kde']['base_noise_std']
@@ -263,13 +312,12 @@ def base_noise(cache, tempSim):
 
     noise = numpy.random.normal(0.0, noise_std, len(times))
 
-    for (unitName, solutionName), outlet in get_outputs(tempSim):
-        tempSim.root.output.solution[unitName][solutionName] = outlet + noise * max(outlet)
+    data[:,1] = data[:,1] + noise * max(data[:,1])
 
-def signal_noise(cache, tempSim):
+def signal_noise(cache, data):
     "add noise to the signal"
     "based on looking at experimental error about +/- .5%"
-    times = tempSim.root.output.solution.solution_times
+    times = data[:,0]
 
     #0.003 base on experiments
 
@@ -280,8 +328,8 @@ def signal_noise(cache, tempSim):
 
     noise = numpy.random.normal(1.0, noise_std, len(times))
 
-    for (unitName, solutionName), outlet in get_outputs(tempSim):
-        tempSim.root.output.solution[unitName][solutionName] = outlet * noise
+
+    data[:,1] = data[:,1] * noise
 
 def get_outputs(tempSim):
     "get the outputs for tempSim so they can be mutated"
@@ -299,26 +347,25 @@ def quantize_delay(delay, interval):
 def score_sim(first,second, cache):
     "score first vs second simulation"
     target = {}
-    for experiment in cache.settings['experiments']:
-        target[experiment["name"]] = cache.setupExperiment(experiment, first[experiment["name"]]['simulation'], dataFromSim=1)
+    for experiment in first:
+        target[experiment["name"]] = cache.setupExperiment(experiment)
 
     score_sim = []
     diff = 0
-    for experimentName in cache.settings['experiments']:
+    for experiment in second:
         experimentName = experiment['name']
 
-        firstSim = first[experimentName]['simulation']
-        secondSim = second[experimentName]['simulation']
-        for (unitName, solutionName), outlet in get_outputs(firstSim):
-            outlet_second = secondSim.root.output.solution[unitName][solutionName]
-            diff = diff + numpy.sum( (outlet-outlet_second)**2 )
-            a = 1
+        data = experiment.get('data', None)
 
         for feature in experiment['features']:
             featureType = feature['type']
             featureName = feature['name']
+
+            if data is None:
+                data = feature.get('data', None)
+
             if featureType in cache.scores:
-                scores, sse, sse_count = cache.scores[featureType].run(second[experimentName], target[experiment['name']][featureName])
+                scores, sse, sse_count = cache.scores[featureType].run({'simulation':data}, target[experimentName][featureName])
                 score_sim.extend(scores)
 
     return score_sim

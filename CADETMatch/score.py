@@ -41,7 +41,11 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
 
     roll_index = index - len(exp_time_values)
 
-    score = corr[index]
+    try:
+        score = corr[index]
+    except IndexError:
+        score = 0.0
+        scoop.logger.warn("Index error in pearson score at index %s out of %s entries", index, len(corr))
 
     endTime = exp_time_values[-1]
 
@@ -59,9 +63,9 @@ def time_function_decay(CV_time, peak_time, diff_input=False):
     x_exp = numpy.array([0, 1.0*CV_time])
     y_exp = numpy.array([1, 0.5])
 
-    #a, b = calc_coeff.exponential_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
+    a, b = calc_coeff.exponential_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
 
-    a, b = calc_coeff.linear_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
+    #a, b = calc_coeff.linear_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
     
     def wrapper(x):
 
@@ -70,8 +74,8 @@ def time_function_decay(CV_time, peak_time, diff_input=False):
         else:
             diff = numpy.abs(x - peak_time)
 
-        #value = max(0.0, calc_coeff.exponential(diff, a, b))
-        value = max(0.0, calc_coeff.linear(diff, a, b))
+        value = max(0.0, calc_coeff.exponential(diff, a, b))
+        #value = max(0.0, calc_coeff.linear(diff, a, b))
 
         return value
 

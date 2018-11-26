@@ -15,11 +15,11 @@
   "kde": 
   {
       "power": 1,
-      "variations": 25,
+      "variations": 200,
       "pump_delay_mean": 2,
-      "pump_delay_std": 1,
-      "base_noise_std": 1e-5,
-      "signal_noise_std": 0.001      
+      "pump_delay_std": 4,
+      "base_noise_std": 1e-7,
+      "signal_noise_std": 1e-3      
   },
   "parameters": [
     {
