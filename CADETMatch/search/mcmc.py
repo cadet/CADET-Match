@@ -72,6 +72,8 @@ container = Container(1e-10, 1e-1)
 def log_likelihood(theta, json_path,multiplier, kde_scores, kde_bw):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path, False)
+        cache.cache.roundScores = None
+        cache.cache.roundParameters = None
 
     if 'kde' not in log_likelihood.__dict__:
         log_likelihood.kde = kde_generator.getKDE(cache.cache, kde_scores, kde_bw)
@@ -105,6 +107,9 @@ def log_posterior(theta, json_path, multiplier, kde_scores, kde_bw):
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
+
+    cache.roundScores = None
+    cache.roundParameters = None
 
     parameters = len(cache.MIN_VALUE)
     

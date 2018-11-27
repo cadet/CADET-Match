@@ -282,14 +282,16 @@ def pump_delay(cache, data, pump_delay_time=None):
         except KeyError:
             pump_std = 1.0
             
-        delay = -1
-        while delay < 0:
-            delay = numpy.random.normal(pump_mean, pump_std, 1)
+        #delay = -1
+        #while delay < 0:
+        delay = numpy.random.normal(pump_mean, pump_std, 1)
 
-    interval = times[1] - times[0]
-    delay = quantize_delay(delay[0], interval)
+    delay = delay[0]
+    #interval = times[1] - times[0]
+    #delay = quantize_delay(delay[0], interval)
 
-    data[:,1] = score.roll(data[:,1], delay)
+    #data[:,1] = score.roll(data[:,1], delay)
+    data[:,1] = score.roll_spline(data[:,0], data[:,1], delay)
 
     return delay
 

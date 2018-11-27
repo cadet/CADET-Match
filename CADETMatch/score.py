@@ -17,6 +17,19 @@ def roll(x, shift):
     else:
         return x
 
+
+def roll_spline(times, values, shift):
+    "this function does approximately what the roll function does except that is used the spline so the shift does not have to be an integer and the points are resampled"
+
+    spline = scipy.interpolate.InterpolatedUnivariateSpline(times, values)
+
+    times_new = times + shift
+
+    values_new = spline(times_new)
+
+    return values_new
+
+
 def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
     corr = scipy.signal.correlate(exp_data_values, sim_data_values)/(numpy.linalg.norm(sim_data_values) * numpy.linalg.norm(exp_data_values))
 
@@ -63,9 +76,9 @@ def time_function_decay(CV_time, peak_time, diff_input=False):
     x_exp = numpy.array([0, 1.0*CV_time])
     y_exp = numpy.array([1, 0.5])
 
-    a, b = calc_coeff.exponential_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
+    #a, b = calc_coeff.exponential_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
 
-    #a, b = calc_coeff.linear_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
+    a, b = calc_coeff.linear_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
     
     def wrapper(x):
 
@@ -74,8 +87,8 @@ def time_function_decay(CV_time, peak_time, diff_input=False):
         else:
             diff = numpy.abs(x - peak_time)
 
-        value = max(0.0, calc_coeff.exponential(diff, a, b))
-        #value = max(0.0, calc_coeff.linear(diff, a, b))
+        #value = max(0.0, calc_coeff.exponential(diff, a, b))
+        value = max(0.0, calc_coeff.linear(diff, a, b))
 
         return value
 
