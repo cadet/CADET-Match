@@ -611,6 +611,20 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
     gen_data = numpy.array([generation, len(result_data['input'])]).reshape(1,2)
 
+    population_input = []
+    population_output = []
+    for ind in population:
+        temp = [generation]
+        temp.extend(ind)
+        population_input.append( temp)
+
+        temp = [generation]
+        temp.extend(ind.fitness.values)
+        population_output.append( temp)
+
+    population_input = numpy.array(population_input)
+    population_output = numpy.array(population_output)
+
     if result_data is not None:
         resultDir = Path(cache.settings['resultsDir'])
         result_h5 = resultDir / "result.h5"
@@ -623,6 +637,8 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 hf.create_dataset("input_transform", data=result_data['input_transform'], maxshape=(None, len(result_data['input_transform'][0])), compression="gzip")
                 hf.create_dataset("input_transform_extended", data=result_data['input_transform_extended'], maxshape=(None, len(result_data['input_transform_extended'][0])), compression="gzip")
                 hf.create_dataset("generation", data=gen_data, maxshape=(None, 2), compression="gzip")
+                hf.create_dataset("population_input", data=population_input, maxshape=(None, population_input.shape[1] ), compression="gzip")
+                hf.create_dataset("population_output", data=population_output, maxshape=(None, population_output.shape[1] ), compression="gzip")
                 
                 if cache.fullTrainingData:
 
@@ -648,8 +664,11 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 hf["input_transform_extended"].resize((hf["input_transform_extended"].shape[0] + len(result_data['input_transform_extended'])), axis = 0)
                 hf["input_transform_extended"][-len(result_data['input_transform_extended']):] = result_data['input_transform_extended']
 
-                hf["generation"].resize((hf["generation"].shape[0] + 1), axis = 0)
-                hf["generation"][-1] = gen_data
+                hf["population_input"].resize((hf["population_input"].shape[0] + population_input.shape[0]), axis = 0)
+                hf["population_input"][-population_input.shape[0]:] = population_input
+
+                hf["population_output"].resize((hf["population_output"].shape[0] + population_output.shape[0]), axis = 0)
+                hf["population_output"][-population_output.shape[0]:] = population_output
                 
                 if cache.fullTrainingData:
 

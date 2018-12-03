@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\MCMC\Dextran\MCMC_dextran.json" 1</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\NSGA3_dextran_full.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -109,6 +109,9 @@
     <Compile Include="scores\derivative_similarity_hybrid2.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\derivative_similarity_hybrid2_spline.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\dextran.py">
       <SubType>Code</SubType>
     </Compile>
@@ -116,6 +119,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\dextranHybrid2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\dextranHybrid2_spline.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\fractionation.py">
@@ -154,10 +160,16 @@
     <Compile Include="scores\similarityHybrid2.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\similarityHybrid2_spline.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\similarityHybridDecay.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\similarityHybridDecay2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\similarityHybridDecay2Spline.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\sse.py">

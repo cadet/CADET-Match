@@ -21,7 +21,7 @@ def roll(x, shift):
 def roll_spline(times, values, shift):
     "this function does approximately what the roll function does except that is used the spline so the shift does not have to be an integer and the points are resampled"
 
-    spline = scipy.interpolate.InterpolatedUnivariateSpline(times, values)
+    spline = scipy.interpolate.InterpolatedUnivariateSpline(times, values, ext=1)
 
     times_new = times + shift
 
@@ -69,6 +69,34 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
     sim_data_values_copy = roll(sim_data_values, shift=int(numpy.ceil(roll_index)))
 
     pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
+
+    return pear_corr(pear[0]), diff_time
+
+
+def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
+
+    spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=1)
+
+    exp_time_values = numpy.array(exp_time_values)
+    exp_data_values = numpy.array(exp_data_values)
+
+    def goal(offset):
+        data = spline(exp_time_values + offset[0])
+        return sum( (exp_data_values - data)**2 )
+
+    result = scipy.optimize.least_squares(goal, [0.0])
+
+    diff_time = result.x[0]
+
+    #scoop.logger.info("Pearson spline delay %s seconds", diff_time)
+
+    endTime = exp_time_values[-1]
+
+    sim_data_values_copy = roll_spline(exp_time_values, sim_data_values, diff_time)
+
+    pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
+
+    #scoop.logger.info('Pearson correlation %s', pear[0])
 
     return pear_corr(pear[0]), diff_time
 
