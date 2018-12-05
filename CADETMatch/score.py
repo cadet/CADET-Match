@@ -84,19 +84,23 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
         data = spline(exp_time_values + offset[0])
         return sum( (exp_data_values - data)**2 )
 
-    result = scipy.optimize.least_squares(goal, [0.0])
+    #pessimistic bounds for search, find the farthest the peak max can be moved before it rolls off the bounds
+    max_index = numpy.argmax(sim_data_values)
+    max_time = exp_time_values[max_index]
 
-    diff_time = result.x[0]
+    min_time = exp_time_values[0] - max_time
+    max_time = exp_time_values[-1] - max_time
+    
+    result_evo = scipy.optimize.differential_evolution(goal, ((min_time, max_time),))
 
-    #scoop.logger.info("Pearson spline delay %s seconds", diff_time)
-
-    endTime = exp_time_values[-1]
+    diff_time = result_evo.x[0]
 
     sim_data_values_copy = roll_spline(exp_time_values, sim_data_values, diff_time)
 
     pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
 
     #scoop.logger.info('Pearson correlation %s', pear[0])
+
 
     return pear_corr(pear[0]), diff_time
 

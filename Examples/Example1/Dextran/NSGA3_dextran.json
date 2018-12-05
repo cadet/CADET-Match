@@ -11,9 +11,9 @@
   "mutationRate": 0.1,
   "crossoverRate": 0.7,
   "generations": 1000,
-  "population": 12,
-  "minPopulation": 12,
-  "maxPopulation":12,
+  "population": 100,
+  "minPopulation": 100,
+  "maxPopulation":100,
   "roundParameters": 3,
   "roundScores": 3,
   "metaResultsOnly": 1,
@@ -47,7 +47,7 @@
       "features": [
         {
           "name": "Dextran",
-          "type": "dextranHybrid2_spline"
+          "type": "dextranHybrid2"
         }
       ]
     }
