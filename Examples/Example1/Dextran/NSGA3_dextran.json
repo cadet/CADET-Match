@@ -9,16 +9,16 @@
   "gradCheck": 1.0,
   "searchMethod": "NSGA3",
   "mutationRate": 0.1,
-  "crossoverRate": 0.7,
+  "crossoverRate": 0.9,
   "generations": 1000,
-  "population": 100,
-  "minPopulation": 100,
-  "maxPopulation":100,
+  "population": 5,
+  "minPopulation": 5,
+  "maxPopulation":5,
   "roundParameters": 3,
   "roundScores": 3,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "stallGenerations": 40,
+  "stallGenerations": 60,
   "parameters": [
     {
       "transform": "norm_log",
@@ -26,7 +26,7 @@
       "bound": -1,
       "location": "/input/model/unit_001/COL_DISPERSION",
       "min": 1e-12,
-      "max": 1.0
+      "max": 1e-1
     },
     {
       "transform": "norm",
@@ -46,8 +46,12 @@
       "timeout": 3.4842967987060547,
       "features": [
         {
-          "name": "Dextran",
-          "type": "dextranHybrid2"
+            "name": "Pulse",
+            "type": "similarityHybridDecay2_spline"
+        },
+        {
+            "name": "Deriv",
+            "type": "derivative_similarity_hybrid2_spline"
         }
       ]
     }

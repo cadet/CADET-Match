@@ -84,6 +84,13 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
         data = spline(exp_time_values + offset[0])
         return sum( (exp_data_values - data)**2 )
 
+    def goal_pearson(offset):
+        sim_data_values_copy = roll_spline(exp_time_values, sim_data_values, -offset)
+
+        pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
+
+        return -pear[0]
+
     #pessimistic bounds for search, find the farthest the peak max can be moved before it rolls off the bounds
     max_index = numpy.argmax(sim_data_values)
     max_time = exp_time_values[max_index]
@@ -91,18 +98,32 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     min_time = exp_time_values[0] - max_time
     max_time = exp_time_values[-1] - max_time
     
-    result_evo = scipy.optimize.differential_evolution(goal, ((min_time, max_time),))
+    result_evo = scipy.optimize.differential_evolution(goal_pearson, ((min_time, max_time),))
 
     diff_time = result_evo.x[0]
 
-    sim_data_values_copy = roll_spline(exp_time_values, sim_data_values, diff_time)
+    #sim_data_values_copy = roll_spline(exp_time_values, sim_data_values, -diff_time)
 
-    pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
+    #pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
+
+    pear = -result_evo.fun
 
     #scoop.logger.info('Pearson correlation %s', pear[0])
 
+    #plt.plot(exp_time_values, exp_data_values, 'k')
+    #plt.plot(exp_time_values, sim_data_values, 'r')
+    #plt.legend()
+    #plt.savefig(r"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\test_before.png")
+    #plt.close()
 
-    return pear_corr(pear[0]), diff_time
+    #plt.plot(exp_time_values, exp_data_values, 'k')
+    #plt.plot(exp_time_values, sim_data_values_copy, 'r')
+    #plt.legend()
+    #plt.savefig(r"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\test_after.png")
+    #plt.close()
+
+
+    return pear_corr(pear), diff_time
 
 def time_function_decay(CV_time, peak_time, diff_input=False):
     x_exp = numpy.array([0, 1.0*CV_time])

@@ -291,7 +291,7 @@ def pump_delay(cache, data, pump_delay_time=None):
     #delay = quantize_delay(delay[0], interval)
 
     #data[:,1] = score.roll(data[:,1], delay)
-    data[:,1] = score.roll_spline(data[:,0], data[:,1], delay)
+    data[:,1] = score.roll_spline(data[:,0], data[:,1], -delay)
 
     return delay
 
