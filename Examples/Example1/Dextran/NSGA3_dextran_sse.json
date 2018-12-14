@@ -1,19 +1,19 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Dextran",
-  "resultsDir": "fit_nsga3/",
+  "resultsDir": "fit_nsga3_sse/",
   "CSV": "dextran_NSGA3.csv",
   "checkpointFile": "check",
-  "stopAverage": 0.999,
-  "stopBest": 0.999,
-  "gradCheck": 1.0,
+  "stopAverage": 60.0,
+  "stopBest": 60.0,
+  "gradCheck": 100.0,
   "searchMethod": "NSGA3",
   "mutationRate": 0.1,
   "crossoverRate": 0.9,
   "generations": 1000,
-  "population": 50,
-  "minPopulation": 50,
-  "maxPopulation":50,
+  "population": 25,
+  "minPopulation": 25,
+  "maxPopulation":25,
   "roundParameters": 3,
   "roundScores": 3,
   "metaResultsOnly": 1,
@@ -47,11 +47,7 @@
       "features": [
         {
             "name": "Pulse",
-            "type": "similarityHybridDecay2_spline"
-        },
-        {
-            "name": "Deriv",
-            "type": "derivative_similarity_hybrid2_spline"
+            "type": "LogSSE"
         }
       ]
     }

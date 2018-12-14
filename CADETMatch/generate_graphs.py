@@ -34,6 +34,19 @@ import corner
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
 
+
+from matplotlib.colors import ListedColormap
+cmap = matplotlib.cm.winter
+
+# Get the colormap colors
+my_cmap = cmap(numpy.arange(cmap.N))
+
+# Set alpha
+my_cmap[:,-1] = 0.05
+
+# Create new colormap
+my_cmap = ListedColormap(my_cmap)
+
 def main():
     cache.setup(sys.argv[1])
     cache.progress_path = Path(cache.settings['resultsDirBase']) / "progress.csv"
@@ -390,7 +403,7 @@ def plot_3d(arg):
     fig = figure.Figure()
     canvas = FigureCanvas(fig)
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(numpy.log(x), numpy.log(y), scores, c=scores, cmap=cm.get_cmap('winter'))
+    ax.scatter(numpy.log(x), numpy.log(y), scores, c=scores, cmap=my_cmap)
     ax.set_xlabel('log(%s)' % headers[c1])
     ax.set_ylabel('log(%s)' % headers[c2])
     ax.set_zlabel(scoreName)
@@ -416,7 +429,7 @@ def plot_2d(arg):
     fig = figure.Figure()
     canvas = FigureCanvas(fig)
     graph = fig.add_subplot(1, 1, 1)
-    graph.scatter(numpy.log(dataframe.iloc[:, c1]), scores, c=scores, cmap=cm.get_cmap('winter'))
+    graph.scatter(numpy.log(dataframe.iloc[:, c1]), scores, c=scores, cmap=my_cmap)
     graph.set_xlabel('log(%s)' % headers[c1])
     graph.set_ylabel(scoreName)
     filename = "%s_%s.png" % (c1, score)

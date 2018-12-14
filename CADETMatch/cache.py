@@ -10,6 +10,8 @@ import plugins
 import os
 import scoop
 
+from deap import tools
+
 class Cache:
     def __init__(self):
         self.settings = None
@@ -110,6 +112,17 @@ class Cache:
 
         if "MCMCpopulation" not in self.settings:
             self.settings['MCMCpopulation'] = self.settings['population']
+
+
+        if self.numGoals == 1:
+            #with one goal one of the emo functions breaks, this is a temporary fix
+
+            def sortNDHelperB(best, worst, obj, front):
+                if obj < 0:
+                    return
+                sortNDHelperB(best, worst, obj, front)
+
+            tools.emo.sortNDHelperB = sortNDHelperB
         
     def setupSettings(self):
         settings_file = Path(self.json_path)

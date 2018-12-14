@@ -191,6 +191,12 @@ def plotVariations(cache, temp):
         plt.savefig(str(mcmcDir / ("%s.png" % key ) ), bbox_inches='tight')
         plt.close()
 
+        plt.plot(time, value.transpose(), 'g', alpha=0.04, linewidth=2)
+        plt.xlabel('time(s)')
+        plt.ylabel('conc mol/m^3')
+        plt.savefig(str(mcmcDir / ("%s_probability.png" % key ) ), bbox_inches='tight')
+        plt.close()
+
         plt.plot(time, value.transpose())
         plt.xlabel('time(s)')
         plt.ylabel('conc mol/m^3')

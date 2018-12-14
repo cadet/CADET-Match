@@ -59,6 +59,10 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
     creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
 
+    creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0] * 4)
+    creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None)
+    cache.toolbox.register("individualMeta", util.initIndividual, creator.IndividualMeta, cache)
+
     cache.toolbox.register("individual", util.generateIndividual, creator.Individual,
         len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, cache)
     cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)

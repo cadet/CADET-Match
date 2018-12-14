@@ -6,6 +6,7 @@ import nsga3_selection
 from deap import algorithms
 import functools
 import pareto
+import array
 
 name = "NSGA3"
 
@@ -41,11 +42,15 @@ def run(cache, tools, creator):
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
-    creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
+    creator.create("Individual", array.array, typecode="d", fitness=creator.FitnessMax, strategy=None)
+
+    creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0] * 4)
+    creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None)
+    cache.toolbox.register("individualMeta", util.initIndividual, creator.IndividualMeta, cache)
 
     cache.toolbox.register("individual", util.generateIndividual, creator.Individual,
         len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, cache)
-
+        
     if cache.sobolGeneration:
         cache.toolbox.register("population", util.sobolGenerator, creator.Individual, cache)
     else:

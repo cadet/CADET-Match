@@ -868,11 +868,12 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
         
         save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
         
-        ind.fitness.values = fit
+        ind.fitness.values = tuple(fit)
 
-        ind_meta = toolbox.clone(ind)
+        ind_meta = toolbox.individualMeta(ind)
+
         ind_meta.fitness.values = meta_calc(fit)
-
+       
         update_result_data(cache, ind, fit, result_data, results)
 
         if csv_line:
