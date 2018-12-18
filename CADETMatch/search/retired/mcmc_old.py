@@ -170,7 +170,7 @@ def run(cache, tools, creator):
         emcee.EnsembleSampler._propose_stretch = _propose_stretch
 
 
-        result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[]}
+        result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[]}
         halloffame = pareto.DummyFront(similar=util.similar)
         meta_hof = pareto.ParetoFront(similar=util.similar)
         grad_hof = pareto.DummyFront(similar=util.similar)

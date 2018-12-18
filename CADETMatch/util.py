@@ -632,6 +632,10 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         if not result_h5.exists():
             with h5py.File(result_h5, 'w') as hf:
                 hf.create_dataset("input", data=result_data['input'], maxshape=(None, len(result_data['input'][0])), compression="gzip")
+
+                if len(result_data['strategy']):
+                    hf.create_dataset("strategy", data=result_data['strategy'], maxshape=(None, len(result_data['strategy'][0])), compression="gzip")
+
                 hf.create_dataset("output", data=result_data['output'], maxshape=(None, len(result_data['output'][0])), compression="gzip")
                 hf.create_dataset("output_meta", data=result_data['output_meta'], maxshape=(None, len(result_data['output_meta'][0])), compression="gzip")
                 hf.create_dataset("input_transform", data=result_data['input_transform'], maxshape=(None, len(result_data['input_transform'][0])), compression="gzip")
@@ -651,6 +655,10 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
             with h5py.File(result_h5, 'a') as hf:
                 hf["input"].resize((hf["input"].shape[0] + len(result_data['input'])), axis = 0)
                 hf["input"][-len(result_data['input']):] = result_data['input']
+
+                if len(result_data['strategy']):
+                    hf["strategy"].resize((hf["strategy"].shape[0] + len(result_data['strategy'])), axis = 0)
+                    hf["strategy"][-len(result_data['strategy']):] = result_data['strategy']
 
                 hf["output"].resize((hf["output"].shape[0] + len(result_data['output'])), axis = 0)
                 hf["output"][-len(result_data['output']):] = result_data['output']
@@ -818,6 +826,9 @@ def meta_calc(scores):
 def update_result_data(cache, ind, fit, result_data, results):
     if result_data is not None and results is not None:
         result_data['input'].append(tuple(ind))
+
+        if ind.strategy is not None:
+            result_data['strategy'].append(tuple(ind.strategy))
         result_data['output'].append(tuple(fit))
         result_data['output_meta'].append(tuple(meta_calc(fit)))
 

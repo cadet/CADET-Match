@@ -15,7 +15,7 @@ def run(cache, tools, creator):
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
         pop = cache.toolbox.population(n=0)
         sim_start = generation_start = time.time()
-        result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[]}
+        result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[]}
 
         if "seeds" in cache.settings:
             seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]

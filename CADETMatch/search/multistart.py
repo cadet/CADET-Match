@@ -16,7 +16,7 @@ def run(cache, tools, creator):
 
     LAMBDA = parameters * cache.settings['population']
     sim_start = generation_start = time.time()
-    result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[]}
+    result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[]}
 
     pop = cache.toolbox.population(n=LAMBDA)
 
