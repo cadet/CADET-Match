@@ -187,6 +187,12 @@
     <Compile Include="search\multistart.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="search\nsga2_improved.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\nsga3_improved.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="search\nsga3_strategy.py">
       <SubType>Code</SubType>
     </Compile>
@@ -236,6 +242,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\retired\theta_nsga3.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\spea2_improved.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\__init__.py">

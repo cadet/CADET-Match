@@ -7,18 +7,19 @@
   "stopAverage": 0.999,
   "stopBest": 0.999,
   "gradCheck": 1.0,
-  "searchMethod": "NSGA3",
-  "mutationRate": 0.1,
-  "crossoverRate": 0.9,
+  "searchMethod": "NSGA3_improved",
+  "mutationRate": 0.2,
+  "crossoverRate": 0.8,
   "generations": 1000,
-  "population": 50,
-  "minPopulation": 50,
-  "maxPopulation":50,
+  "population": 25,
+  "minPopulation": 25,
+  "maxPopulation":25,
   "roundParameters": 3,
   "roundScores": 3,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "stallGenerations": 60,
+  "stallGenerations": 15,
+  "correct":[3e-7, 0.4],
   "parameters": [
     {
       "transform": "norm_log",
@@ -47,11 +48,7 @@
       "features": [
         {
             "name": "Pulse",
-            "type": "similarityHybridDecay2_spline"
-        },
-        {
-            "name": "Deriv",
-            "type": "derivative_similarity_hybrid2_spline"
+            "type": "dextranHybrid2_spline"
         }
       ]
     }

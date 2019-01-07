@@ -636,6 +636,16 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 if len(result_data['strategy']):
                     hf.create_dataset("strategy", data=result_data['strategy'], maxshape=(None, len(result_data['strategy'][0])), compression="gzip")
 
+                if len(result_data['mean']):
+                    hf.create_dataset("mean", data=result_data['mean'], maxshape=(None, len(result_data['mean'][0])), compression="gzip")
+
+                if len(result_data['confidence']):
+                    hf.create_dataset("confidence", data=result_data['confidence'], maxshape=(None, len(result_data['confidence'][0])), compression="gzip")
+
+                if cache.correct is not None:
+                    distance = cache.correct - result_data['input']
+                    hf.create_dataset("distance_correct", data=distance, maxshape=(None, len(result_data['input'][0])), compression="gzip")
+
                 hf.create_dataset("output", data=result_data['output'], maxshape=(None, len(result_data['output'][0])), compression="gzip")
                 hf.create_dataset("output_meta", data=result_data['output_meta'], maxshape=(None, len(result_data['output_meta'][0])), compression="gzip")
                 hf.create_dataset("input_transform", data=result_data['input_transform'], maxshape=(None, len(result_data['input_transform'][0])), compression="gzip")
@@ -659,6 +669,19 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 if len(result_data['strategy']):
                     hf["strategy"].resize((hf["strategy"].shape[0] + len(result_data['strategy'])), axis = 0)
                     hf["strategy"][-len(result_data['strategy']):] = result_data['strategy']
+
+                if len(result_data['mean']):
+                    hf["mean"].resize((hf["mean"].shape[0] + len(result_data['mean'])), axis = 0)
+                    hf["mean"][-len(result_data['mean']):] = result_data['mean']
+
+                if len(result_data['confidence']):
+                    hf["confidence"].resize((hf["confidence"].shape[0] + len(result_data['confidence'])), axis = 0)
+                    hf["confidence"][-len(result_data['confidence']):] = result_data['confidence']
+
+                if cache.correct is not None:
+                    distance = cache.correct - result_data['input']
+                    hf["distance_correct"].resize((hf["distance_correct"].shape[0] + len(result_data['input'])), axis = 0)
+                    hf["distance_correct"][-len(result_data['input']):] = distance
 
                 hf["output"].resize((hf["output"].shape[0] + len(result_data['output'])), axis = 0)
                 hf["output"][-len(result_data['output']):] = result_data['output']
@@ -685,6 +708,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                         hf[filename][-len(chroma):] = chroma
 
         result_data['input'] = []
+        result_data['strategy'] = []
+        result_data['mean'] = []
+        result_data['confidence'] = []
         result_data['output'] = []
         result_data['output_meta'] = []
         result_data['input_transform'] = []
@@ -829,6 +855,10 @@ def update_result_data(cache, ind, fit, result_data, results):
 
         if ind.strategy is not None:
             result_data['strategy'].append(tuple(ind.strategy))
+        if ind.mean is not None:
+            result_data['mean'].append(tuple(ind.mean))
+        if ind.confidence is not None:
+            result_data['confidence'].append(tuple(ind.confidence))
         result_data['output'].append(tuple(fit))
         result_data['output_meta'].append(tuple(meta_calc(fit)))
 
@@ -1055,3 +1085,39 @@ def findOutlets(simulation):
         if unitType == b'OUTLET':
             outlets.append((key, value.ncomp))
     return outlets
+
+def test_eta(eta, xl, xu, size):
+    "return delta_q log10 power for each eta to use with distribution"
+    x = (xu-xl)/2.0
+    
+    delta_1 = (x - xl)/(xu - xl)
+    delta_2 = (xu - x)/(xu - xl)
+    
+    print(x, delta_1, delta_2)
+    
+    rand = numpy.random.rand(size)
+    
+    mut_pow = 1.0 / (eta + 1.0)
+    
+    xy = numpy.zeros(size)
+    val = numpy.zeros(size)
+    delta_q = numpy.zeros(size)
+    
+    xy[rand < 0.5] = 1.0 - delta_1
+    val[rand < 0.5] = 2.0 * rand[rand < 0.5] + (1.0 - 2.0 * rand[rand < 0.5]) * xy[rand < 0.5]**(eta + 1)
+    delta_q[rand < 0.5] = val[rand < 0.5]**mut_pow - 1.0
+    
+    xy[rand >= 0.5] = 1.0 - delta_2
+    val[rand >= 0.5] = 2.0 * (1.0 - rand[rand >= 0.5]) + 2.0 * (rand[rand >= 0.5] - 0.5) * xy[rand >= 0.5]**(eta + 1)
+    delta_q[rand >= 0.5] = 1.0 - val[rand >= 0.5]**mut_pow
+    
+    delta_q = delta_q *  (xu - xl)
+    
+    return delta_q
+
+def confidence_eta(eta, xl, xu):
+    seq = test_eta(eta, xl, xu, 100000)
+    confidence = numpy.max(numpy.abs(numpy.percentile(seq, [5, 95])))
+    mean = numpy.mean(numpy.abs(seq))
+
+    return mean, confidence

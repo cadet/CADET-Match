@@ -205,8 +205,8 @@ def value_function(peak_height, tolerance=1e-8, bottom_score = 0.05):
     x = numpy.array([0.0, 1.0])
     y = numpy.array([1.0, bottom_score])
 
-    a, b = calc_coeff.exponential_coeff(x[0], y[0], x[1], y[1])
-    #a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
+    #a, b = calc_coeff.exponential_coeff(x[0], y[0], x[1], y[1])
+    a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
     
     if numpy.abs(peak_height) < tolerance:
         scoop.logger.warn("peak height less than tolerance %s %s", tolerance, peak_height)
@@ -215,13 +215,13 @@ def value_function(peak_height, tolerance=1e-8, bottom_score = 0.05):
                 return 1.0
             else:
                 diff = numpy.abs(x-tolerance)/numpy.abs(tolerance)
-                return max(0, calc_coeff.exponential(diff, a, b))
-                #return max(0, calc_coeff.linear(diff, a, b))
+                #return max(0, calc_coeff.exponential(diff, a, b))
+                return max(0, calc_coeff.linear(diff, a, b))
     else:
         def wrapper(x):
             diff = numpy.abs(x-peak_height)/numpy.abs(peak_height)
-            return max(0, calc_coeff.exponential(diff, a, b))
-            #return max(0, calc_coeff.linear(diff, a, b))
+            #return max(0, calc_coeff.exponential(diff, a, b))
+            return max(0, calc_coeff.linear(diff, a, b))
 
     return wrapper
 

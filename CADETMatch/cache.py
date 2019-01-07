@@ -78,6 +78,10 @@ class Cache:
 
         self.settings['transform'] = self.transform
 
+        self.correct = None
+        if "correct" in cache.settings:
+            self.correct = numpy.array([f(v) for f, v in zip(cache.settings['transform'], cache.settings['correct'])])
+
         #create used paths in settings, only the root process will make the directories later
         self.settings['resultsDirEvo'] = Path(self.settings['resultsDir']) / "evo"
         self.settings['resultsDirMeta'] = Path(self.settings['resultsDir']) / "meta"
@@ -176,7 +180,10 @@ class Cache:
 
         self.headers.extend(self.score_headers)                      
         
-        self.headers.extend(['Product Root Score', 'Min Score', 'Mean Score', 'Norm', 'SSE'])
+        self.meta_headers = ['Product Root Score', 'Min Score', 'Mean Score', 'Norm']
+
+        self.headers.extend(self.meta_headers)
+        self.headers.append('SSE')
 
         scores = len(self.headers)
         self.score_indexes = list(range(parameters, scores))

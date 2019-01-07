@@ -65,6 +65,73 @@ def main():
         graphSpace(fullGeneration, cache)
         graphExperiments(cache)    
 
+def graphDistance(cache):
+
+    resultDir = Path(cache.settings['resultsDir'])
+    result_h5 = resultDir / "result.h5"
+
+    output_distance = cache.settings['resultsDirSpace'] / "distance"
+    output_distance_meta = output_distance / "meta"
+
+    output_distance.mkdir(parents=True, exist_ok=True)
+
+    output_distance_meta.mkdir(parents=True, exist_ok=True)
+
+    parameter_headers_actual = cache.parameter_headers_actual
+    score_headers = cache.score_headers
+    meta_headers = cache.meta_headers
+
+    if result_h5.exists():
+        data = {}
+        with h5py.File(result_h5, 'r') as h5:
+            for key in h5.keys():
+                data[key] = h5[key].value
+
+            temp = []
+
+            if 'mean' in data and 'confidence' in data and 'distance_correct' in data:
+                for idx_parameter, parameter in enumerate(parameter_headers_actual):
+                    for idx_score, score in enumerate(score_headers):
+                        temp.append( (output_distance, parameter, idx_parameter, score, idx_score, data['distance_correct'][:,idx_parameter], data['output'][:,idx_score],
+                                      data['mean'][:,idx_parameter], data['confidence'][:,idx_parameter]) )
+
+                for idx_parameter, parameter in enumerate(parameter_headers_actual):
+                    for idx_score, score in enumerate(meta_headers):
+                        temp.append( (output_distance_meta, parameter, idx_parameter, score, idx_score, data['distance_correct'][:,idx_parameter], data['output_meta'][:,idx_score],
+                                   data['mean'][:,idx_parameter], data['confidence'][:,idx_parameter]) )
+
+                list(futures.map(plot_2d_scatter, temp))
+
+def plot_2d_scatter(args):
+    output_directory, parameter, parameter_idx, score, score_idx, parameter_data, score_data, mean_data, confidence_data = args
+    fig = figure.Figure()
+    canvas = FigureCanvas(fig)
+    graph = fig.add_subplot(1, 1, 1)
+    graph.scatter(parameter_data, score_data, c=score_data, cmap=my_cmap)
+    graph.set_xlabel(parameter)
+    graph.set_ylabel(score)
+    filename = "%s_%s.png" % (parameter_idx, score_idx)
+    fig.savefig(str(output_directory / filename), bbox_inches='tight')
+
+    fig = figure.Figure()
+    canvas = FigureCanvas(fig)
+    graph = fig.add_subplot(1, 1, 1)
+    graph.scatter(mean_data, score_data, c=score_data, cmap=my_cmap)
+    graph.set_xlabel(parameter)
+    graph.set_ylabel(score)
+    filename = "%s_%s_mean.png" % (parameter_idx, score_idx)
+    fig.savefig(str(output_directory / filename), bbox_inches='tight')
+
+    fig = figure.Figure()
+    canvas = FigureCanvas(fig)
+    graph = fig.add_subplot(1, 1, 1)
+    graph.scatter(confidence_data, score_data, c=score_data, cmap=my_cmap)
+    graph.set_xlabel(parameter)
+    graph.set_ylabel(score)
+    filename = "%s_%s_confidence.png" % (parameter_idx, score_idx)
+    fig.savefig(str(output_directory / filename), bbox_inches='tight')
+
+
 def graphCorner(cache):
     headers = list(cache.parameter_headers_actual)
     headers = [header.split()[0] for header in headers]
@@ -375,6 +442,8 @@ def graphSpace(fullGeneration, cache):
     
     #2d plots
     if fullGeneration >= 1:
+        graphDistance(cache)
+
         prod = list(itertools.product(comp_one, cache.score_indexes))
         seq = [(str(output_2d), str(csv_path), i[0][0], i[1], sys.argv[1]) for i in prod]
         list(futures.map(plot_2d, seq))
