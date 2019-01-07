@@ -229,26 +229,6 @@ class Cache:
 
         abstol = sim.root.input.solver.time_integrator.abstol
 
-        #CV needs to be based on superficial velocity not interstitial velocity
-        length = float(sim.root.input.model.unit_001.col_length)
-
-        velocity = sim.root.input.model.unit_001.velocity
-        if velocity == {}:
-            velocity = 1.0
-        velocity = float(velocity)
-
-        area = sim.root.input.model.unit_001.cross_section_area
-        if area == {}:
-            area = 1.0
-        area = float(area)
-
-        porosity = sim.root.input.model.unit_001.col_porosity
-        if porosity == {}:
-            porosity = sim.root.input.model.unit_001.total_porosity
-        if porosity == {}:
-            porosity = 1.0
-        porosity = float(porosity)
-
         conn = sim.root.input.model.connections.switch_000.connections
 
         conn = numpy.array(conn)
@@ -260,10 +240,36 @@ class Cache:
         #flow is the sum of all flow rates that connect to this column which is in the last column
         flow = sum(conn[filter, -1])
 
-        if area == 1 and abs(velocity) != 1:
-            CV_time = length / velocity
+        if sim.root.input.model.unit_001.unit_type == b'CSTR':
+            volume = float(sim.root.input.model.unit_001.init_volume)
+
+            CV_time = volume / flow
+
         else:
-            CV_time = (area * length) / flow
+            #CV needs to be based on superficial velocity not interstitial velocity
+            length = float(sim.root.input.model.unit_001.col_length)
+
+            velocity = sim.root.input.model.unit_001.velocity
+            if velocity == {}:
+                velocity = 1.0
+            velocity = float(velocity)
+
+            area = sim.root.input.model.unit_001.cross_section_area
+            if area == {}:
+                area = 1.0
+            area = float(area)
+
+            porosity = sim.root.input.model.unit_001.col_porosity
+            if porosity == {}:
+                porosity = sim.root.input.model.unit_001.total_porosity
+            if porosity == {}:
+                porosity = 1.0
+            porosity = float(porosity)
+
+            if area == 1 and abs(velocity) != 1:
+                CV_time = length / velocity
+            else:
+                CV_time = (area * length) / flow
 
         if dataFromSim:
             temp['time'], temp['value'] = get_times_values(sim, {'isotherm':experiment['isotherm']})
@@ -329,9 +335,12 @@ class Cache:
         for parameter in self.settings['parameters']:
             transform = parameter['transform']
             minValues, maxValues = self.transforms[transform].getBounds(parameter)
-            self.MIN_VALUE.extend(minValues)
-            self.MAX_VALUE.extend(maxValues)
-            self.transform.extend(self.transforms[transform].transform(parameter))
+            transforms = self.transforms[transform].transform(parameter)
+
+            if minValues:
+                self.MIN_VALUE.extend(minValues)
+                self.MAX_VALUE.extend(maxValues)
+                self.transform.extend(transforms)
 
 cache = Cache()
 

@@ -268,6 +268,10 @@ def set_simulation(individual, simulation, settings, cache, fullPrecision, exper
 def getBoundOffset(unit):
     if unit.unit_type == b'CSTR':
         NBOUND = unit.nbound
+
+        if not NBOUND:
+            "For a CSTR with NBOUND not set the default is all 0"
+            NBOUND = [0.0] * unit.ncomp
     else:
         NBOUND = unit.discretization.nbound
 

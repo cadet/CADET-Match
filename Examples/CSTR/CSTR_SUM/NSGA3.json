@@ -1,0 +1,60 @@
+{
+  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+  "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/CSTR/CSTR_SUM",
+  "resultsDir": "fit_CSTR/",
+  "CSV": "NSGA3.csv",
+  "checkpointFile": "check",
+  "stopAverage": 0.999,
+  "stopBest": 0.999,
+  "gradCheck": 1.0,
+  "searchMethod": "NSGA3_improved",
+  "mutationRate": 0.2,
+  "crossoverRate": 0.8,
+  "generations": 1000,
+  "population": 25,
+  "minPopulation": 25,
+  "maxPopulation":25,
+  "roundParameters": 3,
+  "roundScores": 3,
+  "metaResultsOnly": 1,
+  "sobolGeneration":1,
+  "stallGenerations": 15,
+  "parameters": [
+    {
+      "transform": "norm",
+      "component": -1,
+      "bound": -1,
+      "location": "/input/model/unit_001/INIT_VOLUME",
+      "min": 0.01,
+      "max": 10.0
+    },
+    {
+      "location1": "/input/model/unit_001/INIT_VOLUME",
+      "index1": -1,
+      "location2": "/input/model/unit_002/INIT_VOLUME",
+      "index2": -1,
+      "locationSum": "/input/model/unit_003/INIT_VOLUME",
+      "indexSum": -1,
+      "transform": "sum"
+    }
+  ],
+  "experiments": [
+    {
+      "CSV": "CSTR_1.csv",
+      "isotherm": "/output/solution/unit_004/SOLUTION_OUTLET_COMP_000",
+      "HDF5": "CSTR_1.h5",
+      "name": "main",
+      "timeout": 3.4842967987060547,
+      "features": [
+        {
+            "name": "Pulse",
+            "type": "similarityHybridDecay2_spline"
+        },
+        {
+            "name": "Deriv",
+            "type": "derivative_similarity_hybrid2_spline"
+        }
+      ]
+    }
+  ]
+}

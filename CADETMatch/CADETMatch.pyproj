@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\NSGA3_dextran.json" 1</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\CSTR\CSTR_SUM\NSGA3_multi.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -290,6 +290,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="transform\nu_sigma.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="transform\sum.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="transform\volume_area.py">
