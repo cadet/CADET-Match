@@ -2,6 +2,7 @@ import math
 import util
 import checkpoint_algorithms
 import random
+import array
 
 import numpy
 from scipy.spatial.distance import pdist, squareform
@@ -41,7 +42,7 @@ def run(cache, tools, creator):
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
-    creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
+    creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None)
 
     creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0] * 4)
     creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None)
@@ -59,14 +60,14 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
 
-    cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=1.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
+    cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=30.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
 
     #if cache.adaptive:
     #    cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
     #    cache.toolbox.register("force_mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
     #else:
-    cache.toolbox.register("mutate", util.mutPolynomialBounded, eta=1.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
-    cache.toolbox.register("force_mutate", util.mutPolynomialBounded, eta=1.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
+    cache.toolbox.register("mutate", util.mutPolynomialBounded, eta=70.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
+    cache.toolbox.register("force_mutate", util.mutPolynomialBounded, eta=70.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
 
     cache.toolbox.register("select", selSPEA2)
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)

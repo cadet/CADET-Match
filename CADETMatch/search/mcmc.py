@@ -36,6 +36,7 @@ import modEnsemble
 import pickle
 import scoop
 import pandas
+import array
 
 import kde_generator
 
