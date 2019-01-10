@@ -80,10 +80,6 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     exp_time_values = numpy.array(exp_time_values)
     exp_data_values = numpy.array(exp_data_values)
 
-    def goal(offset):
-        data = spline(exp_time_values + offset[0])
-        return sum( (exp_data_values - data)**2 )
-
     def goal_pearson(offset):
         sim_data_values_copy = roll_spline(exp_time_values, sim_data_values, -offset)
 
@@ -102,26 +98,7 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
 
     diff_time = result_evo.x[0]
 
-    #sim_data_values_copy = roll_spline(exp_time_values, sim_data_values, -diff_time)
-
-    #pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
-
     pear = -result_evo.fun
-
-    #scoop.logger.info('Pearson correlation %s', pear[0])
-
-    #plt.plot(exp_time_values, exp_data_values, 'k')
-    #plt.plot(exp_time_values, sim_data_values, 'r')
-    #plt.legend()
-    #plt.savefig(r"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\test_before.png")
-    #plt.close()
-
-    #plt.plot(exp_time_values, exp_data_values, 'k')
-    #plt.plot(exp_time_values, sim_data_values_copy, 'r')
-    #plt.legend()
-    #plt.savefig(r"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\test_after.png")
-    #plt.close()
-
 
     return pear_corr(pear), diff_time
 

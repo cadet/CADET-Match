@@ -337,7 +337,15 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
             #this item has already been plotted, this means that plots are occurring faster than generations are so kill this version
             sys.exit()
 
-        numPlots = len(experiment['features']) + 1  #1 additional plot added as an overview for the simulation
+        numPlotsSeq = [1]
+        #Shape and ShapeDecay have a chromatogram + derivative
+        for feature in experiment['features']:
+            if feature['type'] in ('Shape', 'ShapeDecay'):
+                numPlotsSeq.append(2)
+            else:
+                numPlotsSeq.append(1)
+
+        numPlots = sum(numPlotsSeq)
 
         exp_time = target[experimentName]['time']
         exp_value = target[experimentName]['value']
@@ -355,9 +363,8 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
 
         graph_simulation(simulation, fig.add_subplot(numPlots, 1, 1))
 
+        graphIdx = 2
         for idx, feature in enumerate(experiment['features']):
-            graph = fig.add_subplot(numPlots, 1, idx+1+1) #additional +1 added due to the overview plot
-            
             featureName = feature['name']
             featureType = feature['type']
 
@@ -372,20 +379,29 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
 
             if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybrid2_spline', 'similarityHybridDecay', 
                                'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
-                               'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2'):
+                               'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
+                               'Shape', 'ShapeDecay'):
+                
+                graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 graph.plot(sim_time, sim_value, 'r--', label='Simulation')
                 graph.plot(exp_time, exp_value, 'g:', label='Experiment')
-            elif featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_hybrid2', 'derivative_similarity_cross', 'derivative_similarity_cross_alt',
-                                 'derivative_similarity_hybrid2_spline', 'similarityHybridDecay2_spline'):
+                graphIdx += 1
+            
+            if featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_hybrid2', 'derivative_similarity_cross', 'derivative_similarity_cross_alt',
+                                 'derivative_similarity_hybrid2_spline', 'similarityHybridDecay2_spline',
+                                 'Shape', 'ShapeDecay'):
                 #try:
                 sim_spline = scipy.interpolate.UnivariateSpline(sim_time, smoothing(sim_time, sim_value), s=smoothing_factor(sim_value)).derivative(1)
                 exp_spline = scipy.interpolate.UnivariateSpline(exp_time, smoothing(exp_time, exp_value), s=smoothing_factor(exp_value)).derivative(1)
 
+                graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 graph.plot(sim_time, sim_spline(sim_time), 'r--', label='Simulation')
                 graph.plot(exp_time, exp_spline(exp_time), 'g:', label='Experiment')
+                graphIdx += 1
                 #except:
                 #    pass
-            elif featureType in ('fractionation', 'fractionationCombine', 'fractionationMeanVariance', 'fractionationMoment', 'fractionationSlide'):
+            
+            if featureType in ('fractionation', 'fractionationCombine', 'fractionationMeanVariance', 'fractionationMoment', 'fractionationSlide'):
                 cache.scores[featureType].run(results, feat)
 
 
@@ -403,7 +419,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                     (time, values) = zip(*value)
                     findMax = max(findMax, max(values))
 
-
+                graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 factors = []
                 for idx, (key, value) in enumerate(graph_sim.items()):
                     (time, values) = zip(*value)
@@ -419,6 +435,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                     mult = factors[idx]
                     values = [i* mult for i in values]
                     graph.plot(time, values, '%s:' % colors[idx], label='Experiment Comp: %s Mult:%.2f' % (key, mult))
+                graphIdx += 1
             graph.legend()
 
         fig.savefig(str(dst))
