@@ -48,14 +48,9 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
 
-    cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=30.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
-
-    #if cache.adaptive:
-    #    cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
-    #    cache.toolbox.register("force_mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
-    #else:
-    cache.toolbox.register("mutate", tools.mutPolynomialBounded, eta=70.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
-    cache.toolbox.register("force_mutate", tools.mutPolynomialBounded, eta=70.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
+    cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=cache.cross_eta, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
+    cache.toolbox.register("mutate", tools.mutPolynomialBounded, eta=cache.mutate_eta, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
+    cache.toolbox.register("force_mutate", tools.mutPolynomialBounded, eta=cache.mutate_eta, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
 
     cache.toolbox.register("select", tools.selNSGA2)
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)

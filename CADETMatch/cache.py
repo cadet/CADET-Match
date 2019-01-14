@@ -114,6 +114,9 @@ class Cache:
         self.continueMCMC = bool(self.settings.get('continueMCMC', False))
         self.MCMCTauMult = int(self.settings.get('MCMCTauMult', 500))
 
+        self.cross_eta = bool(self.settings.get('cross_eta', 30))
+        self.mutate_eta = int(self.settings.get('mutate_eta', 70))
+
         if "MCMCpopulation" not in self.settings:
             self.settings['MCMCpopulation'] = self.settings['population']
 
