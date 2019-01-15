@@ -22,7 +22,7 @@ def run(sim_data, feature):
     temp = [feature['width_25'](sim_width_25), 
             feature['width_50'](sim_width_50), 
             feature['width_75'](sim_width_75),]
-    return temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values)
+    return temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values), sim_data_values - exp_data_values, [1.0 - i for i in temp]
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}

@@ -40,7 +40,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
 
             save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
 
-            ind_meta = cache.toolbox.clone(ind)
+            ind_meta = cache.toolbox.individualMeta(ind)
             ind_meta.fitness.values = util.meta_calc(fit)
 
             if csv_line:
@@ -89,6 +89,7 @@ def gradSearch(x, json_path):
 
     try:
         x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
+        #scores_start = fitness_sens(x, finished=1)
         val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE), 
             gtol=1e-14, ftol=1e-5, xtol=1e-14, diff_step=1e-7, x_scale="jac")
 
@@ -102,16 +103,19 @@ def fitness_sens_grad(individual, finished=0):
     return fitness_sens(individual, finished)
 
 def fitness_sens(individual, finished=1):
-    scores = []
+    minimize = []
     error = 0.0
+
+    diff = []
 
     results = {}
     for experiment in cache.cache.settings['experiments']:
         result = runExperimentSens(individual, experiment, cache.cache.settings, cache.cache.target, cache.cache)
         if result is not None:
             results[experiment['name']] = result
-            scores.extend(results[experiment['name']]['scores'])
+            minimize.extend(results[experiment['name']]['minimize'])
             error += results[experiment['name']]['error']
+            diff.extend(results[experiment['name']]['diff'])
         else:
             raise GradientException("Gradient caused simulation failure, aborting")
 
@@ -120,7 +124,12 @@ def fitness_sens(individual, finished=1):
         if result['path']:
             os.remove(result['path'])
     
-    return [1.0 - score for score in scores]
+    #need to minimize
+    if cache.cache.gradVector:
+        return numpy.array(diff)
+    else:
+        #return [-1.0 * i for i in scores]
+        return numpy.array(minimize)
 
 def saveExperimentsSens(save_name_base, settings, target, results):
     return util.saveExperiments(save_name_base, settings, target, results, settings['resultsDirGrad'], '%s_%s_GRAD.h5')

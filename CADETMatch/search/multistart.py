@@ -5,6 +5,7 @@ import csv
 import pareto
 import scoop
 import time
+import array
 
 name = "Multistart"
 
@@ -16,7 +17,8 @@ def run(cache, tools, creator):
 
     LAMBDA = parameters * cache.settings['population']
     sim_start = generation_start = time.time()
-    result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[]}
+    result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
+                   'mean':[], 'confidence':[]}
 
     pop = cache.toolbox.population(n=LAMBDA)
 
@@ -57,7 +59,7 @@ def run(cache, tools, creator):
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
-    creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
+    creator.create("Individual", array.array, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None)
 
     creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0] * 4)
     creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None)
@@ -65,7 +67,12 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register("individual", util.generateIndividual, creator.Individual,
         len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, cache)
-    cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)
+    
+    if cache.sobolGeneration:
+        cache.toolbox.register("population", util.sobolGenerator, creator.Individual, cache)
+    else:
+        cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)
+    cache.toolbox.register("randomPopulation", tools.initRepeat, list, cache.toolbox.individual)
 
     cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
 

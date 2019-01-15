@@ -21,7 +21,7 @@ def run(sim_data, feature):
             feature['value_function'](start[1]), 
             feature['time_function_start'](start[0]),
             feature['time_function_stop'](stop[0])]
-    return temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values)
+    return temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values), sim_data_values - exp_data_values, [1.0 - i for i in temp]
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}

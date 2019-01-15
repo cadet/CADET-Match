@@ -373,7 +373,7 @@ def score_sim(first,second, cache):
                 data = feature.get('data', None)
 
             if featureType in cache.scores:
-                scores, sse, sse_count = cache.scores[featureType].run({'simulation':data}, target[experimentName][featureName])
+                scores, sse, sse_count, diff, minimize = cache.scores[featureType].run({'simulation':data}, target[experimentName][featureName])
                 score_sim.extend(scores)
 
     return score_sim

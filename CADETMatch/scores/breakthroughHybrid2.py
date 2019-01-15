@@ -25,14 +25,14 @@ def run(sim_data, feature):
         sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
         exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
     except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
-        return [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 1e6
+        return [0.0] * 7, 1e6, [], [1.0] * 7
 
-    exp_data_values = exp_spline(exp_time_values)
-    sim_data_values = sim_spline(exp_time_values)
+    exp_data_values_der = exp_spline(exp_time_values)
+    sim_data_values_der = sim_spline(exp_time_values)
 
-    pearson_der, diff_time_der = score.pearson(exp_time_values, sim_data_values, exp_data_values)
+    pearson_der, diff_time_der = score.pearson(exp_time_values, sim_data_values_der, exp_data_values_der)
 
-    [highs, lows] = util.find_peak(exp_time_values, sim_data_values)
+    [highs, lows] = util.find_peak(exp_time_values_der, sim_data_values_der)
     
     temp = [pearson, 
             feature['value_function'](start[1]), 
@@ -41,7 +41,7 @@ def run(sim_data, feature):
             feature['offsetDerTimeFunction'](diff_time_der),
             feature['value_function_high'](highs[1]),
             feature['value_function_low'](lows[1]),]
-    return temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values)
+    return temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values), sim_data_values - exp_data_values, [1.0 - i for i in temp]
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     

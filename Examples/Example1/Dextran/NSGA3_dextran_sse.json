@@ -6,14 +6,15 @@
   "checkpointFile": "check",
   "stopAverage": 60.0,
   "stopBest": 60.0,
-  "gradCheck": 100.0,
-  "searchMethod": "NSGA3",
+  "gradCheck": 10.0,
+  "gradVector": 1,
+  "searchMethod": "Multistart",
   "mutationRate": 0.1,
   "crossoverRate": 0.9,
   "generations": 1000,
-  "population": 25,
-  "minPopulation": 25,
-  "maxPopulation":25,
+  "population": 10,
+  "minPopulation": 10,
+  "maxPopulation":10,
   "roundParameters": 3,
   "roundScores": 3,
   "metaResultsOnly": 1,
@@ -47,7 +48,7 @@
       "features": [
         {
             "name": "Pulse",
-            "type": "LogSSE"
+            "type": "SSE"
         }
       ]
     }

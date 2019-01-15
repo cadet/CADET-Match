@@ -99,7 +99,7 @@ def run(sim_data, feature):
     sim_data['graph_exp'] = graph_exp
     sim_data['graph_sim'] = graph_sim
 
-    return scores, util.sse(numpy.array(sim_values_sse), numpy.array(exp_values_sse)), len(sim_values_sse)
+    return scores, util.sse(numpy.array(sim_values_sse), numpy.array(exp_values_sse)), len(sim_values_sse), numpy.array(sim_values_sse) - numpy.array(exp_values_sse), [1.0 - i for i in scores]
 
 def find_bounds(times, values):
     "find the maximum amount left and right the system can be rolled based on 10% of peak max"

@@ -211,13 +211,14 @@ def graphCorner(cache):
         max_scores = numpy.max(all_scores, 1)
         acceptable = max_scores > 0.01
 
-        scoop.logger.info("graphing remove %s points", len(max_scores) - numpy.sum(acceptable))
+        if numpy.any(acceptable):
+            scoop.logger.info("graphing remove %s points", len(max_scores) - numpy.sum(acceptable))
 
-        data_input = data_input[acceptable]
-        data_input_transform = data_input_transform[acceptable]
-        weight_min = weight_min[acceptable]
-        weight_prod = weight_prod[acceptable]
-        weight_norm = weight_norm[acceptable]
+            data_input = data_input[acceptable]
+            data_input_transform = data_input_transform[acceptable]
+            weight_min = weight_min[acceptable]
+            weight_prod = weight_prod[acceptable]
+            weight_norm = weight_norm[acceptable]
 
         out_dir = cache.settings['resultsDirProgress']
 

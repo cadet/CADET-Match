@@ -10,7 +10,7 @@ badScore = 0
 
 def run(sim_data, feature):
     "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
-    failure = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 1e6, 1
+    failure = [0.0] * 7, 1e6, 1, [], [1.0] * 7
     
     exp_time_values = feature['time']
     max_value = feature['max_value']
@@ -52,14 +52,16 @@ def run(sim_data, feature):
 
     [highs, lows] = util.find_peak(exp_time_values, sim_der_data_values)
 
-    data = [pearson, 
+    temp = [pearson, 
             pearson_der, 
             feature['offsetTimeFunction'](diff_time), 
             feature['offsetDerTimeFunction'](diff_time_der), 
             feature['valueFunction'](max(sim_data_zero)),
             feature['value_function_high'](highs[1]),             
             feature['value_function_low'](lows[1]),
-            ], util.sse(sim_data_zero, exp_data_zero), len(sim_data_zero)
+            ]
+
+    data = temp, util.sse(sim_data_zero, exp_data_zero), len(sim_data_zero), sim_data_zero - exp_data_zero, [1.0 - i for i in temp]
 
     return data
 
