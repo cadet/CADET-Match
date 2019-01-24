@@ -6,7 +6,7 @@
   "checkpointFile": "check",
   "stopAverage": 0.995,
   "stopBest": 0.995,
-  "gradCheck": 0.95,
+  "gradCheck": 1.0,
   "gradVector": 1,
   "searchMethod": "NSGA3_improved",
   "mutationRate": 0.2,
@@ -21,6 +21,7 @@
   "sobolGeneration":1,
   "stallGenerations": 15,
   "correct":[3e-7, 0.4],
+  "normalizeOutput":1,
   "parameters": [
     {
       "transform": "norm_log",
@@ -35,8 +36,8 @@
       "component": -1,
       "bound": -1,
       "location": "/input/model/unit_001/COL_POROSITY",
-      "min": 0.1,
-      "max": 0.9
+      "min": 0.3,
+      "max": 0.5
     }
   ],
   "experiments": [
@@ -49,7 +50,7 @@
       "features": [
         {
             "name": "Pulse",
-            "type": "dextranHybrid2_spline"
+            "type": "Dextran"
         }
       ]
     }

@@ -278,7 +278,7 @@ def getBoundOffset(unit):
     boundOffset = numpy.cumsum(numpy.concatenate([[0,], NBOUND]))
     return boundOffset
 
-def runExperiment(individual, experiment, settings, target, template_sim, timeout, cache, fullPrecision=False):
+def runExperiment(individual, experiment, settings, target, template_sim, timeout, cache, fullPrecision=False, post_function=None):
     handle, path = tempfile.mkstemp(suffix='.h5')
     os.close(handle)
 
@@ -286,7 +286,12 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     simulation.filename = path
 
     simulation.root.input.solver.nthreads = int(settings.get('nThreads', 1))
-    cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings, cache, fullPrecision, experiment)
+
+    if individual is not None:
+        cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings, cache, fullPrecision, experiment)
+    else:
+        cadetValues = []
+        cadetValuesKEQ = []
 
     simulation.save()
 
@@ -313,6 +318,9 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         return leave() 
     scoop.logger.debug('Everything ran fine')
 
+    if post_function:
+        post_function(simulation)
+
     temp = {}
     temp['simulation'] = simulation
     temp['path'] = path
@@ -321,7 +329,9 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     temp['error_count'] = 0.0
     temp['cadetValues'] = cadetValues
     temp['cadetValuesKEQ'] = cadetValuesKEQ
-    temp['individual'] = tuple(individual)
+
+    if individual is not None:
+        temp['individual'] = tuple(individual)
     temp['diff'] = []
     temp['minimize'] = []
 
@@ -661,6 +671,11 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 hf.create_dataset("generation", data=gen_data, maxshape=(None, 2), compression="gzip")
                 hf.create_dataset("population_input", data=population_input, maxshape=(None, population_input.shape[1] ), compression="gzip")
                 hf.create_dataset("population_output", data=population_output, maxshape=(None, population_output.shape[1] ), compression="gzip")
+
+                mcmc_score = result_data.get('mcmc_score', None)
+                if mcmc_score is not None:
+                    mcmc_score = numpy.array(mcmc_score)
+                    hf.create_dataset("mcmc_score", data=mcmc_score, maxshape=(None, len(mcmc_score[0])), compression="gzip")
                 
                 if cache.fullTrainingData:
 
@@ -690,6 +705,12 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                     distance = cache.correct - result_data['input']
                     hf["distance_correct"].resize((hf["distance_correct"].shape[0] + len(result_data['input'])), axis = 0)
                     hf["distance_correct"][-len(result_data['input']):] = distance
+
+                mcmc_score = result_data.get('mcmc_score', None)
+                if mcmc_score is not None:
+                    mcmc_score = numpy.array(mcmc_score)
+                    hf["mcmc_score"].resize((hf["mcmc_score"].shape[0] + len(mcmc_score)), axis = 0)
+                    hf["mcmc_score"][-len(mcmc_score):] = mcmc_score
 
                 hf["output"].resize((hf["output"].shape[0] + len(result_data['output'])), axis = 0)
                 hf["output"][-len(result_data['output']):] = result_data['output']
@@ -725,6 +746,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         result_data['input_transform_extended'] = []
         result_data['results'] = {}
         result_data['times'] = {}
+
+        if 'mcmc_score' in result_data:
+            result_data['mcmc_score'] = []
 
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)

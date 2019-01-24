@@ -96,7 +96,7 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     
     result_evo = scipy.optimize.differential_evolution(goal_pearson, ((min_time, max_time),))
 
-    diff_time = result_evo.x[0]
+    diff_time = -result_evo.x[0]
 
     pear = -result_evo.fun
 

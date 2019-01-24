@@ -381,7 +381,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
             if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybrid2_spline', 'similarityHybridDecay', 
                                'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
                                'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
-                               'Shape', 'ShapeDecay'):
+                               'Shape', 'ShapeDecay', 'Dextran'):
                 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 graph.plot(sim_time, sim_value, 'r--', label='Simulation')
@@ -516,8 +516,15 @@ def plot_2d(arg):
     fig = figure.Figure()
     canvas = FigureCanvas(fig)
     graph = fig.add_subplot(1, 1, 1)
-    graph.scatter(numpy.log(dataframe.iloc[:, c1]), scores, c=scores, cmap=my_cmap)
-    graph.set_xlabel('log(%s)' % headers[c1])
+
+    data = dataframe.iloc[:, c1]
+    format = '%s'
+    if numpy.max(data)/numpy.min(data) > 100.0:
+        data = numpy.log(data)
+        format = 'log(%s)'
+
+    graph.scatter(data, scores, c=scores, cmap=my_cmap)
+    graph.set_xlabel(format % headers[c1])
     graph.set_ylabel(scoreName)
     filename = "%s_%s.png" % (c1, score)
     fig.savefig(str(directory / filename), bbox_inches='tight')

@@ -115,6 +115,9 @@
     <Compile Include="scores\dextran.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\dextran_original.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\dextranHybrid.py">
       <SubType>Code</SubType>
     </Compile>
@@ -254,6 +257,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="synthetic_error.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="transform\diameter.py">

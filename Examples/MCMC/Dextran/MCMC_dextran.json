@@ -1,17 +1,16 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
-  "resultsDir": "fit/",
+  "resultsDir": "fit_double_nopca_narrow/",
   "CSV": "dextran_MCMC.csv",
   "checkpointFile": "check",
   "searchMethod": "MCMC",
-  "population": 50,
+  "population": 12,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "scoreMCMC":"score",
   "graphSpearman": 0,
   "normalizeOutput":1,
-  "graphMetaTime": 30,
   "kde": 
   {
       "power": 1,
@@ -20,6 +19,17 @@
       "pump_delay_std": 10,
       "base_noise_std": 1e-7,
       "signal_noise_std": 1e-2      
+  },
+  "kde_synthetic":
+  {
+    "file_path":"dextran_pulse.h5",
+    "delay":[0.0, 0.0],
+    "flow":[1.0, 0.0],
+    "load":[1.0, 0.0],
+    "error_slope":[1.0, 0.0],
+    "error_base":1000.0,
+    "base":1000.0,
+    "count":1000
   },
   "parameters": [
     {
@@ -50,11 +60,7 @@
       "features": [
         {
 					"name": "Pulse",
-					"type": "similarityHybridDecay2_spline"
-				},
-				{
-					"name": "Deriv",
-					"type": "derivative_similarity_hybrid2_spline"
+					"type": "dextranHybrid2_spline"
 				}
       ]
     }

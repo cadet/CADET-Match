@@ -16,6 +16,8 @@ import scoop
 import sys
 from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import cross_val_score
+from sklearn.decomposition import PCA
+from sklearn import preprocessing
 import copy
 
 import warnings
@@ -29,6 +31,12 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+import util
+import cache
+
+from scoop import futures
+import synthetic_error
+
 def bandwidth_score(bw, data, store):
     bandwidth = 10**bw[0]
     kde_bw = KernelDensity(kernel='exponential', bandwidth=bandwidth, atol=1e-5, rtol=1e-5)
@@ -38,7 +46,7 @@ def bandwidth_score(bw, data, store):
 
 def get_bandwidth(scores, cache):
     store = []
-    result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-8, 1),], 
+    result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-4, 1),], 
                                                args = (scores,store,))
     bandwidth = 10**result.x[0]
     scoop.logger.info("selected bandwidth %s", bandwidth)
@@ -60,47 +68,168 @@ def get_bandwidth(scores, cache):
 
     return bandwidth, store
 
+def mirror(data):
+    data_min = numpy.max(data,0) - data
+    data_mask = numpy.ma.masked_equal(data_min, 0.0, copy=False)
+    min_value = data_mask.min(axis=0)
+    
+    data_mirror = 1 + 1 - numpy.copy(data) + min_value
+    full_data = numpy.vstack([data_mirror, data])
+    
+    return full_data
+
+def getPCA(data):
+    pca = PCA(n_components = 1e-3, svd_solver = 'full')
+    pca.fit(mirror(data))
+    return pca
+
+def getScaler(data):
+    scaler = preprocessing.RobustScaler().fit(data)
+    return scaler
+
 def getKDE(cache, scores, bw):
     #scores = generate_data(cache)
 
-    kde = KernelDensity(kernel='exponential', bandwidth=bw).fit(scores)
+    scores_mirror = mirror(scores)
+    pca = getPCA(scores_mirror)
 
-    plotKDE(cache, kde, scores)
+    #scores_pca = pca.transform(scores_mirror)
+
+    scaler = getScaler(scores_mirror)
+
+    scores_scaler = scaler.transform(scores_mirror)
+
+    kde = KernelDensity(kernel='exponential', bandwidth=bw).fit(scores_scaler)
+
+    plotKDE(cache, kde, scores_scaler)
 
     #do kde stuff
     #return kde
-    return kde
+    return kde, pca, scaler
 
 def generate_data(cache):
-    reference_result = setupReferenceResult(cache)
+    scores, simulations = generate_synthetic_error(cache)
 
-    try:
-        variations = cache.settings['kde']['variations']
-    except KeyError:
-        variations = 100
+    if scores is None:
+        reference_result = setupReferenceResult(cache)
 
-    temp = [reference_result]
-    for i in range(variations):
-        temp.append(mutate(cache, reference_result))
+        try:
+            variations = cache.settings['kde']['variations']
+        except KeyError:
+            variations = 100
 
-    plotVariations(cache, temp)
+        simulations = [reference_result]
+        for i in range(variations):
+            simulations.append(mutate(cache, reference_result))
 
-    scores = []
-    for first,second in itertools.combinations(temp, 2):
-        scores.append(score_sim(first, second, cache))
+        plotVariations(cache, temp)
 
-    scores = numpy.array(scores)
+        scores = []
+        for first,second in itertools.combinations(temp, 2):
+            scores.append(score_sim(first, second, cache))
+
+        scores = numpy.array(scores)
 
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
     save_scores = mcmcDir / 'scores_used.npy'
 
     numpy.save(save_scores, scores)
 
-    bandwidth, store = get_bandwidth(scores, cache)
+    scores_mirror = mirror(scores)
+    #pca = getPCA(scores_mirror)
 
-    writeVariations(cache, scores, bandwidth, temp, store)
+    #scores_pca = pca.transform(scores_mirror)
+
+    scaler = getScaler(scores_mirror)
+
+    scores_scaler = scaler.transform(scores_mirror)
+
+    bandwidth, store = get_bandwidth(scores_scaler, cache)
+
+    #writeVariations(cache, scores_scaler, bandwidth, simulations, store)
 
     return scores, bandwidth
+
+def synthetic_error_simulation(json_path):
+    if json_path != cache.cache.json_path:
+        cache.cache.setup(json_path)
+
+    file_path = cache.cache.settings['kde_synthetic']['file_path']
+    delay_settings = cache.cache.settings['kde_synthetic']['delay']
+    flow_settings = cache.cache.settings['kde_synthetic']['flow']
+    load_settings = cache.cache.settings['kde_synthetic']['load']
+    error_slope_settings = cache.cache.settings['kde_synthetic']['error_slope']
+    error_base_settings = cache.cache.settings['kde_synthetic']['error_base']
+    base_settings = cache.cache.settings['kde_synthetic']['base']
+    count_settings = cache.cache.settings['kde_synthetic']['count']
+
+    dir_base = Path(cache.cache.settings.get('baseDir'))
+    file = dir_base / file_path
+
+    temp = Cadet()
+    temp.filename = bytes(file)
+    temp.load()
+
+    nsec = temp.root.input.solver.sections.nsec
+
+    def post_function(simulation):
+        error_slope = numpy.random.normal(error_slope_settings[0], error_slope_settings[1], 1)[0]
+        base = numpy.max(simulation.root.output.solution.unit_002.solution_outlet_comp_000)/1000.0
+        error_base = numpy.random.normal(base, base/error_base_settings, len(simulation.root.output.solution.unit_002.solution_outlet_comp_000))[0]
+        simulation.root.output.solution.unit_002.solution_outlet_comp_000 = simulation.root.output.solution.unit_002.solution_outlet_comp_000 * error_slope + error_base
+    
+    error_delay = Cadet(temp.root)
+
+    delays = numpy.abs(numpy.random.normal(delay_settings[0], delay_settings[1], nsec))
+    
+    synthetic_error.pump_delay(error_delay, delays)
+
+    flow = numpy.random.normal(flow_settings[0], flow_settings[1], error_delay.root.input.solver.sections.nsec)
+    
+    synthetic_error.error_flow(error_delay, flow)
+    
+    load = numpy.random.normal(load_settings[0], load_settings[1], error_delay.root.input.solver.sections.nsec)
+    
+    synthetic_error.error_load(error_delay, load)
+
+    result = util.runExperiment(None, cache.cache.settings['experiments'][0], cache.cache.settings, cache.cache.target, error_delay, 60.0, cache.cache, fullPrecision=True, post_function=post_function)
+
+    return result
+
+def generate_synthetic_error(cache):
+    if 'kde_synthetic' in cache.settings:
+        count_settings = int(cache.settings['kde_synthetic']['count'])
+        results = []
+        for result in futures.map(synthetic_error_simulation, [cache.json_path] * count_settings):
+            
+            #result = synthetic_error_simulation(cache.json_path)
+
+            results.append(result)
+
+        scores = []
+        outputs = []
+        simulations = []
+        for result in results:
+            scores.append(result['scores'])
+            outputs.append(result['simulation'].root.output.solution.unit_002.solution_outlet_comp_000)
+            simulations.append(result['simulation'])
+
+        scores = numpy.array(scores)
+        outputs = numpy.array(outputs)
+
+        times = results[0]['simulation'].root.input.solver.user_solution_times
+
+        dir_base = cache.settings.get('resultsDirBase')
+        file = dir_base / 'kde_data.h5'
+
+        with h5py.File(file, 'w') as hf:
+            hf.create_dataset('scores', data=scores, compression="gzip")
+            hf.create_dataset('outputs', data=outputs, compression="gzip")
+            hf.create_dataset('times', data=times, compression="gzip")
+        
+        return scores, simulations
+
+    return None, None
 
 def writeVariations(cache, scores, bandwidth, simulations, store):
 

@@ -42,6 +42,8 @@ import kde_generator
 
 name = "MCMC"
 
+log2 = numpy.log(2)
+
 class Container:
     def __init__(self, minVar, maxVar, multiplier=1):
         self.set(minVar, maxVar)
@@ -77,20 +79,20 @@ def log_likelihood(theta, json_path,multiplier, kde_scores, kde_bw):
         cache.cache.roundParameters = None
 
     if 'kde' not in log_likelihood.__dict__:
-        log_likelihood.kde = kde_generator.getKDE(cache.cache, kde_scores, kde_bw)
+        kde, pca, scaler = kde_generator.getKDE(cache.cache, kde_scores, kde_bw)
+        log_likelihood.kde = kde
+        log_likelihood.pca = pca
+        log_likelihood.scaler = scaler
     
     individual = theta
 
     scores, csv_record, results = evo.fitness(individual, json_path)
 
-    #norm = numpy.linalg.norm(scores)/numpy.sqrt(len(scores))
-    #score = -multiplier * ((1.0 - norm))
+    scores_shape = numpy.array(scores).reshape(1, -1)
 
-    score = log_likelihood.kde.score(numpy.array([scores,]))
+    score_scaler = log_likelihood.scaler.transform(scores_shape)
 
-    #scoop.logger.info("%s with probability %s", scores, score)
-
-    #score = -100 * sum([(1.0 - i)**2 for i in scores])
+    score = log_likelihood.kde.score_samples(score_scaler) + log2  #*2 is from mirroring and we need to double the probability to get back to the normalized distribution
 
     return score, scores, csv_record, results 
 
@@ -123,6 +125,8 @@ def run(cache, tools, creator):
     
     kde_scores, kde_bw = kde_generator.generate_data(cache)
 
+    kde, pca, scaler = kde_generator.getKDE(cache, kde_scores, kde_bw)
+
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
@@ -132,7 +136,8 @@ def run(cache, tools, creator):
         emcee.EnsembleSampler._propose_stretch = _propose_stretch
 
 
-        result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[]}
+        result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
+                   'mean':[], 'confidence':[], 'mcmc_score':[]}
         halloffame = pareto.DummyFront(similar=util.similar)
         meta_hof = pareto.ParetoFront(similar=util.similar)
         grad_hof = pareto.DummyFront(similar=util.similar)
@@ -218,7 +223,7 @@ def run(cache, tools, creator):
     chain_shape = chain.shape
     chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
                 
-    plotTube(cache, chain)
+    plotTube(cache, chain, kde, pca, scaler)
     util.finish(cache)
     return numpy.mean(chain, 0)
 
@@ -252,7 +257,7 @@ def getCheckPoint(checkpointFile, cache):
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
-    creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
+    creator.create("Individual", array.array, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None)
 
     creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0] * 4)
     creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None)
@@ -309,6 +314,7 @@ def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer,
 
             ind = cache.toolbox.individual_guess(parameters)
             population.append(ind)
+            result_data['mcmc_score'].append(sse)
 
     stalled, stallWarn, progressWarn = util.process_population(cache.toolbox, cache, population, 
                                                           fitnesses, writer, csv_file, 
@@ -480,10 +486,10 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx, parameters):
         hf.create_dataset("flat_chain", data=flat_chain, compression="gzip")
         hf.create_dataset("flat_chain_transform", data=flat_chain_transform, compression="gzip")
 
-def processChainForPlots(cache, chain):
-    mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, results, times = genRandomChoice(cache, chain)
+def processChainForPlots(cache, chain, kde, pca, scaler):
+    mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, results, times, mcmc_score = genRandomChoice(cache, chain, kde, pca, scaler)
 
-    writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score)
+    writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, mcmc_score)
 
     results, combinations = processResultsForPlotting(results, times)
 
@@ -520,7 +526,8 @@ def processResultsForPlotting(results, times):
             combinations[comb_name] = temp
     return results, combinations
 
-def genRandomChoice(cache, chain, size=500):
+def genRandomChoice(cache, chain, kde, pca, scaler):
+    size = 5000
     if len(chain) > size:
         indexes = np.random.choice(chain.shape[0], size, replace=False)
         chain = chain[indexes]
@@ -575,12 +582,17 @@ def genRandomChoice(cache, chain, size=500):
     mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)
     mcmc_selected_score = numpy.array(mcmc_selected_score)
 
-    #set the upperbound of find outliers to 100% since we don't need to get rid of good results only bad ones
-    selected, bools = util.find_outliers(mcmc_selected, 10, 90)
+    mcmc_score = kde.score_samples(scaler.transform(mcmc_selected_score)) + log2
 
-    removeResultsOutliers(results, bools)
+    #set the upperbound of find outliers to 100% since we don't need to get rid of good results only bad ones
     
-    return mcmc_selected[bools], mcmc_selected_transformed[bools], mcmc_selected_score[bools], results, times
+    #selected, bools = util.find_outliers(mcmc_selected, 10, 90)
+
+    #removeResultsOutliers(results, bools)
+    
+    #return mcmc_selected[bools], mcmc_selected_transformed[bools], mcmc_selected_score[bools], results, times
+
+    return mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, results, times, mcmc_score
 
 def removeResultsOutliers(results, bools):
     for exp, units in results.items():
@@ -588,15 +600,16 @@ def removeResultsOutliers(results, bools):
             for comp, data in unit.items():
                 unit[comp] = np.array(data)[bools]
 
-def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score):
+def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, mcmc_score):
     mcmc_h5 = Path(cache.settings['resultsDirMCMC']) / "mcmc.h5"
     with h5py.File(mcmc_h5, 'a') as hf:
          hf.create_dataset("mcmc_selected", data=numpy.array(mcmc_selected), compression="gzip")
          hf.create_dataset("mcmc_selected_transformed", data=numpy.array(mcmc_selected_transformed), compression="gzip")
          hf.create_dataset("mcmc_selected_score", data=numpy.array(mcmc_selected_score), compression="gzip")
+         hf.create_dataset("mcmc_score", data=numpy.array(mcmc_score), compression="gzip")
 
-def plotTube(cache, chain):
-    results, combinations = processChainForPlots(cache, chain)
+def plotTube(cache, chain, kde, pca, scaler):
+    results, combinations = processChainForPlots(cache, chain, kde, pca, scaler)
 
     output_mcmc = cache.settings['resultsDirSpace'] / "mcmc"
     output_mcmc.mkdir(parents=True, exist_ok=True)
@@ -626,7 +639,10 @@ def plot_mcmc(output_mcmc, value, expName, name):
     plt.savefig(str(output_mcmc / ("%s_%s.png" % (expName, name) ) ), bbox_inches='tight')
     plt.close()
 
-    plt.plot(times, data.transpose())
+    row, col = data.shape
+    alpha = row/1.3e6
+    plt.plot(times, data.transpose(), 'g', alpha=alpha)
+    plt.plot(times, mean, 'k')
     plt.savefig(str(output_mcmc / ("%s_%s_lines.png" % (expName, name) ) ), bbox_inches='tight')
     plt.close()
 
