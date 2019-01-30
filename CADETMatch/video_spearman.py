@@ -8,8 +8,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-import numpy
-
 def main():
     cache.setup(sys.argv[1])
     cache.progress_path = Path(cache.settings['resultsDirBase']) / "progress.csv"

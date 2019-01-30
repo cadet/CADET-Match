@@ -2,7 +2,6 @@ import util
 import score
 import scipy.stats
 import numpy
-import scoop
 import math
 import scipy.interpolate
 

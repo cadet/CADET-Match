@@ -5,6 +5,7 @@ from pathlib import Path
 import time
 import jacobian
 import scoop
+import array
 
 name = 'ScoreTest'
 

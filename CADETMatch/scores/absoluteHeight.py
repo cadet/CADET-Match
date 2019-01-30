@@ -1,8 +1,5 @@
 import util
-import score
-import scipy.stats
 import calc_coeff
-import numpy
 
 name = "AbsoluteHeight"
 adaptive = True

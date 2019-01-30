@@ -1,6 +1,4 @@
 import util
-import numpy
-import calc_coeff
 
 name = "sum"
 count = 0

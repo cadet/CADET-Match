@@ -38,16 +38,16 @@ def run(sim_data, feature):
 
     simDerivValues = sim_spline_derivative(simSelected)
 
-    score, diff_time = cross_correlate(expTime, simValues, expValues)
-    scoreDeriv, diff_time_deriv = cross_correlate(expTime, simDerivValues, expDerivValues)
+    score_cross, diff_time = score.cross_correlate(expTime, simValues, expValues)
+    scoreDeriv, diff_time_deriv = score.cross_correlate(expTime, simDerivValues, expDerivValues)
 
-    if score < 0:
-        score = 0
+    if score_cross < 0:
+        score_cross = 0
 
     if scoreDeriv < 0:
         scoreDeriv = 0
 
-    temp = [score, scoreDeriv, feature['maxTimeFunction'](diff_time)]
+    temp = [score_cross, scoreDeriv, feature['maxTimeFunction'](diff_time)]
 
     return temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values), sim_data_values - exp_data_values, [1.0 - i for i in temp]
 

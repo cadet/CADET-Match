@@ -23,21 +23,31 @@ class Cadet():
 
     def __init__(self, *data):
         self.root = Dict()
+        self.filename = None
         for i in data:
             self.root.update(copy.deepcopy(i))
 
     def load(self):
-        with h5py.File(self.filename, 'r') as h5file:
-            self.root = Dict(recursively_load(h5file, '/'))
+        if self.filename is not None:
+            with h5py.File(self.filename, 'r') as h5file:
+                self.root = Dict(recursively_load(h5file, '/'))
+        else:
+            print('Filename must be set before load can be used')
 
     def save(self):
-        with h5py.File(self.filename, 'w') as h5file:
-            recursively_save(h5file, '/', self.root)
+        if self.filename is not None:
+            with h5py.File(self.filename, 'w') as h5file:
+                recursively_save(h5file, '/', self.root)
+        else:
+            print("Filename must be set before save can be used")
 
     def run(self, timeout = None, check=None):
-        data = subprocess.run([self.cadet_path, self.filename], timeout = timeout, check=check, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        self.return_information = data
-        return data
+        if self.filename is not None:
+            data = subprocess.run([self.cadet_path, self.filename], timeout = timeout, check=check, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.return_information = data
+            return data
+        else:
+            print("Filename must be set before run can be used")
 
     def __str__(self):
         temp = []

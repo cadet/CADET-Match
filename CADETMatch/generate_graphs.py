@@ -4,10 +4,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 from matplotlib import figure
-from matplotlib import cm
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
-from mpl_toolkits.mplot3d import Axes3D
 
 from cache import cache
 
@@ -36,6 +33,7 @@ saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC
 
 
 from matplotlib.colors import ListedColormap
+import matplotlib.cm
 cmap = matplotlib.cm.winter
 
 # Get the colormap colors

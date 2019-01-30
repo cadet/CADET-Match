@@ -2,10 +2,7 @@ import util
 import checkpoint_algorithms
 import random
 import nsga3_selection
-
-from deap import algorithms
 from deap import tools
-import functools
 import pareto
 import array
 import numpy

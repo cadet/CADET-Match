@@ -2,11 +2,8 @@ import util
 import checkpoint_algorithms
 import random
 
-import copy
 import numpy
 from deap import tools
-
-from deap import algorithms
 
 name = "ThetaNSGA3"
 
@@ -26,8 +23,6 @@ def run(cache, tools, creator):
         seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]
         pop.extend(seed_pop)
 
-    hof = tools.ParetoFront(similar=util.similar)
-
     return checkpoint_algorithms.eaMuPlusLambda(pop, cache.toolbox,
                               mu=populationSize, 
                               lambda_=populationSize, 
@@ -36,7 +31,6 @@ def run(cache, tools, creator):
                               ngen=totalGenerations,
                               settings=cache.settings,
                               tools=tools,
-                              halloffame=hof,
                               cache=cache)
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):

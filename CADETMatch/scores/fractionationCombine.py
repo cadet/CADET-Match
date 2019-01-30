@@ -72,7 +72,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     smallestTime = min(data['Stop'] - data['Start'])
     abstolFraction = abstol * smallestTime
 
-    scoop.log.debug('abstolFraction %s', abstolFraction)
+    scoop.logger.debug('abstolFraction %s', abstolFraction)
 
     funcs = []
 

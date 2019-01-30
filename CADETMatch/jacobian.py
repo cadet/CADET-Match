@@ -4,7 +4,6 @@ from pathlib import Path
 import util
 import numpy
 import scoop
-import os
 
 class GradientException(Exception):
     pass

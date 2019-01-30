@@ -7,7 +7,6 @@ from deap import algorithms
 import time
 import csv
 import pareto
-import scoop
 
 stallRate = 1.25
 progressRate = 0.75

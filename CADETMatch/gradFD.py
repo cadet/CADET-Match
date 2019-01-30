@@ -4,10 +4,8 @@ import scipy.optimize
 import numpy
 import numpy.linalg
 import hashlib
-import os
 import csv
 import time
-import sys
 
 from cadet import Cadet
 

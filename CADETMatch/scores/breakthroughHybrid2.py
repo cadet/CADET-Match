@@ -32,7 +32,7 @@ def run(sim_data, feature):
 
     pearson_der, diff_time_der = score.pearson(exp_time_values, sim_data_values_der, exp_data_values_der)
 
-    [highs, lows] = util.find_peak(exp_time_values_der, sim_data_values_der)
+    [highs, lows] = util.find_peak(exp_time_values, sim_data_values_der)
     
     temp = [pearson, 
             feature['value_function'](start[1]), 

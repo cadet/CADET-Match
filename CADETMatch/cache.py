@@ -8,8 +8,6 @@ import numpy
 
 import plugins
 import os
-import scoop
-
 from deap import tools
 
 class Cache:

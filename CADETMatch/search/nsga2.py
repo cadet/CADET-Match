@@ -1,13 +1,5 @@
 import random
-import pickle
 import util
-import numpy
-from pathlib import Path
-import time
-import csv
-
-from deap import algorithms
-
 import checkpoint_algorithms
 import array
 

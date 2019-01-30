@@ -1,14 +1,10 @@
 import numpy
 import util
 
-import time
-
 from pathlib import Path
 
 from deap import creator
 from deap import tools
-
-import os
 
 from cadet import Cadet
 

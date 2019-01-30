@@ -88,9 +88,9 @@ def getBounds(parameter):
     maxLower = parameter['maxLower']
     minUpper = parameter['minUpper']
     maxUpper = parameter['maxUpper']
-
-    minValues = numpy.log([minSlope, minIntercept])
-    maxValues = numpy.log([maxSlope, maxIntercept])
+    
+    minValues = numpy.array([minLower, minUpper])
+    maxValues = numpy.array([maxLower, maxUpper])
 
     return minValues, maxValues
 

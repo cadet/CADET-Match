@@ -11,29 +11,18 @@ with warnings.catch_warnings():
 import time
 import csv
 
-from deap import algorithms
-
-import checkpoint_algorithms
-
 import emcee
 import SALib.sample.sobol_sequence
 
 import matplotlib
 matplotlib.use('Agg')
-import corner
 import matplotlib.pyplot as plt
-
-import matplotlib.mlab as mlab
 
 import evo
 import cache
 
-import numpy as np
-import scipy.stats
 import pareto
-import modEnsemble
 
-import pickle
 import scoop
 import pandas
 import array
@@ -44,35 +33,7 @@ name = "MCMC"
 
 log2 = numpy.log(2)
 
-class Container:
-    def __init__(self, minVar, maxVar, multiplier=1):
-        self.set(minVar, maxVar)
-        self.multiplier = multiplier
-
-    def set(self, minVar, maxVar):
-        self.minVar = minVar
-        self.maxVar = maxVar        
-        self.minLogVar = numpy.log(minVar)
-        self.maxLogVar = numpy.log(maxVar)
-
-    def set_multiplier(multiplier):
-        self.multiplier = multiplier
-
-    def lower_multiplier(self, sampler):
-        return None
-        self.multiplier = max(10, self.multiplier * 0.5)
-        #self.multiplier = 1
-        sampler.args[1] = self.multiplier
-
-    def raise_multiplier(self, sampler):
-        return None
-        self.multiplier *= 2.0
-        #self.multiplier = 1000
-        sampler.args[1] = self.multiplier
-
-container = Container(1e-10, 1e-1)
-
-def log_likelihood(theta, json_path,multiplier, kde_scores, kde_bw):
+def log_likelihood(theta, json_path, kde_scores, kde_bw):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path, False)
         cache.cache.roundScores = None
@@ -96,12 +57,12 @@ def log_likelihood(theta, json_path,multiplier, kde_scores, kde_bw):
 
     return score, scores, csv_record, results 
 
-def log_posterior(theta, json_path, multiplier, kde_scores, kde_bw):
+def log_posterior(theta, json_path, kde_scores, kde_bw):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path)
 
     #try:
-    ll, scores, csv_record, results = log_likelihood(theta, json_path, multiplier, kde_scores, kde_bw)
+    ll, scores, csv_record, results = log_likelihood(theta, json_path, kde_scores, kde_bw)
     return ll, theta, scores, csv_record, results
     #except:
     #    # if model does not converge:
@@ -131,7 +92,7 @@ def run(cache, tools, creator):
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path, container.multiplier, kde_scores, kde_bw], pool=cache.toolbox, a=2.0)
+        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path, kde_scores, kde_bw], pool=cache.toolbox, a=2.0)
         emcee.EnsembleSampler._get_lnprob = _get_lnprob
         emcee.EnsembleSampler._propose_stretch = _propose_stretch
 
@@ -146,7 +107,7 @@ def run(cache, tools, creator):
             return process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csvfile, sampler)
         sampler.process = local
 
-        converge = np.random.rand(50)
+        converge = numpy.random.rand(50)
         burn_seq = []
         chain_seq = []
 
@@ -160,12 +121,12 @@ def run(cache, tools, creator):
             count = checkpoint['length_burn'] - checkpoint['idx_burn']
             for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_burn'], checkpoint['ln_prob_burn'],
                                     checkpoint['rstate_burn'], iterations=count ), start=checkpoint['idx_burn']):
-                accept = np.mean(sampler.acceptance_fraction)
+                accept = numpy.mean(sampler.acceptance_fraction)
                 burn_seq.append(accept)
                 converge[:-1] = converge[1:]
                 converge[-1] = accept
                 writeMCMC(cache, sampler, burn_seq, chain_seq, idx, parameters)
-                scoop.logger.info('idx: %s std: %s mean: %s converge: %s  %s', idx, np.std(converge), np.mean(converge), np.std(converge)/tol, container.multiplier)
+                scoop.logger.info('idx: %s std: %s mean: %s converge: %s', idx, numpy.std(converge), numpy.mean(converge), numpy.std(converge)/tol)
 
                 checkpoint['p_burn'] = p
                 checkpoint['ln_prob_burn'] = ln_prob
@@ -175,16 +136,7 @@ def run(cache, tools, creator):
                 with checkpointFile.open('wb')as cp_file:
                     pickle.dump(checkpoint, cp_file)
 
-                if idx % convergence_check_interval == 0 and idx >= convergence_check_interval:
-                    accept = np.mean(converge)
-                    if accept > 0.4:
-                        container.raise_multiplier(sampler)
-                        scoop.logger.info("raising multipler %s", container.multiplier)
-                    if accept < 0.25:
-                        container.lower_multiplier(sampler)
-                        scoop.logger.info("lowering multipler %s", container.multiplier)
-
-                if np.std(converge) < tol:
+                if numpy.std(converge) < tol:
                     scoop.logger.info("burn in completed at iteration %s", idx)
                     checkpoint['state'] = 'chain'
                     checkpoint['p_chain'] = p
@@ -199,7 +151,7 @@ def run(cache, tools, creator):
             count = checkpoint['length_chain'] - checkpoint['idx_chain']
             for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_chain'], checkpoint['ln_prob_chain'],
                                     checkpoint['rstate_chain'], iterations=count ), start=checkpoint['idx_chain']):
-                accept = np.mean(sampler.acceptance_fraction)
+                accept = numpy.mean(sampler.acceptance_fraction)
                 chain_seq.append(accept)
                 writeMCMC(cache, sampler, burn_seq, chain_seq, idx, parameters)
 
@@ -355,9 +307,9 @@ def _get_lnprob(self, pos=None):
         p = pos
 
     # Check that the parameters are in physical ranges.
-    if np.any(np.isinf(p)):
+    if numpy.any(numpy.isinf(p)):
         raise ValueError("At least one parameter value was infinite.")
-    if np.any(np.isnan(p)):
+    if numpy.any(numpy.isnan(p)):
         raise ValueError("At least one parameter value was NaN.")
 
     # If the `pool` property of the sampler has been set (i.e. we want
@@ -377,26 +329,26 @@ def _get_lnprob(self, pos=None):
     results = self.process(results)
 
     try:
-        lnprob = np.array([float(l[0]) for l in results])
+        lnprob = numpy.array([float(l[0]) for l in results])
         blob = [l[1] for l in results]
     except (IndexError, TypeError):
-        lnprob = np.array([float(l) for l in results])
+        lnprob = numpy.array([float(l) for l in results])
         blob = None
 
     # sort it back according to the original order - get the same
     # chain irrespective of the runtime sorting fn
     if self.runtime_sortingfn is not None:
-        orig_idx = np.argsort(idx)
+        orig_idx = numpy.argsort(idx)
         lnprob = lnprob[orig_idx]
         p = [p[i] for i in orig_idx]
         if blob is not None:
             blob = [blob[i] for i in orig_idx]
 
     # Check for lnprob returning NaN.
-    if np.any(np.isnan(lnprob)):
+    if numpy.any(numpy.isnan(lnprob)):
         # Print some debugging stuff.
         bad_pars = []
-        for pars in p[np.isnan(lnprob)]:
+        for pars in p[numpy.isnan(lnprob)]:
             bad_pars.append(pars)
         scoop.logger.info("NaN value of lnprob for parameters: %s", bad_pars)
 
@@ -408,30 +360,30 @@ def _get_lnprob(self, pos=None):
 #auto correlation support functions
 
 def autocorr_new(y, c=5.0):
-    f = np.zeros(y.shape[1])
+    f = numpy.zeros(y.shape[1])
     for yy in y:
         f += autocorr_func_1d(yy)
     f /= len(y)
-    taus = 2.0*np.cumsum(f)-1.0
+    taus = 2.0*numpy.cumsum(f)-1.0
     window = auto_window(taus, c)
     return taus[window]
 
 # Automated windowing procedure following Sokal (1989)
 def auto_window(taus, c):
-    m = np.arange(len(taus)) < c * taus
-    if np.any(m):
-        return np.argmin(m)
+    m = numpy.arange(len(taus)) < c * taus
+    if numpy.any(m):
+        return numpy.argmin(m)
     return len(taus) - 1
 
 def autocorr_func_1d(x, norm=True):
-    x = np.atleast_1d(x)
+    x = numpy.atleast_1d(x)
     if len(x.shape) != 1:
         raise ValueError("invalid dimensions for 1D autocorrelation function")
     n = next_pow_two(len(x))
 
     # Compute the FFT and then (from that) the auto-correlation function
-    f = np.fft.fft(x - np.mean(x), n=2*n)
-    acf = np.fft.ifft(f * np.conjugate(f))[:len(x)].real
+    f = numpy.fft.fft(x - numpy.mean(x), n=2*n)
+    acf = numpy.fft.ifft(f * numpy.conjugate(f))[:len(x)].real
     acf /= 4*n
 
     # Optionally normalize
@@ -529,7 +481,7 @@ def processResultsForPlotting(results, times):
 def genRandomChoice(cache, chain, kde, pca, scaler):
     size = 5000
     if len(chain) > size:
-        indexes = np.random.choice(chain.shape[0], size, replace=False)
+        indexes = numpy.random.choice(chain.shape[0], size, replace=False)
         chain = chain[indexes]
 
     individuals = []
@@ -596,15 +548,15 @@ def removeResultsOutliers(results, bools):
     for exp, units in results.items():
         for unitName, unit in units.items():
             for comp, data in unit.items():
-                unit[comp] = np.array(data)[bools]
+                unit[comp] = numpy.array(data)[bools]
 
 def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, mcmc_score):
     mcmc_h5 = Path(cache.settings['resultsDirMCMC']) / "mcmc.h5"
     with h5py.File(mcmc_h5, 'a') as hf:
-         hf.create_dataset("mcmc_selected", data=numpy.array(mcmc_selected), compression="gzip")
-         hf.create_dataset("mcmc_selected_transformed", data=numpy.array(mcmc_selected_transformed), compression="gzip")
-         hf.create_dataset("mcmc_selected_score", data=numpy.array(mcmc_selected_score), compression="gzip")
-         hf.create_dataset("mcmc_score", data=numpy.array(mcmc_score), compression="gzip")
+        hf.create_dataset("mcmc_selected", data=numpy.array(mcmc_selected), compression="gzip")
+        hf.create_dataset("mcmc_selected_transformed", data=numpy.array(mcmc_selected_transformed), compression="gzip")
+        hf.create_dataset("mcmc_selected_score", data=numpy.array(mcmc_selected_score), compression="gzip")
+        hf.create_dataset("mcmc_score", data=numpy.array(mcmc_score), compression="gzip")
 
 def plotTube(cache, chain, kde, pca, scaler):
     results, combinations = processChainForPlots(cache, chain, kde, pca, scaler)
@@ -652,11 +604,11 @@ def plot_mcmc(output_mcmc, value, expName, name):
 def interval(flat_chain, cache):
     #https://stackoverflow.com/questions/15033511/compute-a-confidence-interval-from-sample-data
 
-    mean = np.mean(flat_chain,0)
+    mean = numpy.mean(flat_chain,0)
 
     percentile = numpy.percentile(flat_chain, [5, 10, 25, 50, 75, 90, 95], 0)
 
-    data = np.vstack( (mean, percentile) ).transpose()
+    data = numpy.vstack( (mean, percentile) ).transpose()
 
     data = util.roundParameter(data, cache)
 
@@ -666,50 +618,50 @@ def interval(flat_chain, cache):
     return pd
 
 def _propose_stretch(self, p0, p1, lnprob0):
-        """
-        Propose a new position for one sub-ensemble given the positions of
-        another.
+    """
+    Propose a new position for one sub-ensemble given the positions of
+    another.
 
-        :param p0:
-            The positions from which to jump.
+    :param p0:
+        The positions from which to jump.
 
-        :param p1:
-            The positions of the other ensemble.
+    :param p1:
+        The positions of the other ensemble.
 
-        :param lnprob0:
-            The log-probabilities at ``p0``.
+    :param lnprob0:
+        The log-probabilities at ``p0``.
 
-        This method returns:
+    This method returns:
 
-        * ``q`` - The new proposed positions for the walkers in ``ensemble``.
+    * ``q`` - The new proposed positions for the walkers in ``ensemble``.
 
-        * ``newlnprob`` - The vector of log-probabilities at the positions
-          given by ``q``.
+    * ``newlnprob`` - The vector of log-probabilities at the positions
+        given by ``q``.
 
-        * ``accept`` - A vector of type ``bool`` indicating whether or not
-          the proposed position for each walker should be accepted.
+    * ``accept`` - A vector of type ``bool`` indicating whether or not
+        the proposed position for each walker should be accepted.
 
-        * ``blob`` - The new meta data blobs or ``None`` if nothing was
-          returned by ``lnprobfn``.
+    * ``blob`` - The new meta data blobs or ``None`` if nothing was
+        returned by ``lnprobfn``.
 
-        """
-        s = np.atleast_2d(p0)
-        Ns = len(s)
-        c = np.atleast_2d(p1)
-        Nc = len(c)
+    """
+    s = numpy.atleast_2d(p0)
+    Ns = len(s)
+    c = numpy.atleast_2d(p1)
+    Nc = len(c)
 
-        # Generate the vectors of random numbers that will produce the
-        # proposal.
-        zz = ((self.a - 1.) * self._random.rand(Ns) + 1) ** 2. / self.a
-        rint = self._random.randint(Nc, size=(Ns,))
+    # Generate the vectors of random numbers that will produce the
+    # proposal.
+    zz = ((self.a - 1.) * self._random.rand(Ns) + 1) ** 2. / self.a
+    rint = self._random.randint(Nc, size=(Ns,))
 
-        # Calculate the proposed positions and the log-probability there.
-        q = (c[rint] - zz[:, np.newaxis] * (c[rint] - s)) % 1
+    # Calculate the proposed positions and the log-probability there.
+    q = (c[rint] - zz[:, numpy.newaxis] * (c[rint] - s)) % 1
         
-        newlnprob, blob = self._get_lnprob(q)
+    newlnprob, blob = self._get_lnprob(q)
 
-        # Decide whether or not the proposals should be accepted.
-        lnpdiff = (self.dim - 1.) * np.log(zz) + newlnprob - lnprob0
-        accept = (lnpdiff > np.log(self._random.rand(len(lnpdiff))))
+    # Decide whether or not the proposals should be accepted.
+    lnpdiff = (self.dim - 1.) * numpy.log(zz) + newlnprob - lnprob0
+    accept = (lnpdiff > numpy.log(self._random.rand(len(lnpdiff))))
 
-        return q, newlnprob, accept, blob
+    return q, newlnprob, accept, blob

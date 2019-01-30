@@ -13,7 +13,6 @@ from cadet import Cadet
 from pathlib import Path
 import numpy
 import scoop
-import sys
 from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import cross_val_score
 from sklearn.decomposition import PCA
@@ -38,8 +37,6 @@ import cache
 
 from scoop import futures
 import synthetic_error
-
-import os
 
 def bandwidth_score(bw, data, store):
     bandwidth = 10**bw[0]

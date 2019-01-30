@@ -1,6 +1,5 @@
 import util
 import score
-import scipy.stats
 
 name = "similarityHybridDecay2"
 adaptive = True

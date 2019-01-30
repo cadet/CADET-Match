@@ -1,4 +1,3 @@
-import math
 import numpy
 import pandas
 
@@ -6,7 +5,6 @@ import hashlib
 
 from deap import tools
 import scipy.signal
-from scipy.spatial.distance import cdist
 from pathlib import Path
 
 from addict import Dict
@@ -17,12 +15,10 @@ from cadet import Cadet
 import subprocess
 import sys
 import json
-import itertools
 import time
 import csv
 import psutil
 
-from scoop import futures
 import random
 import calc_coeff
 import warnings
@@ -563,8 +559,7 @@ def RoundToSigFigs( x, sigfigs ):
     sigfigs must be an integer type and store a positive value.
     x must be a real value or an array like object containing only real values.
     """
-    if not ( type(sigfigs) is int or type(sigfigs) is long or
-             isinstance(sigfigs, numpy.integer) ):
+    if not ( type(sigfigs) is int or isinstance(sigfigs, numpy.integer) ):
         raise TypeError( "RoundToSigFigs: sigfigs must be an integer." )
 
     if sigfigs <= 0:

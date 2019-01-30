@@ -67,6 +67,7 @@
     <Compile Include="LICENSE">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="loggerwriter.py" />
     <Compile Include="modEnsemble.py">
       <SubType>Code</SubType>
     </Compile>
@@ -214,9 +215,6 @@
     <Compile Include="search\nsga3_strategy.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\mcmc_old.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="search\retired\nsga2_mut.py">
       <SubType>Code</SubType>
     </Compile>
@@ -336,6 +334,7 @@
     <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include=".pylintrc" />
     <Content Include="README.txt" />
   </ItemGroup>
   <ItemGroup>

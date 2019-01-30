@@ -1,6 +1,5 @@
 import util
 import score
-import scipy.stats
 import numpy
 
 name = "similarityHybrid2_spline"

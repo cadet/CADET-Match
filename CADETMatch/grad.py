@@ -16,7 +16,6 @@ import os
 import subprocess
 import csv
 import time
-import sys
 from cadet import Cadet
 import scoop
 

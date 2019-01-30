@@ -1,14 +1,9 @@
 import math
-import util
 import random
 
 import numpy
-from scipy.spatial.distance import pdist, squareform
-
-import deap.tools.emo
-from deap import tools
-import pareto
 import itertools
+import operator
 
 name = 'Multiswarm'
 
