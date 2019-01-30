@@ -3,7 +3,6 @@ import score
 import scipy.stats
 import numpy
 import scoop
-import math
 
 name = "Dextran"
 adaptive = True
@@ -11,7 +10,7 @@ badScore = 0
 
 def run(sim_data, feature):
     "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
-    failure = [0.0, 0.0], 1e6, 1, []
+    failure = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 1e6, 1, []
     
     exp_time_values = feature['time']
     max_value = feature['max_value']
@@ -38,25 +37,27 @@ def run(sim_data, feature):
     sim_data_zero = numpy.zeros(len(sim_data_values))
     sim_data_zero[min_index:max_index+1] = sim_data_values[min_index:max_index+1]
 
-    angle = math.atan2(sim_data_zero[max_index], sim_time_values[max_index]-sim_time_values[min_index])
-
     pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_zero, exp_data_zero)
-       
-    #try:
-    #    sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_zero), s=util.smoothing_factor(sim_data_zero)).derivative(1)
-    #    exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_zero), s=util.smoothing_factor(exp_data_zero)).derivative(1)
-    #except:  #I know a bare exception is bad but it looks like the exception is not exposed inside UnivariateSpline
-    #    return failure
 
-    #exp_der_data_values = exp_spline(exp_time_values)
-    #sim_der_data_values = sim_spline(exp_time_values)
+    try:
+        sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_zero), s=util.smoothing_factor(sim_data_zero)).derivative(1)
+        exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_zero), s=util.smoothing_factor(exp_data_zero)).derivative(1)
+    except:  #I know a bare exception is bad but it looks like the exception is not exposed inside UnivariateSpline
+        return failure
 
-    #pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_der_data_values, exp_der_data_values)
+    exp_der_data_values = exp_spline(exp_time_values)
+    sim_der_data_values = sim_spline(exp_time_values)
 
-    #[highs, lows] = util.find_peak(exp_time_values, sim_der_data_values)
+    pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_der_data_values, exp_der_data_values)
 
-    temp = [feature['offsetTimeFunction'](numpy.abs(diff_time)),
-            feature['valueFunction'](angle),
+    [highs, lows] = util.find_peak(exp_time_values, sim_der_data_values)
+
+    temp = [pearson, 
+            pearson_der, 
+            feature['offsetTimeFunction'](numpy.abs(diff_time)),
+            feature['valueFunction'](max(sim_data_zero)),
+            feature['value_function_high'](highs[1]),             
+            feature['value_function_low'](lows[1]),
             ]
 
     data = temp, util.sse(sim_data_zero, exp_data_zero), len(sim_data_zero), sim_data_zero - exp_data_zero, [1.0 - i for i in temp]
@@ -66,7 +67,7 @@ def run(sim_data, feature):
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     #change the stop point to be where the max positive slope is along the searched interval
-    exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, selectedValues, s=util.smoothing_factor(selectedValues), k=1).derivative(1)
+    exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, selectedValues, s=util.smoothing_factor(selectedValues)).derivative(1)
 
     values = exp_spline(selectedTimes)
     
@@ -84,8 +85,6 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, util.smoothing(selectedTimes, exp_data_zero), s=util.smoothing_factor(exp_data_zero)).derivative(1)
 
     [high, low] = util.find_peak(selectedTimes, exp_spline(selectedTimes))
-
-    angle = math.atan2(max_value, max_time-min_time)
                 
     temp['min_time'] = feature['start']
     temp['max_time'] = feature['stop']
@@ -93,15 +92,16 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['exp_data_zero'] = exp_data_zero
     temp['offsetTimeFunction'] = score.time_function_decay(CV_time/10.0, None, diff_input=True)
     temp['offsetDerTimeFunction'] = score.time_function_decay(CV_time/10.0, None, diff_input=True)
-    temp['valueFunction'] = score.value_function(angle, abstol)
+    temp['valueFunction'] = score.value_function(max_value, abstol)
     temp['value_function_high'] = score.value_function(high[1], abstol, 0.1)
     temp['value_function_low'] = score.value_function(low[1], abstol, 0.1)
     return temp
 
 def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
-    temp = ["%s_Time" % name, "%s_Angle" % name]
+    temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, 
+            "%s_Time" % name, "%s_DerTime" % name, "%s_Value" % name, 
+            "%s_Der_High_Value" % name, "%s_Der_Low_Value" % name]
     return temp
-
 
 

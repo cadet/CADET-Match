@@ -1,24 +1,28 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/NonBinding",
-  "resultsDir": "fit_delay/",
+  "resultsDir": "fit_large_nsga3/",
   "tempDir": "M:/",
   "CSV": "nonbinding_MCMC.csv",
   "checkpointFile": "check",
-  "searchMethod": "MCMC",
-  "population": 25,
-  "roundParameters": 6,
-  "roundScores": 6,
-  "metaResultsOnly": 1,
-  "sobolGeneration":1,
-  "graphSpearman": 0,
-  "normalizeOutput":1,
+  "stopAverage": 0.995,
+  "stopBest": 0.995,
+  "gradCheck": 0.99,
+  "gradVector": 1,
+  "searchMethod": "NSGA3",
+  "mutationRate": 0.2,
+  "crossoverRate": 0.8,
+  "generations": 1000,
   "population": 12,
+  "minPopulation": 12,
+  "maxPopulation":12,
+  "roundParameters": 3,
+  "roundScores": 3,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "scoreMCMC":"score",
-  "graphSpearman": 0,
+  "stallGenerations": 15,
   "normalizeOutput":1,
+  "continueMCMC":1,
   "kde": 
   {
       "power": 1,
@@ -31,12 +35,12 @@
   "kde_synthetic":
   {
     "file_path":"protein_pulse.h5",
-    "delay":[5.0, 20.0],
-    "flow":[1.0, 0.003],
-    "load":[1.0, 0.003],
+    "delay":[0.0, 1.0],
+    "flow":[1.0, 0.09],
+    "load":[1.0, 0.09],
     "error_slope":[1.0, 0.001],
-    "error_base":100.0,
-    "base":1000.0,
+    "error_base":50.0,
+    "base":50.0,
     "count":2000
   },
 	"parameters": [
@@ -76,14 +80,6 @@
 				{
                     "name": "Pulse",
                     "type": "ShapeDecay"
-                },
-                {
-                    "name": "Time",
-                    "type": "AbsoluteTime"
-                },
-                {
-                    "name": "Value",
-                    "type": "AbsoluteHeight"
                 }
 			]
 		}

@@ -61,6 +61,7 @@ def update_simulation(simulation, switches, inlets, section_times):
             simulation.root.input.model[unit_name]['sec_%03d' % idx] = sec
     
     #switches
+    simulation.root.input.model.connections.nswitches = len(switches)
     for idx,item in enumerate(switches):
         simulation.root.input.model.connections['switch_%03d' % idx] = item
 

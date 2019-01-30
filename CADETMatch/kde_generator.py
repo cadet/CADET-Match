@@ -20,6 +20,8 @@ from sklearn.decomposition import PCA
 from sklearn import preprocessing
 import copy
 
+bw_tol = 1e-4
+
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore",category=FutureWarning)
@@ -37,9 +39,11 @@ import cache
 from scoop import futures
 import synthetic_error
 
+import os
+
 def bandwidth_score(bw, data, store):
     bandwidth = 10**bw[0]
-    kde_bw = KernelDensity(kernel='exponential', bandwidth=bandwidth, atol=1e-5, rtol=1e-5)
+    kde_bw = KernelDensity(kernel='exponential', bandwidth=bandwidth, atol=bw_tol)
     scores = cross_val_score(kde_bw, data, cv=3)
     store.append( [bandwidth, -max(scores)] )
     return -max(scores)
@@ -99,7 +103,7 @@ def getKDE(cache, scores, bw):
 
     scores_scaler = scaler.transform(scores_mirror)
 
-    kde = KernelDensity(kernel='exponential', bandwidth=bw).fit(scores_scaler)
+    kde = KernelDensity(kernel='exponential', bandwidth=bw, atol=bw_tol).fit(scores_scaler)
 
     plotKDE(cache, kde, scores_scaler)
 
@@ -169,13 +173,14 @@ def synthetic_error_simulation(json_path):
     temp = Cadet()
     temp.filename = bytes(file)
     temp.load()
+    del temp.root.output
 
     nsec = temp.root.input.solver.sections.nsec
 
     def post_function(simulation):
         error_slope = numpy.random.normal(error_slope_settings[0], error_slope_settings[1], 1)[0]
         base = numpy.max(simulation.root.output.solution.unit_002.solution_outlet_comp_000)/1000.0
-        error_base = numpy.random.normal(base, base/error_base_settings, len(simulation.root.output.solution.unit_002.solution_outlet_comp_000))[0]
+        error_base = numpy.random.normal(base, base/error_base_settings, len(simulation.root.output.solution.unit_002.solution_outlet_comp_000))
         simulation.root.output.solution.unit_002.solution_outlet_comp_000 = simulation.root.output.solution.unit_002.solution_outlet_comp_000 * error_slope + error_base
     
     error_delay = Cadet(temp.root)
@@ -194,6 +199,8 @@ def synthetic_error_simulation(json_path):
 
     result = util.runExperiment(None, cache.cache.settings['experiments'][0], cache.cache.settings, cache.cache.target, error_delay, 60.0, cache.cache, fullPrecision=True, post_function=post_function)
 
+    os.remove(result['path'])
+
     return result
 
 def generate_synthetic_error(cache):
@@ -203,8 +210,8 @@ def generate_synthetic_error(cache):
         for result in futures.map(synthetic_error_simulation, [cache.json_path] * count_settings):
             
             #result = synthetic_error_simulation(cache.json_path)
-
-            results.append(result)
+            if result is not None:
+                results.append(result)
 
         scores = []
         outputs = []

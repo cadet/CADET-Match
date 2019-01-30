@@ -279,7 +279,7 @@ def getBoundOffset(unit):
     return boundOffset
 
 def runExperiment(individual, experiment, settings, target, template_sim, timeout, cache, fullPrecision=False, post_function=None):
-    handle, path = tempfile.mkstemp(suffix='.h5')
+    handle, path = tempfile.mkstemp(suffix='.h5', dir=cache.tempDir)
     os.close(handle)
 
     simulation = Cadet(template_sim.root)
@@ -428,10 +428,34 @@ def setupMCMC(cache, lb, ub):
         if 'roundParameters' in settings:
             del settings['roundParameters']
 
+        for experiment in settings['experiments']:
+            foundAbsoluteTime = False
+            foundAbsoluteHeight = False
+            for feature in experiment['features']:
+                if feature["type"] == "AbsoluteTime":
+                    foundAbsoluteTime = True
+                if feature["type"] == "AbsoluteHeight":
+                    foundAbsoluteHeight = True
+            if foundAbsoluteTime is False:
+                experiment['features'].append({"name":"AbsoluteTime", "type":"AbsoluteTime"})
+            if foundAbsoluteHeight is False:
+                experiment['features'].append({"name":"AbsoluteHeight", "type":"AbsoluteHeight"})
+         
+        if "kde_synthetic" in settings:
+            settings['kde_synthetic']['file_path'] = getBestPath(cache)
+
         new_settings_file = resultDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:
             json.dump(settings, json_data, indent=4, sort_keys=True)
         return new_settings_file
+
+def getBestPath(cache):
+    "return the path to the best item based on meta min score"
+    meta_path = cache.settings['resultsDirMeta']
+    df = pandas.read_csv(meta_path / 'results.csv')
+    name = df.loc[df['Min Score'].argmax(), 'Name']
+    for name_path in meta_path.glob('%s_*.h5' % name):
+        return name_path.as_posix()
 
 def copyCSVWithNoise(idx, center, noise):
     "read the original json file and create a new set of simulation data and simulation file in a subdirectory with noise"

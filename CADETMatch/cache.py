@@ -119,6 +119,8 @@ class Cache:
 
         self.gradVector = bool(self.settings.get('gradVector', 0))
 
+        self.tempDir = self.settings.get('tempDir', None)
+
         if "MCMCpopulation" not in self.settings:
             self.settings['MCMCpopulation'] = self.settings['population']
 

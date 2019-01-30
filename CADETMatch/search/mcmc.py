@@ -614,14 +614,19 @@ def plotTube(cache, chain, kde, pca, scaler):
     output_mcmc = cache.settings['resultsDirSpace'] / "mcmc"
     output_mcmc.mkdir(parents=True, exist_ok=True)
 
-    for expName,value in combinations.items():
-        plot_mcmc(output_mcmc, value, expName, "combine")
+    mcmc_h5 = output_mcmc / "mcmc_plots.h5"
+    with h5py.File(mcmc_h5, 'a') as hf:
 
-    for exp, units in results.items():
-        for unitName, unit in units.items():
-            for comp, data in unit.items():
-                expName = '%s_%s' % (exp, unitName)
-                plot_mcmc(output_mcmc, data, expName, comp)
+        for expName,value in combinations.items():
+            plot_mcmc(output_mcmc, value, expName, "combine")
+            hf.create_dataset(expName, data=value['data'], compression="gzip")
+
+        for exp, units in results.items():
+            for unitName, unit in units.items():
+                for comp, data in unit.items():
+                    expName = '%s_%s' % (exp, unitName)
+                    plot_mcmc(output_mcmc, data, expName, comp)
+                    hf.create_dataset('%s_%s' % (expName, comp), data=data['data'], compression="gzip")
 
 def plot_mcmc(output_mcmc, value, expName, name):
     data = value['data']

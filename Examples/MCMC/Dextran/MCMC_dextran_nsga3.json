@@ -1,17 +1,28 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
-  "resultsDir": "fit_all_large_absolute/",
+  "resultsDir": "fit_nsga3_mcmc_all_large_2/",
   "tempDir": "M:/",
   "CSV": "dextran_MCMC.csv",
   "checkpointFile": "check",
-  "searchMethod": "MCMC",
-  "population": 12,
+  "stopAverage": 0.995,
+  "stopBest": 0.995,
+  "gradCheck": 1.0,
+  "gradVector": 1,
+  "searchMethod": "NSGA3",
+  "mutationRate": 0.2,
+  "crossoverRate": 0.8,
+  "generations": 1000,
+  "population": 6,
+  "minPopulation": 6,
+  "maxPopulation":6,
+  "roundParameters": 3,
+  "roundScores": 3,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "scoreMCMC":"score",
-  "graphSpearman": 0,
+  "stallGenerations": 15,
   "normalizeOutput":1,
+  "continueMCMC":1,
   "kde": 
   {
       "power": 1,
@@ -62,14 +73,6 @@
         {
 			"name": "Pulse",
 			"type": "Dextran"
-		},
-        {
-			"name": "Time",
-			"type": "AbsoluteTime"
-		},
-        {
-			"name": "Value",
-			"type": "AbsoluteHeight"
 		}
       ]
     }
