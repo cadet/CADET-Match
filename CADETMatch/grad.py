@@ -154,11 +154,6 @@ def fitness_sens(individual, cache):
     notDuplicate = saveExperimentsSens(save_name_base, evo.settings, evo.target, results)
     if notDuplicate:
         plotExperimentsSens(save_name_base, evo.settings, evo.target, results)
-
-    #cleanup
-    for result in results.values():
-        if result['path']:
-            os.remove(result['path'])
     
     cond = numpy.linalg.cond(jacobian(tuple(individual), cache))
     if cond > 1000:
@@ -207,25 +202,25 @@ def runExperimentSens(individual, experiment, settings, target, jac):
 
     simulation.save()
 
-    def leave():
-        os.remove(path)
-        return None
-
     try:
         simulation.run(timeout = experiment['timeout'] * len(target['sensitivities']))
     except subprocess.TimeoutExpired:
         scoop.logger.warn("Simulation Timed Out %s", individual)
-        return leave()
+        os.remove(path)
+        return None
 
     #read sim data
     simulation.load()
+    os.remove(path)
+
     try:
         #get the solution times
         times = simulation.root.output.solution.solution_times
     except KeyError:
         #sim must have failed
         scoop.logger.error("%s sim must have failed %s", individual, path)
-        return leave()
+        return None
+
     scoop.logger.debug("Everything ran fine")
 
     gradient_components = experiment['gradient']['components']

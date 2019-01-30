@@ -204,9 +204,6 @@ def synthetic_error_simulation(json_path):
 
     result = util.runExperiment(None, cache.cache.settings['experiments'][0], cache.cache.settings, cache.cache.target, error_delay, 60.0, cache.cache, fullPrecision=True, post_function=post_function)
 
-    if result is not None:
-        os.remove(result['path'])
-
     return result
 
 def generate_synthetic_error(cache):
@@ -215,7 +212,6 @@ def generate_synthetic_error(cache):
         results = []
         for result in futures.map(synthetic_error_simulation, [cache.json_path] * count_settings):
             
-            #result = synthetic_error_simulation(cache.json_path)
             if result is not None:
                 results.append(result)
 

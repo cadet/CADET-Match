@@ -295,27 +295,27 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
 
     simulation.save()
 
-    def leave():
-        os.remove(path)
-        return None
-
     try:
         simulation.run(timeout = timeout, check=True)
     except subprocess.TimeoutExpired:
         scoop.logger.warn("Simulation Timed Out")
-        return leave()
+        os.remove(path)
+        return None
+
     except subprocess.CalledProcessError as error:
         scoop.logger.error("The simulation failed")
         logError(cache, cadetValuesKEQ, error)
-        return leave()
+        os.remove(path)
+        return None
 
     #read sim data
     simulation.load()
+    os.remove(path)
 
     simulationFailed = isinstance(simulation.root.output.solution.solution_times, Dict)
     if simulationFailed:
         scoop.logger.error("%s sim must have failed %s", individual, path)
-        return leave() 
+        return None
     scoop.logger.debug('Everything ran fine')
 
     if post_function:
@@ -986,8 +986,6 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
                 processResultsMeta(save_name_base, ind, cache, results)
                 made_progress = True
 
-            cleanupProcess(results)
-
     writer.writerows(csv_lines)
 
     #flush before returning
@@ -1050,12 +1048,6 @@ def processResults(save_name_base, individual, cache, results):
  
 def processResultsMeta(save_name_base, individual, cache, results):
     saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings['resultsDirMeta'], '%s_%s_meta.h5')    
-
-def cleanupProcess(results):
-    #cleanup
-    for result in results.values():
-        if result['path']:
-            os.remove(result['path'])
 
 def cleanupFront(cache, halloffame=None, meta_hof=None, grad_hof=None):
     if halloffame is not None:

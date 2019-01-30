@@ -620,8 +620,6 @@ def genRandomChoice(cache, chain, size=500):
 
             results[key] = sims
 
-        util.cleanupProcess(result)
-
     mcmc_selected = numpy.array(mcmc_selected)
     mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)
     mcmc_selected_score = numpy.array(mcmc_selected_score)

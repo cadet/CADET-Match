@@ -31,12 +31,7 @@ def fitness_grad(individual, cache):
             error += results[experiment['name']]['error']
         else:
             raise GradientException("Gradient caused simulation failure, aborting")
-
-    #cleanup
-    for result in results.values():
-        if result['path']:
-            os.remove(result['path'])
-    
+   
     return scores
 
 def runExperiment(individual, experiment, settings, target, cache):

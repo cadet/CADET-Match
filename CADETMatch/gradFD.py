@@ -55,8 +55,6 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
                     util.processResultsMeta(save_name_base, ind, cache, results)
                     cache.lastProgressGeneration = generation
 
-                util.cleanupProcess(results)
-
             #failed.append(0)
             ind.fitness.values = fit
             temp.append(ind)
@@ -118,12 +116,7 @@ def fitness_sens(individual, finished=1):
             diff.extend(results[experiment['name']]['diff'])
         else:
             raise GradientException("Gradient caused simulation failure, aborting")
-
-    #cleanup
-    for result in results.values():
-        if result['path']:
-            os.remove(result['path'])
-    
+   
     #need to minimize
     if cache.cache.gradVector:
         return numpy.array(diff)
