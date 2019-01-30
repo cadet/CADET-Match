@@ -176,26 +176,7 @@ def setupTemplates(cache):
         #change to where we want the template created
         template.filename = template_path
 
-        try:
-            del template.root.input.solver.user_solution_times
-        except KeyError:
-            pass
-
-        try:
-            del template.root.output
-        except KeyError:
-            pass
-
-        template.root.input.solver.user_solution_times = cache.target[name]['time']
-        template.root.input.solver.sections.section_times[-1] = cache.target[name]['time'][-1]
-        template.root.input['return'].unit_001.write_solution_particle = 0
-        template.root.input['return'].unit_001.write_solution_column_inlet = 1
-        template.root.input['return'].unit_001.write_solution_column_outlet = 1
-        template.root.input['return'].unit_001.write_solution_inlet = 1
-        template.root.input['return'].unit_001.write_solution_outlet = 1
-        template.root.input['return'].unit_001.split_components_data = 0
-        template.root.input.solver.nthreads = 1
-        #template.root.input.solver.time_integrator.max_steps = 100000
+        util.setupSimulation(template, cache.target[name]['time'])
 
         template.save()
 

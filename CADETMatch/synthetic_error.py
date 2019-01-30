@@ -1,4 +1,5 @@
 import numpy
+import copy
 
 def all_steps(simulation):
     "make a switch for each section if it does not have one"
@@ -81,7 +82,7 @@ def pump_delay(simulation, delays):
             
             #add new section to all inlets use previous section as a copy
             for inlet in inlets.values():
-                cur = inlet[idx].deepcopy()
+                cur = copy.deepcopy(inlet[idx])
                 
                 #set all entries to 0
                 for value in cur.values():
@@ -92,7 +93,7 @@ def pump_delay(simulation, delays):
             #add a new switch using previous switch connections but all flow 0
             
             #print('switch', idx, len(switches))
-            cur = switches[idx].deepcopy()
+            cur = copy.deepcopy(switches[idx])
             
             #set flowrates to 0.0
             cur.connections = []

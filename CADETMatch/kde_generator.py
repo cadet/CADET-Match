@@ -166,14 +166,19 @@ def synthetic_error_simulation(json_path):
     error_base_settings = cache.cache.settings['kde_synthetic']['error_base']
     base_settings = cache.cache.settings['kde_synthetic']['base']
     count_settings = cache.cache.settings['kde_synthetic']['count']
+    experimental_csv = cache.cache.settings['kde_synthetic']['experimental_csv']
 
     dir_base = Path(cache.cache.settings.get('baseDir'))
     file = dir_base / file_path
 
+    data = numpy.loadtxt(experimental_csv, delimiter=',')
+    times = data[:,0]
+
     temp = Cadet()
     temp.filename = bytes(file)
     temp.load()
-    del temp.root.output
+
+    util.setupSimulation(temp, times)
 
     nsec = temp.root.input.solver.sections.nsec
 
@@ -199,7 +204,8 @@ def synthetic_error_simulation(json_path):
 
     result = util.runExperiment(None, cache.cache.settings['experiments'][0], cache.cache.settings, cache.cache.target, error_delay, 60.0, cache.cache, fullPrecision=True, post_function=post_function)
 
-    os.remove(result['path'])
+    if result is not None:
+        os.remove(result['path'])
 
     return result
 
