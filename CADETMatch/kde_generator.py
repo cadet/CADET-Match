@@ -206,7 +206,14 @@ def synthetic_error_simulation(json_path):
     
         synthetic_error.error_load(error_delay, load)
 
-        result = util.runExperiment(None, cache.cache.settings['experiments'][0], cache.cache.settings, cache.cache.target, error_delay, 60.0, cache.cache, fullPrecision=True, post_function=post_function)
+
+        exp_info = None
+        for exp in cache.cache.settings['experiments']:
+            if exp['name'] == name:
+                exp_info = exp
+                break
+
+        result = util.runExperiment(None, exp_info, cache.cache.settings, cache.cache.target, error_delay, 60.0, cache.cache, fullPrecision=True, post_function=post_function)
 
         if result is not None:
             scores.extend(result['scores'])
