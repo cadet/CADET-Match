@@ -54,7 +54,7 @@ def update_simulation(simulation, switches, inlets, section_times):
     #sections
     simulation.root.input.solver.sections.section_times = section_times
     simulation.root.input.solver.sections.nsec = nsec
-    simulation.root.input.solver.section_continuity = [0.0] * (nsec - 1)
+    simulation.root.input.solver.sections.section_continuity = [0.0] * (nsec - 1)
     
     #inlets
     for unit_name, unit in inlets.items():

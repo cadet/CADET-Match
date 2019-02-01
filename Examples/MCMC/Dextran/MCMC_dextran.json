@@ -6,12 +6,14 @@
   "CSV": "dextran_MCMC.csv",
   "checkpointFile": "check",
   "searchMethod": "MCMC",
-  "population": 12,
+  "population": 2,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "scoreMCMC":"score",
   "graphSpearman": 0,
   "normalizeOutput":1,
+  "burnIn":5,
+  "chainLength":5,
   "kde": 
   {
       "power": 1,
@@ -21,17 +23,21 @@
       "base_noise_std": 1e-7,
       "signal_noise_std": 1e-2      
   },
-  "kde_synthetic":
+  "kde_synthetic":[
   {
     "file_path":"dextran_pulse.h5",
+    "experimental_csv": "dextran_pulse.csv",
+    "name": "main",
+    "units": [2],
     "delay":[0.0, 1.0],
     "flow":[1.0, 0.09],
     "load":[1.0, 0.09],
     "error_slope":[1.0, 0.001],
     "error_base":50.0,
     "base":50.0,
-    "count":2000
-  },
+    "count":50
+  }
+  ],
   "parameters": [
     {
       "transform": "norm_log",

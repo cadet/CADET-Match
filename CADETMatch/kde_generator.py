@@ -111,25 +111,25 @@ def getKDE(cache, scores, bw):
 def generate_data(cache):
     scores, simulations = generate_synthetic_error(cache)
 
-    if scores is None:
-        reference_result = setupReferenceResult(cache)
+    #if scores is None:
+    #    reference_result = setupReferenceResult(cache)
 
-        try:
-            variations = cache.settings['kde']['variations']
-        except KeyError:
-            variations = 100
+    #    try:
+    #        variations = cache.settings['kde']['variations']
+    #    except KeyError:
+    #        variations = 100
 
-        simulations = [reference_result]
-        for i in range(variations):
-            simulations.append(mutate(cache, reference_result))
+    #    simulations = [reference_result]
+    #    for i in range(variations):
+    #        simulations.append(mutate(cache, reference_result))
 
-        plotVariations(cache, temp)
+    #    plotVariations(cache, temp)
 
-        scores = []
-        for first,second in itertools.combinations(temp, 2):
-            scores.append(score_sim(first, second, cache))
+    #    scores = []
+    #    for first,second in itertools.combinations(temp, 2):
+    #        scores.append(score_sim(first, second, cache))
 
-        scores = numpy.array(scores)
+    #    scores = numpy.array(scores)
 
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
     save_scores = mcmcDir / 'scores_used.npy'
@@ -155,85 +155,109 @@ def synthetic_error_simulation(json_path):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path)
 
-    file_path = cache.cache.settings['kde_synthetic']['file_path']
-    delay_settings = cache.cache.settings['kde_synthetic']['delay']
-    flow_settings = cache.cache.settings['kde_synthetic']['flow']
-    load_settings = cache.cache.settings['kde_synthetic']['load']
-    error_slope_settings = cache.cache.settings['kde_synthetic']['error_slope']
-    error_base_settings = cache.cache.settings['kde_synthetic']['error_base']
-    base_settings = cache.cache.settings['kde_synthetic']['base']
-    count_settings = cache.cache.settings['kde_synthetic']['count']
-    experimental_csv = cache.cache.settings['kde_synthetic']['experimental_csv']
+    scores = []
+    outputs = {}
+    simulations = {}
 
-    dir_base = Path(cache.cache.settings.get('baseDir'))
-    file = dir_base / file_path
+    for experiment in cache.cache.settings['kde_synthetic']:
+        file_path = experiment['file_path']
+        delay_settings = experiment['delay']
+        flow_settings = experiment['flow']
+        load_settings = experiment['load']
+        error_slope_settings = experiment['error_slope']
+        error_base_settings = experiment['error_base']
+        base_settings = experiment['base']
+        count_settings = experiment['count']
+        experimental_csv = experiment['experimental_csv']
+        units = experiment['units']
+        name = experiment['name']
 
-    data = numpy.loadtxt(experimental_csv, delimiter=',')
-    times = data[:,0]
+        dir_base = Path(cache.cache.settings.get('baseDir'))
+        file = dir_base / file_path
 
-    temp = Cadet()
-    temp.filename = bytes(file)
-    temp.load()
+        data = numpy.loadtxt(experimental_csv, delimiter=',')
+        times = data[:,0]
 
-    util.setupSimulation(temp, times)
+        temp = Cadet()
+        temp.filename = bytes(file)
+        temp.load()
 
-    nsec = temp.root.input.solver.sections.nsec
+        util.setupSimulation(temp, times)
 
-    def post_function(simulation):
-        error_slope = numpy.random.normal(error_slope_settings[0], error_slope_settings[1], 1)[0]
-        base = numpy.max(simulation.root.output.solution.unit_002.solution_outlet_comp_000)/1000.0
-        error_base = numpy.random.normal(base, base/error_base_settings, len(simulation.root.output.solution.unit_002.solution_outlet_comp_000))
-        simulation.root.output.solution.unit_002.solution_outlet_comp_000 = simulation.root.output.solution.unit_002.solution_outlet_comp_000 * error_slope + error_base
+        nsec = temp.root.input.solver.sections.nsec
+
+        def post_function(simulation):
+            error_slope = numpy.random.normal(error_slope_settings[0], error_slope_settings[1], 1)[0]
+            base = numpy.max(simulation.root.output.solution.unit_002.solution_outlet_comp_000)/1000.0
+            error_base = numpy.random.normal(base, base/error_base_settings, len(simulation.root.output.solution.unit_002.solution_outlet_comp_000))
+            simulation.root.output.solution.unit_002.solution_outlet_comp_000 = simulation.root.output.solution.unit_002.solution_outlet_comp_000 * error_slope + error_base
     
-    error_delay = Cadet(temp.root)
+        error_delay = Cadet(temp.root)
 
-    delays = numpy.abs(numpy.random.normal(delay_settings[0], delay_settings[1], nsec))
+        delays = numpy.abs(numpy.random.normal(delay_settings[0], delay_settings[1], nsec))
     
-    synthetic_error.pump_delay(error_delay, delays)
+        synthetic_error.pump_delay(error_delay, delays)
 
-    flow = numpy.random.normal(flow_settings[0], flow_settings[1], error_delay.root.input.solver.sections.nsec)
+        flow = numpy.random.normal(flow_settings[0], flow_settings[1], error_delay.root.input.solver.sections.nsec)
     
-    synthetic_error.error_flow(error_delay, flow)
+        synthetic_error.error_flow(error_delay, flow)
     
-    load = numpy.random.normal(load_settings[0], load_settings[1], error_delay.root.input.solver.sections.nsec)
+        load = numpy.random.normal(load_settings[0], load_settings[1], error_delay.root.input.solver.sections.nsec)
     
-    synthetic_error.error_load(error_delay, load)
+        synthetic_error.error_load(error_delay, load)
 
-    result = util.runExperiment(None, cache.cache.settings['experiments'][0], cache.cache.settings, cache.cache.target, error_delay, 60.0, cache.cache, fullPrecision=True, post_function=post_function)
+        result = util.runExperiment(None, cache.cache.settings['experiments'][0], cache.cache.settings, cache.cache.target, error_delay, 60.0, cache.cache, fullPrecision=True, post_function=post_function)
 
-    return result
+        if result is not None:
+            scores.extend(result['scores'])
+
+            simulations[name] = result['simulation']
+
+            for unit in units:
+                outputs['%s_unit_%03d' % (name, int(unit))] = result['simulation'].root.output.solution['unit_%03d' % int(unit)].solution_outlet_comp_000
+
+    return scores, simulations, outputs
 
 def generate_synthetic_error(cache):
     if 'kde_synthetic' in cache.settings:
-        count_settings = int(cache.settings['kde_synthetic']['count'])
-        results = []
-        for result in futures.map(synthetic_error_simulation, [cache.json_path] * count_settings):
+        count_settings = int(cache.settings['kde_synthetic'][0]['count'])
+        
+        scores_all = []
+        simulations_all = {}
+        outputs_all = {}
+
+        for scores, simulations, outputs in futures.map(synthetic_error_simulation, [cache.json_path] * count_settings):
             
-            if result is not None:
-                results.append(result)
+            if scores and simulations and outputs:
 
-        scores = []
-        outputs = []
-        simulations = []
-        for result in results:
-            scores.append(result['scores'])
-            outputs.append(result['simulation'].root.output.solution.unit_002.solution_outlet_comp_000)
-            simulations.append(result['simulation'])
+                scores_all.append(scores)
 
-        scores = numpy.array(scores)
-        outputs = numpy.array(outputs)
+                for key,value in outputs.items():
+                    temp = outputs_all.get(key, [])
+                    temp.append(value)
+                    outputs_all[key] = temp
+                                        
+        scores = numpy.array(scores_all)
 
-        times = results[0]['simulation'].root.input.solver.user_solution_times
+        times = {}
+        for simulation_name, simulation_values in simulations_all.items():
+            times[simulation_name] = simulation_values.root.input.solver.user_solution_times
+            #Only the first item is needed
+            break
 
         dir_base = cache.settings.get('resultsDirBase')
         file = dir_base / 'kde_data.h5'
 
         with h5py.File(file, 'w') as hf:
             hf.create_dataset('scores', data=scores, compression="gzip")
-            hf.create_dataset('outputs', data=outputs, compression="gzip")
-            hf.create_dataset('times', data=times, compression="gzip")
-        
-        return scores, simulations
+
+            for output_name, output in outputs_all.items():
+                hf.create_dataset(output_name, data=numpy.array(output), compression="gzip")
+
+            for time_name, time in times.items():
+                hf.create_dataset(time_name, data=times, compression="gzip")
+                               
+        return scores, simulations_all
 
     return None, None
 

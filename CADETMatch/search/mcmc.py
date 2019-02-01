@@ -568,17 +568,18 @@ def plotTube(cache, chain, kde, pca, scaler):
     with h5py.File(mcmc_h5, 'a') as hf:
 
         for expName,value in combinations.items():
-            plot_mcmc(output_mcmc, value, expName, "combine")
+            exp_name = expName.split('_')[0]
+            plot_mcmc(output_mcmc, value, expName, "combine", cache.target[exp_name]['time'], cache.target[exp_name]['value'])
             hf.create_dataset(expName, data=value['data'], compression="gzip")
 
         for exp, units in results.items():
             for unitName, unit in units.items():
                 for comp, data in unit.items():
                     expName = '%s_%s' % (exp, unitName)
-                    plot_mcmc(output_mcmc, data, expName, comp)
+                    plot_mcmc(output_mcmc, data, expName, comp, cache.target[exp]['time'], cache.target[exp]['value'])
                     hf.create_dataset('%s_%s' % (expName, comp), data=data['data'], compression="gzip")
 
-def plot_mcmc(output_mcmc, value, expName, name):
+def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue):
     data = value['data']
     times = value['time']
     mean = value["mean"]
@@ -591,6 +592,7 @@ def plot_mcmc(output_mcmc, value, expName, name):
                 color='green', alpha=0.2)
     plt.fill_between(times, minValues, maxValues,
                 color='red', alpha=0.2)
+    plt.plot(expTime, expValue, 'r')
     plt.savefig(str(output_mcmc / ("%s_%s.png" % (expName, name) ) ), bbox_inches='tight')
     plt.close()
 
@@ -598,6 +600,7 @@ def plot_mcmc(output_mcmc, value, expName, name):
     alpha = row/1.3e6
     plt.plot(times, data.transpose(), 'g', alpha=alpha)
     plt.plot(times, mean, 'k')
+    plt.plot(expTime, expValue, 'r')
     plt.savefig(str(output_mcmc / ("%s_%s_lines.png" % (expName, name) ) ), bbox_inches='tight')
     plt.close()
 

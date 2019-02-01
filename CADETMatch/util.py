@@ -299,9 +299,9 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         return None
 
     except subprocess.CalledProcessError as error:
-        scoop.logger.error("The simulation failed")
+        scoop.logger.error("The simulation failed %s", individual)
         logError(cache, cadetValuesKEQ, error)
-        os.remove(path)
+        #os.remove(path)
         return None
 
     #read sim data
@@ -438,7 +438,9 @@ def setupMCMC(cache, lb, ub):
                 experiment['features'].append({"name":"AbsoluteHeight", "type":"AbsoluteHeight"})
          
         if "kde_synthetic" in settings:
-            settings['kde_synthetic']['file_path'] = getBestPath(cache)
+            found = getBestPath(cache)
+            for experiment in settings['kde_synthetic']:
+                experiment['file_path'] = found[experiment['name']]
 
         new_settings_file = resultDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:
@@ -450,8 +452,12 @@ def getBestPath(cache):
     meta_path = cache.settings['resultsDirMeta']
     df = pandas.read_csv(meta_path / 'results.csv')
     name = df.loc[df['Min Score'].argmax(), 'Name']
+    found = {}
     for name_path in meta_path.glob('%s_*.h5' % name):
-        return name_path.as_posix()
+        id_name, experiment_name, meta_name = name_path.stem.split('_')
+        found[experiment_name] = name_path.as_posix()
+        #return name_path.as_posix()
+    return found
 
 def copyCSVWithNoise(idx, center, noise):
     "read the original json file and create a new set of simulation data and simulation file in a subdirectory with noise"
