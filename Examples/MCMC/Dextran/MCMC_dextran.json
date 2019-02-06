@@ -14,6 +14,7 @@
   "normalizeOutput":1,
   "burnIn":5,
   "chainLength":5,
+  "mcmc_h5":"S:/ibt72/AMS-003/transport/bypass/fit_small_extended/mcmc_refine/mcmc/mcmc.h5",
   "kde": 
   {
       "power": 1,

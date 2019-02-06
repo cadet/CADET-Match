@@ -9,6 +9,7 @@ import numpy
 import plugins
 import os
 from deap import tools
+from sklearn import preprocessing
 
 class Cache:
     def __init__(self):
@@ -119,6 +120,8 @@ class Cache:
 
         self.tempDir = self.settings.get('tempDir', None)
 
+        self.MCMCSetup()
+
         if "MCMCpopulation" not in self.settings:
             self.settings['MCMCpopulation'] = self.settings['population']
 
@@ -132,6 +135,26 @@ class Cache:
                 sortNDHelperB(best, worst, obj, front)
 
             tools.emo.sortNDHelperB = sortNDHelperB
+
+    def MCMCSetup(self):
+        mcmc_h5 = self.settings.get('mcmc_h5', None)
+        self.dataPrevious = None
+        self.dataPreviousScaled = None
+        self.kdePrevious = None
+        if mcmc_h5 is not None:
+            data = Cadet()
+            data.filename = mcmc_h5
+            data.load()
+            self.dataPrevious = data.root.flat_chain_transform.copy()
+
+            size = 2000
+            indexes = numpy.random.choice(self.dataPrevious.shape[0], size, replace=False)
+            self.dataPrevious = self.dataPrevious[indexes]
+
+            scaler = preprocessing.RobustScaler().fit(self.dataPrevious)
+            self.dataPreviousScaled = scaler.transform(self.dataPrevious)
+
+            self.scalerPrevious = scaler
         
     def setupSettings(self):
         settings_file = Path(self.json_path)

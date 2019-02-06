@@ -28,45 +28,73 @@ import pandas
 import array
 
 import kde_generator
+from sklearn.neighbors.kde import KernelDensity
 
 name = "MCMC"
 
 log2 = numpy.log(2)
 
-def log_likelihood(theta, json_path, kde_scores, kde_bw):
+def log_previous(cadetValues):
+    if cache.cache.dataPreviousScaled is not None:
+        #find the right values to use
+        row, col = cache.cache.dataPreviousScaled.shape
+        values = cadetValues[-col:]
+        values_shape = numpy.array(values).reshape(1, -1)
+        values_scaler = cache.cache.scalerPrevious.transform(values_shape)
+        score = cache.cache.kdePrevious.score_samples(values_scaler)
+        return score
+    else:
+        return 0.0
+
+def setupPrevious(previous_bw):
+    scores_temp = cache.cache.dataPreviousScaled
+    kde = KernelDensity(kernel='gaussian', bandwidth=previous_bw, atol=kde_generator.bw_tol).fit(scores_temp)
+    cache.cache.kdePrevious = kde
+
+def log_likelihood(individual, json_path, kde_scores, kde_bw, previous_bw=None):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path, False)
         cache.cache.roundScores = None
         cache.cache.roundParameters = None
+
+    if previous_bw is not None and cache.cache.kdePrevious is None:
+        setupPrevious(previous_bw)
 
     if 'kde' not in log_likelihood.__dict__:
         kde, pca, scaler = kde_generator.getKDE(cache.cache, kde_scores, kde_bw)
         log_likelihood.kde = kde
         log_likelihood.pca = pca
         log_likelihood.scaler = scaler
-    
-    individual = theta
 
     scores, csv_record, results = evo.fitness(individual, json_path)
+
+    logPrevious = log_previous(next(iter(results.values()))['cadetValues'])
 
     scores_shape = numpy.array(scores).reshape(1, -1)
 
     score_scaler = log_likelihood.scaler.transform(scores_shape)
 
-    score = log_likelihood.kde.score_samples(score_scaler) + log2  #*2 is from mirroring and we need to double the probability to get back to the normalized distribution
+    score = log_likelihood.kde.score_samples(score_scaler) + log2 + logPrevious #*2 is from mirroring and we need to double the probability to get back to the normalized distribution
 
     return score, scores, csv_record, results 
 
-def log_posterior(theta, json_path, kde_scores, kde_bw):
+def log_posterior(theta, json_path, kde_scores, kde_bw, previous_bw=None):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path)
 
     #try:
-    ll, scores, csv_record, results = log_likelihood(theta, json_path, kde_scores, kde_bw)
+    ll, scores, csv_record, results = log_likelihood(theta, json_path, kde_scores, kde_bw, previous_bw)
     return ll, theta, scores, csv_record, results
     #except:
     #    # if model does not converge:
     #    return -numpy.inf, None, None, None, None
+
+def previous_kde(cache):
+    if cache.dataPreviousScaled is not None:
+        bw, store = kde_generator.get_bandwidth(cache.dataPreviousScaled, cache)
+        return bw
+
+    return None
 
 def run(cache, tools, creator):
     "run the parameter estimation"
@@ -86,13 +114,17 @@ def run(cache, tools, creator):
     
     kde_scores, kde_bw = kde_generator.generate_data(cache)
 
+    previous_bw = previous_kde(cache)
+
+    scoop.logger.info("previous_bw: %s",  previous_bw)
+
     kde, pca, scaler = kde_generator.getKDE(cache, kde_scores, kde_bw)
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path, kde_scores, kde_bw], pool=cache.toolbox, a=2.0)
+        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path, kde_scores, kde_bw, previous_bw], pool=cache.toolbox, a=2.0)
         emcee.EnsembleSampler._get_lnprob = _get_lnprob
         emcee.EnsembleSampler._propose_stretch = _propose_stretch
 

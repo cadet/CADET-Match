@@ -40,7 +40,7 @@ import synthetic_error
 
 def bandwidth_score(bw, data, store):
     bandwidth = 10**bw[0]
-    kde_bw = KernelDensity(kernel='exponential', bandwidth=bandwidth, atol=bw_tol)
+    kde_bw = KernelDensity(kernel='gaussian', bandwidth=bandwidth, atol=bw_tol)
     scores = cross_val_score(kde_bw, data, cv=3)
     store.append( [bandwidth, -max(scores)] )
     return -max(scores)
@@ -100,7 +100,7 @@ def getKDE(cache, scores, bw):
 
     scores_scaler = scaler.transform(scores_mirror)
 
-    kde = KernelDensity(kernel='exponential', bandwidth=bw, atol=bw_tol).fit(scores_scaler)
+    kde = KernelDensity(kernel='gaussian', bandwidth=bw, atol=bw_tol).fit(scores_scaler)
 
     plotKDE(cache, kde, scores_scaler)
 
