@@ -2,19 +2,18 @@
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
   "resultsDir": "fit_all_large_absolute/",
-  "tempDir": "M:/",
+  "tempDir": "L:/",
   "CSV": "dextran_MCMC.csv",
   "checkpointFile": "check",
   "searchMethod": "MCMC",
-  "population": 2,
+  "population": 6,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "scoreMCMC":"score",
   "graphSpearman": 0,
   "normalizeOutput":1,
-  "burnIn":5,
-  "chainLength":5,
-  "mcmc_h5":"S:/ibt72/AMS-003/transport/bypass/fit_small_extended/mcmc_refine/mcmc/mcmc.h5",
+  "burnIn":4,
+  "chainLength":4,
   "kde": 
   {
       "power": 1,
@@ -30,13 +29,13 @@
     "experimental_csv": "dextran_pulse.csv",
     "name": "main",
     "units": [2],
-    "delay":[0.0, 1.0],
-    "flow":[1.0, 0.09],
-    "load":[1.0, 0.09],
+    "delay":[0.0, 3.0],
+    "flow":[1.0, 0.03],
+    "load":[1.0, 0.03],
     "error_slope":[1.0, 0.001],
     "error_base":50.0,
     "base":50.0,
-    "count":50
+    "count":4
   }
   ],
   "parameters": [

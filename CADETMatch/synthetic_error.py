@@ -14,7 +14,7 @@ def all_steps(simulation):
             else:
                 switch_name_prev = 'switch_%03d' % (i - 1)
                 connections[switch_name] = connections[switch_name_prev].copy()
-                connections[switch_name].section = i        
+                connections[switch_name].section = i
 
 def get_switches(simulation):
     switches = []

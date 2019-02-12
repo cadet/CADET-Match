@@ -308,6 +308,12 @@ class Cache:
             temp['time'] = data[:, 0]
             temp['value'] = data[:, 1]
 
+            if self.normalizeOutput:
+                temp['factor'] = 1.0/numpy.max(temp['value'])
+            else:
+                temp['factor'] = 1.0
+            temp['valueFactor'] = temp['value'] * temp['factor']
+
         for feature in experiment['features']:
             featureName = feature['name']
             featureType = feature['type']

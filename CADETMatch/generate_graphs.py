@@ -45,6 +45,11 @@ my_cmap[:,-1] = 0.05
 # Create new colormap
 my_cmap = ListedColormap(my_cmap)
 
+cm_plot = matplotlib.cm.gist_rainbow
+
+def get_color(idx, max_colors, cmap):
+    return cmap(1.*float(idx)/max_colors)
+
 def main():
     cache.setup(sys.argv[1])
     cache.progress_path = Path(cache.settings['resultsDirBase']) / "progress.csv"
@@ -297,10 +302,10 @@ def graph_simulation(simulation, graph):
         graph.set_ylabel('mMol Salt', color='b')
         graph.tick_params('y', colors='b')
 
-        colors = ['r', 'g', 'c', 'm', 'y', 'k']
+        #colors = ['r', 'g', 'c', 'm', 'y', 'k']
         axis2 = graph.twinx()
         for idx, comp in enumerate(comps[1:]):
-            axis2.plot(solution_times, comp, '%s-' % colors[idx], label="P%s" % idx)
+            axis2.plot(solution_times, comp, '-', color=get_color(idx, len(comps) - 1, cm_plot), label="P%s" % idx)
         axis2.set_ylabel('mMol Protein', color='r')
         axis2.tick_params('y', colors='r')
 
@@ -311,9 +316,9 @@ def graph_simulation(simulation, graph):
     else:
         graph.set_title("Output")
         
-        colors = ['r', 'g', 'c', 'm', 'y', 'k']
+        #colors = ['r', 'g', 'c', 'm', 'y', 'k']
         for idx, comp in enumerate(comps):
-            graph.plot(solution_times, comp, '%s-' % colors[idx], label="P%s" % idx)
+            graph.plot(solution_times, comp, '-', color=get_color(idx, len(comps), cm_plot), label="P%s" % idx)
         graph.set_ylabel('mMol Protein', color='r')
         graph.tick_params('y', colors='r')
         graph.set_xlabel('time (s)')
@@ -407,7 +412,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                 graph_exp = results['graph_exp']
                 graph_sim = results['graph_sim']
 
-                colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+                #colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
                 findMax = 0
                 for idx, (key, value) in enumerate(graph_sim.items()):
@@ -427,13 +432,13 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                         mult = findMax/(2*max(values))
                         values = [i* mult for i in values]
                     factors.append(mult)
-                    graph.plot(time, values, '%s--' % colors[idx], label='Simulation Comp: %s Mult:%.2f' % (key, mult))
+                    graph.plot(time, values, '--', color=get_color(idx, len(graph_sim), cm_plot), label='Simulation Comp: %s Mult:%.2f' % (key, mult))
 
                 for idx, (key, value) in enumerate(graph_exp.items()):
                     (time, values) = zip(*value)
                     mult = factors[idx]
                     values = [i* mult for i in values]
-                    graph.plot(time, values, '%s:' % colors[idx], label='Experiment Comp: %s Mult:%.2f' % (key, mult))
+                    graph.plot(time, values, ':', color=get_color(idx, len(graph_sim), cm_plot), label='Experiment Comp: %s Mult:%.2f' % (key, mult))
                 graphIdx += 1
             graph.legend()
 
@@ -524,6 +529,7 @@ def plot_2d(arg):
     graph.scatter(data, scores, c=scores, cmap=my_cmap)
     graph.set_xlabel(format % headers[c1])
     graph.set_ylabel(scoreName)
+    graph.set_xlim(min(data), max(data), auto=True)
     filename = "%s_%s.png" % (c1, score)
     fig.savefig(str(directory / filename), bbox_inches='tight')
 

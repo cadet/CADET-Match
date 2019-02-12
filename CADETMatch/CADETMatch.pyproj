@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\AMS-003\transport\dextran\MCMC_small.json" 1</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\MCMC\Dextran\MCMC_dextran.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>
@@ -69,7 +69,13 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="loggerwriter.py" />
+    <Compile Include="mle.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="modEnsemble.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="nsga2_simple.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="nsga3_selection.py">

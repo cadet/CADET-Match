@@ -415,6 +415,27 @@ def setupMCMC(cache, lb, ub):
             transform.setBounds(parameter, lb_local, ub_local)
             idx = idx + count
 
+        if 'mcmc_h5' in settings and 'parameters_mcmc' in settings:
+            mcmc_h5 = settings.get('mcmc_h5', None)
+            data = Cadet()
+            data.filename = mcmc_h5
+            data.load()
+            dataPrevious = data.root.flat_chain_transform.copy()
+
+            lb, ub = numpy.percentile(dataPrevious, [1, 99], 0)
+
+            idx = 0
+            for parameter in settings['parameters_mcmc']:
+                transform = cache.transforms[parameter['transform']]
+                count = transform.count_extended
+                scoop.logger.warn('%s %s %s', idx, count, transform)
+                lb_local = lb[idx:idx+count]
+                ub_local = ub[idx:idx+count]
+                transform.setBounds(parameter, lb_local, ub_local)
+                idx = idx + count
+
+            settings['parameters'].extend(settings['parameters_mcmc'])
+
         settings['searchMethod'] = 'MCMC'
         settings['graphSpearman'] = 0
 

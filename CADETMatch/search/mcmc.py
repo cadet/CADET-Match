@@ -16,6 +16,10 @@ import SALib.sample.sobol_sequence
 
 import matplotlib
 matplotlib.use('Agg')
+
+from matplotlib import figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
 import matplotlib.pyplot as plt
 
 import evo
@@ -26,13 +30,24 @@ import pareto
 import scoop
 import pandas
 import array
+import mle
 
 import kde_generator
 from sklearn.neighbors.kde import KernelDensity
 
 name = "MCMC"
 
+from addict import Dict
+import matplotlib.cm
+cm_plot = matplotlib.cm.gist_rainbow
+
+def get_color(idx, max_colors, cmap):
+    return cmap(1.*float(idx)/max_colors)
+
 log2 = numpy.log(2)
+
+saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
+                 b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
 
 def log_previous(cadetValues):
     if cache.cache.dataPreviousScaled is not None:
@@ -209,7 +224,175 @@ def run(cache, tools, creator):
                 
     plotTube(cache, chain, kde, pca, scaler)
     util.finish(cache)
+
+    process_mle(chain, cache)
     return numpy.mean(chain, 0)
+
+def process_mle(chain, cache):
+    mle_x = mle.get_mle(chain)
+    mle_ind = util.convert_individual(mle_x, cache)[0]
+    scoop.logger.info("mle_x: %s", mle_x)
+    scoop.logger.info("mle_ind: %s", mle_ind)
+
+    temp = [mle_x,]
+
+    #run simulations for 5% 50% 95% and MLE vs experimental data
+    percentile = numpy.percentile(chain, [5, 10, 50, 90, 95], 0)
+
+    for row in percentile:
+        temp.append(list(row))
+
+    cadetValues = [util.convert_individual(i, cache)[0] for i in temp]
+
+    fitnesses = list(cache.toolbox.map(cache.toolbox.evaluate, temp))
+
+    simulations = {}
+    for scores, csv_record, results in fitnesses:
+        for name, value in results.items():
+            sims = simulations.get(name, [])
+            sims.append(value['simulation'])
+
+            simulations[name] = sims
+                       
+    cadetValues = util.roundParameter(cadetValues, cache)
+
+    mcmc_dir = Path(cache.settings['resultsDirMCMC'])
+
+    mcmc_csv = Path(cache.settings['resultsDirMCMC']) / "prob.csv"
+
+    pd = pandas.DataFrame(cadetValues, columns = cache.parameter_headers_actual)
+    labels = ['MLE', '5', '10', '50', '90', '95']
+    pd.insert(0, 'name', labels)
+    pd.to_csv(mcmc_csv, index=False)
+
+    plot_mle(simulations, cache, labels)
+
+def plot_mle(simulations, cache, labels):
+    mcmc_dir = Path(cache.settings['resultsDirMCMC'])
+    target = cache.target
+    settings = cache.settings
+    for experiment in settings['experiments']:
+        experimentName = experiment['name']
+        
+        file_name = '%s_stats.png' % experimentName
+        dst = mcmc_dir / file_name
+
+        numPlotsSeq = [1]
+        #Shape and ShapeDecay have a chromatogram + derivative
+        for feature in experiment['features']:
+            if feature['type'] in ('Shape', 'ShapeDecay'):
+                numPlotsSeq.append(2)
+            else:
+                numPlotsSeq.append(1)
+
+        numPlots = sum(numPlotsSeq)
+
+        exp_time = target[experimentName]['time']
+        exp_value = target[experimentName]['valueFactor']
+
+        fig = figure.Figure(figsize=[10, numPlots*10])
+        canvas = FigureCanvas(fig)
+
+        graph_simulations(simulations[experimentName], labels, fig.add_subplot(numPlots, 1, 1))
+
+        graphIdx = 2
+        for idx, feature in enumerate(experiment['features']):
+            featureName = feature['name']
+            featureType = feature['type']
+
+            feat = target[experimentName][featureName]
+
+            selected = feat['selected']
+            exp_time = feat['time'][selected]
+            exp_value = feat['value'][selected] / feat['factor']
+
+            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybrid2_spline', 'similarityHybridDecay', 
+                               'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
+                               'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
+                               'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle'):
+                
+                graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
+
+                for idx, (sim, label) in enumerate(zip(simulations[experimentName],labels)):
+                    sim_time, sim_value = util.get_times_values(sim, target[experimentName][featureName])
+                    
+                    graph.plot(sim_time, sim_value, '--', label=label, color=get_color(idx, len(simulations[experimentName]) + 1, cm_plot))
+
+                graph.plot(exp_time, exp_value, ':', label='Experiment', color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot))
+                graphIdx += 1
+            
+            if featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_hybrid2', 'derivative_similarity_cross', 'derivative_similarity_cross_alt',
+                                 'derivative_similarity_hybrid2_spline', 'similarityHybridDecay2_spline',
+                                 'Shape', 'ShapeDecay'):
+
+                graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
+                for idx, (sim, label) in enumerate(zip(simulations[experimentName],labels)):
+                    sim_time, sim_value = util.get_times_values(sim, target[experimentName][featureName])
+                    sim_spline = scipy.interpolate.UnivariateSpline(sim_time, smoothing(sim_time, sim_value), s=smoothing_factor(sim_value)).derivative(1)
+                    
+                    graph.plot(sim_time, sim_spline(sim_time), '--', label=label, color=get_color(idx, len(simulations[experimentName]) + 1, cm_plot))
+
+                
+                exp_spline = scipy.interpolate.UnivariateSpline(exp_time, smoothing(exp_time, exp_value), s=smoothing_factor(exp_value)).derivative(1)
+                graph.plot(exp_time, exp_spline(exp_time), ':', label='Experiment', color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot))
+                graphIdx += 1
+                        
+            graph.legend()
+
+        fig.savefig(str(dst))    
+
+def graph_simulations(simulations, simulation_labels, graph):
+    linestyles = ['-', '--', '-.', ':']
+    for idx_sim, (simulation, label_sim) in enumerate(zip(simulations, simulation_labels)):
+
+        comps = []
+
+        ncomp = int(simulation.root.input.model.unit_001.ncomp)
+        isotherm = bytes(simulation.root.input.model.unit_001.adsorption_model)
+
+        hasSalt = isotherm in saltIsotherms
+
+        solution_times = simulation.root.output.solution.solution_times
+
+        hasColumn = isinstance(simulation.root.output.solution.unit_001.solution_outlet_comp_000, Dict)
+
+        if hasColumn:
+            for i in range(ncomp):
+                comps.append(simulation.root.output.solution.unit_001['solution_column_outlet_comp_%03d' % i])
+        else:
+            for i in range(ncomp):
+                comps.append(simulation.root.output.solution.unit_001['solution_outlet_comp_%03d' % i])
+
+        if hasSalt:
+            graph.set_title("Output")
+            graph.plot(solution_times, comps[0], 'b-', label="Salt")
+            graph.set_xlabel('time (s)')
+        
+            # Make the y-axis label, ticks and tick labels match the line color.
+            graph.set_ylabel('mMol Salt', color='b')
+            graph.tick_params('y', colors='b')
+
+            axis2 = graph.twinx()
+            for idx, comp in enumerate(comps[1:]):
+                axis2.plot(solution_times, comp, linestyles[idx], color=get_color(idx_sim, len(simulation_labels), cm_plot), label="P%s %s" % (idx, label_sim))
+            axis2.set_ylabel('mMol Protein', color='r')
+            axis2.tick_params('y', colors='r')
+
+
+            lines, labels = graph.get_legend_handles_labels()
+            lines2, labels2 = axis2.get_legend_handles_labels()
+            axis2.legend(lines + lines2, labels + labels2, loc=0)
+        else:
+            graph.set_title("Output")
+        
+            for idx, comp in enumerate(comps):
+                graph.plot(solution_times, comp, linestyles[idx], color=get_color(idx_sim, len(simulation_labels), cm_plot), label="P%s %s" % (idx, label_sim))
+            graph.set_ylabel('mMol Protein', color='r')
+            graph.tick_params('y', colors='r')
+            graph.set_xlabel('time (s)')
+
+            lines, labels = graph.get_legend_handles_labels()
+            graph.legend(lines, labels, loc=0)
 
 def getCheckPoint(checkpointFile, cache):
     if checkpointFile.exists():

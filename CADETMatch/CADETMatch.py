@@ -159,6 +159,13 @@ def createErrorCSV(cache):
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
             writer.writerow(cache.parameter_headers + ['Return Code', 'STDOUT', 'STDERR'])
 
+def setTemplateValues(simulation, set_values):
+    for path, index, value in set_values:
+        if index > 0:
+            simulation[path][index] = value
+        else:
+            simulation[path] = value
+
 def setupTemplates(cache):
     "setup all the experimental templates"
     for experiment in cache.settings['experiments']:
@@ -172,6 +179,9 @@ def setupTemplates(cache):
         #load based on where the HDF5 file is
         template.filename = HDF5
         template.load()
+
+        if 'set_values' in experiment:
+            setTemplateValues(template, experiment['set_values'])
 
         #change to where we want the template created
         template.filename = template_path
