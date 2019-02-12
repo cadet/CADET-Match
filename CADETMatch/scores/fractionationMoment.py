@@ -2,10 +2,14 @@ import util
 import score
 import numpy
 import pandas
+from addict import Dict
 
 name = "fractionationMoment"
-adaptive = True
-badScore = 0
+settings = Dict()
+settings.adaptive = True
+settings.badScore = 0
+settings.meta_mask = True
+settings.count = None
 
 def run(sim_data, feature):
     simulation = sim_data['simulation']
@@ -83,6 +87,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
                        func_mean_time, func_variance_time, func_skew_time, 
                        func_mean_value, func_variance_value, func_skew_value) )
 
+    settings.count = 6 * len(funcs)
     temp['funcs'] = funcs
     temp['components'] = [int(i) for i in headers[2:]]
     temp['samplesPerComponent'] = rows

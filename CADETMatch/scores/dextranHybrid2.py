@@ -2,15 +2,18 @@ import util
 import score
 import scipy.stats
 import numpy
+from addict import Dict
 
 name = "dextranHybrid2"
-adaptive = True
-badScore = 0
+settings = Dict()
+settings.adaptive = True
+settings.badScore = 0
+settings.meta_mask = True
+settings.count = 7
+settings.failure = [0.0] * settings.count, 1e6, 1, [], [1.0] * settings.count
 
 def run(sim_data, feature):
     "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"
-    failure = [0.0] * 7, 1e6, 1, [], [1.0] * 7
-    
     exp_time_values = feature['time']
     max_value = feature['max_value']
 
@@ -42,7 +45,7 @@ def run(sim_data, feature):
         sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_zero), s=util.smoothing_factor(sim_data_zero)).derivative(1)
         exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_zero), s=util.smoothing_factor(exp_data_zero)).derivative(1)
     except:  #I know a bare exception is bad but it looks like the exception is not exposed inside UnivariateSpline
-        return failure
+        return settings.failure
 
     exp_der_data_values = exp_spline(exp_time_values)
     sim_der_data_values = sim_spline(exp_time_values)

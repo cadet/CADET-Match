@@ -1,10 +1,15 @@
 import util
 import score
 import scipy.stats
+from addict import Dict
 
 name = "similarityDecay"
-adaptive = True
-badScore = 0
+settings = Dict()
+settings.adaptive = True
+settings.badScore = 0
+settings.meta_mask = True
+settings.count = 3
+settings.failure = [0.0] * settings.count, 1e6, 1, [], [1.0] * settings.count
 
 def run(sim_data, feature):
     "similarity, value, start stop"

@@ -1,10 +1,14 @@
 import util
 import calc_coeff
 import numpy
+from addict import Dict
 
 name = "AbsoluteTime"
-adaptive = True
-badScore = 0
+settings = Dict()
+settings.adaptive = True
+settings.badScore = 0
+settings.meta_mask = False
+settings.count = 1
 
 """This score is NOT for optimization. It is needed for the MCMC algorithm in order to handle assymetric distributions"""
 

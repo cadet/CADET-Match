@@ -1,9 +1,14 @@
 import util
 import sys
+from addict import Dict
 
 name = "SSE"
-adaptive = False
-badScore = -sys.float_info.max
+settings = Dict()
+settings.adaptive = False
+settings.badScore = -sys.float_info.max
+settings.meta_mask = True
+settings.count = 1
+settings.failure = [0.0] * settings.count, 1e6, 1, [], [1.0] * settings.count
 
 def run(sim_data, feature):
     "sum square error score, this score is NOT composable with other scores, use negative so score is maximized like other scores"

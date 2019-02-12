@@ -201,7 +201,7 @@ class Cache:
                 if feature['type'] in self.scores:
                     temp = self.scores[feature['type']].headers(experimentName, feature)
                     self.numGoals += len(temp)
-                    self.badScore = self.scores[feature['type']].badScore
+                    self.badScore = self.scores[feature['type']].settings.badScore
 
                 self.score_headers.extend(temp)
                 experiment['headers'].extend(temp)
@@ -356,7 +356,7 @@ class Cache:
 
             if featureType in self.scores:
                 temp[featureName].update(self.scores[featureType].setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol))
-                self.adaptive = self.scores[featureType].adaptive
+                self.adaptive = self.scores[featureType].settings.adaptive
             
         return temp
 

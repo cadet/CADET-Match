@@ -3,10 +3,14 @@ import score
 import numpy
 import pandas
 import scoop
+from addict import Dict
 
 name = "fractionationCombine"
-adaptive = True
-badScore = 0
+settings = Dict()
+settings.adaptive = True
+settings.badScore = 0
+settings.meta_mask = True
+settings.count = None
 
 def run(sim_data, feature):
     "similarity, value, start stop"
@@ -84,6 +88,8 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
             func = score.value_function(value, abstolFraction)
 
             funcs.append( (start, stop, int(component), value, func) )
+
+    settings.count = len(headers[2:])
     temp['funcs'] = funcs
     temp['components'] = [int(i) for i in headers[2:]]
     temp['samplesPerComponent'] = rows

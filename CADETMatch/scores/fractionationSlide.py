@@ -3,10 +3,15 @@ import score
 import numpy
 import pandas
 import scipy.optimize
+from addict import Dict
 
 name = "fractionationSlide"
-adaptive = True
-badScore = 0
+settings = Dict()
+settings.adaptive = True
+settings.badScore = 0
+settings.meta_mask = True
+settings.count = None
+
 
 def goal(offset, frac_exp, sim_data_time, sim_data_value, start, stop):
     sim_data_value = score.roll(sim_data_value, int(offset))
@@ -131,6 +136,8 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     for idx, component in enumerate(headers[2:], 2):
         value = numpy.array(data.iloc[:, idx])
         funcs.append((int(component), score.value_function(max(value), abstolFraction)))
+
+    settings.count = 3 * len(funcs)
 
     temp['data'] = data
     temp['start'] = start

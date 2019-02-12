@@ -3,10 +3,15 @@ import score
 import scipy.stats
 import scipy.interpolate
 import numpy
+from addict import Dict
 
 name = "Shape"
-adaptive = True
-badScore = 0
+settings = Dict()
+settings.adaptive = True
+settings.badScore = 0
+settings.meta_mask = True
+settings.count = 7
+settings.failure = [0.0] * settings.count, 1e6, 1, [], [1.0] * settings.count
 
 def run(sim_data, feature):
     "similarity, value, start stop"
@@ -20,7 +25,7 @@ def run(sim_data, feature):
         sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
         exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
     except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
-        return [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 1e6, 1, [], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+        return settings.failure
      
     [high, low] = util.find_peak(exp_time_values, sim_data_values)
 

@@ -112,6 +112,15 @@ def sobolGenerator(icls, cache, n):
     else:
         return []
 
+def calcMetaScores(scores, cache):
+    score = numpy.array(scores)[cache.meta_mask]
+    prod_score = util.product_score(scores)
+    min_score = min(scores)
+    max_score = max(scores)
+    norm_score = numpy.linalg.norm(scores)/numpy.sqrt(len(scores))
+
+    return [prod_score, min_score, max_score, norm_score]
+
 def product_score(values):
     values = numpy.array(values)
     if numpy.all(values >= 0.0):

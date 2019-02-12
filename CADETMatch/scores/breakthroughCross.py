@@ -1,9 +1,13 @@
 import util
 import score
+from addict import Dict
 
 name = "breakthroughCross"
-adaptive = True
-badScore = 0
+settings = Dict()
+settings.adaptive = True
+settings.badScore = 0
+settings.meta_mask = True
+settings.count = 3
 
 def run(sim_data, feature):
     "similarity, value, start stop"
