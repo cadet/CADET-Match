@@ -121,6 +121,7 @@ class Cache:
         self.tempDir = self.settings.get('tempDir', None)
 
         self.MCMCSetup()
+        self.setupMetaMask()
 
         if "MCMCpopulation" not in self.settings:
             self.settings['MCMCpopulation'] = self.settings['population']
@@ -135,6 +136,19 @@ class Cache:
                 sortNDHelperB(best, worst, obj, front)
 
             tools.emo.sortNDHelperB = sortNDHelperB
+
+    def setupMetaMask(self):
+        meta_mask_seq = []
+
+        for idx, experiment in enumerate(self.settings['experiments']):
+            for feature in experiment['features']:
+                if feature['type'] in self.scores:
+                    settings = self.scores[feature['type']].settings
+                    meta_mask = settings.meta_mask
+                    count = settings.count
+
+                    meta_mask_seq.extend([meta_mask,] * count)
+        self.meta_mask = numpy.array(meta_mask_seq)
 
     def MCMCSetup(self):
         mcmc_h5 = self.settings.get('mcmc_h5', None)

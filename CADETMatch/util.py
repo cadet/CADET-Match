@@ -930,12 +930,6 @@ def metaCSV(cache):
                          numpy.mean(paretoProductScore), numpy.std(paretoProductScore),
                          numpy.mean(totalCPUTime), numpy.std(totalCPUTime),])
 
-def meta_calc(scores):
-    return [product_score(scores), 
-            numpy.min(scores), 
-            numpy.sum(scores)/len(scores), 
-            numpy.linalg.norm(scores)/numpy.sqrt(len(scores))]
-
 def update_result_data(cache, ind, fit, result_data, results):
     if result_data is not None and results is not None:
         result_data['input'].append(tuple(ind))
@@ -947,7 +941,7 @@ def update_result_data(cache, ind, fit, result_data, results):
         if ind.confidence is not None:
             result_data['confidence'].append(tuple(ind.confidence))
         result_data['output'].append(tuple(fit))
-        result_data['output_meta'].append(tuple(meta_calc(fit)))
+        result_data['output_meta'].append(tuple(calcMetaScores(fit, cache)))
 
         for result in results.values():
             result_data['input_transform'].append(tuple(result['cadetValues']))
@@ -1000,7 +994,7 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
         ind_meta = toolbox.individualMeta(ind)
 
-        ind_meta.fitness.values = meta_calc(fit)
+        ind_meta.fitness.values = calcMetaScores(fit, cache)
        
         update_result_data(cache, ind, fit, result_data, results)
 

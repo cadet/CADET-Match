@@ -48,10 +48,7 @@ def fitness(individual, json_path):
     scores = [i**power for i in scores]
 
     #human scores
-    humanScores = numpy.array( [util.product_score(scores), 
-                                min(scores), sum(scores)/len(scores), 
-                                numpy.linalg.norm(scores)/numpy.sqrt(len(scores)), 
-                                error] )
+    humanScores = numpy.concatenate([util.calcMetaScores(scores, cache.cache), error])
 
     if cache.cache.roundScores is not None:
         humanScores = util.RoundToSigFigs(humanScores, cache.cache.roundScores)
