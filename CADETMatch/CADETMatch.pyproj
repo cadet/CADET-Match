@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\MCMC\Dextran\MCMC_dextran_nsga3.json" 1</CommandLineArguments>
+    <CommandLineArguments>"F:\temp\pDNA\Poros_SMA.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -315,6 +315,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="transform\nu_sigma.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="transform\set_value.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="transform\sum.py">

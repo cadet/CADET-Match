@@ -70,8 +70,6 @@ def sse(data1, data2):
 
 def find_peak(times, data):
     "Return tuples of (times,data) for the peak we need"
-    #[highs, lows] = peakdetect.peakdetect(data, times, 1)
-
     minIdx = numpy.argmin(data)
     maxIdx = numpy.argmax(data)
 
@@ -116,9 +114,9 @@ def calcMetaScores(scores, cache):
     scores = numpy.array(scores)[cache.meta_mask]
     prod_score = product_score(scores)
     min_score = min(scores)
-    max_score = max(scores)
+    mean_score = sum(scores)/len(scores)
     norm_score = numpy.linalg.norm(scores)/numpy.sqrt(len(scores))
-    human = [prod_score, min_score, max_score, norm_score]
+    human = [prod_score, min_score, mean_score, norm_score]
     return human
 
 def product_score(values):

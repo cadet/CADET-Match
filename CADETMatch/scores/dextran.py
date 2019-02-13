@@ -102,7 +102,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
 def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
     temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, 
-            "%s_Time" % name, "%s_DerTime" % name, "%s_Value" % name, 
+            "%s_Time" % name, "%s_Value" % name, 
             "%s_Der_High_Value" % name, "%s_Der_Low_Value" % name]
     return temp
 
