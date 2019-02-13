@@ -83,7 +83,10 @@ def log_likelihood(individual, json_path, kde_scores, kde_bw, previous_bw=None):
 
     scores, csv_record, results = evo.fitness(individual, json_path)
 
-    logPrevious = log_previous(next(iter(results.values()))['cadetValues'])
+    if results is not None:
+        logPrevious = log_previous(next(iter(results.values()))['cadetValues'])
+    else:
+        logPrevious = 0.0
 
     scores_shape = numpy.array(scores).reshape(1, -1)
 
@@ -468,9 +471,6 @@ def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer,
         process.generation_start = time.time()
 
     scoop.logger.info("Mean acceptance fraction: %0.3f", numpy.mean(sampler.acceptance_fraction))
-
-    csv_lines = []
-    meta_csv_lines = []
 
     population = []
     fitnesses = []

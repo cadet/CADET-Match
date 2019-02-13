@@ -10,7 +10,7 @@ settings = Dict()
 settings.adaptive = True
 settings.badScore = 0
 settings.meta_mask = True
-settings.count = 7
+settings.count = 6
 settings.failure = [0.0] * settings.count, 1e6, 1, [], [1.0] * settings.count
 
 def run(sim_data, feature):

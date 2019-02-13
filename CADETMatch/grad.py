@@ -124,7 +124,7 @@ def fitness_sens(individual, cache):
     #need
 
     #human scores
-    humanScores = numpy.concatenate([util.calcMetaScores(scores, cache), -error])
+    humanScores = numpy.concatenate([util.calcMetaScores(scores, cache), [-error,]])
 
     #save
     keep_result = 1

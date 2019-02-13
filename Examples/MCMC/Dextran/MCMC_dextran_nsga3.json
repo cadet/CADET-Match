@@ -2,7 +2,7 @@
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
   "resultsDir": "fit_nsga3_mcmc_all_large_2/",
-  "tempDir": "M:/",
+  "tempDir": "L:/",
   "CSV": "dextran_MCMC.csv",
   "checkpointFile": "check",
   "stopAverage": 0.995,
@@ -13,14 +13,14 @@
   "mutationRate": 0.2,
   "crossoverRate": 0.8,
   "generations": 1000,
-  "population": 6,
-  "minPopulation": 6,
-  "maxPopulation":6,
+  "population": 3,
+  "minPopulation": 3,
+  "maxPopulation":3,
   "roundParameters": 3,
   "roundScores": 3,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "stallGenerations": 15,
+  "stallGenerations": 2,
   "normalizeOutput":1,
   "continueMCMC":1,
   "kde": 
@@ -32,17 +32,20 @@
       "base_noise_std": 1e-7,
       "signal_noise_std": 1e-2      
   },
-  "kde_synthetic":
+  "kde_synthetic":[
   {
     "file_path":"dextran_pulse.h5",
+    "experimental_csv": "dextran_pulse.csv",
+    "name": "main",
+    "units":[2],
     "delay":[0.0, 1.0],
     "flow":[1.0, 0.09],
     "load":[1.0, 0.09],
     "error_slope":[1.0, 0.001],
     "error_base":50.0,
     "base":50.0,
-    "count":2000
-  },
+    "count":100
+  }],
   "parameters": [
     {
       "transform": "norm_log",
