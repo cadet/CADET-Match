@@ -204,12 +204,6 @@ def setupDeap(cache):
 
     cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, map_function, creator, base, tools)
 
-if __name__ == "__main__":
-    start = time.time()
-    main()
-    scoop.logger.info('Sysem has finished')
-    scoop.logger.info("The total runtime was %s seconds" % (time.time() - start))
-
 def find_percentile(cache):
     "find the percentile boundaries for the input variables"
     resultDir = Path(cache.settings['resultsDir'])
@@ -222,7 +216,7 @@ def find_percentile(cache):
         #product min average norm
         best_norm = numpy.max(score[:,3])
 
-        data = data[score[:,3] > 0.7 * best_norm,:]
+        data = data[score[:,3] > 0.8 * best_norm,:]
 
         lb, ub = numpy.percentile(data, [1, 99], 0)
 
@@ -244,3 +238,10 @@ def continue_mcmc(cache):
         setup(cache, json_path)
 
         hof = evo.run(cache)
+
+if __name__ == "__main__":
+    start = time.time()
+    main()
+    scoop.logger.info('Sysem has finished')
+    scoop.logger.info("The total runtime was %s seconds" % (time.time() - start))
+

@@ -134,6 +134,22 @@ def plot_2d_scatter(args):
     filename = "%s_%s_confidence.png" % (parameter_idx, score_idx)
     fig.savefig(str(output_directory / filename), bbox_inches='tight')
 
+def plotChain(flat_chain, flat_chain_transform, headers, out_dir, prefix):
+    if len(flat_chain) > 1e5:
+        indexes = numpy.random.choice(flat_chain.shape[0], int(1e5), replace=False)
+        chain = flat_chain[indexes]
+        chain_transform = flat_chain_transform[indexes]
+    else:
+        chain = flat_chain
+        chain_transform = flat_chain_transform
+        
+    fig = corner.corner(chain, quantiles=(0.16, 0.5, 0.84),
+                    show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=20)
+    fig.savefig(str(out_dir / ("%s_corner.png" % prefix)), bbox_inches='tight')
+
+    fig = corner.corner(chain_transform, quantiles=(0.16, 0.5, 0.84),
+                    show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=20)
+    fig.savefig(str(out_dir / ("%s_corner_transform.png" % prefix)), bbox_inches='tight')
 
 def graphCorner(cache):
     headers = list(cache.parameter_headers_actual)
@@ -151,23 +167,12 @@ def graphCorner(cache):
             for key in h5.keys():
                 data[key] = h5[key].value
 
-        if len(data['flat_chain']) > 1e5:
-            indexes = numpy.random.choice(data['flat_chain'].shape[0], int(1e5), replace=False)
-            chain = data['flat_chain'][indexes]
-            chain_transform = data['flat_chain_transform'][indexes]
-        else:
-            chain = data['flat_chain']
-            chain_transform = data['flat_chain_transform']
-        
         out_dir = cache.settings['resultsDirProgress']
 
-        fig = corner.corner(chain, quantiles=(0.16, 0.5, 0.84),
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=20)
-        fig.savefig(str(out_dir / "corner.png"), bbox_inches='tight')
+        plotChain(data['train_flat_chain'], data['train_flat_chain_transform'], headers, out_dir, 'train')
 
-        fig = corner.corner(chain_transform, quantiles=(0.16, 0.5, 0.84),
-                       show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=20)
-        fig.savefig(str(out_dir / "corner_transform.png"), bbox_inches='tight')
+        if 'flat_chain' in data:
+            plotChain(data['flat_chain'], data['flat_chain_transform'], headers, out_dir, 'full')
 
         if 'burn_in_acceptance' in data:
             fig = figure.Figure(figsize=[10, 10])
@@ -346,6 +351,8 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
         for feature in experiment['features']:
             if feature['type'] in ('Shape', 'ShapeDecay'):
                 numPlotsSeq.append(2)
+            elif feature['type'] in ('AbsoluteTime', 'AbsoluteHeight'):
+                pass
             else:
                 numPlotsSeq.append(1)
 

@@ -2,6 +2,7 @@ import random
 import pickle
 import util
 import numpy
+import scipy
 from pathlib import Path
 import warnings
 with warnings.catch_warnings():
@@ -165,9 +166,10 @@ def run(cache, tools, creator):
 
         checkpoint = getCheckPoint(checkpointFile,cache)
 
+        train_chain = None
+
         if checkpoint['state'] == 'burn_in':
             tol = 5e-4
-            convergence_check_interval = 50
             count = checkpoint['length_burn'] - checkpoint['idx_burn']
             for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_burn'], checkpoint['ln_prob_burn'],
                                     checkpoint['rstate_burn'], iterations=count ), start=checkpoint['idx_burn']):
@@ -175,7 +177,7 @@ def run(cache, tools, creator):
                 burn_seq.append(accept)
                 converge[:-1] = converge[1:]
                 converge[-1] = accept
-                writeMCMC(cache, sampler, burn_seq, chain_seq, idx, parameters)
+                writeMCMC(cache, sampler.chain, None, burn_seq, chain_seq, parameters)
                 scoop.logger.info('idx: %s std: %s mean: %s converge: %s', idx, numpy.std(converge), numpy.mean(converge), numpy.std(converge)/tol)
 
                 checkpoint['p_burn'] = p
@@ -192,6 +194,8 @@ def run(cache, tools, creator):
                     checkpoint['p_chain'] = p
                     checkpoint['ln_prob_chain'] = None
                     checkpoint['rstate_chain'] = None
+
+                    train_chain = numpy.array(sampler.chain)
                     sampler.reset()
                     break
             
@@ -203,7 +207,7 @@ def run(cache, tools, creator):
                                     checkpoint['rstate_chain'], iterations=count ), start=checkpoint['idx_chain']):
                 accept = numpy.mean(sampler.acceptance_fraction)
                 chain_seq.append(accept)
-                writeMCMC(cache, sampler, burn_seq, chain_seq, idx, parameters)
+                writeMCMC(cache, train_chain, sampler.chain, burn_seq, chain_seq, parameters)
 
                 checkpoint['p_chain'] = p
                 checkpoint['ln_prob_chain'] = ln_prob
@@ -285,6 +289,8 @@ def plot_mle(simulations, cache, labels):
         for feature in experiment['features']:
             if feature['type'] in ('Shape', 'ShapeDecay'):
                 numPlotsSeq.append(2)
+            elif feature['type'] in ('AbsoluteTime', 'AbsoluteHeight'):
+                pass
             else:
                 numPlotsSeq.append(1)
 
@@ -307,7 +313,7 @@ def plot_mle(simulations, cache, labels):
 
             selected = feat['selected']
             exp_time = feat['time'][selected]
-            exp_value = feat['value'][selected] / feat['factor']
+            exp_value = feat['value'][selected]
 
             if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybrid2_spline', 'similarityHybridDecay', 
                                'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
@@ -318,10 +324,15 @@ def plot_mle(simulations, cache, labels):
 
                 for idx, (sim, label) in enumerate(zip(simulations[experimentName],labels)):
                     sim_time, sim_value = util.get_times_values(sim, target[experimentName][featureName])
-                    
-                    graph.plot(sim_time, sim_value, '--', label=label, color=get_color(idx, len(simulations[experimentName]) + 1, cm_plot))
 
-                graph.plot(exp_time, exp_value, ':', label='Experiment', color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot))
+                    if idx == 0:
+                        linewidth = 2
+                    else:
+                        linewidth = 1
+                    
+                    graph.plot(sim_time, sim_value, '--', label=label, color=get_color(idx, len(simulations[experimentName]) + 1, cm_plot), linewidth = linewidth)
+
+                graph.plot(exp_time, exp_value, '-', label='Experiment', color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot), linewidth=2)
                 graphIdx += 1
             
             if featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_hybrid2', 'derivative_similarity_cross', 'derivative_similarity_cross_alt',
@@ -332,12 +343,17 @@ def plot_mle(simulations, cache, labels):
                 for idx, (sim, label) in enumerate(zip(simulations[experimentName],labels)):
                     sim_time, sim_value = util.get_times_values(sim, target[experimentName][featureName])
                     sim_spline = scipy.interpolate.UnivariateSpline(sim_time, smoothing(sim_time, sim_value), s=smoothing_factor(sim_value)).derivative(1)
+
+                    if idx == 0:
+                        linewidth = 2
+                    else:
+                        linewidth = 1
                     
-                    graph.plot(sim_time, sim_spline(sim_time), '--', label=label, color=get_color(idx, len(simulations[experimentName]) + 1, cm_plot))
+                    graph.plot(sim_time, sim_spline(sim_time), '--', label=label, color=get_color(idx, len(simulations[experimentName]) + 1, cm_plot), linewidth = linewidth)
 
                 
                 exp_spline = scipy.interpolate.UnivariateSpline(exp_time, smoothing(exp_time, exp_value), s=smoothing_factor(exp_value)).derivative(1)
-                graph.plot(exp_time, exp_spline(exp_time), ':', label='Experiment', color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot))
+                graph.plot(exp_time, exp_spline(exp_time), '-', label='Experiment', color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot), linewidth=2)
                 graphIdx += 1
                         
             graph.legend()
@@ -613,12 +629,7 @@ def next_pow_two(n):
         i = i << 1
     return i
 
-def writeMCMC(cache, sampler, burn_seq, chain_seq, idx, parameters):
-    "write out the mcmc data so it can be plotted"
-    mcmcDir = Path(cache.settings['resultsDirMCMC'])
-    mcmc_h5 = mcmcDir / "mcmc.h5"
-
-    chain = sampler.chain
+def process_chain(chain, cache, idx):
     chain = chain[:, :idx+1, :]
     chain_shape = chain.shape
     flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
@@ -630,8 +641,26 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx, parameters):
 
     flat_chain_transform = chain_transform.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 
-    flat_interval = interval(flat_chain, cache)
-    flat_interval_transform = interval(flat_chain_transform, cache)
+    return chain, flat_chain, chain_transform, flat_chain_transform
+
+def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters):
+    "write out the mcmc data so it can be plotted"
+    mcmcDir = Path(cache.settings['resultsDirMCMC'])
+    mcmc_h5 = mcmcDir / "mcmc.h5"
+
+    train_chain, train_chain_flat, train_chain_transform, train_chain_flat_transform = process_chain(train_chain, cache, len(burn_seq)-1)
+
+    if chain is not None:
+        chain, chain_flat, chain_transform, chain_flat_transform = process_chain(train_chain, cache, len(chain_seq)-1)
+        interval_chain = chain_flat
+        interval_chain_transform = chain_flat_transform
+    else:
+        interval_chain = train_chain_flat
+        interval_chain_transform = train_chain_flat_transform
+
+
+    flat_interval = interval(interval_chain, cache)
+    flat_interval_transform = interval(interval_chain_transform, cache)
 
     flat_interval.to_csv(mcmcDir / "percentile.csv")
     flat_interval_transform.to_csv(mcmcDir / "percentile_transform.csv")
@@ -646,12 +675,19 @@ def writeMCMC(cache, sampler, burn_seq, chain_seq, idx, parameters):
         if chain_seq:
             data = numpy.array(chain_seq).reshape(-1, 1)   
             hf.create_dataset("mcmc_acceptance", data=data, compression="gzip")
-                
-        hf.create_dataset("full_chain", data=chain, compression="gzip")
-        hf.create_dataset("full_chain_transform", data=chain_transform, compression="gzip")
+        
+        if chain is not None:    
+            hf.create_dataset("full_chain", data=chain, compression="gzip")
+            hf.create_dataset("full_chain_transform", data=chain_transform, compression="gzip")
 
-        hf.create_dataset("flat_chain", data=flat_chain, compression="gzip")
-        hf.create_dataset("flat_chain_transform", data=flat_chain_transform, compression="gzip")
+            hf.create_dataset("flat_chain", data=chain_flat, compression="gzip")
+            hf.create_dataset("flat_chain_transform", data=chain_flat_transform, compression="gzip")
+
+        hf.create_dataset("train_full_chain", data=train_chain, compression="gzip")
+        hf.create_dataset("train_full_chain_transform", data=train_chain_transform, compression="gzip")
+
+        hf.create_dataset("train_flat_chain", data=train_chain_flat, compression="gzip")
+        hf.create_dataset("train_flat_chain_transform", data=train_chain_flat_transform, compression="gzip")
 
 def processChainForPlots(cache, chain, kde, pca, scaler):
     mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, results, times, mcmc_score = genRandomChoice(cache, chain, kde, pca, scaler)
@@ -694,10 +730,16 @@ def processResultsForPlotting(results, times):
     return results, combinations
 
 def genRandomChoice(cache, chain, kde, pca, scaler):
-    size = 5000
+    "want about 1000 items and will be removing about 10% of them"
+    size = 1100
     if len(chain) > size:
         indexes = numpy.random.choice(chain.shape[0], size, replace=False)
         chain = chain[indexes]
+
+    lb, ub = numpy.percentile(chain, [5, 95], 0)
+    selected = (chain >= lb) & (chain <= ub)
+    bools = numpy.all(selected, 1)
+    chain = chain[bools, :]
 
     individuals = []
 
@@ -786,6 +828,8 @@ def plotTube(cache, chain, kde, pca, scaler):
             exp_name = expName.split('_')[0]
             plot_mcmc(output_mcmc, value, expName, "combine", cache.target[exp_name]['time'], cache.target[exp_name]['value'])
             hf.create_dataset(expName, data=value['data'], compression="gzip")
+            hf.create_dataset('exp_%s_time' % expName, data=cache.target[exp_name]['time'], compression="gzip")
+            hf.create_dataset('exp_%s_value' % expName, data=cache.target[exp_name]['value'], compression="gzip")
 
         for exp, units in results.items():
             for unitName, unit in units.items():
@@ -793,6 +837,8 @@ def plotTube(cache, chain, kde, pca, scaler):
                     expName = '%s_%s' % (exp, unitName)
                     plot_mcmc(output_mcmc, data, expName, comp, cache.target[exp]['time'], cache.target[exp]['value'])
                     hf.create_dataset('%s_%s' % (expName, comp), data=data['data'], compression="gzip")
+                    hf.create_dataset('exp_%s_%s_time' % (expName, comp), data=cache.target[exp_name]['time'], compression="gzip")
+                    hf.create_dataset('exp_%s_%s_value' % (expName, comp), data=cache.target[exp_name]['value'], compression="gzip")
 
 def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue):
     data = value['data']
@@ -812,7 +858,7 @@ def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue):
     plt.close()
 
     row, col = data.shape
-    alpha = row/1.3e6
+    alpha = 0.005
     plt.plot(times, data.transpose(), 'g', alpha=alpha)
     plt.plot(times, mean, 'k')
     plt.plot(expTime, expValue, 'r')

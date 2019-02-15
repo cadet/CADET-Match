@@ -429,7 +429,7 @@ def setupMCMC(cache, lb, ub):
             data.load()
             dataPrevious = data.root.flat_chain_transform.copy()
 
-            lb, ub = numpy.percentile(dataPrevious, [1, 99], 0)
+            lb, ub = numpy.percentile(dataPrevious, [5, 95], 0)
 
             idx = 0
             for parameter in settings['parameters_mcmc']:
