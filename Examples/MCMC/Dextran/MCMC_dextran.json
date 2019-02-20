@@ -12,9 +12,7 @@
   "scoreMCMC":"score",
   "graphSpearman": 0,
   "normalizeOutput":1,
-  "burnIn":20,
-  "chainLength":60,
-  "burnStable":300,
+  "burnStable":50,
   "kde": 
   {
       "power": 1,

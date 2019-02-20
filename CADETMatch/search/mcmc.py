@@ -169,7 +169,7 @@ def run(cache, tools, creator):
             return process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csvfile, sampler)
         sampler.process = local
 
-        converge = numpy.random.rand(cache.settings.get('burnStable', 50))
+        converge = numpy.ones(cache.settings.get('burnStable', 50)) * numpy.nan
 
         checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings['checkpointFile'])
         checkpoint = getCheckPoint(checkpointFile,cache)
@@ -190,7 +190,10 @@ def run(cache, tools, creator):
                 converge[:-1] = converge[1:]
                 converge[-1] = accept
                 writeMCMC(cache, addChain(train_chain, sampler.chain), None, burn_seq, chain_seq, parameters)
-                scoop.logger.info('burn:  idx: %s accept: %.3f std: %.3f mean: %.3f converge: %.3f', idx, accept, numpy.std(converge), numpy.mean(converge), numpy.std(converge)/tol)
+
+                converge_real = converge[~numpy.isnan(converge)]
+                scoop.logger.info('burn:  idx: %s accept: %.3f std: %.3f mean: %.3f converge: %.3f', idx, accept, 
+                                  numpy.std(converge_real), numpy.mean(converge_real), numpy.std(converge_real)/tol)
 
                 checkpoint['p_burn'] = p
                 checkpoint['ln_prob_burn'] = ln_prob
@@ -202,7 +205,7 @@ def run(cache, tools, creator):
                 with checkpointFile.open('wb')as cp_file:
                     pickle.dump(checkpoint, cp_file)
 
-                if numpy.std(converge) < tol:
+                if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
                     scoop.logger.info("burn in completed at iteration %s", idx)
                     break
 
