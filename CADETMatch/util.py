@@ -429,7 +429,9 @@ def setupMCMC(cache, lb, ub):
             data.load()
             dataPrevious = data.root.flat_chain_transform.copy()
 
-            lb, ub = numpy.percentile(dataPrevious, [5, 95], 0)
+            lb, ub = numpy.percentile(dataPrevious, [1, 99], 0)
+            #lb = numpy.min(dataPrevious, 0)
+            #ub = numpy.max(dataPrevious, 0)
 
             idx = 0
             for parameter in settings['parameters_mcmc']:
@@ -657,7 +659,8 @@ def fractionate(start_seq, stop_seq, times, values):
         temp.append(numpy.trapz(local_values, local_times)/ (stop - start))
     return numpy.array(temp)
 
-def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, average_score, minimum_score, product_score, sim_start, generation_start, result_data=None):
+def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, average_score, 
+                  minimum_score, product_score, sim_start, generation_start, result_data=None, line_log=True):
     cpu_time = psutil.Process().cpu_times()
     now = time.time()
 
@@ -823,12 +826,14 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
             line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.3f \tBest: %.3f \tMinimum Score: %.3f \tBest: %.3f \tProduct Score: %.3f \tBest: %.3f'
  
-            scoop.logger.info(line_format, generation, len(population),
-                  RoundToSigFigs(population_average,3), RoundToSigFigs(population_average_best,3),
-                  RoundToSigFigs(population_min,3), RoundToSigFigs(population_min_best,3),
-                  RoundToSigFigs(population_product,3), RoundToSigFigs(population_product_best,3))
+            if line_log:
+                scoop.logger.info(line_format, generation, len(population),
+                      RoundToSigFigs(population_average,3), RoundToSigFigs(population_average_best,3),
+                      RoundToSigFigs(population_min,3), RoundToSigFigs(population_min_best,3),
+                      RoundToSigFigs(population_product,3), RoundToSigFigs(population_product_best,3))
         else:
-            scoop.logger.info("Generation: %s \tPopulation: %s \t No Stats Avaialable", generation, len(population))
+            if line_log:
+                scoop.logger.info("Generation: %s \tPopulation: %s \t No Stats Avaialable", generation, len(population))
         
         writer.writerow([generation,
                          len(population),

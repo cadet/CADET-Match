@@ -115,6 +115,13 @@ def previous_kde(cache):
 
     return None
 
+def addChain(*args):
+    temp = [arg for arg in args if arg is not None]
+    if len(temp) > 1:
+        return numpy.concatenate( temp, axis=1)
+    else:
+        return numpy.array(temp[0])
+
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
@@ -124,8 +131,12 @@ def run(cache, tools, creator):
 
     parameters = len(cache.MIN_VALUE)
     
-    populationSize = parameters * cache.settings['MCMCpopulation']
-
+    MCMCpopulationSet = cache.settings.get('MCMCpopulationSet', None)
+    if MCMCpopulationSet is not None:
+        populationSize = MCMCpopulationSet
+    else:
+        populationSize = parameters * cache.settings['MCMCpopulation']
+               
     #Population must be even
     populationSize = populationSize + populationSize % 2  
 
@@ -158,15 +169,16 @@ def run(cache, tools, creator):
             return process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csvfile, sampler)
         sampler.process = local
 
-        converge = numpy.random.rand(50)
-        burn_seq = []
-        chain_seq = []
+        converge = numpy.random.rand(cache.settings.get('burnStable', 50))
 
         checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings['checkpointFile'])
-
         checkpoint = getCheckPoint(checkpointFile,cache)
 
-        train_chain = None
+        burn_seq = checkpoint.get('burn_seq', [])
+        chain_seq = checkpoint.get('chain_seq', [])
+        
+        train_chain = checkpoint.get('train_chain', None)
+        run_chain = checkpoint.get('run_chain', None)
 
         if checkpoint['state'] == 'burn_in':
             tol = 5e-4
@@ -177,27 +189,35 @@ def run(cache, tools, creator):
                 burn_seq.append(accept)
                 converge[:-1] = converge[1:]
                 converge[-1] = accept
-                writeMCMC(cache, sampler.chain, None, burn_seq, chain_seq, parameters)
-                scoop.logger.info('idx: %s std: %s mean: %s converge: %s', idx, numpy.std(converge), numpy.mean(converge), numpy.std(converge)/tol)
+                writeMCMC(cache, addChain(train_chain, sampler.chain), None, burn_seq, chain_seq, parameters)
+                scoop.logger.info('burn:  idx: %s accept: %.3f std: %.3f mean: %.3f converge: %.3f', idx, accept, numpy.std(converge), numpy.mean(converge), numpy.std(converge)/tol)
 
                 checkpoint['p_burn'] = p
                 checkpoint['ln_prob_burn'] = ln_prob
                 checkpoint['rstate_burn'] = random_state
                 checkpoint['idx_burn'] = idx+1
+                checkpoint['train_chain'] = sampler.chain
+                checkpoint['burn_seq'] = burn_seq
 
                 with checkpointFile.open('wb')as cp_file:
                     pickle.dump(checkpoint, cp_file)
 
                 if numpy.std(converge) < tol:
                     scoop.logger.info("burn in completed at iteration %s", idx)
-                    checkpoint['state'] = 'chain'
-                    checkpoint['p_chain'] = p
-                    checkpoint['ln_prob_chain'] = None
-                    checkpoint['rstate_chain'] = None
-
-                    train_chain = numpy.array(sampler.chain)
-                    sampler.reset()
                     break
+
+            checkpoint['state'] = 'chain'
+            checkpoint['p_chain'] = p
+            checkpoint['ln_prob_chain'] = None
+            checkpoint['rstate_chain'] = None
+            checkpoint['train_chain'] = sampler.chain
+            checkpoint['burn_seq'] = burn_seq
+
+            with checkpointFile.open('wb')as cp_file:
+                pickle.dump(checkpoint, cp_file)
+
+            train_chain = addChain(train_chain, sampler.chain)
+            sampler.reset()
             
         if checkpoint['state'] == 'chain':
             checkInterval = 25
@@ -207,14 +227,18 @@ def run(cache, tools, creator):
                                     checkpoint['rstate_chain'], iterations=count ), start=checkpoint['idx_chain']):
                 accept = numpy.mean(sampler.acceptance_fraction)
                 chain_seq.append(accept)
-                writeMCMC(cache, train_chain, sampler.chain, burn_seq, chain_seq, parameters)
+                writeMCMC(cache, train_chain, addChain(run_chain, sampler.chain), burn_seq, chain_seq, parameters)
 
+                scoop.logger.info('run:  idx: %s accept: %.3f', idx, accept)
+                
                 checkpoint['p_chain'] = p
                 checkpoint['ln_prob_chain'] = ln_prob
                 checkpoint['rstate_chain'] = random_state
                 checkpoint['idx_chain'] = idx+1
+                checkpoint['run_chain'] = sampler.chain
+                checkpoint['chain_seq'] = chain_seq
 
-                with checkpointFile.open('wb')as cp_file:
+                with checkpointFile.open('wb') as cp_file:
                     pickle.dump(checkpoint, cp_file)
 
                 if idx % checkInterval == 0 and idx >= 200:  
@@ -224,8 +248,20 @@ def run(cache, tools, creator):
                         scoop.logger.info("we have run long enough and can quit %s", idx)
                         break
 
-    chain = sampler.chain
-    chain = chain[:, :idx, :]
+            checkpoint['p_chain'] = p
+            checkpoint['ln_prob_chain'] = ln_prob
+            checkpoint['rstate_chain'] = random_state
+            checkpoint['idx_chain'] = idx+1
+            checkpoint['run_chain'] = sampler.chain
+            checkpoint['chain_seq'] = chain_seq
+
+            with checkpointFile.open('wb')as cp_file:
+                pickle.dump(checkpoint, cp_file)
+
+            run_chain = addChain(train_chain, sampler.chain)
+
+    chain = run_chain
+    #chain = chain[:, :idx, :]
     chain_shape = chain.shape
     chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
                 
@@ -342,7 +378,7 @@ def plot_mle(simulations, cache, labels):
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 for idx, (sim, label) in enumerate(zip(simulations[experimentName],labels)):
                     sim_time, sim_value = util.get_times_values(sim, target[experimentName][featureName])
-                    sim_spline = scipy.interpolate.UnivariateSpline(sim_time, smoothing(sim_time, sim_value), s=smoothing_factor(sim_value)).derivative(1)
+                    sim_spline = scipy.interpolate.UnivariateSpline(sim_time, util.smoothing(sim_time, sim_value), s=util.smoothing_factor(sim_value)).derivative(1)
 
                     if idx == 0:
                         linewidth = 2
@@ -352,7 +388,7 @@ def plot_mle(simulations, cache, labels):
                     graph.plot(sim_time, sim_spline(sim_time), '--', label=label, color=get_color(idx, len(simulations[experimentName]) + 1, cm_plot), linewidth = linewidth)
 
                 
-                exp_spline = scipy.interpolate.UnivariateSpline(exp_time, smoothing(exp_time, exp_value), s=smoothing_factor(exp_value)).derivative(1)
+                exp_spline = scipy.interpolate.UnivariateSpline(exp_time, util.smoothing(exp_time, exp_value), s=util.smoothing_factor(exp_value)).derivative(1)
                 graph.plot(exp_time, exp_spline(exp_time), '-', label='Experiment', color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot), linewidth=2)
                 graphIdx += 1
                         
@@ -420,7 +456,11 @@ def getCheckPoint(checkpointFile, cache):
     else:
         parameters = len(cache.MIN_VALUE)
         
-        populationSize = parameters * cache.settings['MCMCpopulation']
+        MCMCpopulationSet = cache.settings.get('MCMCpopulationSet', None)
+        if MCMCpopulationSet is not None:
+            populationSize = MCMCpopulationSet
+        else:
+            populationSize = parameters * cache.settings['MCMCpopulation']
 
         #Population must be even
         populationSize = populationSize + populationSize % 2  
@@ -431,13 +471,14 @@ def getCheckPoint(checkpointFile, cache):
         checkpoint['ln_prob_burn'] = None
         checkpoint['rstate_burn'] = None
         checkpoint['idx_burn'] = 0
-        checkpoint['length_burn'] = cache.settings.get('burnIn', 10000)
-
+        
         checkpoint['p_chain'] = None
         checkpoint['ln_prob_chain'] = None
         checkpoint['rstate_chain'] = None
         checkpoint['idx_chain'] = 0
-        checkpoint['length_chain'] = cache.settings.get('chainLength', 10000)
+    
+    checkpoint['length_chain'] = cache.settings.get('chainLength', 10000)
+    checkpoint['length_burn'] = cache.settings.get('burnIn', 10000)
     return checkpoint
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
@@ -486,7 +527,7 @@ def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer,
     if 'generation_start' not in process.__dict__:
         process.generation_start = time.time()
 
-    scoop.logger.info("Mean acceptance fraction: %0.3f", numpy.mean(sampler.acceptance_fraction))
+    #scoop.logger.info("Mean acceptance fraction: %0.3f", numpy.mean(sampler.acceptance_fraction))
 
     population = []
     fitnesses = []
@@ -506,7 +547,7 @@ def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer,
     avg, bestMin, bestProd = util.averageFitness(population, cache)
 
     util.writeProgress(cache, process.gen, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, 
-                       process.sim_start, process.generation_start, result_data)
+                       process.sim_start, process.generation_start, result_data, line_log=False)
 
     util.graph_process(cache, process.gen)
 
@@ -651,13 +692,12 @@ def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters):
     train_chain, train_chain_flat, train_chain_transform, train_chain_flat_transform = process_chain(train_chain, cache, len(burn_seq)-1)
 
     if chain is not None:
-        chain, chain_flat, chain_transform, chain_flat_transform = process_chain(train_chain, cache, len(chain_seq)-1)
+        chain, chain_flat, chain_transform, chain_flat_transform = process_chain(chain, cache, len(chain_seq)-1)
         interval_chain = chain_flat
         interval_chain_transform = chain_flat_transform
     else:
         interval_chain = train_chain_flat
         interval_chain_transform = train_chain_flat_transform
-
 
     flat_interval = interval(interval_chain, cache)
     flat_interval_transform = interval(interval_chain_transform, cache)
@@ -822,7 +862,7 @@ def plotTube(cache, chain, kde, pca, scaler):
     output_mcmc.mkdir(parents=True, exist_ok=True)
 
     mcmc_h5 = output_mcmc / "mcmc_plots.h5"
-    with h5py.File(mcmc_h5, 'a') as hf:
+    with h5py.File(mcmc_h5, 'w') as hf:
 
         for expName,value in combinations.items():
             exp_name = expName.split('_')[0]

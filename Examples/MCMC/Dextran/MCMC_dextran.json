@@ -12,8 +12,9 @@
   "scoreMCMC":"score",
   "graphSpearman": 0,
   "normalizeOutput":1,
-  "burnIn":4,
-  "chainLength":4,
+  "burnIn":20,
+  "chainLength":60,
+  "burnStable":300,
   "kde": 
   {
       "power": 1,
@@ -35,7 +36,7 @@
     "error_slope":[1.0, 0.001],
     "error_base":50.0,
     "base":50.0,
-    "count":4
+    "count":40
   }
   ],
   "parameters": [
