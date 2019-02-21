@@ -50,28 +50,29 @@ def setValue(sim, value, location, bound=None, comp=None, index=None):
             sim[location.lower()][index] = value
         
 def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
-    locationFrom = parameter['locationFrom']
-    locationTo = parameter['locationTo']
+    if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:    
+        locationFrom = parameter['locationFrom']
+        locationTo = parameter['locationTo']
     
-    try:
-        compFrom = parameter['componentFrom']
-        boundFrom = parameter['boundFrom']
-        indexFrom = None
-    except KeyError:
-        indexFrom = parameter['indexFrom']
-        boundFrom = None
-        compFrom = None
-    valueFrom = getValue(sim, locationFrom, bound=boundFrom, comp=compFrom, index=indexFrom)
+        try:
+            compFrom = parameter['componentFrom']
+            boundFrom = parameter['boundFrom']
+            indexFrom = None
+        except KeyError:
+            indexFrom = parameter['indexFrom']
+            boundFrom = None
+            compFrom = None
+        valueFrom = getValue(sim, locationFrom, bound=boundFrom, comp=compFrom, index=indexFrom)
 
-    try:
-        compTo = parameter['componentTo']
-        boundTo = parameter['boundTo']
-        indexTo = None
-    except KeyError:
-        indexTo = parameter['indexTo']
-        boundTo = None
-        compTo = None
-    setValue(sim, valueFrom, locationTo, bound=boundTo, comp=compTo, index=indexTo)
+        try:
+            compTo = parameter['componentTo']
+            boundTo = parameter['boundTo']
+            indexTo = None
+        except KeyError:
+            indexTo = parameter['indexTo']
+            boundTo = None
+            compTo = None
+        setValue(sim, valueFrom, locationTo, bound=boundTo, comp=compTo, index=indexTo)
 
     return [],[]
 

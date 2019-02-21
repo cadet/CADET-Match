@@ -47,40 +47,41 @@ def untransform(seq, cache, parameter, fullPrecision=False):
 def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
     values, headerValues = untransform(seq, cache, parameter, fullPrecision)
 
-    location = parameter['location']
+    if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
+        location = parameter['location']
     
-    minX = parameter['minX']
-    maxX = parameter['maxX']
+        minX = parameter['minX']
+        maxX = parameter['maxX']
 
-    x_name = parameter['x_name']
+        x_name = parameter['x_name']
 
-    x_value = experiment[x_name]
+        x_value = experiment[x_name]
 
-    slope, intercept = calc_coeff.linear_coeff(minX, values[0], maxX, values[1])
+        slope, intercept = calc_coeff.linear_coeff(minX, values[0], maxX, values[1])
 
-    value = calc_coeff.linear(x_value, slope, intercept)
+        value = calc_coeff.linear(x_value, slope, intercept)
 
-    try:
-        comp = parameter['component']
-        bound = parameter['bound']
-        index = None
-    except KeyError:
-        index = parameter['index']
-        bound = None
+        try:
+            comp = parameter['component']
+            bound = parameter['bound']
+            index = None
+        except KeyError:
+            index = parameter['index']
+            bound = None
 
-    if bound is not None:
-        unit = getUnit(location)
-        boundOffset = util.getBoundOffset(sim.root.input.model[unit])
+        if bound is not None:
+            unit = getUnit(location)
+            boundOffset = util.getBoundOffset(sim.root.input.model[unit])
 
-        if comp == -1:
-            position = ()
-            sim[location.lower()] = value
-        else:
-            position = boundOffset[comp] + bound
-            sim[location.lower()][position] = value
+            if comp == -1:
+                position = ()
+                sim[location.lower()] = value
+            else:
+                position = boundOffset[comp] + bound
+                sim[location.lower()][position] = value
 
-    if index is not None:
-        sim[location.lower()][index] = value
+        if index is not None:
+            sim[location.lower()][index] = value
 
     return values, headerValues
 

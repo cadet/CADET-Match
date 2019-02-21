@@ -13,6 +13,8 @@
   "graphSpearman": 0,
   "normalizeOutput":1,
   "burnStable":50,
+  "chainLength": 40,
+  "burnIn": 20,
   "kde": 
   {
       "power": 1,

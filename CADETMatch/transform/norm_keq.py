@@ -46,17 +46,18 @@ def untransform(seq, cache, parameter, fullPrecision=False):
 def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
     values, headerValues = untransform(seq, cache, parameter, fullPrecision)
 
-    location = parameter['location']
+    if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
+        location = parameter['location']
     
-    comp = parameter['component']
-    bound = parameter['bound']
+        comp = parameter['component']
+        bound = parameter['bound']
     
-    unit = getUnit(location)
-    boundOffset = util.getBoundOffset(sim.root.input.model[unit])
+        unit = getUnit(location)
+        boundOffset = util.getBoundOffset(sim.root.input.model[unit])
 
-    position = boundOffset[comp] + bound
-    sim[location[0].lower()][position] = values[0]
-    sim[location[1].lower()][position] = values[1]
+        position = boundOffset[comp] + bound
+        sim[location[0].lower()][position] = values[0]
+        sim[location[1].lower()][position] = values[1]
 
     return values, headerValues
 

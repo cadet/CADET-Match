@@ -26,29 +26,30 @@ def untransform(seq, cache, parameter, fullPrecision=False):
 def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
     values, headerValues = untransform(seq, cache, parameter, fullPrecision)
 
-    location = parameter['location']
+    if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
+        location = parameter['location']
     
-    try:
-        comp = parameter['component']
-        bound = parameter['bound']
-        index = None
-    except KeyError:
-        index = parameter['index']
-        bound = None
+        try:
+            comp = parameter['component']
+            bound = parameter['bound']
+            index = None
+        except KeyError:
+            index = parameter['index']
+            bound = None
 
-    if bound is not None:
-        unit = getUnit(location)
-        boundOffset = util.getBoundOffset(sim.root.input.model[unit])
+        if bound is not None:
+            unit = getUnit(location)
+            boundOffset = util.getBoundOffset(sim.root.input.model[unit])
 
-        if comp == -1:
-            position = ()
-            sim[location.lower()] = values[0]
-        else:
-            position = boundOffset[comp] + bound
-            sim[location.lower()][position] = values[0]
+            if comp == -1:
+                position = ()
+                sim[location.lower()] = values[0]
+            else:
+                position = boundOffset[comp] + bound
+                sim[location.lower()][position] = values[0]
 
-    if index is not None:
-        sim[location.lower()][index] = values[0]
+        if index is not None:
+            sim[location.lower()][index] = values[0]
     return values, headerValues
 
 def setupTarget(parameter):

@@ -31,18 +31,20 @@ def untransform(seq, cache, parameter, fullPrecision=False):
 
 def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
     values, headerValues = untransform(seq, cache, parameter, fullPrecision)
-    nu_location = parameter['nu_location']
-    sigma_location = parameter['sigma_location']
     
-    comp = parameter['component']
-    bound = parameter['bound']
+    if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
+        nu_location = parameter['nu_location']
+        sigma_location = parameter['sigma_location']
     
-    unit = getUnit(nu_location)
-    boundOffset = util.getBoundOffset(sim.root.input.model[unit])
+        comp = parameter['component']
+        bound = parameter['bound']
+    
+        unit = getUnit(nu_location)
+        boundOffset = util.getBoundOffset(sim.root.input.model[unit])
 
-    position = boundOffset[comp] + bound
-    sim[nu_location.lower()][position] = values[0]
-    sim[sigma_location.lower()][position] = values[1]
+        position = boundOffset[comp] + bound
+        sim[nu_location.lower()][position] = values[0]
+        sim[sigma_location.lower()][position] = values[1]
 
     return values, headerValues
 

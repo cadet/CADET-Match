@@ -27,11 +27,13 @@ def untransform(seq, cache, parameter, fullPrecision=False):
 
 def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
     values, headerValues = untransform(seq, cache, parameter, fullPrecision)
-    area_location = parameter['area_location']
-    length_location = parameter['length_location']
     
-    sim[area_location.lower()] = values[0]
-    sim[length_location.lower()] = values[1]
+    if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
+        area_location = parameter['area_location']
+        length_location = parameter['length_location']
+    
+        sim[area_location.lower()] = values[0]
+        sim[length_location.lower()] = values[1]
 
     return values, headerValues
 

@@ -199,7 +199,7 @@ def run(cache, tools, creator):
                 checkpoint['ln_prob_burn'] = ln_prob
                 checkpoint['rstate_burn'] = random_state
                 checkpoint['idx_burn'] = idx+1
-                checkpoint['train_chain'] = sampler.chain
+                checkpoint['train_chain'] = addChain(train_chain, sampler.chain)
                 checkpoint['burn_seq'] = burn_seq
 
                 with checkpointFile.open('wb')as cp_file:
@@ -213,7 +213,7 @@ def run(cache, tools, creator):
             checkpoint['p_chain'] = p
             checkpoint['ln_prob_chain'] = None
             checkpoint['rstate_chain'] = None
-            checkpoint['train_chain'] = sampler.chain
+            checkpoint['train_chain'] = addChain(train_chain, sampler.chain)
             checkpoint['burn_seq'] = burn_seq
 
             with checkpointFile.open('wb')as cp_file:
@@ -238,14 +238,14 @@ def run(cache, tools, creator):
                 checkpoint['ln_prob_chain'] = ln_prob
                 checkpoint['rstate_chain'] = random_state
                 checkpoint['idx_chain'] = idx+1
-                checkpoint['run_chain'] = sampler.chain
+                checkpoint['run_chain'] = addChain(run_chain, sampler.chain)
                 checkpoint['chain_seq'] = chain_seq
 
                 with checkpointFile.open('wb') as cp_file:
                     pickle.dump(checkpoint, cp_file)
 
                 if idx % checkInterval == 0 and idx >= 200:  
-                    tau = autocorr_new(sampler.chain[:, :idx, 0].T)
+                    tau = autocorr_new(addChain(run_chain, sampler.chain)[:, :idx, 0].T)
                     scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", idx, accept, tau)
                     if idx > (mult * tau):
                         scoop.logger.info("we have run long enough and can quit %s", idx)
@@ -255,7 +255,7 @@ def run(cache, tools, creator):
             checkpoint['ln_prob_chain'] = ln_prob
             checkpoint['rstate_chain'] = random_state
             checkpoint['idx_chain'] = idx+1
-            checkpoint['run_chain'] = sampler.chain
+            checkpoint['run_chain'] = addChain(run_chain, sampler.chain)
             checkpoint['chain_seq'] = chain_seq
 
             with checkpointFile.open('wb')as cp_file:
@@ -282,13 +282,19 @@ def process_mle(chain, cache):
 
     temp = [mle_x,]
 
+    scoop.logger.info('chain shape: %s', chain.shape)
+
     #run simulations for 5% 50% 95% and MLE vs experimental data
     percentile = numpy.percentile(chain, [5, 10, 50, 90, 95], 0)
+
+    scoop.logger.info("percentile: %s", percentile)
 
     for row in percentile:
         temp.append(list(row))
 
     cadetValues = [util.convert_individual(i, cache)[0] for i in temp]
+
+    scoop.logger.info('cadetValues: %s', cadetValues)
 
     fitnesses = list(cache.toolbox.map(cache.toolbox.evaluate, temp))
 
@@ -798,35 +804,37 @@ def genRandomChoice(cache, chain, kde, pca, scaler):
     mcmc_selected_transformed = []
     mcmc_selected_score = []
 
-    for (fit, csv_line, result) in fitnesses:
-
-        mcmc_selected_score.append(tuple(fit))
-        for value in result.values():
-            mcmc_selected_transformed.append(tuple(value['cadetValues']))
-            mcmc_selected.append(tuple(value['individual']))
-            break
+    for (fit, csv_line, result) in fitnesses:        
+        if result is not None:
+            mcmc_selected_score.append(tuple(fit))
+            for value in result.values():
+                mcmc_selected_transformed.append(tuple(value['cadetValues']))
+                mcmc_selected.append(tuple(value['individual']))
+                break
   
-        for key,value in result.items():
-            sims = results.get(key, {})
+            for key,value in result.items():
+                sims = results.get(key, {})
 
-            sim = value['simulation']
+                sim = value['simulation']
 
-            outlets = util.findOutlets(sim)
+                outlets = util.findOutlets(sim)
 
-            for outlet, ncomp in outlets:
-                units = sims.get(outlet, {})
+                for outlet, ncomp in outlets:
+                    units = sims.get(outlet, {})
 
-                for i in range(ncomp):
-                    comps = units.get(i, [])
-                    comps.append(sim.root.output.solution[outlet]["solution_inlet_comp_%03d" % i])
-                    units[i] = comps
+                    for i in range(ncomp):
+                        comps = units.get(i, [])
+                        comps.append(sim.root.output.solution[outlet]["solution_inlet_comp_%03d" % i])
+                        units[i] = comps
 
-                sims[outlet] = units
+                    sims[outlet] = units
 
-                if key not in times:
-                    times[key] = sim.root.output.solution.solution_times
+                    if key not in times:
+                        times[key] = sim.root.output.solution.solution_times
 
-            results[key] = sims
+                results[key] = sims
+        else:
+            scoop.logger.info("Failure in random choice: fit: %s  csv_line: %s   result:%s", fit, csv_line, result)
 
     mcmc_selected = numpy.array(mcmc_selected)
     mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)

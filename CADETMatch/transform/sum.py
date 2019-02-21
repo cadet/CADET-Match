@@ -50,40 +50,41 @@ def setValue(sim, value, location, bound=None, comp=None, index=None):
             sim[location.lower()][index] = value
         
 def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
-    location1 = parameter['location1']
-    location2 = parameter['location2']
-    locationSum = parameter['locationSum']
+    if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
+        location1 = parameter['location1']
+        location2 = parameter['location2']
+        locationSum = parameter['locationSum']
     
-    try:
-        comp1 = parameter['component1']
-        bound1 = parameter['bound1']
-        index1 = None
-    except KeyError:
-        index1 = parameter['index1']
-        bound1 = None
-        comp1 = None
-    value1 = getValue(sim, location1, bound=bound1, comp=comp1, index=index1)
+        try:
+            comp1 = parameter['component1']
+            bound1 = parameter['bound1']
+            index1 = None
+        except KeyError:
+            index1 = parameter['index1']
+            bound1 = None
+            comp1 = None
+        value1 = getValue(sim, location1, bound=bound1, comp=comp1, index=index1)
 
-    try:
-        comp2 = parameter['component2']
-        bound2 = parameter['bound2']
-        index2 = None
-    except KeyError:
-        index2 = parameter['index2']
-        bound2 = None
-        comp2 = None
+        try:
+            comp2 = parameter['component2']
+            bound2 = parameter['bound2']
+            index2 = None
+        except KeyError:
+            index2 = parameter['index2']
+            bound2 = None
+            comp2 = None
 
-    value2 = getValue(sim, location2, bound=bound2, comp=comp2, index=index2)
+        value2 = getValue(sim, location2, bound=bound2, comp=comp2, index=index2)
 
-    try:
-        compSum = parameter['componentSum']
-        boundSum = parameter['boundSum']
-        indexSum = None
-    except KeyError:
-        indexSum = parameter['indexSum']
-        boundSum = None
-        compSum = None
-    setValue(sim, value1+value2, locationSum, bound=boundSum, comp=compSum, index=indexSum)
+        try:
+            compSum = parameter['componentSum']
+            boundSum = parameter['boundSum']
+            indexSum = None
+        except KeyError:
+            indexSum = parameter['indexSum']
+            boundSum = None
+            compSum = None
+        setValue(sim, value1+value2, locationSum, bound=boundSum, comp=compSum, index=indexSum)
 
     return [],[]
 
