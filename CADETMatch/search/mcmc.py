@@ -122,9 +122,152 @@ def addChain(*args):
     else:
         return numpy.array(temp[0])
 
+def sampler_burn(cache, checkpoint, sampler, checkpointFile):
+    burn_seq = checkpoint.get('burn_seq', [])
+    chain_seq = checkpoint.get('chain_seq', [])
+        
+    train_chain = checkpoint.get('train_chain', None)
+    run_chain = checkpoint.get('run_chain', None)
+
+    if run_chain is not None:
+        scoop.logger.info('sampler shape %s', run_chain.shape)
+
+    converge = numpy.ones(cache.settings.get('burnStable', 50)) * numpy.nan
+
+    parameters = len(cache.MIN_VALUE)
+
+    tol = 5e-4
+    count = checkpoint['length_burn'] - checkpoint['idx_burn']
+    for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_burn'], checkpoint['ln_prob_burn'],
+                            checkpoint['rstate_burn'], iterations=count ), start=checkpoint['idx_burn']):
+        accept = numpy.mean(sampler.acceptance_fraction)
+        burn_seq.append(accept)
+        converge[:-1] = converge[1:]
+        converge[-1] = accept
+        writeMCMC(cache, addChain(train_chain, sampler.chain), run_chain, burn_seq, chain_seq, parameters)
+
+        converge_real = converge[~numpy.isnan(converge)]
+        scoop.logger.info('burn:  idx: %s accept: %.3f std: %.3f mean: %.3f converge: %.3f', idx, accept, 
+                            numpy.std(converge_real), numpy.mean(converge_real), numpy.std(converge_real)/tol)
+
+        checkpoint['p_burn'] = p
+        checkpoint['ln_prob_burn'] = ln_prob
+        checkpoint['rstate_burn'] = random_state
+        checkpoint['idx_burn'] = idx+1
+        checkpoint['train_chain'] = addChain(train_chain, sampler.chain)
+        checkpoint['burn_seq'] = burn_seq
+
+        with checkpointFile.open('wb')as cp_file:
+            pickle.dump(checkpoint, cp_file)
+
+        if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
+            scoop.logger.info("burn in completed at iteration %s", idx)
+            break
+
+    checkpoint['state'] = 'chain'
+    checkpoint['p_chain'] = p
+    checkpoint['ln_prob_chain'] = None
+    checkpoint['rstate_chain'] = None
+    checkpoint['train_chain'] = addChain(train_chain, sampler.chain)
+    checkpoint['burn_seq'] = burn_seq
+
+    with checkpointFile.open('wb')as cp_file:
+        pickle.dump(checkpoint, cp_file)
+
+    train_chain = addChain(train_chain, sampler.chain)
+    sampler.reset()
+
+def sampler_run(cache, checkpoint, sampler, checkpointFile):
+    burn_seq = checkpoint.get('burn_seq', [])
+    chain_seq = checkpoint.get('chain_seq', [])
+        
+    train_chain = checkpoint.get('train_chain', None)
+    run_chain = checkpoint.get('run_chain', None)
+
+    if run_chain is not None:
+        scoop.logger.info('sampler shape %s', run_chain.shape)
+
+    checkInterval = 25
+    mult = cache.MCMCTauMult
+    count = checkpoint['length_chain'] - checkpoint['idx_chain']
+
+    parameters = len(cache.MIN_VALUE)
+                                 
+    for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_chain'], checkpoint['ln_prob_chain'],
+                    checkpoint['rstate_chain'], iterations=count ), start=checkpoint['idx_chain']):
+        accept = numpy.mean(sampler.acceptance_fraction)
+        chain_seq.append(accept)
+        writeMCMC(cache, train_chain, addChain(run_chain, sampler.chain), burn_seq, chain_seq, parameters)
+
+        scoop.logger.info('run:  idx: %s accept: %.3f', idx, accept)
+                
+        checkpoint['p_chain'] = p
+        checkpoint['ln_prob_chain'] = ln_prob
+        checkpoint['rstate_chain'] = random_state
+        checkpoint['idx_chain'] = idx+1
+        checkpoint['run_chain'] = addChain(run_chain, sampler.chain)
+        checkpoint['chain_seq'] = chain_seq
+
+        scoop.logger.info('sampler idx %s shape %s', idx, checkpoint['run_chain'].shape)
+
+        with checkpointFile.open('wb') as cp_file:
+            pickle.dump(checkpoint, cp_file)
+
+        if idx % checkInterval == 0 and idx >= 200:  
+            tau = autocorr_new(addChain(run_chain, sampler.chain)[:, :idx, 0].T)
+            scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", idx, accept, tau)
+            if idx > (mult * tau):
+                scoop.logger.info("we have run long enough and can quit %s", idx)
+                break
+
+    checkpoint['p_chain'] = p
+    checkpoint['ln_prob_chain'] = ln_prob
+    checkpoint['rstate_chain'] = random_state
+    checkpoint['idx_chain'] = idx+1
+    checkpoint['run_chain'] = addChain(run_chain, sampler.chain)
+    checkpoint['chain_seq'] = chain_seq
+    checkpoint['state'] = 'complete'
+
+    scoop.logger.info('sampler idx %s shape %s', idx + 1, checkpoint['run_chain'].shape)
+
+    with checkpointFile.open('wb')as cp_file:
+        pickle.dump(checkpoint, cp_file)
+
+def sampler_kde(checkpoint, cache, checkpointFile):
+    if 'kde_scores' not in checkpoint:
+        scoop.logger.info('Generating KDE for MCMC')
+        kde_scores, kde_bw = kde_generator.generate_data(cache)
+        checkpoint['kde_scores'] = kde_scores
+        checkpoint['kde_bw'] = kde_bw
+    else:
+        scoop.logger.info('Reloading KDE from checkpoint for MCMC')
+        kde_scores = checkpoint['kde_scores']
+        kde_bw = checkpoint['kde_bw']
+
+    with checkpointFile.open('wb')as cp_file:
+        pickle.dump(checkpoint, cp_file)
+
+    previous_bw = previous_kde(cache)
+
+    scoop.logger.info("previous_bw: %s",  previous_bw)
+
+    kde, pca, scaler = kde_generator.getKDE(cache, kde_scores, kde_bw)
+    return kde, pca, scaler, kde_scores, kde_bw, previous_bw
+
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
+    checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings['checkpointFile'])
+    checkpoint = getCheckPoint(checkpointFile,cache)
+
+    burn_seq = checkpoint.get('burn_seq', [])
+    chain_seq = checkpoint.get('chain_seq', [])
+        
+    train_chain = checkpoint.get('train_chain', None)
+    run_chain = checkpoint.get('run_chain', None)
+
+    if run_chain is not None:
+        scoop.logger.info('sampler shape %s', run_chain.shape)
 
     cache.roundScores = None
     cache.roundParameters = None
@@ -142,13 +285,7 @@ def run(cache, tools, creator):
 
     sobol = SALib.sample.sobol_sequence.sample(populationSize, parameters)
     
-    kde_scores, kde_bw = kde_generator.generate_data(cache)
-
-    previous_bw = previous_kde(cache)
-
-    scoop.logger.info("previous_bw: %s",  previous_bw)
-
-    kde, pca, scaler = kde_generator.getKDE(cache, kde_scores, kde_bw)
+    kde, pca, scaler, kde_scores, kde_bw, previous_bw = sampler_kde(checkpoint, cache, checkpointFile)
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
@@ -169,101 +306,26 @@ def run(cache, tools, creator):
             return process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csvfile, sampler)
         sampler.process = local
 
-        converge = numpy.ones(cache.settings.get('burnStable', 50)) * numpy.nan
-
-        checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings['checkpointFile'])
-        checkpoint = getCheckPoint(checkpointFile,cache)
-
-        burn_seq = checkpoint.get('burn_seq', [])
-        chain_seq = checkpoint.get('chain_seq', [])
-        
-        train_chain = checkpoint.get('train_chain', None)
-        run_chain = checkpoint.get('run_chain', None)
-
         if checkpoint['state'] == 'burn_in':
-            tol = 5e-4
-            count = checkpoint['length_burn'] - checkpoint['idx_burn']
-            for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_burn'], checkpoint['ln_prob_burn'],
-                                    checkpoint['rstate_burn'], iterations=count ), start=checkpoint['idx_burn']):
-                accept = numpy.mean(sampler.acceptance_fraction)
-                burn_seq.append(accept)
-                converge[:-1] = converge[1:]
-                converge[-1] = accept
-                writeMCMC(cache, addChain(train_chain, sampler.chain), None, burn_seq, chain_seq, parameters)
+            sampler_burn(cache, checkpoint, sampler, checkpointFile)
 
-                converge_real = converge[~numpy.isnan(converge)]
-                scoop.logger.info('burn:  idx: %s accept: %.3f std: %.3f mean: %.3f converge: %.3f', idx, accept, 
-                                  numpy.std(converge_real), numpy.mean(converge_real), numpy.std(converge_real)/tol)
-
-                checkpoint['p_burn'] = p
-                checkpoint['ln_prob_burn'] = ln_prob
-                checkpoint['rstate_burn'] = random_state
-                checkpoint['idx_burn'] = idx+1
-                checkpoint['train_chain'] = addChain(train_chain, sampler.chain)
-                checkpoint['burn_seq'] = burn_seq
-
-                with checkpointFile.open('wb')as cp_file:
-                    pickle.dump(checkpoint, cp_file)
-
-                if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
-                    scoop.logger.info("burn in completed at iteration %s", idx)
-                    break
-
-            checkpoint['state'] = 'chain'
-            checkpoint['p_chain'] = p
-            checkpoint['ln_prob_chain'] = None
-            checkpoint['rstate_chain'] = None
-            checkpoint['train_chain'] = addChain(train_chain, sampler.chain)
-            checkpoint['burn_seq'] = burn_seq
-
-            with checkpointFile.open('wb')as cp_file:
-                pickle.dump(checkpoint, cp_file)
-
-            train_chain = addChain(train_chain, sampler.chain)
-            sampler.reset()
+        if checkpoint['state'] == 'chain':
+            run_chain = checkpoint.get('run_chain', None)
+            if run_chain is not None:
+                mult = cache.MCMCTauMult
+                temp = run_chain[:, :checkpoint['idx_chain'], 0].T
+                scoop.logger.info('complete shape %s', temp.shape)
+                scoop.logger.info(run_chain[:, :checkpoint['idx_chain'], 0].T)
+                tau = autocorr_new(run_chain[:, :checkpoint['idx_chain'], 0].T)
+                scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", checkpoint['idx_chain'], checkpoint['chain_seq'][-1], tau)
+                if checkpoint['idx_chain'] > (mult * tau):
+                    scoop.logger.info("we have previously run long enough and can quit %s", checkpoint['idx_chain'])
+                    checkpoint['state'] = 'complete'
             
         if checkpoint['state'] == 'chain':
-            checkInterval = 25
-            mult = cache.MCMCTauMult
-            count = checkpoint['length_chain'] - checkpoint['idx_chain']
-            for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_chain'], checkpoint['ln_prob_chain'],
-                                    checkpoint['rstate_chain'], iterations=count ), start=checkpoint['idx_chain']):
-                accept = numpy.mean(sampler.acceptance_fraction)
-                chain_seq.append(accept)
-                writeMCMC(cache, train_chain, addChain(run_chain, sampler.chain), burn_seq, chain_seq, parameters)
+            sampler_run(cache, checkpoint, sampler, checkpointFile)
 
-                scoop.logger.info('run:  idx: %s accept: %.3f', idx, accept)
-                
-                checkpoint['p_chain'] = p
-                checkpoint['ln_prob_chain'] = ln_prob
-                checkpoint['rstate_chain'] = random_state
-                checkpoint['idx_chain'] = idx+1
-                checkpoint['run_chain'] = addChain(run_chain, sampler.chain)
-                checkpoint['chain_seq'] = chain_seq
-
-                with checkpointFile.open('wb') as cp_file:
-                    pickle.dump(checkpoint, cp_file)
-
-                if idx % checkInterval == 0 and idx >= 200:  
-                    tau = autocorr_new(addChain(run_chain, sampler.chain)[:, :idx, 0].T)
-                    scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", idx, accept, tau)
-                    if idx > (mult * tau):
-                        scoop.logger.info("we have run long enough and can quit %s", idx)
-                        break
-
-            checkpoint['p_chain'] = p
-            checkpoint['ln_prob_chain'] = ln_prob
-            checkpoint['rstate_chain'] = random_state
-            checkpoint['idx_chain'] = idx+1
-            checkpoint['run_chain'] = addChain(run_chain, sampler.chain)
-            checkpoint['chain_seq'] = chain_seq
-
-            with checkpointFile.open('wb')as cp_file:
-                pickle.dump(checkpoint, cp_file)
-
-            run_chain = addChain(train_chain, sampler.chain)
-
-    chain = run_chain
+    chain = checkpoint['run_chain']
     #chain = chain[:, :idx, :]
     chain_shape = chain.shape
     chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
@@ -641,6 +703,7 @@ def _get_lnprob(self, pos=None):
 #auto correlation support functions
 
 def autocorr_new(y, c=5.0):
+    y = y[~numpy.all(y == 0, axis=1)]
     f = numpy.zeros(y.shape[1])
     for yy in y:
         f += autocorr_func_1d(yy)
@@ -781,9 +844,11 @@ def processResultsForPlotting(results, times):
 def genRandomChoice(cache, chain, kde, pca, scaler):
     "want about 1000 items and will be removing about 10% of them"
     size = 1100
+    chain = chain[~numpy.all(chain == 0, axis=1)]
+    temp = chain
     if len(chain) > size:
         indexes = numpy.random.choice(chain.shape[0], size, replace=False)
-        chain = chain[indexes]
+        chain = chain[indexes,:]
 
     lb, ub = numpy.percentile(chain, [5, 95], 0)
     selected = (chain >= lb) & (chain <= ub)
@@ -861,6 +926,11 @@ def removeResultsOutliers(results, bools):
 def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, mcmc_score):
     mcmc_h5 = Path(cache.settings['resultsDirMCMC']) / "mcmc.h5"
     with h5py.File(mcmc_h5, 'a') as hf:
+        if 'mcmc_selected' in hf:
+            del hf['mcmc_selected']
+            del hf['mcmc_selected_transformed']
+            del hf['mcmc_selected_score']
+            del hf['mcmc_score']
         hf.create_dataset("mcmc_selected", data=numpy.array(mcmc_selected), compression="gzip")
         hf.create_dataset("mcmc_selected_transformed", data=numpy.array(mcmc_selected_transformed), compression="gzip")
         hf.create_dataset("mcmc_selected_score", data=numpy.array(mcmc_selected_score), compression="gzip")
