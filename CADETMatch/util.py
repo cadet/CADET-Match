@@ -397,6 +397,7 @@ def setupMCMC(cache, lb, ub):
     settings_file = Path(sys.argv[1])
     with settings_file.open() as json_data:
         settings = json.load(json_data)
+        settings['continueMCMC'] = 0
 
         baseDir = settings.get('baseDir', None)
         if baseDir is not None:
