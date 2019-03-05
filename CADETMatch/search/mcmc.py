@@ -4,13 +4,9 @@ import util
 import numpy
 import scipy
 from pathlib import Path
-import warnings
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore",category=FutureWarning)
-    import h5py
-#import grad
 import time
 import csv
+import cadet
 
 import emcee
 import SALib.sample.sobol_sequence
@@ -280,8 +276,6 @@ def run(cache, tools, creator):
     #Population must be even
     populationSize = populationSize + populationSize % 2  
 
-    sobol = SALib.sample.sobol_sequence.sample(populationSize, parameters)
-    
     kde, pca, scaler, kde_scores, kde_bw, previous_bw = sampler_kde(checkpoint, cache, checkpointFile)
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
@@ -368,16 +362,26 @@ def process_mle(chain, cache):
 
             simulations[name] = sims
                        
-    cadetValues = util.roundParameter(cadetValues, cache)
+    cadetValues = numpy.array(util.roundParameter(cadetValues, cache))
+    scoop.logger.info('type %s  value %s', type(cadetValues), cadetValues)
 
     mcmc_dir = Path(cache.settings['resultsDirMCMC'])
 
     mcmc_csv = Path(cache.settings['resultsDirMCMC']) / "prob.csv"
+    mcmc_h5 = Path(cache.settings['resultsDirMCMC']) / "mcmc.h5"
 
     pd = pandas.DataFrame(cadetValues, columns = cache.parameter_headers_actual)
     labels = ['MLE', '5', '10', '50', '90', '95']
     pd.insert(0, 'name', labels)
     pd.to_csv(mcmc_csv, index=False)
+
+    h5 = cadet.H5()
+    h5.filename = mcmc_h5.as_posix()
+    h5.root.stat_labels = cache.parameter_headers_actual
+    for idx, i in enumerate(labels):
+        h5.root['stat_%s' % i] = cadetValues[idx,:]
+
+    h5.append()
 
     plot_mle(simulations, cache, labels)
 
@@ -520,6 +524,25 @@ def graph_simulations(simulations, simulation_labels, graph):
             lines, labels = graph.get_legend_handles_labels()
             graph.legend(lines, labels, loc=0)
 
+def get_population(base, size, diff=0.1):
+    new_population = base
+    row, col = base.shape
+    scoop.logger.info('%s', base)
+    
+    scoop.logger.info('row %s size %s', row, size)
+    if row < size:
+        #create new entries
+        indexes = numpy.random.choice(new_population.shape[0], size - row, replace=True)
+        temp = new_population[indexes,:]
+        rand = numpy.random.uniform(1.0-diff, 1.0+diff, size=temp.shape)
+        new_population = numpy.concatenate([new_population, temp * rand])
+    if row > size:
+        #randomly select entries to keep
+        indexes = numpy.random.choice(new_population.shape[0], size, replace=False)
+        scoop.logger.info('indexes: %s', indexes)
+        new_population = new_population[indexes,:]
+    return new_population
+
 def getCheckPoint(checkpointFile, cache):
     if checkpointFile.exists():
         with checkpointFile.open('rb') as cp_file:
@@ -538,7 +561,33 @@ def getCheckPoint(checkpointFile, cache):
 
         checkpoint = {}
         checkpoint['state'] = 'burn_in'
-        checkpoint['p_burn'] = SALib.sample.sobol_sequence.sample(populationSize, parameters)
+
+        if cache.settings.get('PreviousResults', None) is not None:
+            scoop.logger.info('running with previous best results')
+            previousResultsFile = Path(cache.settings['PreviousResults'])
+            results_h5 = cadet.H5()
+            results_h5.filename = previousResultsFile.as_posix()
+            results_h5.load()
+            previousResults = results_h5.root.meta_population_transform
+
+            row,col = previousResults.shape
+            scoop.logger.info('row: %s col: %s  parameters: %s', row, col, parameters)
+            if col < parameters:
+                mcmc_h5 = Path(cache.settings.get('mcmc_h5', None))
+                data = cadet.H5()
+                data.filename = mcmc_h5.as_posix()
+                data.load()
+                scoop.logger.info('%s', list(data.root.keys()))
+                stat_MLE = data.root.stat_MLE.reshape(1, -1)
+                previousResults = numpy.hstack([previousResults, numpy.repeat(stat_MLE, row, 0)])
+                scoop.logger.info('row: %s  col:%s   shape: %s', row, col, previousResults.shape)
+
+            population = get_population(previousResults, populationSize, diff=0.1)
+            checkpoint['p_burn'] = [util.convert_individual_inverse(i, cache) for i in population]
+            scoop.logger.info('p_burn startup: %s', checkpoint['p_burn'])
+        else:
+            checkpoint['p_burn'] = SALib.sample.sobol_sequence.sample(populationSize, parameters)
+
         checkpoint['ln_prob_burn'] = None
         checkpoint['rstate_burn'] = None
         checkpoint['idx_burn'] = 0
@@ -777,29 +826,37 @@ def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters):
     flat_interval.to_csv(mcmcDir / "percentile.csv")
     flat_interval_transform.to_csv(mcmcDir / "percentile_transform.csv")
 
-    with h5py.File(mcmc_h5, 'w') as hf:
-        #if we don't have a file yet then we have to be doing burn in so no point in checking
-        
-        if burn_seq:
-            data = numpy.array(burn_seq).reshape(-1, 1)
-            hf.create_dataset("burn_in_acceptance", data=data, compression="gzip")
-        
-        if chain_seq:
-            data = numpy.array(chain_seq).reshape(-1, 1)   
-            hf.create_dataset("mcmc_acceptance", data=data, compression="gzip")
-        
-        if chain is not None:    
-            hf.create_dataset("full_chain", data=chain, compression="gzip")
-            hf.create_dataset("full_chain_transform", data=chain_transform, compression="gzip")
+    h5 = cadet.H5()
+    h5.filename = mcmc_h5.as_posix()
 
-            hf.create_dataset("flat_chain", data=chain_flat, compression="gzip")
-            hf.create_dataset("flat_chain_transform", data=chain_flat_transform, compression="gzip")
+    if burn_seq:
+        h5.root.burn_in_acceptance = numpy.array(burn_seq).reshape(-1, 1)
 
-        hf.create_dataset("train_full_chain", data=train_chain, compression="gzip")
-        hf.create_dataset("train_full_chain_transform", data=train_chain_transform, compression="gzip")
+    if chain_seq:
+        h5.root.mcmc_acceptance = numpy.array(chain_seq).reshape(-1, 1)
 
-        hf.create_dataset("train_flat_chain", data=train_chain_flat, compression="gzip")
-        hf.create_dataset("train_flat_chain_transform", data=train_chain_flat_transform, compression="gzip")
+    if chain is not None:
+        h5.root.full_chain = chain
+        h5.root.full_chain_transform = chain_transform
+        h5.root.flat_chain = chain_flat
+        h5.root.flat_chain_transform = chain_flat_transform
+
+    h5.root.train_full_chain = train_chain
+    h5.root.train_full_chain_transform = train_chain_transform
+    h5.root.train_flat_chain = train_chain_flat
+    h5.root.train_flat_chain_transform = train_chain_flat_transform
+
+    mean = numpy.mean(interval_chain_transform,0)
+    labels = [5, 10, 25, 50, 75, 90, 95]
+    percentile = numpy.percentile(interval_chain_transform, labels, 0)
+    mean = util.roundParameter(mean, cache)
+    percentile = util.roundParameter(percentile, cache)
+
+    h5.root.percentile['mean'] = mean
+    for idx, label in enumerate(labels):
+        h5.root.percentile['percentile_%s' % label] = percentile[idx,:]
+        
+    h5.save()
 
 def processChainForPlots(cache, chain, kde, pca, scaler):
     mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, results, times, mcmc_score = genRandomChoice(cache, chain, kde, pca, scaler)
@@ -924,16 +981,14 @@ def removeResultsOutliers(results, bools):
 
 def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, mcmc_score):
     mcmc_h5 = Path(cache.settings['resultsDirMCMC']) / "mcmc.h5"
-    with h5py.File(mcmc_h5, 'a') as hf:
-        if 'mcmc_selected' in hf:
-            del hf['mcmc_selected']
-            del hf['mcmc_selected_transformed']
-            del hf['mcmc_selected_score']
-            del hf['mcmc_score']
-        hf.create_dataset("mcmc_selected", data=numpy.array(mcmc_selected), compression="gzip")
-        hf.create_dataset("mcmc_selected_transformed", data=numpy.array(mcmc_selected_transformed), compression="gzip")
-        hf.create_dataset("mcmc_selected_score", data=numpy.array(mcmc_selected_score), compression="gzip")
-        hf.create_dataset("mcmc_score", data=numpy.array(mcmc_score), compression="gzip")
+    h5 = cadet.H5()
+    h5.filename = mcmc_h5.as_posix()
+    h5.load()
+    h5.root.mcmc_selected = numpy.array(mcmc_selected)
+    h5.root.mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)
+    h5.root.mcmc_selected_score = numpy.array(mcmc_selected_score)
+    h5.root.mcmc_score = numpy.array(mcmc_score)
+    h5.save()
 
 def plotTube(cache, chain, kde, pca, scaler):
     results, combinations = processChainForPlots(cache, chain, kde, pca, scaler)
@@ -942,23 +997,26 @@ def plotTube(cache, chain, kde, pca, scaler):
     output_mcmc.mkdir(parents=True, exist_ok=True)
 
     mcmc_h5 = output_mcmc / "mcmc_plots.h5"
-    with h5py.File(mcmc_h5, 'w') as hf:
 
-        for expName,value in combinations.items():
-            exp_name = expName.split('_')[0]
-            plot_mcmc(output_mcmc, value, expName, "combine", cache.target[exp_name]['time'], cache.target[exp_name]['value'])
-            hf.create_dataset(expName, data=value['data'], compression="gzip")
-            hf.create_dataset('exp_%s_time' % expName, data=cache.target[exp_name]['time'], compression="gzip")
-            hf.create_dataset('exp_%s_value' % expName, data=cache.target[exp_name]['value'], compression="gzip")
+    h5 = cadet.H5()
+    h5.filename = mcmc_h5.as_posix()
 
-        for exp, units in results.items():
-            for unitName, unit in units.items():
-                for comp, data in unit.items():
-                    expName = '%s_%s' % (exp, unitName)
-                    plot_mcmc(output_mcmc, data, expName, comp, cache.target[exp]['time'], cache.target[exp]['value'])
-                    hf.create_dataset('%s_%s' % (expName, comp), data=data['data'], compression="gzip")
-                    hf.create_dataset('exp_%s_%s_time' % (expName, comp), data=cache.target[exp_name]['time'], compression="gzip")
-                    hf.create_dataset('exp_%s_%s_value' % (expName, comp), data=cache.target[exp_name]['value'], compression="gzip")
+    for expName,value in combinations.items():
+        exp_name = expName.split('_')[0]
+        plot_mcmc(output_mcmc, value, expName, "combine", cache.target[exp_name]['time'], cache.target[exp_name]['value'])
+        h5.root[expName] = value['data']
+        h5.root['exp_%s_time' % expName] = cache.target[exp_name]['time']
+        h5.root['exp_%s_value' % expName] = cache.target[exp_name]['value']
+
+    for exp, units in results.items():
+        for unitName, unit in units.items():
+            for comp, data in unit.items():
+                expName = '%s_%s' % (exp, unitName)
+                plot_mcmc(output_mcmc, data, expName, comp, cache.target[exp]['time'], cache.target[exp]['value'])
+                h5.root['%s_%s' % (expName, comp)] = data['data']
+                h5.root['exp_%s_%s_time' % (expName, comp)] = cache.target[exp_name]['time']
+                h5.root['exp_%s_%s_value' % (expName, comp)] = cache.target[exp_name]['value']
+    h5.save()
 
 def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue):
     data = value['data']

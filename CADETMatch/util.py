@@ -249,6 +249,9 @@ def convert_individual(individual, cache):
 
     return cadetValues, cadetValuesExtended
 
+def convert_individual_inverse(individual, cache):
+    return numpy.array([f(v) for f, v in zip(cache.settings['transform'], individual)])
+
 def set_simulation(individual, simulation, settings, cache, fullPrecision, experiment):
     scoop.logger.debug("individual %s", individual)
 
@@ -403,12 +406,15 @@ def setupMCMC(cache, lb, ub):
         if baseDir is not None:
             baseDir = Path(baseDir)
             settings['resultsDir'] = baseDir / settings['resultsDir']
+        
+        resultDirOriginal = Path(settings['resultsDir'])
+        resultsOriginal = resultDirOriginal / "result.h5"
+        resultDir = resultDirOriginal / "mcmc_refine"
+        resultDir.mkdir(parents=True, exist_ok=True)        
 
-        resultDir = Path(settings['resultsDir']) / "mcmc_refine"
-        resultDir.mkdir(parents=True, exist_ok=True)
-
-        settings['resultsDirOriginal'] = settings['resultsDir'].as_posix()
+        settings['resultsDirOriginal'] = resultDirOriginal.as_posix()
         settings['resultsDir'] = resultDir.as_posix()
+        settings['PreviousResults'] = resultsOriginal.as_posix()
 
         if baseDir is not None:
             settings['baseDir'] = baseDir.as_posix()
@@ -675,6 +681,14 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
     data_meta = numpy.array([i.fitness.values for i in meta_halloffame])
     data_grad = numpy.array([i.fitness.values for i in grad_halloffame])
 
+    hof_param = numpy.array(halloffame)
+    meta_param = numpy.array(meta_halloffame)
+    grad_param = numpy.array(grad_halloffame)
+
+    hof_param_transform = numpy.array([convert_individual(i, cache)[0] for i in halloffame])
+    meta_param_transform = numpy.array([convert_individual(i, cache)[0] for i in meta_halloffame])
+    grad_param_transform = numpy.array([convert_individual(i, cache)[0] for i in grad_halloffame])
+
     with hof.open('wb') as hof_file:
         numpy.save(hof_file, data)
 
@@ -728,6 +742,22 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 hf.create_dataset("generation", data=gen_data, maxshape=(None, 2), compression="gzip")
                 hf.create_dataset("population_input", data=population_input, maxshape=(None, population_input.shape[1] ), compression="gzip")
                 hf.create_dataset("population_output", data=population_output, maxshape=(None, population_output.shape[1] ), compression="gzip")
+
+                if len(hof_param):
+                    hf.create_dataset('hof_population', data=hof_param, maxshape=(None, hof_param.shape[1] ), compression="gzip")
+                    hf.create_dataset('hof_population_transform', data=hof_param_transform, maxshape=(None, hof_param_transform.shape[1] ), compression="gzip")
+                    hf.create_dataset('hof_score', data=data, maxshape=(None, data.shape[1] ), compression="gzip")
+
+                if len(meta_param):
+                    scoop.logger.info("%s %s %s", meta_param.shape, meta_param_transform.shape, data_meta.shape)
+                    hf.create_dataset('meta_population', data=meta_param, maxshape=(None, meta_param.shape[1] ), compression="gzip")
+                    hf.create_dataset('meta_population_transform', data=meta_param_transform, maxshape=(None, meta_param_transform.shape[1] ), compression="gzip")
+                    hf.create_dataset('meta_score', data=data_meta, maxshape=(None, data_meta.shape[1] ), compression="gzip")
+
+                if len(grad_param):
+                    hf.create_dataset('grad_population', data=grad_param, maxshape=(None, grad_param.shape[1] ), compression="gzip")
+                    hf.create_dataset('grad_population_transform', data=grad_param_transform, maxshape=(None, grad_param_transform.shape[1] ), compression="gzip")
+                    hf.create_dataset('grad_score', data=data_grad, maxshape=(None, data_grad.shape[1] ), compression="gzip")
 
                 mcmc_score = result_data.get('mcmc_score', None)
                 if mcmc_score is not None:
@@ -786,6 +816,36 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
                 hf["population_output"].resize((hf["population_output"].shape[0] + population_output.shape[0]), axis = 0)
                 hf["population_output"][-population_output.shape[0]:] = population_output
+
+                if len(hof_param):
+                    hf["hof_population"].resize((hof_param.shape[0]), axis = 0)
+                    hf["hof_population"][:] = hof_param
+
+                    hf["hof_population_transform"].resize((hof_param_transform.shape[0]), axis = 0)
+                    hf["hof_population_transform"][:] = hof_param_transform
+
+                    hf["hof_score"].resize((data.shape[0]), axis = 0)
+                    hf["hof_score"][:] = data
+
+                if len(meta_param):
+                    hf["meta_population"].resize((meta_param.shape[0]), axis = 0)
+                    hf["meta_population"][:] = meta_param
+
+                    hf["meta_population_transform"].resize((meta_param_transform.shape[0]), axis = 0)
+                    hf["meta_population_transform"][:] = meta_param_transform
+
+                    hf["meta_score"].resize((data_meta.shape[0]), axis = 0)
+                    hf["meta_score"][:] = data_meta
+
+                if len(grad_param):
+                    hf["grad_population"].resize((grad_param.shape[0]), axis = 0)
+                    hf["grad_population"][:] = grad_param
+
+                    hf["grad_population_transform"].resize((grad_param_transform.shape[0]), axis = 0)
+                    hf["grad_population_transform"][:] = grad_param_transform
+
+                    hf["grad_score"].resize((grad_score.shape[0]), axis = 0)
+                    hf["grad_score"][:] = grad_score
                 
                 if cache.fullTrainingData:
 

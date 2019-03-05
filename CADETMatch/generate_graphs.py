@@ -15,6 +15,7 @@ import scipy.interpolate
 import itertools
 
 from cadet import Cadet
+from cadet import H5
 from addict import Dict
 
 #parallelization
@@ -23,9 +24,6 @@ import scoop
 
 import os
 import warnings
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore",category=FutureWarning)
-    import h5py
 import corner
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
@@ -85,25 +83,24 @@ def graphDistance(cache):
     meta_headers = cache.meta_headers
 
     if result_h5.exists():
-        data = {}
-        with h5py.File(result_h5, 'r') as h5:
-            for key in h5.keys():
-                data[key] = h5[key].value
+        data = H5()
+        data.filename = result_h5.as_posix()
+        data.load()
 
-            temp = []
+        temp = []
 
-            if 'mean' in data and 'confidence' in data and 'distance_correct' in data:
-                for idx_parameter, parameter in enumerate(parameter_headers_actual):
-                    for idx_score, score in enumerate(score_headers):
-                        temp.append( (output_distance, parameter, idx_parameter, score, idx_score, data['distance_correct'][:,idx_parameter], data['output'][:,idx_score],
-                                      data['mean'][:,idx_parameter], data['confidence'][:,idx_parameter]) )
+        if 'mean' in data.root and 'confidence' in data.root and 'distance_correct' in data.root:
+            for idx_parameter, parameter in enumerate(parameter_headers_actual):
+                for idx_score, score in enumerate(score_headers):
+                    temp.append( (output_distance, parameter, idx_parameter, score, idx_score, data.root.distance_correct[:,idx_parameter], data.root.output[:,idx_score],
+                                    data.root.mean[:,idx_parameter], data.root.confidence[:,idx_parameter]) )
 
-                for idx_parameter, parameter in enumerate(parameter_headers_actual):
-                    for idx_score, score in enumerate(meta_headers):
-                        temp.append( (output_distance_meta, parameter, idx_parameter, score, idx_score, data['distance_correct'][:,idx_parameter], data['output_meta'][:,idx_score],
-                                   data['mean'][:,idx_parameter], data['confidence'][:,idx_parameter]) )
+            for idx_parameter, parameter in enumerate(parameter_headers_actual):
+                for idx_score, score in enumerate(meta_headers):
+                    temp.append( (output_distance_meta, parameter, idx_parameter, score, idx_score, data.root.distance_correct[:,idx_parameter], data['output_meta'][:,idx_score],
+                                data.root.mean[:,idx_parameter], data.root.confidence[:,idx_parameter]) )
 
-                list(futures.map(plot_2d_scatter, temp))
+            list(futures.map(plot_2d_scatter, temp))
 
 def plot_2d_scatter(args):
     output_directory, parameter, parameter_idx, score, score_idx, parameter_data, score_data, mean_data, confidence_data = args
@@ -162,59 +159,57 @@ def graphCorner(cache):
     mcmc_h5 = miscDir / "mcmc.h5"
 
     if mcmc_h5.exists():
-        data = {}
-        with h5py.File(mcmc_h5, 'r') as h5:
-            for key in h5.keys():
-                data[key] = h5[key].value
+        data = H5()
+        data.filename = mcmc_h5.as_posix()
+        data.load()
 
         out_dir = cache.settings['resultsDirProgress']
 
-        plotChain(data['train_flat_chain'], data['train_flat_chain_transform'], headers, out_dir, 'train')
+        plotChain(data.root.train_flat_chain, data.root.train_flat_chain_transform, headers, out_dir, 'train')
 
-        if 'flat_chain' in data:
-            plotChain(data['flat_chain'], data['flat_chain_transform'], headers, out_dir, 'full')
+        if 'flat_chain' in data.root:
+            plotChain(data.root.flat_chain, data.root.flat_chain_transform, headers, out_dir, 'full')
 
-        if 'burn_in_acceptance' in data:
+        if 'burn_in_acceptance' in data.root:
             fig = figure.Figure(figsize=[10, 10])
             canvas = FigureCanvas(fig)
             graph = fig.add_subplot(1, 1, 1)
-            graph.plot(data['burn_in_acceptance'])
+            graph.plot(data.root.burn_in_acceptance)
             graph.set_title("Burn In Acceptance")
             graph.set_xlabel('Step')
             graph.set_ylabel('Acceptance')
             fig.savefig(str(out_dir / "burn_in_acceptance.png"), bbox_inches='tight')
 
-        if 'mcmc_acceptance' in data:
+        if 'mcmc_acceptance' in data.root:
             fig = figure.Figure(figsize=[10, 10])
             canvas = FigureCanvas(fig)
             graph = fig.add_subplot(1, 1, 1)
-            graph.plot(data['mcmc_acceptance'])
+            graph.plot(data.root.mcmc_acceptance)
             graph.set_title("MCMC Acceptance")
             graph.set_xlabel('Step')
             graph.set_ylabel('Acceptance')
             fig.savefig(str(out_dir / "mcmc_acceptance.png"), bbox_inches='tight')
 
     else:
-        data = {}
-        with h5py.File(result_h5, 'r') as h5:
-            for key in h5.keys():
-                data[key] = h5[key].value
+        data = H5()
+        data.filename = result_h5.as_posix()
+        data.load()
 
-        if len(data['input']) > 1e5:
-            indexes = numpy.random.choice(data['input'].shape[0], int(1e5), replace=False)
-            data_input = data['input'][indexes]
-            data_input_transform = data['input_transform'][indexes]
-            weight_min = data['output_meta'][indexes,1]
-            weight_prod = data['output_meta'][indexes,2]
-            weight_norm = data['output_meta'][indexes,3]
-            all_scores = data['output'][indexes]
+        if len(data.root.input) > 1e5:
+            indexes = numpy.random.choice(data.root.input.shape[0], int(1e5), replace=False)
+            data_input = data.root.input[indexes]
+            data_input_transform = data.root.input_transform[indexes]
+            weight_min = data.root.output_meta[indexes,1]
+            weight_prod = data.root.output_meta[indexes,2]
+            weight_norm = data.root.output_meta[indexes,3]
+            all_scores = data.root.output[indexes]
         else:
-            data_input = data['input']
-            data_input_transform = data['input_transform']
-            weight_min = data['output_meta'][:,1]
-            weight_prod = data['output_meta'][:,2]
-            weight_norm = data['output_meta'][:,3]
-            all_scores = data['output']
+            data_input = data.root.input
+            data_input_transform = data.root.input_transform
+            weight_min = data.root.output_meta[:,1]
+            weight_prod = data.root.output_meta[:,2]
+            weight_norm = data.root.output_meta[:,3]
+            all_scores = data.root.output
 
         max_scores = numpy.max(all_scores, 1)
         acceptable = max_scores > 0.01
