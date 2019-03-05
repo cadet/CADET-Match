@@ -13,9 +13,9 @@
   "mutationRate": 0.2,
   "crossoverRate": 0.8,
   "generations": 1000,
-  "population": 10,
-  "minPopulation": 10,
-  "maxPopulation":10,
+  "population": 6,
+  "minPopulation": 6,
+  "maxPopulation":6,
   "roundParameters": 3,
   "roundScores": 3,
   "metaResultsOnly": 1,
@@ -23,6 +23,7 @@
   "stallGenerations": 5,
   "normalizeOutput":1,
   "continueMCMC":1,
+  "MCMCTauMult":50,
   "kde": 
   {
       "power": 1,

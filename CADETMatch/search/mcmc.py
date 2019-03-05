@@ -28,6 +28,7 @@ import scoop
 import pandas
 import array
 import mle
+import autocorr
 
 import kde_generator
 from sklearn.neighbors.kde import KernelDensity
@@ -125,8 +126,8 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
     train_chain = checkpoint.get('train_chain', None)
     run_chain = checkpoint.get('run_chain', None)
 
-    if run_chain is not None:
-        scoop.logger.info('sampler shape %s', run_chain.shape)
+    #if run_chain is not None:
+    #    scoop.logger.info('sampler shape %s', run_chain.shape)
 
     converge = numpy.ones(cache.settings.get('burnStable', 50)) * numpy.nan
 
@@ -177,11 +178,10 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
     train_chain = checkpoint.get('train_chain', None)
     run_chain = checkpoint.get('run_chain', None)
 
-    if run_chain is not None:
-        scoop.logger.info('sampler shape %s', run_chain.shape)
+    #if run_chain is not None:
+    #    scoop.logger.info('sampler shape %s', run_chain.shape)
 
     checkInterval = 25
-    mult = cache.MCMCTauMult
     count = checkpoint['length_chain'] - checkpoint['idx_chain']
 
     parameters = len(cache.MIN_VALUE)
@@ -201,17 +201,21 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
         checkpoint['run_chain'] = addChain(run_chain, sampler.chain)[:, :idx+1, :]
         checkpoint['chain_seq'] = chain_seq
 
-        scoop.logger.info('sampler idx %s shape %s', idx, checkpoint['run_chain'].shape)
+        #scoop.logger.info('sampler idx %s shape %s', idx, checkpoint['run_chain'].shape)
 
         with checkpointFile.open('wb') as cp_file:
             pickle.dump(checkpoint, cp_file)
 
-        if idx % checkInterval == 0 and idx >= 200:  
-            tau = autocorr_new(addChain(run_chain, sampler.chain)[:, :idx+1, 0].T)
-            scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", idx, accept, tau)
-            if idx > (mult * tau):
+        if idx % checkInterval == 0 and idx >= 200:
+            try:
+                tau = autocorr.integrated_time(numpy.swapaxes(addChain(run_chain, sampler.chain)[:, :idx+1, :], 0, 1), tol=cache.MCMCTauMult)
+                scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", idx, accept, tau)
                 scoop.logger.info("we have run long enough and can quit %s", idx)
                 break
+            except autocorr.AutocorrError as err:
+                scoop.logger.info(str(err))
+                tau = err.tau
+            scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", idx, accept, tau)
 
     checkpoint['p_chain'] = p
     checkpoint['ln_prob_chain'] = ln_prob
@@ -221,7 +225,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
     checkpoint['chain_seq'] = chain_seq
     checkpoint['state'] = 'complete'
 
-    scoop.logger.info('sampler idx %s shape %s', idx + 1, checkpoint['run_chain'].shape)
+    #scoop.logger.info('sampler idx %s shape %s', idx + 1, checkpoint['run_chain'].shape)
 
     with checkpointFile.open('wb')as cp_file:
         pickle.dump(checkpoint, cp_file)
@@ -259,8 +263,8 @@ def run(cache, tools, creator):
     train_chain = checkpoint.get('train_chain', None)
     run_chain = checkpoint.get('run_chain', None)
 
-    if run_chain is not None:
-        scoop.logger.info('sampler shape %s', run_chain.shape)
+    #if run_chain is not None:
+    #    scoop.logger.info('sampler shape %s', run_chain.shape)
 
     cache.roundScores = None
     cache.roundParameters = None
@@ -303,14 +307,18 @@ def run(cache, tools, creator):
         if checkpoint['state'] == 'chain':
             run_chain = checkpoint.get('run_chain', None)
             if run_chain is not None:
-                mult = cache.MCMCTauMult
                 temp = run_chain[:, :checkpoint['idx_chain'], 0].T
                 scoop.logger.info('complete shape %s', temp.shape)
-                tau = autocorr_new(run_chain[:, :checkpoint['idx_chain'], 0].T)
-                scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", checkpoint['idx_chain'], checkpoint['chain_seq'][-1], tau)
-                if checkpoint['idx_chain'] > (mult * tau):
+ 
+                try:
+                    tau = autocorr.integrated_time(numpy.swapaxes(run_chain[:, :checkpoint['idx_chain'], :], 0, 1), tol=cache.MCMCTauMult)
                     scoop.logger.info("we have previously run long enough and can quit %s", checkpoint['idx_chain'])
                     checkpoint['state'] = 'complete'
+                except autocorr.AutocorrError as err:
+                    scoop.logger.info(str(err))
+                    tau = err.tau
+
+                scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", checkpoint['idx_chain'], checkpoint['chain_seq'][-1], tau)
             
         if checkpoint['state'] == 'chain':
             sampler_run(cache, checkpoint, sampler, checkpointFile)
@@ -524,7 +532,7 @@ def graph_simulations(simulations, simulation_labels, graph):
             lines, labels = graph.get_legend_handles_labels()
             graph.legend(lines, labels, loc=0)
 
-def get_population(base, size, diff=0.1):
+def get_population(base, size, diff=0.05):
     new_population = base
     row, col = base.shape
     scoop.logger.info('%s', base)
@@ -748,48 +756,6 @@ def _get_lnprob(self, pos=None):
         raise ValueError("lnprob returned NaN.")
 
     return lnprob, blob
-
-#auto correlation support functions
-
-def autocorr_new(y, c=5.0):
-    y = y[~numpy.all(y == 0, axis=1)]
-    f = numpy.zeros(y.shape[1])
-    for yy in y:
-        f += autocorr_func_1d(yy)
-    f /= len(y)
-    taus = 2.0*numpy.cumsum(f)-1.0
-    window = auto_window(taus, c)
-    return taus[window]
-
-# Automated windowing procedure following Sokal (1989)
-def auto_window(taus, c):
-    m = numpy.arange(len(taus)) < c * taus
-    if numpy.any(m):
-        return numpy.argmin(m)
-    return len(taus) - 1
-
-def autocorr_func_1d(x, norm=True):
-    x = numpy.atleast_1d(x)
-    if len(x.shape) != 1:
-        raise ValueError("invalid dimensions for 1D autocorrelation function")
-    n = next_pow_two(len(x))
-
-    # Compute the FFT and then (from that) the auto-correlation function
-    f = numpy.fft.fft(x - numpy.mean(x), n=2*n)
-    acf = numpy.fft.ifft(f * numpy.conjugate(f))[:len(x)].real
-    acf /= 4*n
-
-    # Optionally normalize
-    if norm:
-        acf /= acf[0]
-
-    return acf
-
-def next_pow_two(n):
-    i = 1
-    while i < n:
-        i = i << 1
-    return i
 
 def process_chain(chain, cache, idx):
     chain = chain[:, :idx+1, :]

@@ -27,6 +27,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="autocorr.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="cache.py">
       <SubType>Code</SubType>
     </Compile>

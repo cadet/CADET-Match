@@ -111,7 +111,7 @@ class Cache:
         self.scoreMCMC = self.settings.get('scoreMCMC', "sse")
 
         self.continueMCMC = bool(self.settings.get('continueMCMC', False))
-        self.MCMCTauMult = int(self.settings.get('MCMCTauMult', 500))
+        self.MCMCTauMult = int(self.settings.get('MCMCTauMult', 100))
 
         self.cross_eta = int(self.settings.get('cross_eta', 30))
         self.mutate_eta = int(self.settings.get('mutate_eta', 70))
