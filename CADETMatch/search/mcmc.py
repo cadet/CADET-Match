@@ -126,41 +126,84 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
     train_chain = checkpoint.get('train_chain', None)
     run_chain = checkpoint.get('run_chain', None)
 
-    #if run_chain is not None:
-    #    scoop.logger.info('sampler shape %s', run_chain.shape)
-
-    converge = numpy.ones(cache.settings.get('burnStable', 50)) * numpy.nan
+    converge = checkpoint.get('converge')    
 
     parameters = len(cache.MIN_VALUE)
 
     tol = 5e-4
-    count = checkpoint['length_burn'] - checkpoint['idx_burn']
-    for idx, (p, ln_prob, random_state) in enumerate(sampler.sample(checkpoint['p_burn'], checkpoint['ln_prob_burn'],
-                            checkpoint['rstate_burn'], iterations=count ), start=checkpoint['idx_burn']):
+    power = 0.0
+    distance = 1.0
+    distance_a = sampler.a
+    stop_next = False
+    finished = False
+
+    generation = checkpoint['idx_burn']
+
+    sampler.iterations = checkpoint['sampler_iterations']
+    sampler.naccepted = checkpoint['sampler_naccepted']
+
+    while not finished:
+        p, ln_prob, random_state = next(sampler.sample(checkpoint['p_burn'], lnprob0=checkpoint['ln_prob_burn'], rstate0=checkpoint['rstate_burn'], iterations=1 ))
+
         accept = numpy.mean(sampler.acceptance_fraction)
         burn_seq.append(accept)
         converge[:-1] = converge[1:]
         converge[-1] = accept
-        writeMCMC(cache, addChain(train_chain, sampler.chain)[:, :idx+1, :], run_chain, burn_seq, chain_seq, parameters)
+
+        train_chain = addChain(train_chain, p[:, numpy.newaxis, :])
+
+        writeMCMC(cache, train_chain, run_chain, burn_seq, chain_seq, parameters)
 
         converge_real = converge[~numpy.isnan(converge)]
-        scoop.logger.info('burn:  idx: %s accept: %.3f std: %.3f mean: %.3f converge: %.3f', idx, accept, 
+        scoop.logger.info('burn:  idx: %s accept: %.3f std: %.3f mean: %.3f converge: %.3f', generation, accept, 
                             numpy.std(converge_real), numpy.mean(converge_real), numpy.std(converge_real)/tol)
+
+        generation += 1
 
         checkpoint['p_burn'] = p
         checkpoint['ln_prob_burn'] = ln_prob
         checkpoint['rstate_burn'] = random_state
-        checkpoint['idx_burn'] = idx+1
-        checkpoint['train_chain'] = addChain(train_chain, sampler.chain)[:, :idx+1, :]
+        checkpoint['idx_burn'] = generation
+        checkpoint['train_chain'] = train_chain
         checkpoint['burn_seq'] = burn_seq
+        checkpoint['converge'] = converge
+        checkpoint['sampler_iterations'] = sampler.iterations
+        checkpoint['sampler_naccepted'] = sampler.naccepted
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(checkpoint, cp_file)
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
-            scoop.logger.info("burn in completed at iteration %s", idx)
-            break
+            average_converge = numpy.mean(converge)
+            if 0.16 < average_converge < 0.30:
+                scoop.logger.info("burn in completed at iteration %s", idx)
+                finished = True
 
+            if stop_next is True:
+                scoop.logger.info("burn in completed at iteration %s based on minimum distances", idx)
+                finished = True
+
+            new_distance = numpy.abs(average_converge - 0.234)
+            if new_distance < distance:
+                distance = new_distance
+                distance_a = sampler.a
+
+                scoop.logger.info("burn in acceptance is out of tolerance and alpha must be adjusted while burn in continues")
+                converge[:] = numpy.nan
+                prev_a = sampler.a
+                if average_converge > 0.3:
+                    #a must be increased to decrease the acceptance rate (step size)
+                    power += 1
+                else:
+                    #a must be decreased to increase the acceptance rate (step size)
+                    power -= 1
+                new_a = 1.0 + 2.0**power
+                sampler.a = new_a
+                scoop.logger.info('previous alpha: %s    new alpha: %s', prev_a, new_a)
+            else:
+                sampler.a = distance_a
+                stop_next = True
+ 
     checkpoint['state'] = 'chain'
     checkpoint['p_chain'] = p
     checkpoint['ln_prob_chain'] = None
@@ -289,7 +332,6 @@ def run(cache, tools, creator):
         sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path, kde_scores, kde_bw, previous_bw], pool=cache.toolbox, a=2.0)
         emcee.EnsembleSampler._get_lnprob = _get_lnprob
         emcee.EnsembleSampler._propose_stretch = _propose_stretch
-
 
         result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[], 'mcmc_score':[]}
@@ -604,9 +646,14 @@ def getCheckPoint(checkpointFile, cache):
         checkpoint['ln_prob_chain'] = None
         checkpoint['rstate_chain'] = None
         checkpoint['idx_chain'] = 0
+
+        checkpoint['sampler_iterations'] = 0
+        checkpoint['sampler_naccepted'] = numpy.zeros(populationSize)
+
+        checkpoint['converge'] = numpy.ones(cache.settings.get('burnStable', 50)) * numpy.nan
     
-    checkpoint['length_chain'] = cache.settings.get('chainLength', 10000)
-    checkpoint['length_burn'] = cache.settings.get('burnIn', 10000)
+    checkpoint['length_chain'] = cache.settings.get('chainLength', 50000)
+    checkpoint['length_burn'] = cache.settings.get('burnIn', 50000)
     return checkpoint
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
@@ -758,7 +805,7 @@ def _get_lnprob(self, pos=None):
     return lnprob, blob
 
 def process_chain(chain, cache, idx):
-    chain = chain[:, :idx+1, :]
+    #chain = chain[:, :idx+1, :]
     chain_shape = chain.shape
     flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 
