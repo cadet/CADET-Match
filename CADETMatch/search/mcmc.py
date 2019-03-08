@@ -1010,7 +1010,7 @@ def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected
     h5.root.mcmc_selected = numpy.array(mcmc_selected)
     h5.root.mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)
     h5.root.mcmc_selected_score = numpy.array(mcmc_selected_score)
-    h5.root.mcmc_score = numpy.array(mcmc_score)
+    h5.root.mcmc_selected_kdescore = numpy.array(mcmc_score)
     h5.save()
 
 def plotTube(cache, chain, kde, pca, scaler):
