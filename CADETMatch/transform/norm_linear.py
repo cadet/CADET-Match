@@ -44,6 +44,19 @@ def untransform(seq, cache, parameter, fullPrecision=False):
     headerValues = values
     return values, headerValues
 
+def untransform_matrix(matrix, cache, parameter):
+    minLower = parameter['minLower']
+    maxLower = parameter['maxLower']
+    minUpper = parameter['minUpper']
+    maxUpper = parameter['maxUpper']
+    
+    minValues = numpy.array([minLower, minUpper])
+    maxValues = numpy.array([maxLower, maxUpper])
+
+    values = (maxValues - minValues) * values + minValues
+
+    return values
+
 def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
     values, headerValues = untransform(seq, cache, parameter, fullPrecision)
 

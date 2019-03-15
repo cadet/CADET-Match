@@ -25,6 +25,7 @@ import scoop
 import os
 import warnings
 import corner
+import util
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
@@ -174,7 +175,7 @@ def graphCorner(cache):
             fig = figure.Figure(figsize=[10, 10])
             canvas = FigureCanvas(fig)
             graph = fig.add_subplot(1, 1, 1)
-            graph.plot(data.root.burn_in_acceptance)
+            graph.plot(util.get_confidence(data.root.burn_in_acceptance))
             graph.set_title("Burn In Acceptance")
             graph.set_xlabel('Step')
             graph.set_ylabel('Acceptance')
@@ -184,7 +185,7 @@ def graphCorner(cache):
             fig = figure.Figure(figsize=[10, 10])
             canvas = FigureCanvas(fig)
             graph = fig.add_subplot(1, 1, 1)
-            graph.plot(data.root.mcmc_acceptance)
+            graph.plot(util.get_confidence(data.root.mcmc_acceptance))
             graph.set_title("MCMC Acceptance")
             graph.set_xlabel('Step')
             graph.set_ylabel('Acceptance')

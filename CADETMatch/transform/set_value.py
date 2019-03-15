@@ -13,6 +13,9 @@ def transform(parameter):
 def untransform(seq, cache, parameter, fullPrecision=False):
     return [], []
 
+def untransform_matrix(matrix, cache, parameter):
+    return None
+
 def getValue(sim, location, bound=None, comp=None, index=None):
     if bound is not None:
         unit = getUnit(location)

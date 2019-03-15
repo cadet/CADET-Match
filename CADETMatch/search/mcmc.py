@@ -152,8 +152,6 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
 
         train_chain = addChain(train_chain, p[:, numpy.newaxis, :])
 
-        writeMCMC(cache, train_chain, run_chain, burn_seq, chain_seq, parameters)
-
         converge_real = converge[~numpy.isnan(converge)]
         scoop.logger.info('burn:  idx: %s accept: %.3f std: %.3f mean: %.3f converge: %.3f', generation, accept, 
                             numpy.std(converge_real), numpy.mean(converge_real), numpy.std(converge_real)/tol)
@@ -170,39 +168,39 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
         checkpoint['sampler_iterations'] = sampler.iterations
         checkpoint['sampler_naccepted'] = sampler.naccepted
 
-        with checkpointFile.open('wb')as cp_file:
-            pickle.dump(checkpoint, cp_file)
+        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters)
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
             average_converge = numpy.mean(converge)
             if 0.16 < average_converge < 0.30:
-                scoop.logger.info("burn in completed at iteration %s", idx)
+                scoop.logger.info("burn in completed at iteration %s", generation)
                 finished = True
 
             if stop_next is True:
-                scoop.logger.info("burn in completed at iteration %s based on minimum distances", idx)
+                scoop.logger.info("burn in completed at iteration %s based on minimum distances", generation)
                 finished = True
 
-            new_distance = numpy.abs(average_converge - 0.234)
-            if new_distance < distance:
-                distance = new_distance
-                distance_a = sampler.a
+            if not finished:
+                new_distance = numpy.abs(average_converge - 0.234)
+                if new_distance < distance:
+                    distance = new_distance
+                    distance_a = sampler.a
 
-                scoop.logger.info("burn in acceptance is out of tolerance and alpha must be adjusted while burn in continues")
-                converge[:] = numpy.nan
-                prev_a = sampler.a
-                if average_converge > 0.3:
-                    #a must be increased to decrease the acceptance rate (step size)
-                    power += 1
+                    scoop.logger.info("burn in acceptance is out of tolerance and alpha must be adjusted while burn in continues")
+                    converge[:] = numpy.nan
+                    prev_a = sampler.a
+                    if average_converge > 0.3:
+                        #a must be increased to decrease the acceptance rate (step size)
+                        power += 1
+                    else:
+                        #a must be decreased to increase the acceptance rate (step size)
+                        power -= 1
+                    new_a = 1.0 + 2.0**power
+                    sampler.a = new_a
+                    scoop.logger.info('previous alpha: %s    new alpha: %s', prev_a, new_a)
                 else:
-                    #a must be decreased to increase the acceptance rate (step size)
-                    power -= 1
-                new_a = 1.0 + 2.0**power
-                sampler.a = new_a
-                scoop.logger.info('previous alpha: %s    new alpha: %s', prev_a, new_a)
-            else:
-                sampler.a = distance_a
-                stop_next = True
+                    sampler.a = distance_a
+                    stop_next = True
  
     sampler.reset()
 
@@ -213,8 +211,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
     checkpoint['ln_prob_chain'] = None
     checkpoint['rstate_chain'] = None
 
-    with checkpointFile.open('wb')as cp_file:
-        pickle.dump(checkpoint, cp_file)
+    write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters)
             
 
 def sampler_run(cache, checkpoint, sampler, checkpointFile):
@@ -243,8 +240,6 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
 
         run_chain = addChain(run_chain, p[:, numpy.newaxis, :])
 
-        writeMCMC(cache, train_chain, run_chain, burn_seq, chain_seq, parameters)
-
         scoop.logger.info('run:  idx: %s accept: %.3f', generation, accept)
         
         generation += 1
@@ -258,15 +253,17 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
         checkpoint['sampler_iterations'] = sampler.iterations
         checkpoint['sampler_naccepted'] = sampler.naccepted
 
-        with checkpointFile.open('wb') as cp_file:
-            pickle.dump(checkpoint, cp_file)
+        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters)
 
-        if idx % checkInterval == 0:
+        if generation % checkInterval == 0:
             try:
                 tau = autocorr.integrated_time(numpy.swapaxes(run_chain, 0, 1), tol=cache.MCMCTauMult)
-                scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", generation, accept, tau)
-                scoop.logger.info("we have run long enough and can quit %s", generation)
-                finished = True
+                scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s with shape: %s", generation, accept, tau, run_chain.shape)
+                if numpy.any(numpy.isnan(tau)):
+                    scoop.logger.info("tau is NaN and clearly not complete %s", generation)
+                else:
+                    scoop.logger.info("we have run long enough and can quit %s", generation)
+                    finished = True
             except autocorr.AutocorrError as err:
                 scoop.logger.info(str(err))
                 tau = err.tau
@@ -280,8 +277,20 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
     checkpoint['chain_seq'] = chain_seq
     checkpoint['state'] = 'complete'
 
-    with checkpointFile.open('wb')as cp_file:
-        pickle.dump(checkpoint, cp_file)
+    write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters)
+
+def write_interval(interval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters):
+    "write the checkpoint and mcmc data at most every n seconds"
+    if 'last_time' not in write_interval.__dict__:
+        write_interval.last_time = time.time()
+
+    if time.time() - write_interval.last_time > interval:
+        writeMCMC(cache, train_chain, run_chain, burn_seq, chain_seq, parameters)
+
+        with checkpointFile.open('wb') as cp_file:
+            pickle.dump(checkpoint, cp_file)
+
+        write_interval.last_time = time.time()
 
 def sampler_kde(checkpoint, cache, checkpointFile):
     if 'kde_scores' not in checkpoint:
@@ -819,12 +828,8 @@ def process_chain(chain, cache, idx):
     chain_shape = chain.shape
     flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 
-    chain_transform = numpy.array(chain)
-    for walker in range(chain_shape[0]):
-        for position in range(chain_shape[1]):
-            chain_transform[walker, position,:] = util.convert_individual(chain_transform[walker, position, :], cache)[0]
-
-    flat_chain_transform = chain_transform.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
+    flat_chain_transform = util.convert_population(flat_chain, cache)
+    chain_transform = flat_chain_transform.reshape(chain_shape)
 
     return chain, flat_chain, chain_transform, flat_chain_transform
 

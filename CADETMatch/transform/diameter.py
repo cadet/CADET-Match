@@ -23,6 +23,11 @@ def untransform(seq, cache, parameter, fullPrecision=False):
     headerValues = [seq[0], values[0]]
     return values, headerValues
 
+def untransform_matrix(matrix, cache, parameter):
+    values = numpy.zeros(matrix.shape)
+    values[:,0] = math.pi * matrix[:,0]**2/4.0
+    return values
+
 def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
     values, headerValues = untransform(seq, cache, parameter, fullPrecision)
 

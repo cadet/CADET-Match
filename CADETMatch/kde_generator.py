@@ -256,13 +256,13 @@ def generate_synthetic_error(cache):
         file = dir_base / 'kde_data.h5'
 
         with h5py.File(file, 'w') as hf:
-            hf.create_dataset('scores', data=scores, compression="gzip")
+            hf.create_dataset('scores', data=scores)
 
             for output_name, output in outputs_all.items():
-                hf.create_dataset(output_name, data=numpy.array(output), compression="gzip")
+                hf.create_dataset(output_name, data=numpy.array(output))
 
             for time_name, time in times.items():
-                hf.create_dataset(time_name, data=times, compression="gzip")
+                hf.create_dataset(time_name, data=times)
                                
         return scores, simulations_all
 
@@ -283,15 +283,15 @@ def writeVariations(cache, scores, bandwidth, simulations, store):
     with h5py.File(mcmc_kde, 'w') as hf:
         hf.create_dataset("bandwidth", data=bandwidth, maxshape=tuple(None for i in range(bandwidth.ndim)), fillvalue=[0])
 
-        hf.create_dataset("scores", data=scores, maxshape=(None, len(scores[0])), compression="gzip")
+        hf.create_dataset("scores", data=scores, maxshape=(None, len(scores[0])))
 
-        hf.create_dataset("bandwidth_scores", data=store, maxshape=(None,2), compression="gzip")
+        hf.create_dataset("bandwidth_scores", data=store, maxshape=(None,2))
 
         for name, value in times.items():
-            hf.create_dataset(name, data=value, maxshape=(None,), compression="gzip")
+            hf.create_dataset(name, data=value, maxshape=(None,))
 
         for name, value in data.items():
-            hf.create_dataset(name, data=value, maxshape=(None, len(value[0])), compression="gzip")
+            hf.create_dataset(name, data=value, maxshape=(None, len(value[0])))
 
 def getData(variations):
 

@@ -249,6 +249,21 @@ def convert_individual(individual, cache):
 
     return cadetValues, cadetValuesExtended
 
+def convert_population(population, cache):
+    cadetValues = numpy.zeros(population.shape)
+
+    idx = 0
+    for parameter in cache.settings['parameters']:
+        transform = parameter['transform']
+        count = cache.transforms[transform].count
+        if count:
+            matrix = population[:,idx:idx+count]
+            values = cache.transforms[transform].untransform_matrix(matrix, cache, parameter)
+            cadetValues[:,idx:idx+count] = values
+            idx += count
+
+    return cadetValues
+
 def convert_individual_inverse(individual, cache):
     return numpy.array([f(v) for f, v in zip(cache.settings['transform'], individual)])
 
@@ -419,15 +434,15 @@ def setupMCMC(cache, lb, ub):
         if baseDir is not None:
             settings['baseDir'] = baseDir.as_posix()
 
-        idx = 0
-        for parameter in settings['parameters']:
-            transform = cache.transforms[parameter['transform']]
-            count = transform.count_extended
-            scoop.logger.warn('%s %s %s', idx, count, transform)
-            lb_local = lb[idx:idx+count]
-            ub_local = ub[idx:idx+count]
-            transform.setBounds(parameter, lb_local, ub_local)
-            idx = idx + count
+        #idx = 0
+        #for parameter in settings['parameters']:
+        #    transform = cache.transforms[parameter['transform']]
+        #    count = transform.count_extended
+        #    scoop.logger.warn('%s %s %s', idx, count, transform)
+        #    lb_local = lb[idx:idx+count]
+        #    ub_local = ub[idx:idx+count]
+        #    transform.setBounds(parameter, lb_local, ub_local)
+        #    idx = idx + count
 
         if 'mcmc_h5' in settings and 'parameters_mcmc' in settings:
             mcmc_h5 = settings.get('mcmc_h5', None)
@@ -720,54 +735,54 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
         if not result_h5.exists():
             with h5py.File(result_h5, 'w') as hf:
-                hf.create_dataset("input", data=result_data['input'], maxshape=(None, len(result_data['input'][0])), compression="gzip")
+                hf.create_dataset("input", data=result_data['input'], maxshape=(None, len(result_data['input'][0])))
 
                 if len(result_data['strategy']):
-                    hf.create_dataset("strategy", data=result_data['strategy'], maxshape=(None, len(result_data['strategy'][0])), compression="gzip")
+                    hf.create_dataset("strategy", data=result_data['strategy'], maxshape=(None, len(result_data['strategy'][0])))
 
                 if len(result_data['mean']):
-                    hf.create_dataset("mean", data=result_data['mean'], maxshape=(None, len(result_data['mean'][0])), compression="gzip")
+                    hf.create_dataset("mean", data=result_data['mean'], maxshape=(None, len(result_data['mean'][0])))
 
                 if len(result_data['confidence']):
-                    hf.create_dataset("confidence", data=result_data['confidence'], maxshape=(None, len(result_data['confidence'][0])), compression="gzip")
+                    hf.create_dataset("confidence", data=result_data['confidence'], maxshape=(None, len(result_data['confidence'][0])))
 
                 if cache.correct is not None:
                     distance = cache.correct - result_data['input']
-                    hf.create_dataset("distance_correct", data=distance, maxshape=(None, len(result_data['input'][0])), compression="gzip")
+                    hf.create_dataset("distance_correct", data=distance, maxshape=(None, len(result_data['input'][0])))
 
-                hf.create_dataset("output", data=result_data['output'], maxshape=(None, len(result_data['output'][0])), compression="gzip")
-                hf.create_dataset("output_meta", data=result_data['output_meta'], maxshape=(None, len(result_data['output_meta'][0])), compression="gzip")
-                hf.create_dataset("input_transform", data=result_data['input_transform'], maxshape=(None, len(result_data['input_transform'][0])), compression="gzip")
-                hf.create_dataset("input_transform_extended", data=result_data['input_transform_extended'], maxshape=(None, len(result_data['input_transform_extended'][0])), compression="gzip")
-                hf.create_dataset("generation", data=gen_data, maxshape=(None, 2), compression="gzip")
-                hf.create_dataset("population_input", data=population_input, maxshape=(None, population_input.shape[1] ), compression="gzip")
-                hf.create_dataset("population_output", data=population_output, maxshape=(None, population_output.shape[1] ), compression="gzip")
+                hf.create_dataset("output", data=result_data['output'], maxshape=(None, len(result_data['output'][0])))
+                hf.create_dataset("output_meta", data=result_data['output_meta'], maxshape=(None, len(result_data['output_meta'][0])))
+                hf.create_dataset("input_transform", data=result_data['input_transform'], maxshape=(None, len(result_data['input_transform'][0])))
+                hf.create_dataset("input_transform_extended", data=result_data['input_transform_extended'], maxshape=(None, len(result_data['input_transform_extended'][0])))
+                hf.create_dataset("generation", data=gen_data, maxshape=(None, 2))
+                hf.create_dataset("population_input", data=population_input, maxshape=(None, population_input.shape[1] ))
+                hf.create_dataset("population_output", data=population_output, maxshape=(None, population_output.shape[1] ))
 
                 if len(hof_param):
-                    hf.create_dataset('hof_population', data=hof_param, maxshape=(None, hof_param.shape[1] ), compression="gzip")
-                    hf.create_dataset('hof_population_transform', data=hof_param_transform, maxshape=(None, hof_param_transform.shape[1] ), compression="gzip")
-                    hf.create_dataset('hof_score', data=data, maxshape=(None, data.shape[1] ), compression="gzip")
+                    hf.create_dataset('hof_population', data=hof_param, maxshape=(None, hof_param.shape[1] ))
+                    hf.create_dataset('hof_population_transform', data=hof_param_transform, maxshape=(None, hof_param_transform.shape[1] ))
+                    hf.create_dataset('hof_score', data=data, maxshape=(None, data.shape[1] ))
 
                 if len(meta_param):
                     scoop.logger.info("%s %s %s", meta_param.shape, meta_param_transform.shape, data_meta.shape)
-                    hf.create_dataset('meta_population', data=meta_param, maxshape=(None, meta_param.shape[1] ), compression="gzip")
-                    hf.create_dataset('meta_population_transform', data=meta_param_transform, maxshape=(None, meta_param_transform.shape[1] ), compression="gzip")
-                    hf.create_dataset('meta_score', data=data_meta, maxshape=(None, data_meta.shape[1] ), compression="gzip")
+                    hf.create_dataset('meta_population', data=meta_param, maxshape=(None, meta_param.shape[1] ))
+                    hf.create_dataset('meta_population_transform', data=meta_param_transform, maxshape=(None, meta_param_transform.shape[1] ))
+                    hf.create_dataset('meta_score', data=data_meta, maxshape=(None, data_meta.shape[1] ))
 
                 if len(grad_param):
-                    hf.create_dataset('grad_population', data=grad_param, maxshape=(None, grad_param.shape[1] ), compression="gzip")
-                    hf.create_dataset('grad_population_transform', data=grad_param_transform, maxshape=(None, grad_param_transform.shape[1] ), compression="gzip")
-                    hf.create_dataset('grad_score', data=data_grad, maxshape=(None, data_grad.shape[1] ), compression="gzip")
+                    hf.create_dataset('grad_population', data=grad_param, maxshape=(None, grad_param.shape[1] ))
+                    hf.create_dataset('grad_population_transform', data=grad_param_transform, maxshape=(None, grad_param_transform.shape[1] ))
+                    hf.create_dataset('grad_score', data=data_grad, maxshape=(None, data_grad.shape[1] ))
 
                 mcmc_score = result_data.get('mcmc_score', None)
                 if mcmc_score is not None:
                     mcmc_score = numpy.array(mcmc_score)
-                    hf.create_dataset("mcmc_score", data=mcmc_score, maxshape=(None, len(mcmc_score[0])), compression="gzip")
+                    hf.create_dataset("mcmc_score", data=mcmc_score, maxshape=(None, len(mcmc_score[0])))
                 
                 if cache.fullTrainingData:
 
                     for filename, chroma in result_data['results'].items():
-                        hf.create_dataset(filename, data=chroma, maxshape=(None, len(chroma[0])), compression="gzip")
+                        hf.create_dataset(filename, data=chroma, maxshape=(None, len(chroma[0])))
 
                     for filename, chroma in result_data['times'].items():
                         hf.create_dataset(filename, data=chroma)
@@ -1210,6 +1225,12 @@ def find_outliers(data, lower_percent=10, upper_percent=90):
     selected = (data >= lb) & (data <= ub)
     bools = numpy.all(selected, 1)
     return selected, bools
+
+def get_confidence(data, lb=5, ub=95):
+    lb, ub = numpy.percentile(data, [lb, ub], 0)
+    selected = (data >= lb) & (data <= ub)
+    bools = numpy.all(selected, 1)
+    return data[bools, :]
 
 def findOutlets(simulation):
     "find all the outlets from a simulation along with their number of components"

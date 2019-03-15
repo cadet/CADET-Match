@@ -22,6 +22,11 @@ def untransform(seq, cache, parameter, fullPrecision=False):
     headerValues = values
     return values, headerValues
 
+def untransform_matrix(matrix, cache, parameter):
+    values = numpy.zeros(matrix.shape)
+    values[:,0] = matrix[:,0]
+    return values
+
 def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
     values, headerValues = untransform(seq, cache, parameter, fullPrecision)
 

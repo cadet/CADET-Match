@@ -120,6 +120,8 @@ class Cache:
 
         self.tempDir = self.settings.get('tempDir', None)
 
+        self.checkpointInterval = self.settings.get('checkpointInterval', 600)
+
         self.MCMCSetup()
         self.setupMetaMask()
 

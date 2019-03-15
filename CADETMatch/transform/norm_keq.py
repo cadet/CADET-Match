@@ -43,6 +43,23 @@ def untransform(seq, cache, parameter, fullPrecision=False):
     headerValues = [values[0], values[1], values[0]/values[1]]
     return values, headerValues
 
+def untransform_matrix(matrix, cache, parameter):
+    minKA = parameter['minKA']
+    maxKA = parameter['maxKA']
+    minKEQ = parameter['minKEQ']
+    maxKEQ = parameter['maxKEQ']
+
+    minValues = numpy.log([minKA, minKEQ])
+    maxValues = numpy.log([maxKA, maxKEQ])
+    
+    values = (maxValues - minValues) * values + minValues
+
+    values = numpy.exp(values)
+
+    values[:,1] = values[:,0] / values[:,1]
+
+    return values
+
 def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
     values, headerValues = untransform(seq, cache, parameter, fullPrecision)
 

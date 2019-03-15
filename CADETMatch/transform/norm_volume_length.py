@@ -43,6 +43,21 @@ def untransform(seq, cache, parameter, fullPrecision=False):
     headerValues = [values[0], values[1], values[0]*values[1]]
     return values, headerValues
 
+def untransform_matrix(matrix, cache, parameter):
+    minVolume = parameter['minVolume']
+    maxVolume = parameter['maxVolume']
+    minLength = parameter['minLength']
+    maxLength = parameter['maxLength']
+
+    minValues = numpy.array([minVolume, minLength])
+    maxValues = numpy.array([maxVolume, maxLength])
+
+    values = (maxValues - minValues) * matrix + minValues
+
+    values[:,0] = values[:,0] / values[:,1]
+
+    return values
+
 def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
     values, headerValues = untransform(seq, cache, parameter, fullPrecision)
     
