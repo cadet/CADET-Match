@@ -168,6 +168,18 @@ def graphCorner(cache):
 
         plotChain(data.root.train_flat_chain, data.root.train_flat_chain_transform, headers, out_dir, 'train')
 
+        if 'tau_percent' in data.root:
+            fig = figure.Figure(figsize=[10, 10])
+            canvas = FigureCanvas(fig)
+            graph = fig.add_subplot(1, 1, 1)
+
+            tau_percent = numpy.squeeze(data.root.tau_percent)
+            max_values = numpy.ones(tau_percent.shape)
+            tau_percent = numpy.min([tau_percent, max_values], 0)
+
+            graph.bar(headers, tau_percent)
+            fig.savefig(str(out_dir / "tau_percent.png" ), bbox_inches='tight')
+
         if 'flat_chain' in data.root:
             plotChain(data.root.flat_chain, data.root.flat_chain_transform, headers, out_dir, 'full')
 

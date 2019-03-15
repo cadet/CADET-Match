@@ -168,7 +168,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
         checkpoint['sampler_iterations'] = sampler.iterations
         checkpoint['sampler_naccepted'] = sampler.naccepted
 
-        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters)
+        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, None)
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
             average_converge = numpy.mean(converge)
@@ -211,7 +211,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
     checkpoint['ln_prob_chain'] = None
     checkpoint['rstate_chain'] = None
 
-    write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters)
+    write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, None)
             
 
 def sampler_run(cache, checkpoint, sampler, checkpointFile):
@@ -231,6 +231,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
 
     sampler.iterations = checkpoint['sampler_iterations']
     sampler.naccepted = checkpoint['sampler_naccepted']
+    tau_percent = None
 
     while not finished:
         p, ln_prob, random_state = next(sampler.sample(checkpoint['p_chain'], lnprob0=checkpoint['ln_prob_chain'], rstate0=checkpoint['rstate_chain'], iterations=1 ))
@@ -253,7 +254,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
         checkpoint['sampler_iterations'] = sampler.iterations
         checkpoint['sampler_naccepted'] = sampler.naccepted
 
-        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters)
+        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, tau_percent)
 
         if generation % checkInterval == 0:
             try:
@@ -268,6 +269,8 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
                 scoop.logger.info(str(err))
                 tau = err.tau
             scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", generation, accept, tau)
+            tau = numpy.array(tau)
+            tau_percent = generation / (tau * cache.MCMCTauMult)
 
     checkpoint['p_chain'] = p
     checkpoint['ln_prob_chain'] = ln_prob
@@ -277,15 +280,15 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
     checkpoint['chain_seq'] = chain_seq
     checkpoint['state'] = 'complete'
 
-    write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters)
+    write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, tau_percent)
 
-def write_interval(interval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters):
+def write_interval(interval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, tau_percent=None):
     "write the checkpoint and mcmc data at most every n seconds"
     if 'last_time' not in write_interval.__dict__:
         write_interval.last_time = time.time()
 
     if time.time() - write_interval.last_time > interval:
-        writeMCMC(cache, train_chain, run_chain, burn_seq, chain_seq, parameters)
+        writeMCMC(cache, train_chain, run_chain, burn_seq, chain_seq, parameters, tau_percent)
 
         with checkpointFile.open('wb') as cp_file:
             pickle.dump(checkpoint, cp_file)
@@ -833,7 +836,7 @@ def process_chain(chain, cache, idx):
 
     return chain, flat_chain, chain_transform, flat_chain_transform
 
-def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters):
+def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters, tau_percent):
     "write out the mcmc data so it can be plotted"
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
     mcmc_h5 = mcmcDir / "mcmc.h5"
@@ -856,6 +859,9 @@ def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters):
 
     h5 = cadet.H5()
     h5.filename = mcmc_h5.as_posix()
+
+    if tau_percent is not None:
+        h5.root.tau_percent = tau_percent.reshape(-1, 1)
 
     if burn_seq:
         h5.root.burn_in_acceptance = numpy.array(burn_seq).reshape(-1, 1)
