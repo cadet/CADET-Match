@@ -177,7 +177,7 @@ def graphCorner(cache):
             max_values = numpy.ones(tau_percent.shape)
             tau_percent = numpy.min([tau_percent, max_values], 0)
 
-            graph.bar(headers, tau_percent)
+            graph.bar(list(range(len(headers))), tau_percent, tick_label = headers)
             fig.savefig(str(out_dir / "tau_percent.png" ), bbox_inches='tight')
 
         if 'flat_chain' in data.root:
