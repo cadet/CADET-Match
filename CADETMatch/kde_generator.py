@@ -158,6 +158,7 @@ def synthetic_error_simulation(json_path):
     scores = []
     outputs = {}
     simulations = {}
+    experiment_failed = False
 
     for experiment in cache.cache.settings['kde_synthetic']:
         file_path = experiment['file_path']
@@ -222,7 +223,11 @@ def synthetic_error_simulation(json_path):
 
             for unit in units:
                 outputs['%s_unit_%03d' % (name, int(unit))] = result['simulation'].root.output.solution['unit_%03d' % int(unit)].solution_outlet_comp_000
+        else:
+            experiment_failed = True
 
+    if experiment_failed:
+        return None, None, None
     return scores, simulations, outputs
 
 def generate_synthetic_error(cache):
@@ -234,7 +239,6 @@ def generate_synthetic_error(cache):
         outputs_all = {}
 
         for scores, simulations, outputs in futures.map(synthetic_error_simulation, [cache.json_path] * count_settings):
-            
             if scores and simulations and outputs:
 
                 scores_all.append(scores)
