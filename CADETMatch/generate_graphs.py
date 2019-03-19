@@ -149,6 +149,32 @@ def plotChain(flat_chain, flat_chain_transform, headers, out_dir, prefix):
                     show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=20)
     fig.savefig(str(out_dir / ("%s_corner_transform.png" % prefix)), bbox_inches='tight')
 
+def plotMCMCParam(out_dir, param, chain, header):
+    shape = chain.shape
+    x = numpy.linspace(0, shape[1], shape[1])
+
+    fig = figure.Figure(figsize=[10, 10])
+    canvas = FigureCanvas(fig)
+    graph = fig.add_subplot(1, 1, 1)
+
+    graph.plot(x, chain[0,:,param], 'r', label='5')
+    graph.plot(x, chain[1,:,param], 'k', label='mean')
+    graph.plot(x, chain[2,:,param], 'r', label='95')
+    graph.fill_between(x, chain[0,:,param], chain[2,:,param], facecolor='r', alpha=0.5)
+    graph.legend()
+    graph.set_title(header)
+    fig.savefig(str(out_dir / ("%s.png" % header) ), bbox_inches='tight')
+
+def plotMCMCVars(out_dir, headers, data):
+    for param_idx, header in enumerate(headers):
+        if 'train_chain_stat' in data.root:
+            plotMCMCParam(out_dir, param_idx, data.root.train_chain_stat, "Train " + header)
+            plotMCMCParam(out_dir, param_idx, data.root.train_chain_stat_transform, "Train " + header + " Transform")
+
+        if 'run_chain_stat' in data.root:
+            plotMCMCParam(out_dir, param_idx, data.root.run_chain_stat, "Train " + header)
+            plotMCMCParam(out_dir, param_idx, data.root.run_chain_stat_transform, "Train " + header + " Transform")
+
 def graphCorner(cache):
     headers = list(cache.parameter_headers_actual)
     headers = [header.split()[0] for header in headers]
@@ -167,6 +193,8 @@ def graphCorner(cache):
         out_dir = cache.settings['resultsDirProgress']
 
         plotChain(data.root.train_flat_chain, data.root.train_flat_chain_transform, headers, out_dir, 'train')
+
+        plotMCMCVars(out_dir, headers, data)
 
         if 'tau_percent' in data.root:
             fig = figure.Figure(figsize=[10, 10])

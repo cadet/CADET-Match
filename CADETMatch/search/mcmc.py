@@ -119,12 +119,20 @@ def addChain(*args):
     else:
         return numpy.array(temp[0])
 
+def flatten(chain):
+    chain_shape = chain.shape
+    flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
+    return flat_chain
+
 def sampler_burn(cache, checkpoint, sampler, checkpointFile):
     burn_seq = checkpoint.get('burn_seq', [])
     chain_seq = checkpoint.get('chain_seq', [])
         
     train_chain = checkpoint.get('train_chain', None)
     run_chain = checkpoint.get('run_chain', None)
+
+    train_chain_stat = checkpoint.get('train_chain_stat', None)
+    run_chain_stat = checkpoint.get('run_chain_stat', None)
 
     converge = checkpoint.get('converge')    
 
@@ -152,6 +160,8 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
 
         train_chain = addChain(train_chain, p[:, numpy.newaxis, :])
 
+        train_chain_stat = addChain(train_chain_stat, numpy.percentile(flatten(train_chain), [5, 50, 95], 0)[:, numpy.newaxis, :])
+
         converge_real = converge[~numpy.isnan(converge)]
         scoop.logger.info('burn:  idx: %s accept: %.3f std: %.3f mean: %.3f converge: %.3f', generation, accept, 
                             numpy.std(converge_real), numpy.mean(converge_real), numpy.std(converge_real)/tol)
@@ -167,8 +177,10 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
         checkpoint['converge'] = converge
         checkpoint['sampler_iterations'] = sampler.iterations
         checkpoint['sampler_naccepted'] = sampler.naccepted
+        checkpoint['train_chain_stat'] = train_chain_stat
+        checkpoint['run_chain_stat'] = run_chain_stat
 
-        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, None)
+        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
             average_converge = numpy.mean(converge)
@@ -211,7 +223,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
     checkpoint['ln_prob_chain'] = None
     checkpoint['rstate_chain'] = None
 
-    write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, None)
+    write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
             
 
 def sampler_run(cache, checkpoint, sampler, checkpointFile):
@@ -220,6 +232,9 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
         
     train_chain = checkpoint.get('train_chain', None)
     run_chain = checkpoint.get('run_chain', None)
+
+    train_chain_stat = checkpoint.get('train_chain_stat', None)
+    run_chain_stat = checkpoint.get('run_chain_stat', None)
 
     checkInterval = 25
 
@@ -241,6 +256,8 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
 
         run_chain = addChain(run_chain, p[:, numpy.newaxis, :])
 
+        run_chain_stat = addChain(run_chain_stat, numpy.percentile(flatten(run_chain), [5, 50, 95], 0)[:, numpy.newaxis, :])
+
         scoop.logger.info('run:  idx: %s accept: %.3f', generation, accept)
         
         generation += 1
@@ -253,8 +270,10 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
         checkpoint['chain_seq'] = chain_seq
         checkpoint['sampler_iterations'] = sampler.iterations
         checkpoint['sampler_naccepted'] = sampler.naccepted
+        checkpoint['train_chain_stat'] = train_chain_stat
+        checkpoint['run_chain_stat'] = run_chain_stat
 
-        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, tau_percent)
+        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
 
         if generation % checkInterval == 0:
             try:
@@ -280,15 +299,15 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
     checkpoint['chain_seq'] = chain_seq
     checkpoint['state'] = 'complete'
 
-    write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, tau_percent)
+    write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
 
-def write_interval(interval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, tau_percent=None):
+def write_interval(interval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent=None):
     "write the checkpoint and mcmc data at most every n seconds"
     if 'last_time' not in write_interval.__dict__:
         write_interval.last_time = time.time()
 
     if time.time() - write_interval.last_time > interval:
-        writeMCMC(cache, train_chain, run_chain, burn_seq, chain_seq, parameters, tau_percent)
+        writeMCMC(cache, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
 
         with checkpointFile.open('wb') as cp_file:
             pickle.dump(checkpoint, cp_file)
@@ -827,7 +846,6 @@ def _get_lnprob(self, pos=None):
     return lnprob, blob
 
 def process_chain(chain, cache, idx):
-    #chain = chain[:, :idx+1, :]
     chain_shape = chain.shape
     flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 
@@ -836,7 +854,7 @@ def process_chain(chain, cache, idx):
 
     return chain, flat_chain, chain_transform, flat_chain_transform
 
-def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters, tau_percent):
+def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent):
     "write out the mcmc data so it can be plotted"
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
     mcmc_h5 = mcmcDir / "mcmc.h5"
@@ -863,6 +881,18 @@ def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters, tau_pe
     if tau_percent is not None:
         h5.root.tau_percent = tau_percent.reshape(-1, 1)
 
+    if train_chain_stat is not None:
+        train_chain_stat, _, train_chain_stat_transform, _ = process_chain(train_chain_stat, cache, len(burn_seq)-1)
+
+        h5.root.train_chain_stat = train_chain_stat
+        h5.root.train_chain_stat_transform = train_chain_stat_transform
+
+    if run_chain_stat is not None:
+        run_chain_stat, _, run_chain_stat_transform, _ = process_chain(train_chain_stat, cache, len(burn_seq)-1)
+
+        h5.root.run_chain_stat = run_chain_stat
+        h5.root.run_chain_stat_transform = run_chain_stat_transform
+
     if burn_seq:
         h5.root.burn_in_acceptance = numpy.array(burn_seq).reshape(-1, 1)
 
@@ -881,7 +911,7 @@ def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters, tau_pe
     h5.root.train_flat_chain_transform = train_chain_flat_transform
 
     mean = numpy.mean(interval_chain_transform,0)
-    labels = [5, 10, 25, 50, 75, 90, 95]
+    labels = [5, 10, 50, 90, 95]
     percentile = numpy.percentile(interval_chain_transform, labels, 0)
     mean = util.roundParameter(mean, cache)
     percentile = util.roundParameter(percentile, cache)
@@ -1082,13 +1112,13 @@ def interval(flat_chain, cache):
 
     mean = numpy.mean(flat_chain,0)
 
-    percentile = numpy.percentile(flat_chain, [5, 10, 25, 50, 75, 90, 95], 0)
+    percentile = numpy.percentile(flat_chain, [5, 10, 50, 90, 95], 0)
 
     data = numpy.vstack( (mean, percentile) ).transpose()
 
     data = util.roundParameter(data, cache)
 
-    pd = pandas.DataFrame(data, columns = ['mean', '5', '10', '25', '50', '75', '90', '95'])
+    pd = pandas.DataFrame(data, columns = ['mean', '5', '10', '50', '90', '95'])
     pd.insert(0, 'name', cache.parameter_headers_actual)
     pd.set_index('name')
     return pd
