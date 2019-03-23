@@ -12,9 +12,9 @@
     <Name>CADETMatch</Name>
     <RootNamespace>CADETMatch</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.7</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\AMG-002\sma_multi.json" 0</CommandLineArguments>
+    <CommandLineArguments>"F:\AMS-003\transport\dextran\NSGA3_dextran.json" 0</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -144,6 +144,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\dextranHybrid2_spline.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\dextran_spline.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\fractionation.py">
@@ -343,9 +346,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include=".pylintrc" />
     <Content Include="README.txt" />
   </ItemGroup>
@@ -354,6 +354,9 @@
     <Folder Include="search\" />
     <Folder Include="scores\" />
     <Folder Include="search\retired\" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.7" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

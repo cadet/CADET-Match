@@ -4,12 +4,12 @@ import scipy.stats
 import numpy
 from addict import Dict
 
-name = "Dextran"
+name = "DextranSpline"
 settings = Dict()
 settings.adaptive = True
 settings.badScore = 0
 settings.meta_mask = True
-settings.count = 2
+settings.count = 6
 settings.failure = [0.0] * settings.count, 1e6, 1, [], [1.0] * settings.count
 
 def run(sim_data, feature):
@@ -41,30 +41,30 @@ def run(sim_data, feature):
 
     pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_zero, exp_data_zero)
 
-    slope = get_slope(exp_time_values, sim_data_zero)
+    try:
+        sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_zero), s=util.smoothing_factor(sim_data_zero)).derivative(1)
+        exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_zero), s=util.smoothing_factor(exp_data_zero)).derivative(1)
+    except:  #I know a bare exception is bad but it looks like the exception is not exposed inside UnivariateSpline
+        return settings.failure
 
-    temp = [feature['slope_function'](slope),
+    exp_der_data_values = exp_spline(exp_time_values)
+    sim_der_data_values = sim_spline(exp_time_values)
+
+    pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_der_data_values, exp_der_data_values)
+
+    [highs, lows] = util.find_peak(exp_time_values, sim_der_data_values)
+
+    temp = [pearson, 
+            pearson_der, 
             feature['offsetTimeFunction'](numpy.abs(diff_time)),
+            feature['valueFunction'](max(sim_data_zero)),
+            feature['value_function_high'](highs[1]),             
+            feature['value_function_low'](lows[1]),
             ]
 
     data = temp, util.sse(sim_data_zero, exp_data_zero), len(sim_data_zero), sim_data_zero - exp_data_zero, [1.0 - i for i in temp]
 
     return data
-
-def get_slope(times, values):
-    max_value = numpy.max(values)
-    max_index = numpy.argmax(values >= 0.8*max_value)
-    max_time = times[max_index]
-
-    min_index = numpy.argmax(values >= 0.2*max_value)
-    min_time = times[min_index]
-    min_value = values[min_index]
-    
-    temp_values = values[min_index:max_index+1]
-    temp_times = times[min_index:max_index+1]
-    
-    p = numpy.polyfit(temp_times, temp_values, 1)
-    return p[0]
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
@@ -87,8 +87,6 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, util.smoothing(selectedTimes, exp_data_zero), s=util.smoothing_factor(exp_data_zero)).derivative(1)
 
     [high, low] = util.find_peak(selectedTimes, exp_spline(selectedTimes))
-
-    slope = get_slope(selectedTimes, exp_data_zero)
                 
     temp['min_time'] = feature['start']
     temp['max_time'] = feature['stop']
@@ -99,13 +97,14 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['valueFunction'] = score.value_function(max_value, abstol)
     temp['value_function_high'] = score.value_function(high[1], abstol, 0.1)
     temp['value_function_low'] = score.value_function(low[1], abstol, 0.1)
-    temp['slope_function'] = score.value_function(slope, abstol, 0.1)
     return temp
 
 def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
-    temp = ["%s_Slope" % name, 
-            "%s_Time" % name]
+    temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, 
+            "%s_Time" % name, "%s_Value" % name, 
+            "%s_Der_High_Value" % name, "%s_Der_Low_Value" % name]
     return temp
+
 
 

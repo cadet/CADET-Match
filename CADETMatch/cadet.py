@@ -101,7 +101,7 @@ def recursively_load( h5file, path, func):
     for key, item in h5file[path].items():
         key = func(key)
         if isinstance(item, h5py._hl.dataset.Dataset):
-            ans[key] = item.value
+            ans[key] = item[()]
         elif isinstance(item, h5py._hl.group.Group):
             ans[key] = recursively_load(h5file, path + key + '/', func)
     return ans 
