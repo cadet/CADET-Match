@@ -168,12 +168,12 @@ def plotMCMCParam(out_dir, param, chain, header):
 def plotMCMCVars(out_dir, headers, data):
     for param_idx, header in enumerate(headers):
         if 'train_chain_stat' in data.root:
-            plotMCMCParam(out_dir, param_idx, data.root.train_chain_stat, "Train " + header)
-            plotMCMCParam(out_dir, param_idx, data.root.train_chain_stat_transform, "Train " + header + " Transform")
+            plotMCMCParam(out_dir, param_idx, data.root.train_chain_stat, "Train " + header + str(param_idx))
+            plotMCMCParam(out_dir, param_idx, data.root.train_chain_stat_transform, "Train " + header + " Transform" + str(param_idx))
 
         if 'run_chain_stat' in data.root:
-            plotMCMCParam(out_dir, param_idx, data.root.run_chain_stat, "Train " + header)
-            plotMCMCParam(out_dir, param_idx, data.root.run_chain_stat_transform, "Train " + header + " Transform")
+            plotMCMCParam(out_dir, param_idx, data.root.run_chain_stat, "Run " + header + str(param_idx))
+            plotMCMCParam(out_dir, param_idx, data.root.run_chain_stat_transform, "Run " + header + " Transform" + str(param_idx))
 
 def graphCorner(cache):
     headers = list(cache.parameter_headers_actual)
