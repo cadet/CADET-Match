@@ -15,10 +15,6 @@ def transform(parameter):
 
 def untransform(seq, cache, parameter, fullPrecision=False):
     values = [seq[0],]
-
-    if cache.roundParameters is not None and not fullPrecision:
-        values = [util.RoundToSigFigs(i, cache.roundParameters) for i in values]
-
     headerValues = values
     return values, headerValues
 

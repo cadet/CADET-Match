@@ -19,10 +19,6 @@ def transform(parameter):
 
 def untransform(seq, cache, parameter, fullPrecision=False):
     values = [numpy.exp(seq[0]), numpy.exp(seq[0])/(numpy.exp(seq[1]))]
-
-    if cache.roundParameters is not None and not fullPrecision:
-        values = [util.RoundToSigFigs(i, cache.roundParameters) for i in values]
-
     headerValues = [values[0], values[1], values[0]/values[1]]
     return values, headerValues
 

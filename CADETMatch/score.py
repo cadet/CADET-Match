@@ -124,6 +124,28 @@ def time_function_decay(CV_time, peak_time, diff_input=False):
 
     return wrapper
 
+def time_function_decay_cv(CV_time, times, peak_time):
+
+    time = numpy.max(numpy.abs(numpy.array([times[-1] - peak_time, peak_time - times[0]])))
+    cv_time = time /CV_time
+    
+    x_exp = numpy.array([0, cv_time])
+    y_exp = numpy.array([1, 0.0])
+
+    #a, b = calc_coeff.exponential_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
+
+    a, b = calc_coeff.linear_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
+    
+    def wrapper(x):
+        diff = x/CV_time
+        #value = max(0.0, calc_coeff.exponential(diff, a, b))
+        value = max(0.0, calc_coeff.linear(diff, a, b))
+
+        return value
+
+    return wrapper
+
+
 def time_function_decay_exp(CV_time, peak_time, diff_input=False):
     x_exp = numpy.array([0, 1.0*CV_time])
     y_exp = numpy.array([1, 0.5])
@@ -246,6 +268,19 @@ def value_function_exp(peak_height, tolerance=1e-8, bottom_score = 0.05):
             diff = numpy.abs(x-peak_height)/numpy.abs(peak_height)
             return max(0, calc_coeff.exponential(diff, a, b))
             #return max(0, calc_coeff.linear(diff, a, b))
+
+    return wrapper
+
+def slope_function(peak_slope):
+    #if the peak height is 0 or less than the tolerance it needs to be treated as a special case to prevent divide by zero problems
+    x = numpy.array([0.0, 2.0])
+    y = numpy.array([1.0, 0.0])
+
+    a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
+    
+    def wrapper(x):
+        diff = numpy.abs(x-peak_slope)/numpy.abs(peak_slope)
+        return max(0, calc_coeff.linear(diff, a, b))
 
     return wrapper
 

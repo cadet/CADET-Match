@@ -34,12 +34,6 @@ def fitness(individual, json_path):
         else:
             return cache.cache.WORST, [], None
 
-    #need
-    if cache.cache.roundScores is not None:
-        scores = util.RoundToSigFigs(scores, cache.cache.roundScores)
-    else:
-        scores = scores
-
     try:
         power = float(cache.cache.settings['kde']['power'])
     except KeyError:
@@ -50,11 +44,6 @@ def fitness(individual, json_path):
     #human scores
     humanScores = numpy.concatenate([util.calcMetaScores(scores, cache.cache), [error,]])
 
-    if cache.cache.roundScores is not None:
-        humanScores = util.RoundToSigFigs(humanScores, cache.cache.roundScores)
-    else:
-        humanScores = humanScores
-
     for result in results.values():
         if result['cadetValuesKEQ']:
             cadetValuesKEQ = result['cadetValuesKEQ']
@@ -63,9 +52,9 @@ def fitness(individual, json_path):
     #generate csv
     csv_record = []
     csv_record.extend(['EVO', 'NA'])
-    csv_record.extend(["%.5g" % i for i in cadetValuesKEQ])
-    csv_record.extend(["%.5g" % i for i in scores])
-    csv_record.extend(["%.5g" % i for i in humanScores])
+    csv_record.extend(cadetValuesKEQ)
+    csv_record.extend(scores)
+    csv_record.extend(humanScores)
       
     return scores, csv_record, results
 

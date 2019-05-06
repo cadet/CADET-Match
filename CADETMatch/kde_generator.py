@@ -9,13 +9,12 @@
 
 import itertools
 import score
-from cadet import Cadet
+from cadet import Cadet, H5
 from pathlib import Path
 import numpy
 import scoop
 from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import cross_val_score
-from sklearn.decomposition import PCA
 from sklearn import preprocessing
 import copy
 
@@ -37,6 +36,8 @@ import cache
 
 from scoop import futures
 import synthetic_error
+
+import joblib
 
 def bandwidth_score(bw, data, store):
     bandwidth = 10**bw[0]
@@ -79,67 +80,12 @@ def mirror(data):
     
     return full_data
 
-def getPCA(data):
-    pca = PCA(n_components = 1e-3, svd_solver = 'full')
-    pca.fit(mirror(data))
-    return pca
-
-def getScaler(data):
-    scaler = preprocessing.RobustScaler().fit(data)
-    return scaler
-
-def getKDE(cache, scores, bw):
-    #scores = generate_data(cache)
-
-    scores_mirror = mirror(scores)
-    pca = getPCA(scores_mirror)
-
-    #scores_pca = pca.transform(scores_mirror)
-
-    scaler = getScaler(scores_mirror)
-
-    scores_scaler = scaler.transform(scores_mirror)
-
-    kde = KernelDensity(kernel='gaussian', bandwidth=bw, atol=bw_tol).fit(scores_scaler)
-
-    plotKDE(cache, kde, scores_scaler)
-
-    #do kde stuff
-    #return kde
-    return kde, pca, scaler
-
-def generate_data(cache):
+def setupKDE(cache):
     scores, simulations = generate_synthetic_error(cache)
 
-    #if scores is None:
-    #    reference_result = setupReferenceResult(cache)
-
-    #    try:
-    #        variations = cache.settings['kde']['variations']
-    #    except KeyError:
-    #        variations = 100
-
-    #    simulations = [reference_result]
-    #    for i in range(variations):
-    #        simulations.append(mutate(cache, reference_result))
-
-    #    plotVariations(cache, temp)
-
-    #    scores = []
-    #    for first,second in itertools.combinations(temp, 2):
-    #        scores.append(score_sim(first, second, cache))
-
-    #    scores = numpy.array(scores)
-
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
-    save_scores = mcmcDir / 'scores_used.npy'
-
-    numpy.save(save_scores, scores)
 
     scores_mirror = mirror(scores)
-    #pca = getPCA(scores_mirror)
-
-    #scores_pca = pca.transform(scores_mirror)
 
     scaler = getScaler(scores_mirror)
 
@@ -147,7 +93,63 @@ def generate_data(cache):
 
     bandwidth, store = get_bandwidth(scores_scaler, cache)
 
-    #writeVariations(cache, scores_scaler, bandwidth, simulations, store)
+    kde = KernelDensity(kernel='gaussian', bandwidth=bandwidth, atol=bw_tol).fit(scores_scaler)
+
+    joblib.dump(scaler, mcmcDir / 'kde_scaler.joblib')
+
+    joblib.dump(kde, mcmcDir / 'kde_score.joblib')
+
+    h5_data = H5()
+    h5_data.filename = mcmcDir / "kde_settings.h5"
+    h5_data.root.bandwidth = bandwidth
+    h5_data.root.store = numpy.array(store)
+    h5_data.root.scores = scores
+    h5_data.root.scores_mirror = scores_mirror
+    h5_data.root.scores_mirror_scaled = scores_scaler
+    h5_data.save()
+
+    return kde, scaler
+
+def getScaler(data):
+    scaler = preprocessing.StandardScaler().fit(data)
+    return scaler
+
+def getKDE(cache):
+    mcmcDir = Path(cache.settings['resultsDirMCMC'])
+
+    kde = joblib.load(mcmcDir / 'kde_score.joblib')
+
+    scaler = joblib.load(mcmcDir / 'kde_scaler.joblib')
+
+    return kde, scaler
+
+def getKDEPrevious(cache):
+    if 'mcmcPriorDir' in cache.settings:
+        mcmcDir = Path(cache.settings['mcmcPriorDir']) / "mcmc"
+
+        if mcmcDir.exists():
+            kde = joblib.load(mcmcDir / 'kde_score.joblib')
+
+            scaler = joblib.load(mcmcDir / 'kde_scaler.joblib')
+
+            return kde, scaler
+    return None, None
+
+def generate_data(cache):
+    scores, simulations = generate_synthetic_error(cache)
+
+    mcmcDir = Path(cache.settings['resultsDirMCMC'])
+    save_scores = mcmcDir / 'scores_used.npy'
+
+    numpy.save(save_scores, scores)
+
+    scores_mirror = mirror(scores)
+
+    scaler = getScaler(scores_mirror)
+
+    scores_scaler = scaler.transform(scores_mirror)
+
+    bandwidth, store = get_bandwidth(scores_scaler, cache)
 
     return scores, bandwidth
 

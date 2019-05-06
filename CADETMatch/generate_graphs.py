@@ -5,6 +5,7 @@ matplotlib.use('Agg')
 
 from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from mpl_toolkits.mplot3d import Axes3D  
 
 from cache import cache
 
@@ -427,7 +428,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
             if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybrid2_spline', 'similarityHybridDecay', 
                                'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
                                'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
-                               'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle'):
+                               'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle', 'DextranTest'):
                 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 graph.plot(sim_time, sim_value, 'r--', label='Simulation')

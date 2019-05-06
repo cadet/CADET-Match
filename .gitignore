@@ -279,3 +279,12 @@ __pycache__/
 /Examples/MCMC/Dextran/dextran_scores_used.npy
 /Examples/MCMC/Dextran/exp_design.xlsx
 /CADETMatch.zip
+/Examples/Example1/Dextran/fit_nsga3_better_abs
+/Examples/Example1/Dextran/fit_nsga3_better_abs_mcmc
+/Examples/Example1/Dextran/fit_nsga3_better_slope
+/Examples/Example1/Dextran/fit_nsga3_better_slope_2
+/Examples/Example1/Dextran/fit_nsga3_better_slope_3d
+/Examples/Example1/Dextran/fit_nsga3_better_slope_sep
+/Examples/Example1/Dextran/fit_nsga3_better_slope_spline
+/Examples/Example1/Dextran/fit_nsga3_better_test
+/Examples/Example1/NonBindingProtein/fit

@@ -23,7 +23,7 @@ def reduce_data(data, size):
     else:
         data_reduced = data
 
-    scaler = preprocessing.RobustScaler().fit(data)
+    scaler = preprocessing.StandardScaler().fit(data)
     data = scaler.transform(data)
 
     data_reduced = scaler.transform(data_reduced)

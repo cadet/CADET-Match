@@ -4,8 +4,9 @@ import scipy.stats
 import numpy
 import numpy.linalg
 from addict import Dict
+from cadet import H5
 
-name = "Dextran"
+name = "DextranTest"
 settings = Dict()
 settings.adaptive = True
 settings.badScore = 0
@@ -47,6 +48,8 @@ def run(sim_data, feature):
     except numpy.linalg.LinAlgError:
         return settings.failure
 
+    angle = numpy.arctan(slope)
+
     temp = [feature['slope_function'](slope),
             feature['offsetTimeFunction'](numpy.abs(diff_time)),
             ]
@@ -56,6 +59,10 @@ def run(sim_data, feature):
     return data
 
 def get_slope(times, values):
+    data = H5()
+    data.filename ="F:/temp/get_slope.h5"
+    data.root.time = times
+    data.root.value = values
     max_value = numpy.max(values)
     max_index = numpy.argmax(values >= 0.8*max_value)
     max_time = times[max_index]
@@ -68,6 +75,10 @@ def get_slope(times, values):
     temp_times = times[min_index:max_index+1]
     
     p = numpy.polyfit(temp_times, temp_values, 1)
+
+    data.root.p = p[0]
+    data.save()
+
     return p[0]
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
@@ -98,14 +109,16 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['max_time'] = feature['stop']
     temp['max_value'] = max_value
     temp['exp_data_zero'] = exp_data_zero
-    temp['offsetTimeFunction'] = score.time_function_decay_exp(CV_time/10.0, None, diff_input=True)
-    temp['slope_function'] = score.value_function_exp(slope, abstol, 0.1)
+    temp['offsetTimeFunction'] = score.time_function_decay_cv(CV_time, selectedTimes, max_time)
+    temp['slope_function'] = score.slope_function(slope)
     return temp
 
 def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
     temp = ["%s_Slope" % name, 
-            "%s_Time" % name]
+            "%s_Time" % name,
+            ]
     return temp
+
 
 

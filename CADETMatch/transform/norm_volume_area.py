@@ -36,10 +36,6 @@ def untransform(seq, cache, parameter, fullPrecision=False):
     values = (maxValues - minValues) * values + minValues
 
     values = [values[1], values[0]/values[1]]
-
-    if cache.roundParameters is not None and not fullPrecision:
-        values = [util.RoundToSigFigs(i, cache.roundParameters) for i in values]
-
     headerValues = [values[0], values[1], values[0]*values[1]]
     return values, headerValues
 

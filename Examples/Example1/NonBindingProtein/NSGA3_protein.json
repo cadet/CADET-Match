@@ -4,21 +4,23 @@
   "resultsDir": "fit/",
   "CSV": "nonbinding_NSGA3.csv",
   "checkpointFile": "check",
-  "stopAverage": 0.999,
-  "stopBest": 0.99,
-  "gradCheck": 1.0,
-  "searchMethod": "NSGA2",
-  "mutationRate": 0.05,
+  "stopAverage": 1.1,
+  "stopBest": 1.1,
+  "gradCheck": 1.1,
+  "gradVector": 1,
+  "searchMethod": "NSGA3",
+  "mutationRate": 0.2,
   "crossoverRate": 0.8,
-  "generations": 100,
-  "population": 24,
-  "minPopulation":24,
-  "maxPopulation":24,
-  "roundParameters": 3,
-  "roundScores": 3,
+  "generations": 1000,
+  "population": 16,
+  "minPopulation": 16,
+  "maxPopulation":16,
+  "roundParameters": -1,
+  "roundScores": -1,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "stallGenerations": 10,
+  "stallGenerations": 30,
+  "normalizeOutput":1,
   "continueMCMC":0,
 	"parameters": [
 		{
@@ -26,16 +28,16 @@
 			"component": -1,
 			"bound": -1,
 			"location": "/input/model/unit_001/FILM_DIFFUSION",
-			"min": 1e-10,
-			"max": 0.01
+			"min": 1e-9,
+			"max": 1e-5
 		},
 		{
 			"transform": "norm",
 			"component": -1,
 			"bound": -1,
 			"location": "/input/model/unit_001/PAR_POROSITY",
-			"min": 0.1,
-			"max": 0.9
+			"min": 0.2,
+			"max": 0.5
 		},
 		{
 			"transform": "norm_log",
@@ -52,12 +54,20 @@
 			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
 			"HDF5": "protein_pulse.h5",
 			"name": "main",
-			"timeout": 4.01073694229126,
+			"timeout": 10.0,
 			"features": [
 				{
 					"name": "Pulse",
 					"type": "ShapeDecay"
-				}
+				},
+                {
+                    "name": "Height",
+                    "type": "AbsoluteHeight"
+                },
+                {
+                    "name": "Time",
+                    "type": "AbsoluteTime"
+                }
 			]
 		}
 	]

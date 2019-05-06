@@ -14,7 +14,7 @@ from pathlib import Path
 #Simulation Values
 json_file = Path(r"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\NSGA3_dextran.json")
 cadet_match_location = Path(r"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\CADETMatch\CADETMatch.py")
-python_path = Path(r"C:\Program Files (x86)\Microsoft Visual Studio\Shared\Anaconda3_64\python.exe")
+python_path = Path(r"C:\Users\kosh_000\Anaconda3\python.exe")
 default_cpus = 6
 
 #Default Values

@@ -116,12 +116,8 @@ def run(cache, tools, creator):
         generation += 1
 
 def generate(pclass, pmin, pmax, smin, smax, cache):
-    if cache.roundParameters is not None:
-        part = pclass(RoundToSigFigs(numpy.random.uniform(pmin, pmax), cache.roundParameters))
-        part.speed = RoundToSigFigs(numpy.random.uniform(smin, smax), cache.roundParameters)
-    else:
-        part = pclass(numpy.random.uniform(pmin, pmax))
-        part.speed = numpy.random.uniform(smin, smax)
+    part = pclass(numpy.random.uniform(pmin, pmax))
+    part.speed = numpy.random.uniform(smin, smax)
     return part
 
 def convertQuantum(swarm, rcloud, centre, dist):

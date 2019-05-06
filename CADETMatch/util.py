@@ -81,23 +81,11 @@ def find_breakthrough(times, data):
     selected_times = times[selected]
     return (selected_times[0], max(data)), (selected_times[-1], max(data))
 
-def roundParameter(value, cache):
-    if cache.roundParameters is not None:
-        return RoundToSigFigs(value, cache.roundParameters)
-    else:
-        return value
-
 def generateIndividual(icls, size, imin, imax, cache):
-    if cache.roundParameters is not None:
-        return icls(RoundToSigFigs(numpy.random.uniform(imin, imax), cache.roundParameters))
-    else:
-        return icls(numpy.random.uniform(imin, imax))
+    return icls(numpy.random.uniform(imin, imax))
 
 def initIndividual(icls, cache, content):
-    if cache.roundParameters is not None:
-        return icls(RoundToSigFigs(content, cache.roundParameters))
-    else:
-        return icls(content)
+    return icls(content)
 
 def sobolGenerator(icls, cache, n):
     if n > 0:
@@ -140,10 +128,7 @@ def averageFitness(offspring, cache):
 
     result = [total/number, bestMin, bestProd]
 
-    if cache.roundScores is not None:
-        return RoundToSigFigs(result, cache.roundScores)
-    else:
-        return result
+    return result
 
 def smoothing(times, values):
     #temporarily get rid of smoothing for debugging
@@ -470,12 +455,6 @@ def setupMCMC(cache, lb, ub):
         settings['searchMethod'] = 'MCMC'
         settings['graphSpearman'] = 0
 
-        if 'roundScores' in settings:
-            del settings['roundScores']
-
-        if 'roundParameters' in settings:
-            del settings['roundParameters']
-
         for experiment in settings['experiments']:
             foundAbsoluteTime = False
             foundAbsoluteHeight = False
@@ -565,49 +544,6 @@ def similar(a, b, cache):
     b = numpy.array(convert_individual(b,cache)[0])
     diff = numpy.abs((a-b)/a)
     return numpy.all(diff < 1e-3)
-
-def RoundChild(cache, child):
-    if cache.roundParameters is not None:
-        temp = RoundToSigFigs(child, cache.roundParameters)
-    else:
-        temp = numpy.array(child)
-    if all(child == temp):
-        pass
-    else:
-        for idx, i in enumerate(temp):
-            child[idx] = i
-        del child.fitness.values
-
-def RoundOffspring(cache, offspring, hof):
-    for child in offspring:
-        RoundChild(cache, child)
-        
-    #make offspring unique
-    unique = set()
-    new_offspring = []
-    for child in offspring:
-        key = tuple(child)
-        if key not in unique:
-            new_offspring.append(child)
-            unique.add(key)
-
-    #population size needs to remain the same so add more children randomly if we have removed duplicates
-    scoop.logger.info("had to create %s new offspring", len(offspring) - len(new_offspring))
-    while len(new_offspring) < len(offspring):
-        if len(hof):
-            ind = hof[random.sample(range(len(hof)), 1)[0]]
-        else:
-            ind = cache.toolbox.individual()
-
-        child = cache.toolbox.clone(ind)
-        cache.toolbox.force_mutate(child)
-
-        key = tuple(child)
-        if key not in unique:
-            new_offspring.append(child)
-            unique.add(key)
-
-    return new_offspring
 
 def RoundToSigFigs( x, sigfigs ):
     """
@@ -1058,6 +994,9 @@ def update_result_data(cache, ind, fit, result_data, results):
 
                                 result_data['results'][name].append(tuple(solution))
 
+def calcFitness(scores, cache):
+    return tuple(numpy.array(scores)[cache.meta_mask])
+
 def process_population(toolbox, cache, population, fitnesses, writer, csvfile, halloffame, meta_hof, generation, result_data=None):
     csv_lines = []
     meta_csv_lines = []
@@ -1066,10 +1005,12 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
     for ind, result in zip(population, fitnesses):
         fit, csv_line, results = result
+
+        csv_line[2:] = RoundToSigFigs(csv_line[2:], 4)
         
         save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
         
-        ind.fitness.values = tuple(fit)
+        ind.fitness.values = calcFitness(fit, cache)
 
         ind_meta = toolbox.individualMeta(ind)
 
@@ -1194,7 +1135,7 @@ def graph_process(cache, generation, last=0):
         log_subprocess('graph_spearman.py', ret)
     
     if last or (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
-        ret = subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
+        ret = subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '2'], 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
         log_subprocess('generate_graphs.py', ret)
         cache.lastGraphTime = time.time()

@@ -11,6 +11,8 @@ import os
 from deap import tools
 from sklearn import preprocessing
 
+import kde_generator
+
 class Cache:
     def __init__(self):
         self.settings = None
@@ -30,8 +32,6 @@ class Cache:
         self.graphMetaTime = None
         self.lastGraphTime = None
         self.lastMetaTime = None
-        self.roundParameters = None
-        self.roundScores = None
         self.metaResultsOnly = 0
         self.stallGenerations = 10
         self.stallCorrect = 5
@@ -97,8 +97,6 @@ class Cache:
         self.graphGenerateTime = int(self.settings.get('graphGenerateTime', 3600))
         self.graphMetaTime = int(self.settings.get('graphMetaTime', 60*5))
 
-        self.roundParameters = self.settings.get('roundParameters', None)
-        self.roundScores = self.settings.get('roundScores', None)
         self.metaResultsOnly = self.settings.get('metaResultsOnly', 0)
         self.stallGenerations = int(self.settings.get('stallGenerations', 10))
         self.stallCorrect = int(self.settings.get('stallCorrect', 5))
@@ -122,7 +120,6 @@ class Cache:
 
         self.checkpointInterval = self.settings.get('checkpointInterval', 600)
 
-        self.MCMCSetup()
         self.setupMetaMask()
 
         if "MCMCpopulation" not in self.settings:
@@ -151,26 +148,6 @@ class Cache:
 
                     meta_mask_seq.extend([meta_mask,] * count)
         self.meta_mask = numpy.array(meta_mask_seq)
-
-    def MCMCSetup(self):
-        mcmc_h5 = self.settings.get('mcmc_h5', None)
-        self.dataPrevious = None
-        self.dataPreviousScaled = None
-        self.kdePrevious = None
-        if mcmc_h5 is not None:
-            data = Cadet()
-            data.filename = mcmc_h5
-            data.load()
-            self.dataPrevious = data.root.flat_chain_transform.copy()
-
-            size = 2000
-            indexes = numpy.random.choice(self.dataPrevious.shape[0], size, replace=False)
-            self.dataPrevious = self.dataPrevious[indexes]
-
-            scaler = preprocessing.RobustScaler().fit(self.dataPrevious)
-            self.dataPreviousScaled = scaler.transform(self.dataPrevious)
-
-            self.scalerPrevious = scaler
         
     def setupSettings(self):
         settings_file = Path(self.json_path)
@@ -216,11 +193,13 @@ class Cache:
             for feature in experiment['features']:
                 if feature['type'] in self.scores:
                     temp = self.scores[feature['type']].headers(experimentName, feature)
-                    self.numGoals += len(temp)
+
+                    if self.scores[feature['type']].settings.meta_mask:
+                        self.numGoals += len(temp)
                     self.badScore = self.scores[feature['type']].settings.badScore
 
-                self.score_headers.extend(temp)
-                experiment['headers'].extend(temp)
+                    self.score_headers.extend(temp)
+                    experiment['headers'].extend(temp)
 
         self.headers.extend(self.score_headers)                      
         

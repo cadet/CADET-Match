@@ -42,10 +42,7 @@ def run(cache, tools, creator):
                               cache=cache)
 
 def generateIndividualStrategy(icls, scls, size, imin, imax, smin, smax, cache):
-    if cache.roundParameters is not None:
-        ind = icls(util.RoundToSigFigs(numpy.random.uniform(imin, imax), cache.roundParameters))
-    else:
-        ind = icls(numpy.random.uniform(imin, imax))
+    ind = icls(numpy.random.uniform(imin, imax))
     ind.strategy = scls(numpy.random.uniform(smin, smax))
     ind.mean = array.array('d', [0.0]*len(imin))
     ind.confidence = array.array('d', [0.0]*len(imin))

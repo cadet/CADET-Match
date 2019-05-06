@@ -57,10 +57,10 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
 
     temp = {}
     temp['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
-    temp['time_function'] = score.time_function(CV_time, temp['peak'][0], diff_input=True)
-    temp['value_function'] = score.value_function(temp['peak'][1], abstol)
-    temp['value_function_high'] = score.value_function(high[1], abstol, 0.1)
-    temp['value_function_low'] = score.value_function(low[1], abstol, 0.1)
+    temp['time_function'] = score.time_function_exp(CV_time, temp['peak'][0], diff_input=True)
+    temp['value_function'] = score.value_function_exp(temp['peak'][1], abstol)
+    temp['value_function_high'] = score.value_function_exp(high[1], abstol, 0.1)
+    temp['value_function_low'] = score.value_function_exp(low[1], abstol, 0.1)
     return temp
 
 def headers(experimentName, feature):

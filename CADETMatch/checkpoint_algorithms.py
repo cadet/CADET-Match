@@ -73,8 +73,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
         for gen in range(start_gen, ngen+1):
             generation_start = time.time()
             # Vary the population
-            offspring = varOr(population, toolbox, lambda_, cxpb, mutpb, cache)
-            #offspring = util.RoundOffspring(cache, offspring, halloffame)
+            offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -179,18 +178,12 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
         for gen in range(start_gen, ngen+1):
             generation_start = time.time()
             # Vary the population
-            offspring = varOr(population, toolbox, lambda_, cxpb, mutpb, cache)
-            #offspring = util.RoundOffspring(cache, offspring, halloffame)
+            offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen, result_data)
-
-            # Combination of varOr and RoundOffSpring invalidates some members of the population, not sure why yet
-            #invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            #scoop.logger.info("we have invalid population %s", len(invalid_ind))
-            #stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen, result_data)
-
+                        
             gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
 
@@ -312,8 +305,6 @@ def nsga2(populationSize, ngen, cache, tools):
                 cache.toolbox.mutate(ind1)
                 cache.toolbox.mutate(ind2)
                 del ind1.fitness.values, ind2.fitness.values
-
-            offspring = util.RoundOffspring(cache, offspring, halloffame)
         
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -377,87 +368,3 @@ def nsga2(populationSize, ngen, cache, tools):
 
         util.finish(cache)
         return halloffame
-
-def varOr(population, toolbox, lambda_, cxpb, mutpb, cache):
-    """This version of varOr has been taken from DEAP and modified to create
-    lambda_ unique individuals based on roundParameters. This should improve population
-    diversity while also eliminating near duplicate individuals.
-    """
-    """Part of an evolutionary algorithm applying only the variation part
-    (crossover, mutation **or** reproduction). The modified individuals have
-    their fitness invalidated. The individuals are cloned so returned
-    population is independent of the input population.
-    :param population: A list of individuals to vary.
-    :param toolbox: A :class:`~deap.base.Toolbox` that contains the evolution
-                    operators.
-    :param lambda\_: The number of children to produce
-    :param cxpb: The probability of mating two individuals.
-    :param mutpb: The probability of mutating an individual.
-    :returns: The final population
-    :returns: A :class:`~deap.tools.Logbook` with the statistics of the
-              evolution
-    The variation goes as follow. On each of the *lambda_* iteration, it
-    selects one of the three operations; crossover, mutation or reproduction.
-    In the case of a crossover, two individuals are selected at random from
-    the parental population :math:`P_\mathrm{p}`, those individuals are cloned
-    using the :meth:`toolbox.clone` method and then mated using the
-    :meth:`toolbox.mate` method. Only the first child is appended to the
-    offspring population :math:`P_\mathrm{o}`, the second child is discarded.
-    In the case of a mutation, one individual is selected at random from
-    :math:`P_\mathrm{p}`, it is cloned and then mutated using using the
-    :meth:`toolbox.mutate` method. The resulting mutant is appended to
-    :math:`P_\mathrm{o}`. In the case of a reproduction, one individual is
-    selected at random from :math:`P_\mathrm{p}`, cloned and appended to
-    :math:`P_\mathrm{o}`.
-    This variation is named *Or* beceause an offspring will never result from
-    both operations crossover and mutation. The sum of both probabilities
-    shall be in :math:`[0, 1]`, the reproduction probability is
-    1 - *cxpb* - *mutpb*.
-    """
-
-    #If we are operating with unlimited precision there is no need to trim
-    if cache.roundParameters is None:
-        return algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
-
-    assert (cxpb + mutpb) <= 1.0, (
-        "The sum of the crossover and mutation probabilities must be smaller "
-        "or equal to 1.0.")
-
-    RoundChild = util.RoundChild
-
-    offspring = []
-    unique = set()
-    while len(offspring) < lambda_:
-        op_choice = random.random()
-        if op_choice < cxpb:            # Apply crossover
-            ind1, ind2 = map(toolbox.clone, random.sample(population, 2))
-            ind1, ind2 = toolbox.mate(ind1, ind2)
-            del ind1.fitness.values
-
-            RoundChild(cache, ind1)
-            key = tuple(ind1)
-            if key not in unique:
-                offspring.append(ind1)
-                unique.add(key)
-
-        elif op_choice < cxpb + mutpb:  # Apply mutation
-            ind = toolbox.clone(random.choice(population))
-            ind, = toolbox.mutate(ind)
-            del ind.fitness.values
-
-            RoundChild(cache, ind)
-            key = tuple(ind)
-            if key not in unique:
-                offspring.append(ind)
-                unique.add(key)
-        else:                           # Apply reproduction
-            ind = toolbox.clone(random.choice(population))
-            util.RoundChild(cache, ind)
-            key = tuple(ind)
-            if key not in unique:
-                offspring.append(ind)
-                unique.add(key)
-
-            #offspring.append(random.choice(population))
-
-    return offspring

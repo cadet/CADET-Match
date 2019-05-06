@@ -39,6 +39,8 @@ from addict import Dict
 import matplotlib.cm
 cm_plot = matplotlib.cm.gist_rainbow
 
+import joblib
+
 def get_color(idx, max_colors, cmap):
     return cmap(1.*float(idx)/max_colors)
 
@@ -47,42 +49,30 @@ log2 = numpy.log(2)
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
 
-def log_previous(cadetValues):
-    if cache.cache.dataPreviousScaled is not None:
-        #find the right values to use
-        row, col = cache.cache.dataPreviousScaled.shape
-        values = cadetValues[-col:]
-        values_shape = numpy.array(values).reshape(1, -1)
-        values_scaler = cache.cache.scalerPrevious.transform(values_shape)
-        score = cache.cache.kdePrevious.score_samples(values_scaler)
-        return score
-    else:
-        return 0.0
+def log_previous(cadetValues, kde_previous, kde_previous_scaler):
+    #find the right values to use
+    col = len(kde_previous_scaler.scale_)
+    values = cadetValues[-col:]
+    values_shape = numpy.array(values).reshape(1, -1)
+    values_scaler = kde_previous_scaler.transform(values_shape)
+    score = kde_previous.score_samples(values_scaler)
+    return score
 
-def setupPrevious(previous_bw):
-    scores_temp = cache.cache.dataPreviousScaled
-    kde = KernelDensity(kernel='gaussian', bandwidth=previous_bw, atol=kde_generator.bw_tol).fit(scores_temp)
-    cache.cache.kdePrevious = kde
-
-def log_likelihood(individual, json_path, kde_scores, kde_bw, previous_bw=None):
+def log_likelihood(individual, json_path):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path, False)
-        cache.cache.roundScores = None
-        cache.cache.roundParameters = None
 
-    if previous_bw is not None and cache.cache.kdePrevious is None:
-        setupPrevious(previous_bw)
+    kde_previous, kde_previous_scaler = kde_generator.getKDEPrevious(cache.cache)
 
     if 'kde' not in log_likelihood.__dict__:
-        kde, pca, scaler = kde_generator.getKDE(cache.cache, kde_scores, kde_bw)
+        kde, kde_scaler = kde_generator.getKDE(cache.cache)
         log_likelihood.kde = kde
-        log_likelihood.pca = pca
-        log_likelihood.scaler = scaler
+        log_likelihood.scaler = kde_scaler
 
     scores, csv_record, results = evo.fitness(individual, json_path)
 
-    if results is not None:
-        logPrevious = log_previous(next(iter(results.values()))['cadetValues'])
+    if results is not None and kde_previous is not None:
+        logPrevious = log_previous(next(iter(results.values()))['cadetValues'], kde_previous, kde_previous_scaler)
     else:
         logPrevious = 0.0
 
@@ -94,23 +84,16 @@ def log_likelihood(individual, json_path, kde_scores, kde_bw, previous_bw=None):
 
     return score, scores, csv_record, results 
 
-def log_posterior(theta, json_path, kde_scores, kde_bw, previous_bw=None):
+def log_posterior(theta, json_path):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path)
 
     #try:
-    ll, scores, csv_record, results = log_likelihood(theta, json_path, kde_scores, kde_bw, previous_bw)
+    ll, scores, csv_record, results = log_likelihood(theta, json_path)
     return ll, theta, scores, csv_record, results
     #except:
     #    # if model does not converge:
     #    return -numpy.inf, None, None, None, None
-
-def previous_kde(cache):
-    if cache.dataPreviousScaled is not None:
-        bw, store = kde_generator.get_bandwidth(cache.dataPreviousScaled, cache)
-        return bw
-
-    return None
 
 def addChain(*args):
     temp = [arg for arg in args if arg is not None]
@@ -314,27 +297,6 @@ def write_interval(interval, cache, checkpoint, checkpointFile, train_chain, run
 
         write_interval.last_time = time.time()
 
-def sampler_kde(checkpoint, cache, checkpointFile):
-    if 'kde_scores' not in checkpoint:
-        scoop.logger.info('Generating KDE for MCMC')
-        kde_scores, kde_bw = kde_generator.generate_data(cache)
-        checkpoint['kde_scores'] = kde_scores
-        checkpoint['kde_bw'] = kde_bw
-    else:
-        scoop.logger.info('Reloading KDE from checkpoint for MCMC')
-        kde_scores = checkpoint['kde_scores']
-        kde_bw = checkpoint['kde_bw']
-
-    with checkpointFile.open('wb')as cp_file:
-        pickle.dump(checkpoint, cp_file)
-
-    previous_bw = previous_kde(cache)
-
-    scoop.logger.info("previous_bw: %s",  previous_bw)
-
-    kde, pca, scaler = kde_generator.getKDE(cache, kde_scores, kde_bw)
-    return kde, pca, scaler, kde_scores, kde_bw, previous_bw
-
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
@@ -347,12 +309,6 @@ def run(cache, tools, creator):
     train_chain = checkpoint.get('train_chain', None)
     run_chain = checkpoint.get('run_chain', None)
 
-    #if run_chain is not None:
-    #    scoop.logger.info('sampler shape %s', run_chain.shape)
-
-    cache.roundScores = None
-    cache.roundParameters = None
-
     parameters = len(cache.MIN_VALUE)
     
     MCMCpopulationSet = cache.settings.get('MCMCpopulationSet', None)
@@ -364,13 +320,13 @@ def run(cache, tools, creator):
     #Population must be even
     populationSize = populationSize + populationSize % 2  
 
-    kde, pca, scaler, kde_scores, kde_bw, previous_bw = sampler_kde(checkpoint, cache, checkpointFile)
+    kde, kde_scaler = kde_generator.setupKDE(cache)
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path, kde_scores, kde_bw, previous_bw], pool=cache.toolbox, a=2.0)
+        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox, a=2.0)
         emcee.EnsembleSampler._get_lnprob = _get_lnprob
         emcee.EnsembleSampler._propose_stretch = _propose_stretch
 
@@ -410,8 +366,8 @@ def run(cache, tools, creator):
     #chain = chain[:, :idx, :]
     chain_shape = chain.shape
     chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
-                
-    plotTube(cache, chain, kde, pca, scaler)
+
+    plotTube(cache, chain, kde, kde_scaler)
     util.finish(cache)
 
     process_mle(chain, cache)
@@ -453,7 +409,7 @@ def process_mle(chain, cache):
 
             simulations[name] = sims
                        
-    cadetValues = numpy.array(util.roundParameter(cadetValues, cache))
+    cadetValues = numpy.array(cadetValues)
     scoop.logger.info('type %s  value %s', type(cadetValues), cadetValues)
 
     mcmc_dir = Path(cache.settings['resultsDirMCMC'])
@@ -520,7 +476,7 @@ def plot_mle(simulations, cache, labels):
             if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybrid2_spline', 'similarityHybridDecay', 
                                'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
                                'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
-                               'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle'):
+                               'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle', 'DextranTest'):
                 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
 
@@ -913,8 +869,6 @@ def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters, train_
     mean = numpy.mean(interval_chain_transform,0)
     labels = [5, 10, 50, 90, 95]
     percentile = numpy.percentile(interval_chain_transform, labels, 0)
-    mean = util.roundParameter(mean, cache)
-    percentile = util.roundParameter(percentile, cache)
 
     h5.root.percentile['mean'] = mean
     for idx, label in enumerate(labels):
@@ -922,8 +876,8 @@ def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters, train_
         
     h5.save()
 
-def processChainForPlots(cache, chain, kde, pca, scaler):
-    mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, results, times, mcmc_score = genRandomChoice(cache, chain, kde, pca, scaler)
+def processChainForPlots(cache, chain, kde, scaler):
+    mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, results, times, mcmc_score = genRandomChoice(cache, chain, kde, scaler)
 
     writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, mcmc_score)
 
@@ -962,7 +916,7 @@ def processResultsForPlotting(results, times):
             combinations[comb_name] = temp
     return results, combinations
 
-def genRandomChoice(cache, chain, kde, pca, scaler):
+def genRandomChoice(cache, chain, kde, scaler):
     "want about 1000 items and will be removing about 10% of them"
     size = 1100
     chain = chain[~numpy.all(chain == 0, axis=1)]
@@ -1054,8 +1008,8 @@ def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected
     h5.root.mcmc_selected_kdescore = numpy.array(mcmc_score)
     h5.save()
 
-def plotTube(cache, chain, kde, pca, scaler):
-    results, combinations = processChainForPlots(cache, chain, kde, pca, scaler)
+def plotTube(cache, chain, kde, scaler):
+    results, combinations = processChainForPlots(cache, chain, kde, scaler)
 
     output_mcmc = cache.settings['resultsDirSpace'] / "mcmc"
     output_mcmc.mkdir(parents=True, exist_ok=True)
@@ -1115,8 +1069,6 @@ def interval(flat_chain, cache):
     percentile = numpy.percentile(flat_chain, [5, 10, 50, 90, 95], 0)
 
     data = numpy.vstack( (mean, percentile) ).transpose()
-
-    data = util.roundParameter(data, cache)
 
     pd = pandas.DataFrame(data, columns = ['mean', '5', '10', '50', '90', '95'])
     pd.insert(0, 'name', cache.parameter_headers_actual)
