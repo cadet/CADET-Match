@@ -288,3 +288,7 @@ __pycache__/
 /Examples/Example1/Dextran/fit_nsga3_better_slope_spline
 /Examples/Example1/Dextran/fit_nsga3_better_test
 /Examples/Example1/NonBindingProtein/fit
+/Examples/Example1/Dextran/fit_nsga3_pear
+/Examples/Example1/Dextran/fit_nsga3_pear_lopsided
+/Examples/Example1/NonBindingProtein/fit_shape
+/Examples/Example1/NonBindingProtein/fit_shape_decay

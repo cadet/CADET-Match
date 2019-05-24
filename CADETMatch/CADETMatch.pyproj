@@ -14,10 +14,9 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda37-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\NSGA3_dextran.json" 2</CommandLineArguments>
+    <CommandLineArguments>"F:\temp\stephan\new_dextran\NSGA3_sma.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>
-    </InterpreterArguments>
+    <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -132,7 +131,16 @@
     <Compile Include="scores\dextran.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\dextran3.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\dextranAngle.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\dextranQuad.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\dextranShape.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\dextranTest.py">
@@ -175,6 +183,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\shapeDecay.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\shapeDecaySimple.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\shapeSimple.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\similarity.py">

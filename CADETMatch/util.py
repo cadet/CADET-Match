@@ -1135,7 +1135,7 @@ def graph_process(cache, generation, last=0):
         log_subprocess('graph_spearman.py', ret)
     
     if last or (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
-        ret = subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '2'], 
+        ret = subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
         log_subprocess('generate_graphs.py', ret)
         cache.lastGraphTime = time.time()

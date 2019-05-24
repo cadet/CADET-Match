@@ -41,7 +41,7 @@ class Cache:
         self.fullTrainingData = 0
         self.normalizeOutput = False
         self.sobolGeneration = False
-        self.graphSpearman = True
+        self.graphSpearman = False
         self.continueMCMC = False
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
@@ -68,6 +68,7 @@ class Cache:
         Cadet.cadet_path = self.settings['CADETPath']
 
         self.normalizeOutput = bool(self.settings.get('normalizeOutput', False))
+        self.connectionNumberEntries = int(self.settings.get('connectionNumberEntries', 5))
 
         self.setupHeaders()
         self.setupTarget()
@@ -105,7 +106,7 @@ class Cache:
         self.fullTrainingData = int(self.settings.get('fullTrainingData', 0))
 
         self.sobolGeneration = bool(self.settings.get('soboloGeneration', False)) or bool(self.settings.get('sobolGeneration', False))
-        self.graphSpearman = bool(self.settings.get('graphSpearman', True))
+        self.graphSpearman = bool(self.settings.get('graphSpearman', False))
         self.scoreMCMC = self.settings.get('scoreMCMC', "sse")
 
         self.continueMCMC = bool(self.settings.get('continueMCMC', False))
@@ -119,7 +120,6 @@ class Cache:
         self.tempDir = self.settings.get('tempDir', None)
 
         self.checkpointInterval = self.settings.get('checkpointInterval', 600)
-
         self.setupMetaMask()
 
         if "MCMCpopulation" not in self.settings:
@@ -255,7 +255,7 @@ class Cache:
         conn = sim.root.input.model.connections.switch_000.connections
 
         conn = numpy.array(conn)
-        conn = numpy.reshape(conn, [-1, 5])
+        conn = numpy.reshape(conn, [-1, self.connectionNumberEntries])
 
         #find all the entries that connect to the column
         filter = conn[:, 1] == 1
@@ -281,13 +281,6 @@ class Cache:
             if area == {}:
                 area = 1.0
             area = float(area)
-
-            porosity = sim.root.input.model.unit_001.col_porosity
-            if porosity == {}:
-                porosity = sim.root.input.model.unit_001.total_porosity
-            if porosity == {}:
-                porosity = 1.0
-            porosity = float(porosity)
 
             if area == 1 and abs(velocity) != 1:
                 CV_time = length / velocity

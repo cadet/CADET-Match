@@ -48,7 +48,7 @@ def untransform_matrix(matrix, cache, parameter):
     minValues = numpy.log([minKA, minKEQ])
     maxValues = numpy.log([maxKA, maxKEQ])
     
-    values = (maxValues - minValues) * values + minValues
+    values = (maxValues - minValues) * matrix + minValues
 
     values = numpy.exp(values)
 

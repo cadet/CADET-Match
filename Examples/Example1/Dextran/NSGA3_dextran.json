@@ -2,7 +2,7 @@
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Dextran",
     "tempDir": "L:/",
-  "resultsDir": "fit_nsga3_better_slope_3d_1/",
+  "resultsDir": "fit_nsga3_pear",
   "CSV": "dextran_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 1.1,
@@ -22,7 +22,7 @@
   "sobolGeneration":1,
   "stallGenerations": 30,
   "normalizeOutput":1,
-  "continueMCMC":0,
+  "continueMCMC":1,
   "parameters": [
     {
       "transform": "norm_log",
@@ -66,7 +66,7 @@
       "features": [
         {
             "name": "Pulse",
-            "type": "DextranTest"
+            "type": "DextranShape"
         },
         {
             "name": "Height",

@@ -60,8 +60,8 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     
     temp['time_function'] = score.time_function_decay_cv(CV_time, selectedTimes, temp['peak'][0])
     temp['value_function'] = score.value_function(temp['peak'][1], abstol)
-    temp['value_function_high'] = score.value_function(high[1], abstol, 0.1)
-    temp['value_function_low'] = score.value_function(low[1], abstol, 0.1)
+    temp['value_function_high'] = score.value_function(high[1], abstol)
+    temp['value_function_low'] = score.value_function(low[1], abstol)
     return temp
 
 def headers(experimentName, feature):

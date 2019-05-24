@@ -476,7 +476,7 @@ def plot_mle(simulations, cache, labels):
             if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybrid2_spline', 'similarityHybridDecay', 
                                'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
                                'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
-                               'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle', 'DextranTest'):
+                               'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle', 'DextranTest', 'ShapeDecaySimple'):
                 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
 
@@ -493,9 +493,11 @@ def plot_mle(simulations, cache, labels):
                 graph.plot(exp_time, exp_value, '-', label='Experiment', color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot), linewidth=2)
                 graphIdx += 1
             
-            if featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_hybrid2', 'derivative_similarity_cross', 'derivative_similarity_cross_alt',
-                                 'derivative_similarity_hybrid2_spline', 'similarityHybridDecay2_spline',
-                                 'Shape', 'ShapeDecay'):
+            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybrid2_spline', 'similarityHybridDecay', 
+                               'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
+                               'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
+                               'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle', 'DextranTest', 'DextranQuad',
+                               'Dextran3', 'DextranShape'):
 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 for idx, (sim, label) in enumerate(zip(simulations[experimentName],labels)):
