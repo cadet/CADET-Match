@@ -326,11 +326,16 @@ def graph_simulation(simulation, graph):
 
     comps = []
 
-    hasColumn = isinstance(simulation.root.output.solution.unit_001.solution_outlet_comp_000, Dict)
+    hasColumn = any('column' in i for i in simulation.root.output.solution.unit_001.keys())
+    hasPort = any('port' in i for i in simulation.root.output.solution.unit_001.keys())
+    #hasColumn = isinstance(simulation.root.output.solution.unit_001.solution_outlet_comp_000, Dict)
 
     if hasColumn:
         for i in range(ncomp):
             comps.append(simulation.root.output.solution.unit_001['solution_column_outlet_comp_%03d' % i])
+    elif hasPort:
+        for i in range(ncomp):
+            comps.append(simulation.root.output.solution.unit_001['solution_outlet_port_000_comp_%03d' % i])
     else:
         for i in range(ncomp):
             comps.append(simulation.root.output.solution.unit_001['solution_outlet_comp_%03d' % i])
