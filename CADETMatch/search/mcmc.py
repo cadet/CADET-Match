@@ -192,9 +192,11 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
                         power -= 1
                     new_a = 1.0 + 2.0**power
                     sampler.a = new_a
+                    sampler.reset()
                     scoop.logger.info('previous alpha: %s    new alpha: %s', prev_a, new_a)
                 else:
                     sampler.a = distance_a
+                    sampler.reset()
                     stop_next = True
  
     sampler.reset()
