@@ -3,6 +3,17 @@ import sys
 import matplotlib
 matplotlib.use('Agg')
 
+size = 20
+
+matplotlib.rc('font', size=size)          # controls default text sizes
+matplotlib.rc('axes', titlesize=size)     # fontsize of the axes title
+matplotlib.rc('axes', labelsize=size)    # fontsize of the x and y labels
+matplotlib.rc('xtick', labelsize=size)    # fontsize of the tick labels
+matplotlib.rc('ytick', labelsize=size)    # fontsize of the tick labels
+matplotlib.rc('legend', fontsize=size)    # legend fontsize
+matplotlib.rc('figure', titlesize=size)  # fontsize of the figure title
+matplotlib.rc('figure', autolayout=True)
+
 from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D  
@@ -46,6 +57,16 @@ my_cmap[:,-1] = 0.05
 my_cmap = ListedColormap(my_cmap)
 
 cm_plot = matplotlib.cm.gist_rainbow
+
+def new_range(flat_chain):
+    lb_data, mid_data, ub_data = numpy.percentile(flat_chain, [5, 50, 95], 0)
+    
+    distance = numpy.max(numpy.abs(numpy.array([lb_data - mid_data, ub_data - mid_data])), axis=0)
+    
+    lb_range = mid_data - 4 * distance
+    ub_range = mid_data + 4 * distance
+    
+    return numpy.array([lb_range, ub_range])
 
 def get_color(idx, max_colors, cmap):
     return cmap(1.*float(idx)/max_colors)
@@ -113,7 +134,7 @@ def plot_2d_scatter(args):
     graph.set_xlabel(parameter)
     graph.set_ylabel(score)
     filename = "%s_%s.png" % (parameter_idx, score_idx)
-    fig.savefig(str(output_directory / filename), bbox_inches='tight')
+    fig.savefig(str(output_directory / filename))
 
     fig = figure.Figure()
     canvas = FigureCanvas(fig)
@@ -122,7 +143,7 @@ def plot_2d_scatter(args):
     graph.set_xlabel(parameter)
     graph.set_ylabel(score)
     filename = "%s_%s_mean.png" % (parameter_idx, score_idx)
-    fig.savefig(str(output_directory / filename), bbox_inches='tight')
+    fig.savefig(str(output_directory / filename))
 
     fig = figure.Figure()
     canvas = FigureCanvas(fig)
@@ -131,7 +152,7 @@ def plot_2d_scatter(args):
     graph.set_xlabel(parameter)
     graph.set_ylabel(score)
     filename = "%s_%s_confidence.png" % (parameter_idx, score_idx)
-    fig.savefig(str(output_directory / filename), bbox_inches='tight')
+    fig.savefig(str(output_directory / filename))
 
 def plotChain(flat_chain, flat_chain_transform, headers, out_dir, prefix):
     if len(flat_chain) > 1e5:
@@ -141,14 +162,20 @@ def plotChain(flat_chain, flat_chain_transform, headers, out_dir, prefix):
     else:
         chain = flat_chain
         chain_transform = flat_chain_transform
-        
+    
     fig = corner.corner(chain, quantiles=(0.16, 0.5, 0.84),
-                    show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=20)
-    fig.savefig(str(out_dir / ("%s_corner.png" % prefix)), bbox_inches='tight')
+                   show_titles=True, labels=headers, 
+                    bins=20, range=new_range(chain).T, 
+                     use_math_text=True, title_fmt='.2g')    
+    fig.set_size_inches((12,12))
+    fig.savefig(str(out_dir / ("%s_corner.png" % prefix)))
 
     fig = corner.corner(chain_transform, quantiles=(0.16, 0.5, 0.84),
-                    show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=20)
-    fig.savefig(str(out_dir / ("%s_corner_transform.png" % prefix)), bbox_inches='tight')
+                   show_titles=True, labels=headers, 
+                    bins=20, range=new_range(chain_transform).T, 
+                     use_math_text=True, title_fmt='.2g') 
+    fig.set_size_inches((12,12))
+    fig.savefig(str(out_dir / ("%s_corner_transform.png" % prefix)))
 
 def plotMCMCParam(out_dir, param, chain, header):
     shape = chain.shape
@@ -164,7 +191,8 @@ def plotMCMCParam(out_dir, param, chain, header):
     graph.fill_between(x, chain[0,:,param], chain[2,:,param], facecolor='r', alpha=0.5)
     graph.legend()
     graph.set_title(header)
-    fig.savefig(str(out_dir / ("%s.png" % header) ), bbox_inches='tight')
+    fig.set_size_inches((12,12))
+    fig.savefig(str(out_dir / ("%s.png" % header) ))
 
 def plotMCMCVars(out_dir, headers, data):
     for param_idx, header in enumerate(headers):
@@ -207,7 +235,8 @@ def graphCorner(cache):
             tau_percent = numpy.min([tau_percent, max_values], 0)
 
             graph.bar(list(range(len(headers))), tau_percent, tick_label = headers)
-            fig.savefig(str(out_dir / "tau_percent.png" ), bbox_inches='tight')
+            fig.set_size_inches((12,12))
+            fig.savefig(str(out_dir / "tau_percent.png" ))
 
         if 'flat_chain' in data.root:
             plotChain(data.root.flat_chain, data.root.flat_chain_transform, headers, out_dir, 'full')
@@ -220,7 +249,8 @@ def graphCorner(cache):
             graph.set_title("Burn In Acceptance")
             graph.set_xlabel('Step')
             graph.set_ylabel('Acceptance')
-            fig.savefig(str(out_dir / "burn_in_acceptance.png"), bbox_inches='tight')
+            fig.set_size_inches((12,12))
+            fig.savefig(str(out_dir / "burn_in_acceptance.png"))
 
         if 'mcmc_acceptance' in data.root:
             fig = figure.Figure(figsize=[10, 10])
@@ -230,7 +260,8 @@ def graphCorner(cache):
             graph.set_title("MCMC Acceptance")
             graph.set_xlabel('Step')
             graph.set_ylabel('Acceptance')
-            fig.savefig(str(out_dir / "mcmc_acceptance.png"), bbox_inches='tight')
+            fig.set_size_inches((12,12))
+            fig.savefig(str(out_dir / "mcmc_acceptance.png"))
 
     else:
         data = H5()
@@ -281,9 +312,12 @@ def graphCorner(cache):
 def create_corner(dir, filename, headers, data, weights=None):
     if  numpy.all(numpy.min(data,0) < numpy.max(data,0)):
         if weights is None or numpy.max(weights) > numpy.min(weights):
-            fig = corner.corner(data, quantiles=(0.16, 0.5, 0.84), weights=weights,
-                show_titles=True, title_kwargs={"fontsize": 12}, labels=headers, bins=20)
-            fig.savefig(str(dir / filename), bbox_inches='tight')
+            fig = corner.corner(data, quantiles=(0.16, 0.5, 0.84),
+                   show_titles=True, labels=headers, 
+                    bins=20, range=new_range(data).T, 
+                     use_math_text=True, title_fmt='.2g')
+            fig.set_size_inches((12,12))
+            fig.savefig(str(dir / filename))
 
 def graphExperiments(cache):
     directory = Path(cache.settings['resultsDirEvo'])
@@ -491,7 +525,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                     graph.plot(time, values, ':', color=get_color(idx, len(graph_sim), cm_plot), label='Experiment Comp: %s Mult:%.2f' % (key, mult))
                 graphIdx += 1
             graph.legend()
-
+        fig.set_size_inches((12,12))
         fig.savefig(str(dst))
 
 def graphSpace(fullGeneration, cache):
@@ -548,7 +582,7 @@ def plot_3d(arg):
     ax.set_ylabel('log(%s)' % headers[c2])
     ax.set_zlabel(scoreName)
     filename = "%s_%s_%s.png" % (c1, c2, score)
-    fig.savefig(str(directory / filename), bbox_inches='tight')
+    fig.savefig(str(directory / filename))
     
 def plot_2d(arg):
     directory_path, csv_path, c1, score, json_path = arg
@@ -581,7 +615,7 @@ def plot_2d(arg):
     graph.set_ylabel(scoreName)
     graph.set_xlim(min(data), max(data), auto=True)
     filename = "%s_%s.png" % (c1, score)
-    fig.savefig(str(directory / filename), bbox_inches='tight')
+    fig.savefig(str(directory / filename))
 
 def graphProgress(cache):
     results = Path(cache.settings['resultsDirBase'])

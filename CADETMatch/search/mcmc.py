@@ -19,6 +19,17 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 import matplotlib.pyplot as plt
 
+size = 20
+
+plt.rc('font', size=size)          # controls default text sizes
+plt.rc('axes', titlesize=size)     # fontsize of the axes title
+plt.rc('axes', labelsize=size)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=size)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=size)    # fontsize of the tick labels
+plt.rc('legend', fontsize=size)    # legend fontsize
+plt.rc('figure', titlesize=size)  # fontsize of the figure title
+plt.rc('figure', autolayout=True)
+
 import evo
 import cache
 
@@ -190,7 +201,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
                     else:
                         #a must be decreased to increase the acceptance rate (step size)
                         power -= 1
-                    new_a = 1.0 + 2.0**power
+                    new_a = 1.0 + 2.0*power
                     sampler.a = new_a
                     sampler.reset()
                     scoop.logger.info('previous alpha: %s    new alpha: %s', prev_a, new_a)
@@ -1054,7 +1065,7 @@ def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue):
     plt.fill_between(times, minValues, maxValues,
                 color='red', alpha=0.2)
     plt.plot(expTime, expValue, 'r')
-    plt.savefig(str(output_mcmc / ("%s_%s.png" % (expName, name) ) ), bbox_inches='tight')
+    plt.savefig(str(output_mcmc / ("%s_%s.png" % (expName, name) ) ))
     plt.close()
 
     row, col = data.shape
@@ -1062,7 +1073,7 @@ def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue):
     plt.plot(times, data.transpose(), 'g', alpha=alpha)
     plt.plot(times, mean, 'k')
     plt.plot(expTime, expValue, 'r')
-    plt.savefig(str(output_mcmc / ("%s_%s_lines.png" % (expName, name) ) ), bbox_inches='tight')
+    plt.savefig(str(output_mcmc / ("%s_%s_lines.png" % (expName, name) ) ))
     plt.close()
 
 def interval(flat_chain, cache):
