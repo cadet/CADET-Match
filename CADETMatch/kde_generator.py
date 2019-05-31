@@ -197,7 +197,7 @@ def synthetic_error_simulation(json_path):
     
         error_delay = Cadet(temp.root)
 
-        delays = numpy.abs(numpy.random.normal(delay_settings[0], delay_settings[1], nsec))
+        delays = numpy.random.uniform(delay_settings[0], delay_settings[1], nsec)
     
         synthetic_error.pump_delay(error_delay, delays)
 

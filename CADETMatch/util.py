@@ -395,6 +395,17 @@ def repeatSimulation(idx):
             json.dump(settings, json_data, indent=4, sort_keys=True)
         return new_settings_file
 
+def expand_range(lb, ub, mult=2):
+    log_lb = numpy.log(lb)
+    log_ub = numpy.log(ub)
+    
+    log_mid = log_ub - log_lb
+    
+    new_log_lb = log_lb - log_mid*mult
+    new_log_ub = log_ub + log_mid*mult
+    
+    return numpy.exp(new_log_lb), numpy.exp(new_log_ub)
+
 def setupMCMC(cache, lb, ub):
     "read the original json file and make an mcmc file based on it with new boundaries"
     settings_file = Path(sys.argv[1])
@@ -436,9 +447,9 @@ def setupMCMC(cache, lb, ub):
             data.load()
             dataPrevious = data.root.flat_chain_transform.copy()
 
-            lb, ub = numpy.percentile(dataPrevious, [1, 99], 0)
-            #lb = numpy.min(dataPrevious, 0)
-            #ub = numpy.max(dataPrevious, 0)
+            lb, ub = numpy.percentile(dataPrevious, [0, 100], 0)
+
+            lb, ub = expand_range(lb, ub, mult=2)
 
             idx = 0
             for parameter in settings['parameters_mcmc']:
