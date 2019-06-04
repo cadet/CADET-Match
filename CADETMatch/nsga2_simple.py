@@ -9,6 +9,7 @@ import SALib.sample.sobol_sequence
 import numpy
 import random
 import array
+import scoop
 
 def sobolGenerator(icls, dimension, lb, ub, n):
     ub = numpy.array(ub)
@@ -84,13 +85,13 @@ def nsga2_min(func, lb, ub, ngen=8000, mu=200, cxpb=0.8, args=None, stop=40):
 
 
         if gen - last_progress > stop:
-            print("stopped at gen %s" % gen)
+            scoop.logger.info("stopped at gen %s", gen)
             break
 
         # Select the next generation population
         pop = toolbox.select(pop + offspring, mu)
 
-        print('best_score\t', best_score, "\tbest\t", best)
+        scoop.logger.info('best_score\t %s \tbest\t %s', best_score, best)
         
     result = {}
     result['x'] = best

@@ -48,8 +48,10 @@ def bandwidth_score(bw, data, store):
 
 def get_bandwidth(scores, cache):
     store = []
+
     result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-4, 1),], 
-                                               args = (scores,store,))
+                    args = (scores,store,), updating='deferred', workers=futures.map, disp=True,
+                    popsize=100)
     bandwidth = 10**result.x[0]
     scoop.logger.info("selected bandwidth %s", bandwidth)
 
@@ -124,13 +126,14 @@ def getKDE(cache):
     return kde, scaler
 
 def getKDEPrevious(cache):
-    if 'mcmcPriorDir' in cache.settings:
-        mcmcDir = Path(cache.settings['mcmcPriorDir']) / "mcmc"
+    if 'mcmc_h5' in cache.settings:
+        mcmc_h5 = Path(cache.settings['mcmc_h5'])
+        mcmcDir = mcmc_h5.parent
 
         if mcmcDir.exists():
-            kde = joblib.load(mcmcDir / 'kde_score.joblib')
+            kde = joblib.load(mcmcDir / 'kde_prior.joblib')
 
-            scaler = joblib.load(mcmcDir / 'kde_scaler.joblib')
+            scaler = joblib.load(mcmcDir / 'kde_prior_scaler.joblib')
 
             return kde, scaler
     return None, None

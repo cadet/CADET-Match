@@ -82,8 +82,11 @@ def log_likelihood(individual, json_path):
 
     scores, csv_record, results = evo.fitness(individual, json_path)
 
+    if results is None:
+        return -numpy.inf, scores, csv_record, results
+
     if results is not None and kde_previous is not None:
-        logPrevious = log_previous(next(iter(results.values()))['cadetValues'], kde_previous, kde_previous_scaler)
+        logPrevious = log_previous(individual, kde_previous, kde_previous_scaler)
     else:
         logPrevious = 0.0
 
@@ -91,7 +94,9 @@ def log_likelihood(individual, json_path):
 
     score_scaler = log_likelihood.scaler.transform(scores_shape)
 
-    score = log_likelihood.kde.score_samples(score_scaler) + log2 + logPrevious #*2 is from mirroring and we need to double the probability to get back to the normalized distribution
+    score_kde = log_likelihood.kde.score_samples(score_scaler)
+
+    score = score_kde + log2 + logPrevious #*2 is from mirroring and we need to double the probability to get back to the normalized distribution
 
     return score, scores, csv_record, results 
 
@@ -101,7 +106,10 @@ def log_posterior(theta, json_path):
 
     #try:
     ll, scores, csv_record, results = log_likelihood(theta, json_path)
-    return ll, theta, scores, csv_record, results
+    if results is None:
+        return -numpy.inf, None, None, None, None
+    else:
+        return ll, theta, scores, csv_record, results
     #except:
     #    # if model does not converge:
     #    return -numpy.inf, None, None, None, None
@@ -143,6 +151,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
 
     sampler.iterations = checkpoint['sampler_iterations']
     sampler.naccepted = checkpoint['sampler_naccepted']
+    sampler.a = checkpoint['sampler_a']
 
     while not finished:
         p, ln_prob, random_state = next(sampler.sample(checkpoint['p_burn'], lnprob0=checkpoint['ln_prob_burn'], rstate0=checkpoint['rstate_burn'], iterations=1 ))
@@ -173,6 +182,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
         checkpoint['sampler_naccepted'] = sampler.naccepted
         checkpoint['train_chain_stat'] = train_chain_stat
         checkpoint['run_chain_stat'] = run_chain_stat
+        checkpoint['sampler_a'] = sampler.a
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
 
@@ -218,6 +228,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
     checkpoint['p_chain'] = p
     checkpoint['ln_prob_chain'] = None
     checkpoint['rstate_chain'] = None
+    checkpoint['sampler_a'] = sampler.a
 
     write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
             
@@ -242,6 +253,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
 
     sampler.iterations = checkpoint['sampler_iterations']
     sampler.naccepted = checkpoint['sampler_naccepted']
+    sampler.a = checkpoint['sampler_a']
     tau_percent = None
 
     while not finished:
@@ -333,7 +345,13 @@ def run(cache, tools, creator):
     #Population must be even
     populationSize = populationSize + populationSize % 2  
 
-    kde, kde_scaler = kde_generator.setupKDE(cache)
+    if checkpoint['state'] == 'start':
+        scoop.logger.info("setting up kde")
+        kde, kde_scaler = kde_generator.setupKDE(cache)
+        checkpoint['state'] = 'burn_in'
+    else:
+        scoop.logger.info("loading kde")
+        kde, kde_scaler = kde_generator.getKDE(cache)
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:
@@ -342,6 +360,9 @@ def run(cache, tools, creator):
         sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox, a=2.0)
         emcee.EnsembleSampler._get_lnprob = _get_lnprob
         emcee.EnsembleSampler._propose_stretch = _propose_stretch
+
+        if 'sampler_a' not in checkpoint:
+            checkpoint['sampler_a'] = sampler.a
 
         result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[], 'mcmc_score':[]}
@@ -380,10 +401,16 @@ def run(cache, tools, creator):
     chain_shape = chain.shape
     chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 
-    plotTube(cache, chain, kde, kde_scaler)
-    util.finish(cache)
+    if checkpoint['state'] == 'complete':
+        plotTube(cache, chain, kde, kde_scaler)
+        util.finish(cache)
+        checkpoint['state'] = 'plot_finish'
 
-    process_mle(chain, cache)
+        with checkpointFile.open('wb') as cp_file:
+            pickle.dump(checkpoint, cp_file)
+
+    if checkpoint['state'] == 'plot_finish':
+        process_mle(chain, cache)
     return numpy.mean(chain, 0)
 
 def process_mle(chain, cache):
@@ -391,7 +418,12 @@ def process_mle(chain, cache):
     #This step cleans up bad entries
     chain = chain[~numpy.all(chain == 0, axis=1)]
     scoop.logger.info('process mle chain shape after cleaning 0 entries %s', chain.shape)
-    mle_x = mle.get_mle(chain)
+    mle_x, kde, scaler = mle.get_mle(chain)
+
+    mcmcDir = Path(cache.settings['resultsDirMCMC'])
+    joblib.dump(scaler, mcmcDir / 'kde_prior_scaler.joblib')
+    joblib.dump(kde, mcmcDir / 'kde_prior.joblib')
+
     mle_ind = util.convert_individual(mle_x, cache)[0]
     scoop.logger.info("mle_x: %s", mle_x)
     scoop.logger.info("mle_ind: %s", mle_ind)
@@ -622,7 +654,7 @@ def getCheckPoint(checkpointFile, cache):
         populationSize = populationSize + populationSize % 2  
 
         checkpoint = {}
-        checkpoint['state'] = 'burn_in'
+        checkpoint['state'] = 'start'
 
         if cache.settings.get('PreviousResults', None) is not None:
             scoop.logger.info('running with previous best results')

@@ -395,17 +395,6 @@ def repeatSimulation(idx):
             json.dump(settings, json_data, indent=4, sort_keys=True)
         return new_settings_file
 
-def expand_range(lb, ub, mult=2):
-    log_lb = numpy.log(lb)
-    log_ub = numpy.log(ub)
-    
-    log_mid = log_ub - log_lb
-    
-    new_log_lb = log_lb - log_mid*mult
-    new_log_ub = log_ub + log_mid*mult
-    
-    return numpy.exp(new_log_lb), numpy.exp(new_log_ub)
-
 def setupMCMC(cache, lb, ub):
     "read the original json file and make an mcmc file based on it with new boundaries"
     settings_file = Path(sys.argv[1])
@@ -441,25 +430,23 @@ def setupMCMC(cache, lb, ub):
         #    idx = idx + count
 
         if 'mcmc_h5' in settings and 'parameters_mcmc' in settings:
-            mcmc_h5 = settings.get('mcmc_h5', None)
-            data = Cadet()
-            data.filename = mcmc_h5
-            data.load()
-            dataPrevious = data.root.flat_chain_transform.copy()
+            #mcmc_h5 = settings.get('mcmc_h5', None)
+            #data = Cadet()
+            #data.filename = mcmc_h5
+            #data.load()
+            #dataPrevious = data.root.flat_chain_transform.copy()
 
-            lb, ub = numpy.percentile(dataPrevious, [0, 100], 0)
+            #lb, ub = numpy.percentile(dataPrevious, [0, 100], 0)
 
-            lb, ub = expand_range(lb, ub, mult=2)
-
-            idx = 0
-            for parameter in settings['parameters_mcmc']:
-                transform = cache.transforms[parameter['transform']]
-                count = transform.count_extended
-                scoop.logger.warn('%s %s %s', idx, count, transform)
-                lb_local = lb[idx:idx+count]
-                ub_local = ub[idx:idx+count]
-                transform.setBounds(parameter, lb_local, ub_local)
-                idx = idx + count
+            #idx = 0
+            #for parameter in settings['parameters_mcmc']:
+            #    transform = cache.transforms[parameter['transform']]
+            #    count = transform.count_extended
+            #    scoop.logger.warn('%s %s %s', idx, count, transform)
+            #    lb_local = lb[idx:idx+count]
+            #    ub_local = ub[idx:idx+count]
+            #    transform.setBounds(parameter, lb_local, ub_local)
+            #    idx = idx + count
 
             settings['parameters'].extend(settings['parameters_mcmc'])
 
