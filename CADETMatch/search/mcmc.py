@@ -284,7 +284,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
         checkpoint['run_chain_stat'] = run_chain_stat
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
-        mle_process(last=False, interval=450)
+        mle_process(last=False, interval=cache.checkpointInterval)
 
         if generation % checkInterval == 0:
             try:
@@ -415,7 +415,7 @@ def run(cache, tools, creator):
         mle_process(last=True)
     return numpy.mean(chain, 0)
 
-def mle_process(last=False, interval=3600):
+def mle_process(last=False, interval=1800):
     if 'last_time' not in mle_process.__dict__:
         mle_process.last_time = time.time()
 

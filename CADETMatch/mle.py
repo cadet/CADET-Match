@@ -144,6 +144,15 @@ def addChain(axis, *args):
         return numpy.array(temp[0])
 
 def process_mle(chain, gen, cache):
+    h5 = cadet.H5()
+    h5.filename = mle_h5.as_posix()
+    if mle_h5.exists():
+        h5.load()
+
+        if h5.root.generations[-1] == gen:
+            scoop.logger.info('new information is not yet available and mle will quit')
+            return
+
     scoop.logger.info('process mle chain shape before %s', chain.shape)
     #This step cleans up bad entries
     chain = chain[~numpy.all(chain == 0, axis=1)]
@@ -172,6 +181,7 @@ def process_mle(chain, gen, cache):
         temp.append(list(row))
 
     cadetValues = [util.convert_individual(i, cache)[0] for i in temp]
+    cadetValues = numpy.array(cadetValues)
 
     scoop.logger.info('cadetValues: %s %s', cadetValues.shape, cadetValues)
 
@@ -185,7 +195,6 @@ def process_mle(chain, gen, cache):
 
             simulations[name] = sims
                        
-    cadetValues = numpy.array(cadetValues)
     scoop.logger.info('type %s  value %s', type(cadetValues), cadetValues)
 
     mcmc_dir = Path(cache.settings['resultsDirMCMC'])
@@ -197,11 +206,6 @@ def process_mle(chain, gen, cache):
     labels = ['MLE', '5', '10', '50', '90', '95']
     pd.insert(0, 'name', labels)
     pd.to_csv(mcmc_csv, index=False)
-
-    h5 = cadet.H5()
-    h5.filename = mle_h5.as_posix()
-    if mle_h5.exists():
-        h5.load()
 
     h5.root.stat_labels = cache.parameter_headers_actual
     h5.root.percentile_splits = percentile_splits
