@@ -18,6 +18,8 @@ from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 import matplotlib.pyplot as plt
+import subprocess
+import sys
 
 size = 20
 
@@ -282,6 +284,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
         checkpoint['run_chain_stat'] = run_chain_stat
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
+        mle_process(last=False, interval=450)
 
         if generation % checkInterval == 0:
             try:
@@ -397,7 +400,6 @@ def run(cache, tools, creator):
             sampler_run(cache, checkpoint, sampler, checkpointFile)
 
     chain = checkpoint['run_chain']
-    #chain = chain[:, :idx, :]
     chain_shape = chain.shape
     chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 
@@ -410,214 +412,24 @@ def run(cache, tools, creator):
             pickle.dump(checkpoint, cp_file)
 
     if checkpoint['state'] == 'plot_finish':
-        process_mle(chain, cache)
+        mle_process(last=True)
     return numpy.mean(chain, 0)
 
-def process_mle(chain, cache):
-    scoop.logger.info('process mle chain shape before %s', chain.shape)
-    #This step cleans up bad entries
-    chain = chain[~numpy.all(chain == 0, axis=1)]
-    scoop.logger.info('process mle chain shape after cleaning 0 entries %s', chain.shape)
-    mle_x, kde, scaler = mle.get_mle(chain)
+def mle_process(last=False, interval=3600):
+    if 'last_time' not in mle_process.__dict__:
+        mle_process.last_time = time.time()
 
-    mcmcDir = Path(cache.settings['resultsDirMCMC'])
-    joblib.dump(scaler, mcmcDir / 'kde_prior_scaler.joblib')
-    joblib.dump(kde, mcmcDir / 'kde_prior.joblib')
+    cwd = str(Path(__file__).parent.parent)
 
-    mle_ind = util.convert_individual(mle_x, cache)[0]
-    scoop.logger.info("mle_x: %s", mle_x)
-    scoop.logger.info("mle_ind: %s", mle_ind)
-
-    temp = [mle_x,]
-
-    scoop.logger.info('chain shape: %s', chain.shape)
-
-    #run simulations for 5% 50% 95% and MLE vs experimental data
-    percentile = numpy.percentile(chain, [5, 10, 50, 90, 95], 0)
-
-    scoop.logger.info("percentile: %s", percentile)
-
-    for row in percentile:
-        temp.append(list(row))
-
-    cadetValues = [util.convert_individual(i, cache)[0] for i in temp]
-
-    scoop.logger.info('cadetValues: %s', cadetValues)
-
-    fitnesses = list(cache.toolbox.map(cache.toolbox.evaluate, temp))
-
-    simulations = {}
-    for scores, csv_record, results in fitnesses:
-        for name, value in results.items():
-            sims = simulations.get(name, [])
-            sims.append(value['simulation'])
-
-            simulations[name] = sims
-                       
-    cadetValues = numpy.array(cadetValues)
-    scoop.logger.info('type %s  value %s', type(cadetValues), cadetValues)
-
-    mcmc_dir = Path(cache.settings['resultsDirMCMC'])
-
-    mcmc_csv = Path(cache.settings['resultsDirMCMC']) / "prob.csv"
-    mcmc_h5 = Path(cache.settings['resultsDirMCMC']) / "mcmc.h5"
-
-    pd = pandas.DataFrame(cadetValues, columns = cache.parameter_headers_actual)
-    labels = ['MLE', '5', '10', '50', '90', '95']
-    pd.insert(0, 'name', labels)
-    pd.to_csv(mcmc_csv, index=False)
-
-    h5 = cadet.H5()
-    h5.filename = mcmc_h5.as_posix()
-    h5.root.stat_labels = cache.parameter_headers_actual
-    for idx, i in enumerate(labels):
-        h5.root['stat_%s' % i] = cadetValues[idx,:]
-
-    h5.append()
-
-    plot_mle(simulations, cache, labels)
-
-def plot_mle(simulations, cache, labels):
-    mcmc_dir = Path(cache.settings['resultsDirMCMC'])
-    target = cache.target
-    settings = cache.settings
-    for experiment in settings['experiments']:
-        experimentName = experiment['name']
+    if last:
+        ret = subprocess.run([sys.executable, '-m', 'scoop', 'mle.py', str(cache.cache.json_path),], 
+            stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
+        mle_process.last_time = time.time()
+    elif (time.time() - mle_process.last_time) > interval:
+        ret = subprocess.Popen([sys.executable, '-m', 'scoop', 'mle.py', str(cache.cache.json_path),], 
+            stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
+        mle_process.last_time = time.time()
         
-        file_name = '%s_stats.png' % experimentName
-        dst = mcmc_dir / file_name
-
-        numPlotsSeq = [1]
-        #Shape and ShapeDecay have a chromatogram + derivative
-        for feature in experiment['features']:
-            if feature['type'] in ('Shape', 'ShapeDecay'):
-                numPlotsSeq.append(2)
-            elif feature['type'] in ('AbsoluteTime', 'AbsoluteHeight'):
-                pass
-            else:
-                numPlotsSeq.append(1)
-
-        numPlots = sum(numPlotsSeq)
-
-        exp_time = target[experimentName]['time']
-        exp_value = target[experimentName]['valueFactor']
-
-        fig = figure.Figure(figsize=[10, numPlots*10])
-        canvas = FigureCanvas(fig)
-
-        graph_simulations(simulations[experimentName], labels, fig.add_subplot(numPlots, 1, 1))
-
-        graphIdx = 2
-        for idx, feature in enumerate(experiment['features']):
-            featureName = feature['name']
-            featureType = feature['type']
-
-            feat = target[experimentName][featureName]
-
-            selected = feat['selected']
-            exp_time = feat['time'][selected]
-            exp_value = feat['value'][selected]
-
-            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybrid2_spline', 'similarityHybridDecay', 
-                               'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
-                               'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
-                               'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle', 'DextranTest', 'ShapeDecaySimple'):
-                
-                graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
-
-                for idx, (sim, label) in enumerate(zip(simulations[experimentName],labels)):
-                    sim_time, sim_value = util.get_times_values(sim, target[experimentName][featureName])
-
-                    if idx == 0:
-                        linewidth = 2
-                    else:
-                        linewidth = 1
-                    
-                    graph.plot(sim_time, sim_value, '--', label=label, color=get_color(idx, len(simulations[experimentName]) + 1, cm_plot), linewidth = linewidth)
-
-                graph.plot(exp_time, exp_value, '-', label='Experiment', color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot), linewidth=2)
-                graphIdx += 1
-            
-            if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybrid2_spline', 'similarityHybridDecay', 
-                               'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
-                               'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
-                               'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle', 'DextranTest', 'DextranQuad',
-                               'Dextran3', 'DextranShape'):
-
-                graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
-                for idx, (sim, label) in enumerate(zip(simulations[experimentName],labels)):
-                    sim_time, sim_value = util.get_times_values(sim, target[experimentName][featureName])
-                    sim_spline = scipy.interpolate.UnivariateSpline(sim_time, util.smoothing(sim_time, sim_value), s=util.smoothing_factor(sim_value)).derivative(1)
-
-                    if idx == 0:
-                        linewidth = 2
-                    else:
-                        linewidth = 1
-                    
-                    graph.plot(sim_time, sim_spline(sim_time), '--', label=label, color=get_color(idx, len(simulations[experimentName]) + 1, cm_plot), linewidth = linewidth)
-
-                
-                exp_spline = scipy.interpolate.UnivariateSpline(exp_time, util.smoothing(exp_time, exp_value), s=util.smoothing_factor(exp_value)).derivative(1)
-                graph.plot(exp_time, exp_spline(exp_time), '-', label='Experiment', color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot), linewidth=2)
-                graphIdx += 1
-                        
-            graph.legend()
-
-        fig.savefig(str(dst))    
-
-def graph_simulations(simulations, simulation_labels, graph):
-    linestyles = ['-', '--', '-.', ':']
-    for idx_sim, (simulation, label_sim) in enumerate(zip(simulations, simulation_labels)):
-
-        comps = []
-
-        ncomp = int(simulation.root.input.model.unit_001.ncomp)
-        isotherm = bytes(simulation.root.input.model.unit_001.adsorption_model)
-
-        hasSalt = isotherm in saltIsotherms
-
-        solution_times = simulation.root.output.solution.solution_times
-
-        hasColumn = isinstance(simulation.root.output.solution.unit_001.solution_outlet_comp_000, Dict)
-
-        if hasColumn:
-            for i in range(ncomp):
-                comps.append(simulation.root.output.solution.unit_001['solution_column_outlet_comp_%03d' % i])
-        else:
-            for i in range(ncomp):
-                comps.append(simulation.root.output.solution.unit_001['solution_outlet_comp_%03d' % i])
-
-        if hasSalt:
-            graph.set_title("Output")
-            graph.plot(solution_times, comps[0], 'b-', label="Salt")
-            graph.set_xlabel('time (s)')
-        
-            # Make the y-axis label, ticks and tick labels match the line color.
-            graph.set_ylabel('mMol Salt', color='b')
-            graph.tick_params('y', colors='b')
-
-            axis2 = graph.twinx()
-            for idx, comp in enumerate(comps[1:]):
-                axis2.plot(solution_times, comp, linestyles[idx], color=get_color(idx_sim, len(simulation_labels), cm_plot), label="P%s %s" % (idx, label_sim))
-            axis2.set_ylabel('mMol Protein', color='r')
-            axis2.tick_params('y', colors='r')
-
-
-            lines, labels = graph.get_legend_handles_labels()
-            lines2, labels2 = axis2.get_legend_handles_labels()
-            axis2.legend(lines + lines2, labels + labels2, loc=0)
-        else:
-            graph.set_title("Output")
-        
-            for idx, comp in enumerate(comps):
-                graph.plot(solution_times, comp, linestyles[idx], color=get_color(idx_sim, len(simulation_labels), cm_plot), label="P%s %s" % (idx, label_sim))
-            graph.set_ylabel('mMol Protein', color='r')
-            graph.tick_params('y', colors='r')
-            graph.set_xlabel('time (s)')
-
-            lines, labels = graph.get_legend_handles_labels()
-            graph.legend(lines, labels, loc=0)
-
 def get_population(base, size, diff=0.05):
     new_population = base
     row, col = base.shape

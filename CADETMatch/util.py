@@ -1132,16 +1132,21 @@ def graph_process(cache, generation, last=0):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
         log_subprocess('graph_spearman.py', ret)
     
-    if last or (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
+    if last:
         ret = subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
-        log_subprocess('generate_graphs.py', ret)
+        #log_subprocess('generate_graphs.py', ret)
+        cache.lastGraphTime = time.time()
+    elif (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
+        ret = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
+            stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
+        #log_subprocess('generate_graphs.py', ret)
         cache.lastGraphTime = time.time()
     else:
         if (time.time() - cache.lastMetaTime) > cache.graphMetaTime:
-            ret = subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '0'], 
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
-            log_subprocess('generate_graphs.py', ret)
+            ret = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '0'], 
+                stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
+            #log_subprocess('generate_graphs.py', ret)
             cache.lastMetaTime = time.time()
 
 def log_subprocess(name, ret):

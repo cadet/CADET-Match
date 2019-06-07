@@ -38,6 +38,8 @@ import os
 import warnings
 import corner
 import util
+import logging
+import loggerwriter
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
@@ -58,6 +60,19 @@ my_cmap = ListedColormap(my_cmap)
 
 cm_plot = matplotlib.cm.gist_rainbow
 
+def setupLog(log_directory):
+    logger = scoop.logger
+    logger.setLevel(logging.INFO)
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler(log_directory / "graph.log")
+    fh.setLevel(logging.INFO)
+
+    # add the handlers to the logger
+    logger.addHandler(fh)
+
+    sys.stdout = loggerwriter.LoggerWriter(logger.debug)
+    sys.stderr = loggerwriter.LoggerWriter(logger.warning)
+
 def new_range(flat_chain):
     lb_data, mid_data, ub_data = numpy.percentile(flat_chain, [5, 50, 95], 0)
     
@@ -74,6 +89,8 @@ def get_color(idx, max_colors, cmap):
 def main():
     cache.setup(sys.argv[1])
     cache.progress_path = Path(cache.settings['resultsDirBase']) / "progress.csv"
+
+    setupLog(cache.settings['resultsDirLog'])
 
     scoop.logger.info("graphing directory %s", os.getcwd())
 
