@@ -44,7 +44,7 @@ def setupLog(log_directory):
     # add the handlers to the logger
     logger.addHandler(fh)
 
-    sys.stdout = loggerwriter.LoggerWriter(logger.debug)
+    sys.stdout = loggerwriter.LoggerWriter(logger.info)
     sys.stderr = loggerwriter.LoggerWriter(logger.warning)
 
 def get_color(idx, max_colors, cmap):
@@ -103,8 +103,9 @@ def get_mle(data):
     kernel = 'gaussian'
 
     scoop.logger.info("setting up scaler and reducing data")
-    data, data_reduced, scaler = reduce_data(data, 16000)
+    data, data_reduced, scaler = reduce_data(data, 32000)
     scoop.logger.info("finished setting up scaler and reducing data")
+    scoop.logger.info('data_reduced shape %s', data_reduced.shape)
 
     BOUND_LOW_num = numpy.min(data, 0)
     BOUND_UP_num = numpy.max(data, 0)
@@ -116,20 +117,28 @@ def get_mle(data):
     BOUND_UP_real = [1.0] * len(BOUND_UP_trans)
 
     result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-3, 1),], 
-                                               args = (data_reduced, kernel, atol), updating='deferred', workers=futures.map, disp=True,
-                                               popsize=25)
+                                               args = (data_reduced, kernel, atol), 
+                                               updating='deferred', workers=futures.map, disp=True,
+                                               popsize=50)
     bw = 10**result.x[0]
     
     scoop.logger.info("mle bandwidth: %.2g", bw)
 
     kde_ga = KernelDensity(kernel=kernel, bandwidth=bw, atol=atol)
-    kde_ga = kde_ga.fit(data)
+
+    scoop.logger.info('fitting kde with mle bandwidth')
+    kde_ga = kde_ga.fit(data_reduced)
+    scoop.logger.info('finished fitting and starting mle search')
         
     result_kde = scipy.optimize.differential_evolution(goal_kde, bounds = list(zip(BOUND_LOW_trans, BOUND_UP_trans)), 
-                                               args = (kde_ga,), updating='deferred', workers=futures.map, disp=True,
-                                               popsize=25)
+                                               args = (kde_ga,), 
+                                               updating='deferred', workers=futures.map, disp=True,
+                                               popsize=50)
+    scoop.logger.info('finished mle search')
 
     x = list(scaler.inverse_transform(numpy.array(result_kde.x).reshape(1, -1))[0])
+
+    scoop.logger.info('mle found %s', x)
 
     return x, kde_ga, scaler
 
@@ -144,6 +153,11 @@ def addChain(axis, *args):
         return numpy.array(temp[0])
 
 def process_mle(chain, gen, cache):
+    mcmc_dir = Path(cache.settings['resultsDirMCMC'])
+
+    mcmc_csv = Path(cache.settings['resultsDirMCMC']) / "prob.csv"
+    mle_h5 = Path(cache.settings['resultsDirMCMC']) / "mle.h5"
+
     h5 = cadet.H5()
     h5.filename = mle_h5.as_posix()
     if mle_h5.exists():
@@ -158,13 +172,14 @@ def process_mle(chain, gen, cache):
     chain = chain[~numpy.all(chain == 0, axis=1)]
     scoop.logger.info('process mle chain shape after cleaning 0 entries %s', chain.shape)
     mle_x, kde, scaler = get_mle(chain)
+    scoop.logger.info("mle_x: %s", mle_x)
 
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
     joblib.dump(scaler, mcmcDir / 'kde_prior_scaler.joblib')
     joblib.dump(kde, mcmcDir / 'kde_prior.joblib')
 
     mle_ind = util.convert_individual(mle_x, cache)[0]
-    scoop.logger.info("mle_x: %s", mle_x)
+    
     scoop.logger.info("mle_ind: %s", mle_ind)
 
     temp = [mle_x,]
@@ -196,11 +211,6 @@ def process_mle(chain, gen, cache):
             simulations[name] = sims
                        
     scoop.logger.info('type %s  value %s', type(cadetValues), cadetValues)
-
-    mcmc_dir = Path(cache.settings['resultsDirMCMC'])
-
-    mcmc_csv = Path(cache.settings['resultsDirMCMC']) / "prob.csv"
-    mle_h5 = Path(cache.settings['resultsDirMCMC']) / "mle.h5"
 
     pd = pandas.DataFrame(cadetValues, columns = cache.parameter_headers_actual)
     labels = ['MLE', '5', '10', '50', '90', '95']
@@ -361,9 +371,6 @@ def graph_simulations(simulations, simulation_labels, graph):
             lines, labels = graph.get_legend_handles_labels()
             graph.legend(lines, labels, loc=0)
 
-if __name__ == "__main__":
-    main()
-
 def main():
     cache.setup(sys.argv[1])
 
@@ -377,3 +384,5 @@ def main():
         mcmc_acceptance = h5['/mcmc_acceptance'][()]
         process_mle(flat_chain, len(mcmc_acceptance), cache)
 
+if __name__ == "__main__":
+    main()

@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>0067cb6f-0de6-4dd6-8086-20ea899a691d</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>CADETMatch.py</StartupFile>
+    <StartupFile>mcmc_plot_tube.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda37-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\fit_nsga3_mle\mcmc_refine\NSGA3_dextran.json" 1</CommandLineArguments>
+    <CommandLineArguments>"F:\PREP2019\nonbiding_prep_prior_kde\mcmc_refine\MCMC_protein_prep_carry.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -71,6 +71,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="loggerwriter.py" />
+    <Compile Include="mcmc_plot_tube.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="mle.py">
       <SubType>Code</SubType>
     </Compile>

@@ -70,7 +70,7 @@ def setupLog(log_directory):
     # add the handlers to the logger
     logger.addHandler(fh)
 
-    sys.stdout = loggerwriter.LoggerWriter(logger.debug)
+    sys.stdout = loggerwriter.LoggerWriter(logger.info)
     sys.stderr = loggerwriter.LoggerWriter(logger.warning)
 
 def new_range(flat_chain):
