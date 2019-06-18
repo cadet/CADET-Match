@@ -2,6 +2,9 @@ Depends on Python 3.6+
 
 The easiest thing to do is use anaconda
 
+joblib
+	conda install joblib
+
 addict
 	conda install -c conda-forge addict
 

@@ -13,6 +13,8 @@ import subprocess
 import pprint
 import copy
 
+from pathlib import Path
+
 class H5():
     pp = pprint.PrettyPrinter(indent=4)
     
@@ -37,6 +39,9 @@ class H5():
 
     def save(self):
         if self.filename is not None:
+            file = Path(self.filename)
+            if file.exists():
+                file.replace(self.filename + '.backup')
             with h5py.File(self.filename, 'w') as h5file:
                 recursively_save(h5file, '/', self.root, self.transform)
         else:

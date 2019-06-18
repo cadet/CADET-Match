@@ -96,7 +96,7 @@ class Cache:
         self.error_path = Path(cache.settings['resultsDirBase'], "error.csv")
 
         self.graphGenerateTime = int(self.settings.get('graphGenerateTime', 3600))
-        self.graphMetaTime = int(self.settings.get('graphMetaTime', 60*5))
+        self.graphMetaTime = int(self.settings.get('graphMetaTime', 1200))
 
         self.metaResultsOnly = self.settings.get('metaResultsOnly', 0)
         self.stallGenerations = int(self.settings.get('stallGenerations', 10))
@@ -247,7 +247,7 @@ class Cache:
         
         if sim is None:
             sim = Cadet()
-            sim.filename = Path(experiment['HDF5'])
+            sim.filename = Path(experiment['HDF5']).as_posix()
             sim.load()
 
         abstol = sim.root.input.solver.time_integrator.abstol

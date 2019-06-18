@@ -102,7 +102,7 @@ def setupKDE(cache):
     joblib.dump(kde, mcmcDir / 'kde_score.joblib')
 
     h5_data = H5()
-    h5_data.filename = mcmcDir / "kde_settings.h5"
+    h5_data.filename = (mcmcDir / "kde_settings.h5").as_posix()
     h5_data.root.bandwidth = bandwidth
     h5_data.root.store = numpy.array(store)
     h5_data.root.scores = scores
@@ -185,7 +185,7 @@ def synthetic_error_simulation(json_path):
         times = data[:,0]
 
         temp = Cadet()
-        temp.filename = bytes(file)
+        temp.filename = file.as_posix()
         temp.load()
 
         util.setupSimulation(temp, times)
@@ -388,7 +388,7 @@ def setupReferenceResult(cache):
         
     #    templatePath = experiment['reference']
     #    templateSim = Cadet()
-    #    templateSim.filename = templatePath
+    #    templateSim.filename = templatePath.as_posix()
     #    templateSim.run()
     #    templateSim.load()
         

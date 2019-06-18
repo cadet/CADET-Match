@@ -210,7 +210,7 @@ def saveExperiments(save_name_base, settings, target, results, directory, file_p
         if dst.is_file():  #File already exists don't try to write over it
             return False
         else:
-            simulation.filename = bytes(dst)
+            simulation.filename = dst.as_posix()
 
             for (header, score) in zip(experiment['headers'], results[experimentName]['scores']):
                 simulation.root.score[header] = score
@@ -1120,14 +1120,25 @@ def cleanDir(dir, hof):
             path.unlink()
 
 def graph_process(cache, generation, last=0):
-    if cache.lastGraphTime is None:
-        cache.lastGraphTime = time.time()
-    if cache.lastMetaTime is None:
-        cache.lastMetaTime = time.time()
+    if 'lastGraphTime' not in graph_process.__dict__:
+        graph_process.lastGraphTime = time.time()
+    if 'lastMetaTime' not in graph_process.__dict__:
+        graph_process.lastMetaTime = time.time()
+
+    if 'child' in graph_process.__dict__:
+        if graph_process.child.poll() is None:  #This is false if the child has completed
+            scoop.logger.info("graphing process is still running so don't start another one")
+            if last:
+                scoop.logger.info("this is the last step and a graphing process is already running so wait for completion")
+                graph_process.child.wait()
+            else:
+                return
+        else:
+            scoop.logger.info("graphing has finished and it is okay to start another one")
 
     cwd = str(Path(__file__).parent)
 
-    if cache.graphSpearman:
+    if cache.graphSpearman:  #This is mostly just for debugging now and is not run async
         ret = subprocess.run([sys.executable, 'graph_spearman.py', str(cache.json_path), str(generation)], 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
         log_subprocess('graph_spearman.py', ret)
@@ -1135,19 +1146,16 @@ def graph_process(cache, generation, last=0):
     if last:
         ret = subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
-        #log_subprocess('generate_graphs.py', ret)
-        cache.lastGraphTime = time.time()
-    elif (time.time() - cache.lastGraphTime) > cache.graphGenerateTime:
-        ret = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
+        graph_process.lastGraphTime = time.time()
+    elif (time.time() - graph_process.lastGraphTime) > cache.graphGenerateTime:
+        graph_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
-        #log_subprocess('generate_graphs.py', ret)
-        cache.lastGraphTime = time.time()
+        graph_process.lastGraphTime = time.time()
     else:
-        if (time.time() - cache.lastMetaTime) > cache.graphMetaTime:
-            ret = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '0'], 
+        if (time.time() - graph_process.lastMetaTime) > cache.graphMetaTime:
+            graph_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '0'], 
                 stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
-            #log_subprocess('generate_graphs.py', ret)
-            cache.lastMetaTime = time.time()
+            graph_process.lastMetaTime = time.time()
 
 def log_subprocess(name, ret):
     for line in ret.stdout.splitlines():
@@ -1246,3 +1254,29 @@ def setupSimulation(sim, times):
     sim.root.input['return'].unit_001.write_solution_outlet = 1
     sim.root.input['return'].unit_001.split_components_data = 0
     sim.root.input.solver.nthreads = 1
+
+def graph_corner_process(cache, last=False, interval=3600):
+    if 'last_time' not in graph_corner_process.__dict__:
+        graph_corner_process.last_time = time.time()
+
+    if 'child' in graph_corner_process.__dict__:
+        if graph_corner_process.child.poll() is None:  #This is false if the child has completed
+            scoop.logger.info("graphing corner process is still running so don't start another one")
+            if last:
+                scoop.logger.info("this is the last step and a graphing corner process is already running so wait for completion")
+                graph_corner_process.child.wait()
+            else:
+                return
+        else:
+            scoop.logger.info("graphing corner process has finished and it is okay to start another one")
+
+    cwd = str(Path(__file__).parent)
+
+    if last:
+        ret = subprocess.run([sys.executable, '-m', 'scoop', '-n', '1', 'generate_corner_graphs.py', str(cache.json_path),], 
+            stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
+        graph_corner_process.last_time = time.time()
+    elif (time.time() - graph_corner_process.last_time) > interval:
+        graph_corner_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', '-n', '1', 'generate_corner_graphs.py', str(cache.json_path),], 
+            stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
+        graph_corner_process.last_time = time.time()

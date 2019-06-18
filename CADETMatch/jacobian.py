@@ -37,7 +37,7 @@ def runExperiment(individual, experiment, settings, target, cache):
     if 'simulation' not in experiment:
         templatePath = Path(settings['resultsDirMisc'], "template_%s.h5" % experiment['name'])
         templateSim = Cadet()
-        templateSim.filename = templatePath
+        templateSim.filename = templatePath.as_posix()
         templateSim.load()
         experiment['simulation'] = templateSim
 

@@ -62,6 +62,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
                 avg, bestMin, bestProd = util.averageFitness(population, cache)
                 util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
                 util.graph_process(cache, "First")
+                util.graph_corner_process(cache, last=False)
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)
@@ -88,6 +89,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             avg, bestMin, bestProd = util.averageFitness(offspring, cache)
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
             util.graph_process(cache, gen)
+            util.graph_corner_process(cache, last=False)
 
             if stallWarn:
                 maxPopulation = cache.settings['maxPopulation'] * len(cache.MIN_VALUE)
@@ -110,8 +112,10 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             if avg >= settings['stopAverage'] or bestMin >= settings['stopBest'] or stalled:
                 util.finish(cache)
+                util.graph_corner_process(cache, last=True)
                 return halloffame
         util.finish(cache)
+        util.graph_corner_process(cache, last=True)
         return halloffame
 
 
@@ -167,6 +171,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 avg, bestMin, bestProd = util.averageFitness(population, cache)
                 util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
                 util.graph_process(cache, "First")
+                util.graph_corner_process(cache, last=False)
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)
@@ -194,6 +199,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
             util.graph_process(cache, gen)
+            util.graph_corner_process(cache, last=False)
 
             cp = dict(population=population, generation=gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)
@@ -217,8 +223,10 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             if avg >= settings['stopAverage'] or bestMin >= settings['stopBest'] or stalled:
                 util.finish(cache)
+                util.graph_corner_process(cache, last=True)
                 return halloffame
         util.finish(cache)
+        util.graph_corner_process(cache, last=True)
         return halloffame
 
 def nsga2(populationSize, ngen, cache, tools):
@@ -279,6 +287,7 @@ def nsga2(populationSize, ngen, cache, tools):
             avg, bestMin, bestProd = util.averageFitness(population, cache)
             util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
             util.graph_process(cache, "First")
+            util.graph_corner_process(cache, last=False)
         
         # This is just to assign the crowding distance to the individuals
         # no actual selection is done
@@ -317,6 +326,7 @@ def nsga2(populationSize, ngen, cache, tools):
 
             util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
             util.graph_process(cache, gen)
+            util.graph_corner_process(cache, last=False)
 
             # Select the next generation population
             population = cache.toolbox.select(population + offspring, populationSize)
@@ -364,7 +374,8 @@ def nsga2(populationSize, ngen, cache, tools):
 
             if avg >= cache.settings['stopAverage'] or bestMin >= cache.settings['stopBest'] or stalled:
                 util.finish(cache)
+                util.graph_corner_process(cache, last=True)
                 return halloffame
-
         util.finish(cache)
+        util.graph_corner_process(cache, last=True)
         return halloffame

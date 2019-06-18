@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>0067cb6f-0de6-4dd6-8086-20ea899a691d</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>mcmc_plot_tube.py</StartupFile>
+    <StartupFile>CADETMatch.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda37-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\PREP2019\nonbiding_prep_prior_kde\mcmc_refine\MCMC_protein_prep_carry.json" 1</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\NSGA3_dextran.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -50,6 +50,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="generate_graphs.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="generate_corner_graphs.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="grad.py">

@@ -39,6 +39,7 @@ def run(cache, tools, creator):
         util.writeProgress(cache, -1, pop, hof, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
         
         util.finish(cache)
+        util.graph_corner_process(cache, last=True)
         return hof
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):

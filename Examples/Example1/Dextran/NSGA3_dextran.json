@@ -23,6 +23,7 @@
   "stallGenerations": 30,
   "normalizeOutput":1,
   "continueMCMC":1,
+  "graphMetaTime": 10,
   "parameters": [
     {
       "transform": "norm_log",

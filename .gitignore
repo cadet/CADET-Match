@@ -293,3 +293,7 @@ __pycache__/
 /Examples/Example1/NonBindingProtein/fit_shape
 /Examples/Example1/NonBindingProtein/fit_shape_decay
 /Examples/Example1/Dextran/fit_nsga3_mle
+/Examples/Example1/Dextran/dextran_pulse_delay.h5
+/Examples/Example1/Dextran/dextran_pulse_error_delay.h5
+/Examples/Example1/Dextran/dextran_pulse_extended.h5
+/Examples/Example1/Dextran/dextran_pulse_temp.h5

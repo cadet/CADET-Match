@@ -26,7 +26,7 @@ def main():
 
     output_spear.mkdir(parents=True, exist_ok=True)
 
-    with h5py.File(result_path) as h5:
+    with h5py.File(result_path, 'r') as h5:
         data_output = h5['/output'][()]
         data_generation = h5['/generation'][()]
         

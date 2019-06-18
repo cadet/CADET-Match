@@ -102,6 +102,7 @@ def setup(cache, json_path):
 
 def setupLog(log_directory):
     logger = scoop.logger
+    logger.propagate = False
     logger.setLevel(logging.INFO)
     # create file handler which logs even debug messages
     fh = logging.FileHandler(log_directory / "main.log")
@@ -184,7 +185,7 @@ def setupTemplates(cache):
             setTemplateValues(template, experiment['set_values'])
 
         #change to where we want the template created
-        template.filename = template_path
+        template.filename = template_path.as_posix()
 
         util.setupSimulation(template, cache.target[name]['time'])
 

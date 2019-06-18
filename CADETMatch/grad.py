@@ -36,7 +36,7 @@ def setupTemplates(settings, target):
         simulationSens = Cadet(experiment['simulation'].root)
 
         template_path_sens = Path(settings['resultsDirMisc'], "template_%s_sens.h5" % name)
-        simulationSens.filename = bytes(template_path_sens)
+        simulationSens.filename = template_path_sens.as_posix()
 
         simulationSens.root.input.sensitivity.nsens = len(parms)
         simulationSens.root.input.sensitivity.sens_method = 'ad1'
@@ -184,13 +184,13 @@ def runExperimentSens(individual, experiment, settings, target, jac):
     if 'simulationSens' not in experiment:
         templatePath = Path(settings['resultsDirMisc'], "template_%s_sens.h5" % experiment['name'])
         templateSim = Cadet()
-        templateSim.filename = templatePath
+        templateSim.filename = templatePath.as_posix()
         templateSim.load()
         experiment['simulationSens'] = templateSim
 
 
     simulation = Cadet(experiment['simulationSens'].root)
-    simulation.filename = path
+    simulation.filename = path.as_posix()
 
     simulation.root.input.solver.nthreads = 1
     cadetValues, cadetValuesKEQ = util.set_simulation(individual, simulation, evo.settings, experiment)

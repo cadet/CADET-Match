@@ -53,6 +53,7 @@ def run(cache, tools, creator):
         util.writeProgress(cache, -1, newChildren, hof, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
         
         util.finish(cache)
+        util.graph_corner_process(cache, last=True)
 
         return hof
 

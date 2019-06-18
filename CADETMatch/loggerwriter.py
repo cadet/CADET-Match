@@ -9,4 +9,5 @@ class LoggerWriter:
             self.level(message)
 
     def flush(self):
-        self.level(sys.stderr)
+        pass
+        #self.level(sys.stderr)

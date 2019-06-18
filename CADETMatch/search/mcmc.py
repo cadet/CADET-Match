@@ -284,7 +284,8 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
         checkpoint['run_chain_stat'] = run_chain_stat
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
-        mle_process(last=False, interval=cache.checkpointInterval)
+        mle_process(last=False)
+        util.graph_corner_process(cache, last=False)
 
         if generation % checkInterval == 0:
             try:
@@ -318,11 +319,11 @@ def write_interval(interval, cache, checkpoint, checkpointFile, train_chain, run
         write_interval.last_time = time.time()
 
     if time.time() - write_interval.last_time > interval:
-        writeMCMC(cache, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
-
         with checkpointFile.open('wb') as cp_file:
             pickle.dump(checkpoint, cp_file)
 
+        writeMCMC(cache, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
+        
         write_interval.last_time = time.time()
 
 def run(cache, tools, creator):
@@ -404,7 +405,7 @@ def run(cache, tools, creator):
     chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 
     if checkpoint['state'] == 'complete':
-        tube_process()
+        tube_process(last=True)
         util.finish(cache)
         checkpoint['state'] = 'plot_finish'
 
@@ -413,16 +414,28 @@ def run(cache, tools, creator):
 
     if checkpoint['state'] == 'plot_finish':
         mle_process(last=True)
+        util.graph_corner_process(cache, last=True)
     return numpy.mean(chain, 0)
 
-def tube_process(last=False, interval=1800):
+def tube_process(last=False, interval=3600):
     cwd = str(Path(__file__).parent.parent)
     ret = subprocess.run([sys.executable, '-m', 'scoop', 'mcmc_plot_tube.py', str(cache.cache.json_path),], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
 
-def mle_process(last=False, interval=1800):
+def mle_process(last=False, interval=10):
     if 'last_time' not in mle_process.__dict__:
         mle_process.last_time = time.time()
+
+    if 'child' in mle_process.__dict__:
+        if mle_process.child.poll() is None:  #This is false if the child has completed
+            scoop.logger.info("mle process is still running so don't start another one")
+            if last:
+                scoop.logger.info("this is the last step and a mle process is already running so wait for completion")
+                mle_process.child.wait()
+            else:
+                return
+        else:
+            scoop.logger.info("mle process has finished and it is okay to start another one")
 
     cwd = str(Path(__file__).parent.parent)
 
@@ -431,7 +444,7 @@ def mle_process(last=False, interval=1800):
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         mle_process.last_time = time.time()
     elif (time.time() - mle_process.last_time) > interval:
-        ret = subprocess.Popen([sys.executable, '-m', 'scoop', 'mle.py', str(cache.cache.json_path),], 
+        mle_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'mle.py', str(cache.cache.json_path),], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         mle_process.last_time = time.time()
         
@@ -708,7 +721,7 @@ def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters, train_
         h5.root.train_chain_stat_transform = train_chain_stat_transform
 
     if run_chain_stat is not None:
-        run_chain_stat, _, run_chain_stat_transform, _ = process_chain(train_chain_stat, cache, len(burn_seq)-1)
+        run_chain_stat, _, run_chain_stat_transform, _ = process_chain(run_chain_stat, cache, len(burn_seq)-1)
 
         h5.root.run_chain_stat = run_chain_stat
         h5.root.run_chain_stat_transform = run_chain_stat_transform

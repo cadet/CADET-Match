@@ -36,6 +36,7 @@ import loggerwriter
 
 def setupLog(log_directory):
     logger = scoop.logger
+    logger.propagate = False
     logger.setLevel(logging.INFO)
     # create file handler which logs even debug messages
     fh = logging.FileHandler(log_directory / "mle.log")
@@ -379,7 +380,7 @@ def main():
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
     mcmc_h5 = mcmcDir / "mcmc.h5"
 
-    with h5py.File(mcmc_h5) as h5:
+    with h5py.File(mcmc_h5, 'r') as h5:
         flat_chain = h5['/flat_chain'][()]
         mcmc_acceptance = h5['/mcmc_acceptance'][()]
         process_mle(flat_chain, len(mcmc_acceptance), cache)
