@@ -60,6 +60,11 @@ my_cmap = ListedColormap(my_cmap)
 
 cm_plot = matplotlib.cm.gist_rainbow
 
+if getattr(scoop, 'SIZE', 1) == 1:
+    map_function = map
+else:
+    map_function = futures.map
+
 def setupLog(log_directory):
     logger = scoop.logger
     logger.propagate = False
@@ -79,8 +84,13 @@ def get_color(idx, max_colors, cmap):
 
 def main():
     cache.setup(sys.argv[1])
-    cache.progress_path = Path(cache.settings['resultsDirBase']) / "progress.csv"
-
+    
+    progress_path = Path(cache.settings['resultsDirBase']) / "result.h5"
+    
+    results = H5()
+    results.filename = progress_path.as_posix()
+    results.load()
+    
     setupLog(cache.settings['resultsDirLog'])
 
     scoop.logger.info("graphing directory %s", os.getcwd())
@@ -93,7 +103,7 @@ def main():
     graphProgress(cache)
 
     if fullGeneration:
-        graphSpace(fullGeneration, cache)
+        graphSpace(fullGeneration, cache, results)
         graphExperiments(cache)    
 
 def graphDistance(cache):
@@ -130,7 +140,7 @@ def graphDistance(cache):
                     temp.append( (output_distance_meta, parameter, idx_parameter, score, idx_score, data.root.distance_correct[:,idx_parameter], data['output_meta'][:,idx_score],
                                 data.root.mean[:,idx_parameter], data.root.confidence[:,idx_parameter]) )
 
-            list(futures.map(plot_2d_scatter, temp))
+            list(map_function(plot_2d_scatter, temp))
 
 def plot_2d_scatter(args):
     output_directory, parameter, parameter_idx, score, score_idx, parameter_data, score_data, mean_data, confidence_data = args
@@ -174,7 +184,7 @@ def graphExperiments(cache):
 
     toGenerate = existsH5 - existsPNG
 
-    list(futures.map(plotExperiments, toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirEvo']), itertools.repeat('%s_%s_EVO.png')))
+    list(map_function(plotExperiments, toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirEvo']), itertools.repeat('%s_%s_EVO.png')))
 
 def graphMeta(cache):
     directory = Path(cache.settings['resultsDirMeta'])
@@ -189,7 +199,7 @@ def graphMeta(cache):
 
     toGenerate = existsH5 - existsPNG
 
-    list(futures.map(plotExperiments, toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirMeta']), itertools.repeat('%s_%s_meta.png')))
+    list(map_function(plotExperiments, toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirMeta']), itertools.repeat('%s_%s_meta.png')))
 
 
 def graph_simulation(simulation, graph):
@@ -370,104 +380,104 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
         fig.set_size_inches((12,12))
         fig.savefig(str(dst))
 
-def graphSpace(fullGeneration, cache):
-    csv_path = Path(cache.settings['resultsDirBase']) / cache.settings['CSV']
+def graphSpace(fullGeneration, cache, results):
     output_2d = cache.settings['resultsDirSpace'] / "2d"
     output_3d = cache.settings['resultsDirSpace'] / "3d"
 
     output_2d.mkdir(parents=True, exist_ok=True)
     output_3d.mkdir(parents=True, exist_ok=True)
 
-    comp_two = list(itertools.combinations(cache.parameter_indexes, 2))
-    comp_one = list(itertools.combinations(cache.parameter_indexes, 1))
+    input = results.root.input_transform_extended
+    output = results.root.output
+    output_meta = results.root.output_meta
+
+    input_headers = cache.parameter_headers
+    output_headers = cache.score_headers
+    meta_headers = cache.meta_headers
+
+    input_indexes = list(range(len(input_headers)))
+    output_indexes = list(range(len(output_headers)))
+    meta_indexes = list(range(len(meta_headers)))
+
+    comp_two = list(itertools.combinations(input_indexes, 2))
+    comp_one = list(itertools.combinations(input_indexes, 1))
 
     #3d plots
     if fullGeneration >= 2:
-        prod = list(itertools.product(comp_two, cache.score_indexes))
-        seq = [(str(output_3d), str(csv_path), i[0][0], i[0][1], i[1], sys.argv[1]) for i in prod]
-        list(futures.map(plot_3d, seq))
+        seq = []
+        for (x, y), z in itertools.product(comp_two, output_indexes):
+            seq.append( [output_3d.as_posix(), input_headers[x], input_headers[y], output_headers[z], input[:,x], input[:,y], output[:,z]] )
+
+        for (x, y), z in itertools.product(comp_two, meta_indexes):
+            seq.append( [output_3d.as_posix(), input_headers[x], meta_headers[y], input_headers[z], input[:,x], input[:,y], output_meta[:,z]] )
+        list(map_function(plot_3d, seq))
     
     #2d plots
     if fullGeneration >= 1:
         graphDistance(cache)
 
-        prod = list(itertools.product(comp_one, cache.score_indexes))
-        seq = [(str(output_2d), str(csv_path), i[0][0], i[1], sys.argv[1]) for i in prod]
-        list(futures.map(plot_2d, seq))
+        seq = []
+        for (x,), y in itertools.product(comp_one, output_indexes):
+            seq.append( [output_2d.as_posix(), input_headers[x], output_headers[y], input[:,x], output[:,y]] )
+
+        for (x,), y in itertools.product(comp_one, meta_indexes):
+            seq.append( [output_2d.as_posix(), input_headers[x], meta_headers[y], input[:,x], output_meta[:,y]] )
+        list(map_function(plot_2d, seq))
 
 def plot_3d(arg):
     "This leaks memory and is run in a separate short-lived process, do not integrate into the matching main process"
-    directory_path, csv_path, c1, c2, score, json_path = arg
-
-    if json_path != cache.json_path:
-        cache.setup(json_path)
-
-    dataframe = pandas.read_csv(csv_path)
+    directory_path, header1, header2, header3, data1, data2, scores = arg
     directory = Path(directory_path)
 
-    headers = dataframe.columns.values.tolist()
-
-    scores = numpy.array(dataframe.iloc[:, score])
-    scoreName = headers[score]
-    if headers[score] == 'SSE':
+    scoreName = header3
+    if scoreName == 'SSE':
         scores = -numpy.log(scores)
-        scoreName = '-log(%s)' % headers[score]
+        scoreName = '-log(%s)' % scoreName
     
-    x = numpy.array(dataframe.iloc[:, c1])
-    y = numpy.array(dataframe.iloc[:, c2])
+    x = data1
+    y = data2
 
     fig = figure.Figure()
     canvas = FigureCanvas(fig)
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(numpy.log(x), numpy.log(y), scores, c=scores, cmap=my_cmap)
-    ax.set_xlabel('log(%s)' % headers[c1])
-    ax.set_ylabel('log(%s)' % headers[c2])
+    ax.set_xlabel('log(%s)' % header1)
+    ax.set_ylabel('log(%s)' % header2)
     ax.set_zlabel(scoreName)
-    filename = "%s_%s_%s.png" % (c1, c2, score)
+    filename = "%s_%s_%s.png" % (header1, header2, scoreName)
+    filename = filename.replace(':', '_')
     fig.savefig(str(directory / filename))
     
 def plot_2d(arg):
-    directory_path, csv_path, c1, score, json_path = arg
-
-    if json_path != cache.json_path:
-        cache.setup(json_path)
-
-    dataframe = pandas.read_csv(csv_path)
+    directory_path, header_x, scoreName, data, scores = arg
     directory = Path(directory_path)
-    headers = dataframe.columns.values.tolist()
 
-    scores = dataframe.iloc[:, score]
-    scoreName = headers[score]
-    if headers[score] == 'SSE':
+    if scoreName == 'SSE':
         scores = -numpy.log(scores)
-        scoreName = '-log(%s)' % headers[score]
+        scoreName = '-log(%s)' % scoreName
 
     fig = figure.Figure()
     canvas = FigureCanvas(fig)
     graph = fig.add_subplot(1, 1, 1)
 
-    data = dataframe.iloc[:, c1]
     format = '%s'
     if numpy.max(data)/numpy.min(data) > 100.0:
         data = numpy.log(data)
         format = 'log(%s)'
 
     graph.scatter(data, scores, c=scores, cmap=my_cmap)
-    graph.set_xlabel(format % headers[c1])
+    graph.set_xlabel(format % header_x)
     graph.set_ylabel(scoreName)
     graph.set_xlim(min(data), max(data), auto=True)
-    filename = "%s_%s.png" % (c1, score)
+    filename = "%s_%s.png" % (header_x, scoreName)
+    filename = filename.replace(':', '_')
     fig.savefig(str(directory / filename))
 
 def graphProgress(cache):
     results = Path(cache.settings['resultsDirBase'])
+    progress = results / "progress.csv"
     
-    df = pandas.read_csv(str(cache.progress_path))
-
-    hof = results / "meta_hof.npy"
-
-    with hof.open('rb') as hof_file:
-        data = numpy.load(hof_file)
+    df = pandas.read_csv(progress)
 
     output = cache.settings['resultsDirProgress']
 
@@ -475,13 +485,17 @@ def graphProgress(cache):
     y = ['Average Score', 'Minimum Score', 'Product Score',
          'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score', 'Population']
 
-    list(futures.map(singleGraphProgress, itertools.product(x,y), itertools.repeat(df), itertools.repeat(output), itertools.repeat(sys.argv[1])))
+    temp = []
+    for x,y in itertools.product(x,y):
+        if x != y:
+            temp.append( (df[[x,y]], output) )
 
-def singleGraphProgress(tup, df, output, json_path):
-    if json_path != cache.json_path:
-        cache.setup(json_path)
+    list(map_function(singleGraphProgress, temp))
 
-    i,j = tup
+def singleGraphProgress(arg):
+    df, output = arg
+
+    i,j = list(df)
 
     fig = figure.Figure()
     canvas = FigureCanvas(fig)
@@ -489,6 +503,7 @@ def singleGraphProgress(tup, df, output, json_path):
     graph = fig.add_subplot(1, 1, 1)
 
     graph.plot(df[i],df[j])
+    a = max(df[j])
     graph.set_ylim((0,1.1*max(df[j])))
     graph.set_title('%s vs %s' % (i,j))
     graph.set_xlabel(i)
