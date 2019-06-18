@@ -30,10 +30,10 @@ class H5():
         for i in data:
             self.root.update(copy.deepcopy(i))
 
-    def load(self):
+    def load(self, paths=None):
         if self.filename is not None:
             with h5py.File(self.filename, 'r') as h5file:
-                self.root = Dict(recursively_load(h5file, '/', self.inverse_transform))
+                self.root = Dict(recursively_load(h5file, '/', self.inverse_transform, paths))
         else:
             print('Filename must be set before load can be used')
 
@@ -100,15 +100,18 @@ class Cadet(H5):
         else:
             print("Filename must be set before run can be used")
 
-def recursively_load( h5file, path, func): 
+def recursively_load( h5file, path, func, paths): 
 
     ans = {}
-    for key, item in h5file[path].items():
-        key = func(key)
-        if isinstance(item, h5py._hl.dataset.Dataset):
-            ans[key] = item[()]
-        elif isinstance(item, h5py._hl.group.Group):
-            ans[key] = recursively_load(h5file, path + key + '/', func)
+    for key_original in h5file[path].keys():
+        key = func(key_original)
+        local_path = path + key
+        if paths is None or (paths is not None and local_path in paths):
+            item = h5file[path][key_original]
+            if isinstance(item, h5py._hl.dataset.Dataset):
+                ans[key] = item[()]
+            elif isinstance(item, h5py._hl.group.Group):
+                ans[key] = recursively_load(h5file, local_path + '/', func, paths)
     return ans 
 
 def recursively_save( h5file, path, dic, func):

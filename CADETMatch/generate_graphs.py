@@ -85,12 +85,6 @@ def get_color(idx, max_colors, cmap):
 def main():
     cache.setup(sys.argv[1])
     
-    progress_path = Path(cache.settings['resultsDirBase']) / "result.h5"
-    
-    results = H5()
-    results.filename = progress_path.as_posix()
-    results.load()
-    
     setupLog(cache.settings['resultsDirLog'])
 
     scoop.logger.info("graphing directory %s", os.getcwd())
@@ -103,7 +97,7 @@ def main():
     graphProgress(cache)
 
     if fullGeneration:
-        graphSpace(fullGeneration, cache, results)
+        graphSpace(fullGeneration, cache)
         graphExperiments(cache)    
 
 def graphDistance(cache):
@@ -380,7 +374,13 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
         fig.set_size_inches((12,12))
         fig.savefig(str(dst))
 
-def graphSpace(fullGeneration, cache, results):
+def graphSpace(fullGeneration, cache):
+    progress_path = Path(cache.settings['resultsDirBase']) / "result.h5"
+    
+    results = H5()
+    results.filename = progress_path.as_posix()
+    results.load(paths=['/input_transform_extended', '/output', '/output_meta'])
+
     output_2d = cache.settings['resultsDirSpace'] / "2d"
     output_3d = cache.settings['resultsDirSpace'] / "3d"
 
