@@ -109,14 +109,14 @@ def plotChain(flat_chain, flat_chain_transform, headers, out_dir, prefix):
     fig_size = 6 * len(headers)
     fig = corner.corner(chain, quantiles=(0.16, 0.5, 0.84),
                    show_titles=True, labels=headers, 
-                    bins=60, range=new_range(chain).T, 
+                    bins=20, range=new_range(chain).T, 
                      use_math_text=True, title_fmt='.2g')    
     fig.set_size_inches((fig_size,fig_size))
     fig.savefig(str(out_dir / ("%s_corner.png" % prefix)))
 
     fig = corner.corner(chain_transform, quantiles=(0.16, 0.5, 0.84),
                    show_titles=True, labels=headers, 
-                    bins=60, range=new_range(chain_transform).T, 
+                    bins=20, range=new_range(chain_transform).T, 
                      use_math_text=True, title_fmt='.2g') 
     fig.set_size_inches((fig_size,fig_size))
     fig.savefig(str(out_dir / ("%s_corner_transform.png" % prefix)))
@@ -264,7 +264,7 @@ def create_corner(dir, filename, headers, data, weights=None):
             fig_size = 6 * len(headers)
             fig = corner.corner(data, quantiles=(0.16, 0.5, 0.84),
                    show_titles=True, labels=headers, 
-                    bins=60, range=new_range(data).T, 
+                    bins=20, range=new_range(data).T, 
                      use_math_text=True, title_fmt='.2g')
             fig.set_size_inches((fig_size,fig_size))
             fig.savefig(str(dir / filename))

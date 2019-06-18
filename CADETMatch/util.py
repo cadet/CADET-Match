@@ -1127,14 +1127,10 @@ def graph_process(cache, generation, last=0):
 
     if 'child' in graph_process.__dict__:
         if graph_process.child.poll() is None:  #This is false if the child has completed
-            scoop.logger.info("graphing process is still running so don't start another one")
             if last:
-                scoop.logger.info("this is the last step and a graphing process is already running so wait for completion")
                 graph_process.child.wait()
             else:
                 return
-        else:
-            scoop.logger.info("graphing has finished and it is okay to start another one")
 
     cwd = str(Path(__file__).parent)
 
@@ -1255,20 +1251,16 @@ def setupSimulation(sim, times):
     sim.root.input['return'].unit_001.split_components_data = 0
     sim.root.input.solver.nthreads = 1
 
-def graph_corner_process(cache, last=False, interval=3600):
+def graph_corner_process(cache, last=False, interval=60):
     if 'last_time' not in graph_corner_process.__dict__:
         graph_corner_process.last_time = time.time()
 
     if 'child' in graph_corner_process.__dict__:
         if graph_corner_process.child.poll() is None:  #This is false if the child has completed
-            scoop.logger.info("graphing corner process is still running so don't start another one")
             if last:
-                scoop.logger.info("this is the last step and a graphing corner process is already running so wait for completion")
                 graph_corner_process.child.wait()
             else:
                 return
-        else:
-            scoop.logger.info("graphing corner process has finished and it is okay to start another one")
 
     cwd = str(Path(__file__).parent)
 

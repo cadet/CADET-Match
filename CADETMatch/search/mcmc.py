@@ -187,6 +187,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
         checkpoint['sampler_a'] = sampler.a
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
+        util.graph_corner_process(cache, last=False)
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
             average_converge = numpy.mean(converge)
@@ -428,14 +429,10 @@ def mle_process(last=False, interval=10):
 
     if 'child' in mle_process.__dict__:
         if mle_process.child.poll() is None:  #This is false if the child has completed
-            scoop.logger.info("mle process is still running so don't start another one")
             if last:
-                scoop.logger.info("this is the last step and a mle process is already running so wait for completion")
                 mle_process.child.wait()
             else:
                 return
-        else:
-            scoop.logger.info("mle process has finished and it is okay to start another one")
 
     cwd = str(Path(__file__).parent.parent)
 
