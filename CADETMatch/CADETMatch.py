@@ -184,11 +184,23 @@ def setupTemplates(cache):
         if 'set_values' in experiment:
             setTemplateValues(template, experiment['set_values'])
 
-        #change to where we want the template created
-        template.filename = template_path.as_posix()
-
         util.setupSimulation(template, cache.target[name]['time'])
 
+        if cache.settings['searchMethod'] != 'MCMC' and "kde_synthetic" in cache.settings:
+            #the base case needs to be saved since the normal template file is what the rest of the code will look for
+            template_base_path = Path(cache.settings['resultsDirMisc'], "template_%s_base.h5" % name)
+            template.filename = template_base_path.as_posix()
+            template.save()
+            
+            scoop.logger.info("create bias template for experiment %s", name)
+            template_bias = util.biasSimulation(template, experiment, cache)
+            template_bias_path = Path(cache.settings['resultsDirMisc'], "template_%s_bias.h5" % name)
+            template_bias.filename = template_bias_path.as_posix()
+            template_bias.save()
+            template = template_bias
+
+        #change to where we want the template created
+        template.filename = template_path.as_posix()
         template.save()
 
         experiment['simulation'] = template

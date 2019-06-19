@@ -35,6 +35,7 @@ __logBase10of2 = float(__logBase10of2_decim)
 
 import SALib.sample.sobol_sequence
 import loggerwriter
+import synthetic_error
 
 def smoothing_factor(y):
     return max(y)/1000000.0
@@ -1283,3 +1284,35 @@ def graph_corner_process(cache, last=False, interval=60):
         graph_corner_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', '-n', '1', 'generate_corner_graphs.py', str(cache.json_path),], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_corner_process.last_time = time.time()
+
+def biasSimulation(simulation, experiment, cache):
+
+    bias_simulation = Cadet(simulation.root)
+
+    name = experiment['name']
+
+    error_model = None
+    for error in cache.settings['kde_synthetic']:
+        if error['name'] == name:
+            error_model = error
+            break
+
+    delay_settings = error_model['delay']
+    flow_settings = error_model['flow']
+    load_settings = error_model['load']
+
+    nsec = bias_simulation.root.input.solver.sections.nsec
+
+    delays = numpy.ones(nsec) * sum(delay_settings)/2.0    
+ 
+    synthetic_error.pump_delay(bias_simulation, delays)
+
+    flow = numpy.ones(nsec) * flow_settings[0]
+    
+    synthetic_error.error_flow(bias_simulation, flow)
+
+    load = numpy.ones(nsec) * load_settings[0]
+  
+    synthetic_error.error_load(bias_simulation, load)
+
+    return bias_simulation
