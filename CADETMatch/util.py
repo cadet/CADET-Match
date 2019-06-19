@@ -11,7 +11,7 @@ from addict import Dict
 
 import tempfile
 import os
-from cadet import Cadet
+from cadet import Cadet, H5
 import subprocess
 import sys
 import json
@@ -420,35 +420,7 @@ def setupMCMC(cache, lb, ub):
         if baseDir is not None:
             settings['baseDir'] = baseDir.as_posix()
 
-        #idx = 0
-        #for parameter in settings['parameters']:
-        #    transform = cache.transforms[parameter['transform']]
-        #    count = transform.count_extended
-        #    scoop.logger.warn('%s %s %s', idx, count, transform)
-        #    lb_local = lb[idx:idx+count]
-        #    ub_local = ub[idx:idx+count]
-        #    transform.setBounds(parameter, lb_local, ub_local)
-        #    idx = idx + count
-
         if 'mcmc_h5' in settings and 'parameters_mcmc' in settings:
-            #mcmc_h5 = settings.get('mcmc_h5', None)
-            #data = Cadet()
-            #data.filename = mcmc_h5
-            #data.load()
-            #dataPrevious = data.root.flat_chain_transform.copy()
-
-            #lb, ub = numpy.percentile(dataPrevious, [0, 100], 0)
-
-            #idx = 0
-            #for parameter in settings['parameters_mcmc']:
-            #    transform = cache.transforms[parameter['transform']]
-            #    count = transform.count_extended
-            #    scoop.logger.warn('%s %s %s', idx, count, transform)
-            #    lb_local = lb[idx:idx+count]
-            #    ub_local = ub[idx:idx+count]
-            #    transform.setBounds(parameter, lb_local, ub_local)
-            #    idx = idx + count
-
             settings['parameters'].extend(settings['parameters_mcmc'])
 
         settings['searchMethod'] = 'MCMC'
@@ -468,7 +440,8 @@ def setupMCMC(cache, lb, ub):
                 experiment['features'].append({"name":"AbsoluteHeight", "type":"AbsoluteHeight"})
          
         if "kde_synthetic" in settings:
-            found = getBestPath(cache)
+            individual = getBestIndividual(cache)
+            found = createSimulationBestIndividual(individual, cache)
             for experiment in settings['kde_synthetic']:
                 experiment['file_path'] = found[experiment['name']]
 
@@ -477,17 +450,33 @@ def setupMCMC(cache, lb, ub):
             json.dump(settings, json_data, indent=4, sort_keys=True)
         return new_settings_file
 
-def getBestPath(cache):
+def createSimulationBestIndividual(individual, cache):
+    temp = {}
+    for experiment in cache.settings['experiments']:
+        name = experiment['name']
+        templatePath = Path(cache.settings['resultsDirMisc'], "template_%s_base.h5" % name)
+        templateSim = Cadet()
+        templateSim.filename = templatePath.as_posix()
+        templateSim.load()
+
+        cadetValues, cadetValuesKEQ = set_simulation(individual, templateSim, cache.settings, cache, True, experiment)
+
+        bestPath = Path(cache.settings['resultsDirMisc'], "best_%s_base.h5" % name)
+        templateSim.filename = bestPath.as_posix()
+        templateSim.save()
+        temp[name] = bestPath.as_posix()
+    return temp
+
+def getBestIndividual(cache):
     "return the path to the best item based on meta min score"
-    meta_path = cache.settings['resultsDirMeta']
-    df = pandas.read_csv(meta_path / 'results.csv')
-    name = df.loc[df['Min Score'].argmax(), 'Name']
-    found = {}
-    for name_path in meta_path.glob('%s_*.h5' % name):
-        id_name, experiment_name, meta_name = name_path.stem.split('_')
-        found[experiment_name] = name_path.as_posix()
-        #return name_path.as_posix()
-    return found
+    progress_path = Path(cache.settings['resultsDirBase']) / "result.h5"
+    results = H5()
+    results.filename = progress_path.as_posix()
+    results.load(paths=['/meta_score', '/meta_population'])
+
+    idx = numpy.argmax(results.root.meta_score[:,1])
+    individual = results.root.meta_population[idx,:]
+    return individual
 
 def copyCSVWithNoise(idx, center, noise):
     "read the original json file and create a new set of simulation data and simulation file in a subdirectory with noise"
