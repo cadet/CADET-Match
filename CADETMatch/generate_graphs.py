@@ -376,18 +376,25 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
 
 def graphSpace(fullGeneration, cache):
     progress_path = Path(cache.settings['resultsDirBase']) / "result.h5"
-    
-    results = H5()
-    results.filename = progress_path.as_posix()
-    results.load(paths=['/input_transform_extended', '/output', '/output_meta'])
 
     output_2d = cache.settings['resultsDirSpace'] / "2d"
     output_3d = cache.settings['resultsDirSpace'] / "3d"
 
     output_2d.mkdir(parents=True, exist_ok=True)
     output_3d.mkdir(parents=True, exist_ok=True)
+    
+    results = H5()
+    results.filename = progress_path.as_posix()
 
-    input = results.root.input_transform_extended
+    results.load(paths=['/output', '/output_meta', '/is_extended_input'])
+
+    if results.root.is_extended_input:
+        results.load(paths=['/input_transform_extended'], update=True)
+        input = results.root.input_transform_extended
+    else:
+        results.load(paths=['/input_transform'], update=True)
+        input = results.root.input_transform
+
     output = results.root.output
     output_meta = results.root.output_meta
 

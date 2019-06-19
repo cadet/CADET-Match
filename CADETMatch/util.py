@@ -649,6 +649,21 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
     gen_data = numpy.array([generation, len(result_data['input'])]).reshape(1,2)
 
+    if cache.debugWrite:
+        population_input = []
+        population_output = []
+        for ind in population:
+            temp = [generation]
+            temp.extend(ind)
+            population_input.append( temp)
+
+            temp = [generation]
+            temp.extend(ind.fitness.values)
+            population_output.append( temp)
+
+        population_input = numpy.array(population_input)
+        population_output = numpy.array(population_output)
+
     if result_data is not None:
         resultDir = Path(cache.settings['resultsDir'])
         result_h5 = resultDir / "result.h5"
@@ -672,9 +687,24 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
                 hf.create_dataset("output", data=result_data['output'], maxshape=(None, len(result_data['output'][0])))
                 hf.create_dataset("output_meta", data=result_data['output_meta'], maxshape=(None, len(result_data['output_meta'][0])))
+
                 hf.create_dataset("input_transform", data=result_data['input_transform'], maxshape=(None, len(result_data['input_transform'][0])))
-                hf.create_dataset("input_transform_extended", data=result_data['input_transform_extended'], maxshape=(None, len(result_data['input_transform_extended'][0])))
+                if result_data['input_transform'] == result_data['input_transform_extended']:
+                    hf.create_dataset("is_extended_input", data=False)                    
+                else:
+                    hf.create_dataset("is_extended_input", data=True)
+                    hf.create_dataset("input_transform_extended", data=result_data['input_transform_extended'], maxshape=(None, len(result_data['input_transform_extended'][0])))
+
                 hf.create_dataset("generation", data=gen_data, maxshape=(None, 2))
+                
+                if cache.debugWrite:
+                    hf.create_dataset("population_input", data=population_input, maxshape=(None, population_input.shape[1] ))
+                    hf.create_dataset("population_output", data=population_output, maxshape=(None, population_output.shape[1] ))
+
+                    mcmc_score = result_data.get('mcmc_score', None)
+                    if mcmc_score is not None:
+                        mcmc_score = numpy.array(mcmc_score)
+                        hf.create_dataset("mcmc_score", data=mcmc_score, maxshape=(None, len(mcmc_score[0])))
 
                 if len(hof_param):
                     hf.create_dataset('hof_population', data=hof_param, maxshape=(None, hof_param.shape[1] ))
@@ -692,11 +722,6 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                     hf.create_dataset('grad_population_transform', data=grad_param_transform, maxshape=(None, grad_param_transform.shape[1] ))
                     hf.create_dataset('grad_score', data=data_grad, maxshape=(None, data_grad.shape[1] ))
 
-                mcmc_score = result_data.get('mcmc_score', None)
-                if mcmc_score is not None:
-                    mcmc_score = numpy.array(mcmc_score)
-                    hf.create_dataset("mcmc_score", data=mcmc_score, maxshape=(None, len(mcmc_score[0])))
-                
                 if cache.fullTrainingData:
 
                     for filename, chroma in result_data['results'].items():
@@ -726,11 +751,18 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                     hf["distance_correct"].resize((hf["distance_correct"].shape[0] + len(result_data['input'])), axis = 0)
                     hf["distance_correct"][-len(result_data['input']):] = distance
 
-                mcmc_score = result_data.get('mcmc_score', None)
-                if mcmc_score is not None:
-                    mcmc_score = numpy.array(mcmc_score)
-                    hf["mcmc_score"].resize((hf["mcmc_score"].shape[0] + len(mcmc_score)), axis = 0)
-                    hf["mcmc_score"][-len(mcmc_score):] = mcmc_score
+                if cache.debugWrite:
+                    mcmc_score = result_data.get('mcmc_score', None)
+                    if mcmc_score is not None:
+                        mcmc_score = numpy.array(mcmc_score)
+                        hf["mcmc_score"].resize((hf["mcmc_score"].shape[0] + len(mcmc_score)), axis = 0)
+                        hf["mcmc_score"][-len(mcmc_score):] = mcmc_score
+
+                    hf["population_input"].resize((hf["population_input"].shape[0] + population_input.shape[0]), axis = 0)
+                    hf["population_input"][-population_input.shape[0]:] = population_input
+
+                    hf["population_output"].resize((hf["population_output"].shape[0] + population_output.shape[0]), axis = 0)
+                    hf["population_output"][-population_output.shape[0]:] = population_output
 
                 hf["output"].resize((hf["output"].shape[0] + len(result_data['output'])), axis = 0)
                 hf["output"][-len(result_data['output']):] = result_data['output']
@@ -741,14 +773,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 hf["input_transform"].resize((hf["input_transform"].shape[0] + len(result_data['input_transform'])), axis = 0)
                 hf["input_transform"][-len(result_data['input_transform']):] = result_data['input_transform']
 
-                hf["input_transform_extended"].resize((hf["input_transform_extended"].shape[0] + len(result_data['input_transform_extended'])), axis = 0)
-                hf["input_transform_extended"][-len(result_data['input_transform_extended']):] = result_data['input_transform_extended']
-
-                hf["population_input"].resize((hf["population_input"].shape[0] + population_input.shape[0]), axis = 0)
-                hf["population_input"][-population_input.shape[0]:] = population_input
-
-                hf["population_output"].resize((hf["population_output"].shape[0] + population_output.shape[0]), axis = 0)
-                hf["population_output"][-population_output.shape[0]:] = population_output
+                if result_data['input_transform'] != result_data['input_transform_extended']:
+                    hf["input_transform_extended"].resize((hf["input_transform_extended"].shape[0] + len(result_data['input_transform_extended'])), axis = 0)
+                    hf["input_transform_extended"][-len(result_data['input_transform_extended']):] = result_data['input_transform_extended']
 
                 if len(hof_param):
                     hf["hof_population"].resize((hof_param.shape[0]), axis = 0)

@@ -30,10 +30,14 @@ class H5():
         for i in data:
             self.root.update(copy.deepcopy(i))
 
-    def load(self, paths=None):
+    def load(self, paths=None, update=False):
         if self.filename is not None:
             with h5py.File(self.filename, 'r') as h5file:
-                self.root = Dict(recursively_load(h5file, '/', self.inverse_transform, paths))
+                data = Dict(recursively_load(h5file, '/', self.inverse_transform, paths))
+                if update:
+                    self.root.update(data)
+                else:
+                    self.root = data
         else:
             print('Filename must be set before load can be used')
 

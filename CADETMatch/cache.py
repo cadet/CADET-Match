@@ -122,6 +122,8 @@ class Cache:
         self.checkpointInterval = self.settings.get('checkpointInterval', 600)
         self.setupMetaMask()
 
+        self.debugWrite = bool(self.settings.get('debugWrite', False))
+
         if "MCMCpopulation" not in self.settings:
             self.settings['MCMCpopulation'] = self.settings['population']
 
