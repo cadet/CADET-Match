@@ -649,20 +649,6 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
     gen_data = numpy.array([generation, len(result_data['input'])]).reshape(1,2)
 
-    population_input = []
-    population_output = []
-    for ind in population:
-        temp = [generation]
-        temp.extend(ind)
-        population_input.append( temp)
-
-        temp = [generation]
-        temp.extend(ind.fitness.values)
-        population_output.append( temp)
-
-    population_input = numpy.array(population_input)
-    population_output = numpy.array(population_output)
-
     if result_data is not None:
         resultDir = Path(cache.settings['resultsDir'])
         result_h5 = resultDir / "result.h5"
@@ -689,8 +675,6 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 hf.create_dataset("input_transform", data=result_data['input_transform'], maxshape=(None, len(result_data['input_transform'][0])))
                 hf.create_dataset("input_transform_extended", data=result_data['input_transform_extended'], maxshape=(None, len(result_data['input_transform_extended'][0])))
                 hf.create_dataset("generation", data=gen_data, maxshape=(None, 2))
-                hf.create_dataset("population_input", data=population_input, maxshape=(None, population_input.shape[1] ))
-                hf.create_dataset("population_output", data=population_output, maxshape=(None, population_output.shape[1] ))
 
                 if len(hof_param):
                     hf.create_dataset('hof_population', data=hof_param, maxshape=(None, hof_param.shape[1] ))
