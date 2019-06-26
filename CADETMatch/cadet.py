@@ -43,9 +43,6 @@ class H5():
 
     def save(self):
         if self.filename is not None:
-            file = Path(self.filename)
-            if file.exists():
-                file.replace(self.filename + '.backup')
             with h5py.File(self.filename, 'w') as h5file:
                 recursively_save(h5file, '/', self.root, self.transform)
         else:

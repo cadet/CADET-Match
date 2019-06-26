@@ -1145,12 +1145,16 @@ def graph_process(cache, generation, last=0):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
         graph_process.lastGraphTime = time.time()
     elif (time.time() - graph_process.lastGraphTime) > cache.graphGenerateTime:
-        graph_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
+        #graph_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
+        #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
+        subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_process.lastGraphTime = time.time()
     else:
         if (time.time() - graph_process.lastMetaTime) > cache.graphMetaTime:
-            graph_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '0'], 
+            #graph_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '0'], 
+            #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
+            subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '0'], 
                 stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
             graph_process.lastMetaTime = time.time()
 
@@ -1252,7 +1256,7 @@ def setupSimulation(sim, times):
     sim.root.input['return'].unit_001.split_components_data = 0
     sim.root.input.solver.nthreads = 1
 
-def graph_corner_process(cache, last=False, interval=60):
+def graph_corner_process(cache, last=False, interval=1200):
     if 'last_time' not in graph_corner_process.__dict__:
         graph_corner_process.last_time = time.time()
 
@@ -1270,7 +1274,9 @@ def graph_corner_process(cache, last=False, interval=60):
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_corner_process.last_time = time.time()
     elif (time.time() - graph_corner_process.last_time) > interval:
-        graph_corner_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', '-n', '1', 'generate_corner_graphs.py', str(cache.json_path),], 
+        #graph_corner_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', '-n', '1', 'generate_corner_graphs.py', str(cache.json_path),], 
+        #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
+        subprocess.run([sys.executable, '-m', 'scoop', '-n', '1', 'generate_corner_graphs.py', str(cache.json_path),], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_corner_process.last_time = time.time()
 

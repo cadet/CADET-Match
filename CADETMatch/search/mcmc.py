@@ -423,7 +423,7 @@ def tube_process(last=False, interval=3600):
     ret = subprocess.run([sys.executable, '-m', 'scoop', 'mcmc_plot_tube.py', str(cache.cache.json_path),], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
 
-def mle_process(last=False, interval=10):
+def mle_process(last=False, interval=3600):
     if 'last_time' not in mle_process.__dict__:
         mle_process.last_time = time.time()
 
@@ -441,7 +441,9 @@ def mle_process(last=False, interval=10):
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         mle_process.last_time = time.time()
     elif (time.time() - mle_process.last_time) > interval:
-        mle_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'mle.py', str(cache.cache.json_path),], 
+        #mle_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'mle.py', str(cache.cache.json_path),], 
+        #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
+        subprocess.run([sys.executable, '-m', 'scoop', 'mle.py', str(cache.cache.json_path),], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         mle_process.last_time = time.time()
         
@@ -495,8 +497,11 @@ def getCheckPoint(checkpointFile, cache):
             scoop.logger.info('row: %s col: %s  parameters: %s', row, col, parameters)
             if col < parameters:
                 mcmc_h5 = Path(cache.settings.get('mcmc_h5', None))
+                mcmcDir = mcmc_h5.parent
+                mle_h5 = mcmcDir / "mle.h5"
+
                 data = cadet.H5()
-                data.filename = mcmc_h5.as_posix()
+                data.filename = mle_h5.as_posix()
                 data.load()
                 scoop.logger.info('%s', list(data.root.keys()))
                 stat_MLE = data.root.stat_MLE.reshape(1, -1)

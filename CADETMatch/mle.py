@@ -226,6 +226,7 @@ def process_mle(chain, gen, cache):
     h5.root.mles = addChain(1, h5.root.mles, mle_x[:,numpy.newaxis])
     h5.root.stats = addChain(2, h5.root.stats, percentile[:, :, numpy.newaxis])
     h5.root.generations = addChain(0, h5.root.generations, [gen,])
+    h5.root.stat_MLE = mle_ind
 
     h5.save()
 
