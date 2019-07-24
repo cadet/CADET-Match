@@ -182,6 +182,9 @@
     <Compile Include="scores\fractionationSlide.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\fractionationSSE.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\logsse.py">
       <SubType>Code</SubType>
     </Compile>
