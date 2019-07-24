@@ -22,7 +22,7 @@
   "sobolGeneration":1,
   "stallGenerations": 30,
   "normalizeOutput":1,
-  "continueMCMC":1,
+  "continueMCMC":0,
   "graphMetaTime": 600,
   "parameters": [
     {

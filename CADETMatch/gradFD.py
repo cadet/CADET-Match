@@ -10,6 +10,7 @@ import time
 from cadet import Cadet
 
 import cache
+import scoop
 
 class GradientException(Exception):
     pass
@@ -33,6 +34,8 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
         elif i.success:
             ind = cache.toolbox.individual_guess(i.x)
             fit, csv_line, results = cache.toolbox.evaluate(ind)
+
+            ind.fitness.values = fit
 
             csv_line[0] = 'GRAD'
 

@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda37-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\PREP2019\transport\bypass\MCMC_small_500_cstr.json" 1</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Amgen\Box Sync\BillJuliane_share\salt\NSGA3_bypassInlet_03.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>

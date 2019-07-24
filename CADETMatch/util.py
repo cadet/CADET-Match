@@ -121,12 +121,15 @@ def averageFitness(offspring, cache):
     bestMin = -sys.float_info.max
     bestProd = -sys.float_info.max
 
+    #scoop.logger.info(offspring)
+
     for i in offspring:
+        #scoop.logger.info('idx: %s  value:%s', i, i.fitness.values)
         total += sum(i.fitness.values)
         number += len(i.fitness.values)
         bestMin = max(bestMin, min(i.fitness.values))
         bestProd = max(bestProd, product_score(i.fitness.values))
-
+    #scoop.logger.info('number: %s', number)
     result = [total/number, bestMin, bestProd]
 
     return result
@@ -702,7 +705,6 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                     hf.create_dataset('hof_score', data=data, maxshape=(None, data.shape[1] ))
 
                 if len(meta_param):
-                    scoop.logger.info("%s %s %s", meta_param.shape, meta_param_transform.shape, data_meta.shape)
                     hf.create_dataset('meta_population', data=meta_param, maxshape=(None, meta_param.shape[1] ))
                     hf.create_dataset('meta_population_transform', data=meta_param_transform, maxshape=(None, meta_param_transform.shape[1] ))
                     hf.create_dataset('meta_score', data=data_meta, maxshape=(None, data_meta.shape[1] ))
