@@ -13,6 +13,8 @@ from sklearn import preprocessing
 
 import kde_generator
 
+import scoop
+
 class Cache:
     def __init__(self):
         self.settings = None
@@ -147,8 +149,10 @@ class Cache:
                     settings = self.scores[feature['type']].settings
                     meta_mask = settings.meta_mask
                     count = settings.count
+                    #scoop.logger.info('%s %s %s %s', idx, feature, meta_mask, count)
 
                     meta_mask_seq.extend([meta_mask,] * count)
+        #scoop.logger.info("%s", meta_mask_seq)
         self.meta_mask = numpy.array(meta_mask_seq)
         
     def setupSettings(self):

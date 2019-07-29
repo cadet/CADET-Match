@@ -71,33 +71,10 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     abstolFraction = abstol * smallestTime
 
     headers = data.columns.values.tolist()
-
-    funcs = []
-
-    for sample in range(rows):
-        for component in headers[2:]:
-            start = data['Start'][sample]
-            stop = data['Stop'][sample]
-            value = data[component][sample]
-            func = score.value_function(value, abstolFraction)
-
-            funcs.append( (start, stop, int(component), value, func) )
-    temp['funcs'] = funcs
-    settings.count = len(funcs)
     return temp
 
 def headers(experimentName, feature):
-    data = pandas.read_csv(feature['csv'])
-    rows, cols = data.shape
-    #remove first two columns since those are the start and stop times
-    cols = cols - 2
-
-    total = rows * cols
-    data_headers = data.columns.values.tolist()
-
-    temp = []
-    for sample in range(rows):
-        for component in data_headers[2:]:
-            temp.append('%s_%s_Sample_%s_Component_%s' % (experimentName, feature['name'], sample, component))
+    name = "%s_%s" % (experimentName, feature['name'])
+    temp = ["%s_SSE" % name]
     return temp
 

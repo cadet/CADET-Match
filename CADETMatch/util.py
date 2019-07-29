@@ -100,6 +100,7 @@ def sobolGenerator(icls, cache, n):
         return []
 
 def calcMetaScores(scores, cache):
+    #scoop.logger.info("calcMetaScores %s %s", scores, cache.meta_mask)
     scores = numpy.array(scores)[cache.meta_mask]
     prod_score = product_score(scores)
     min_score = min(scores)
