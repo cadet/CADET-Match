@@ -7,6 +7,7 @@ from deap import algorithms
 import time
 import csv
 import pareto
+import scoop
 
 stallRate = 1.25
 progressRate = 0.75
@@ -222,9 +223,23 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 pickle.dump(cp, cp_file)
 
             if avg >= settings['stopAverage'] or bestMin >= settings['stopBest'] or stalled:
-                util.finish(cache)
-                util.graph_corner_process(cache, last=True)
-                return halloffame
+                break
+                #util.finish(cache)
+                #util.graph_corner_process(cache, last=True)
+                #return halloffame
+
+        if cache.finalGradRefinement:
+            gen = gen + 1
+            best_individuals = [cache.toolbox.individual_guess(i) for i in meta_hof]
+            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, best_individuals, cache, writer, csvfile, 
+                                                               grad_hof, meta_hof, gen, check_all=True, result_data=result_data)
+            if newChildren:
+                avg, bestMin, bestProd = util.averageFitness(newChildren, cache)
+                util.writeProgress(cache, gen, newChildren, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, 
+                                   sim_start, generation_start, result_data)
+                util.graph_process(cache, gen)
+                util.graph_corner_process(cache, last=False)
+
         util.finish(cache)
         util.graph_corner_process(cache, last=True)
         return halloffame

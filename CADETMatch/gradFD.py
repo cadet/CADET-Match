@@ -15,7 +15,7 @@ import scoop
 class GradientException(Exception):
     pass
 
-def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, generation, check_all=False):
+def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, generation, check_all=False, result_data=None):
     if check_all:
         checkOffspring = offspring
     else:
@@ -43,6 +43,8 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
 
             ind_meta = cache.toolbox.individualMeta(ind)
             ind_meta.fitness.values = util.calcMetaScores(fit, cache)
+
+            util.update_result_data(cache, ind, fit, result_data, results)
 
             if csv_line:
                 csv_lines.append([time.ctime(), save_name_base] + csv_line)

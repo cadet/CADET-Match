@@ -20,10 +20,11 @@
   "roundScores": -1,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "stallGenerations": 30,
+  "stallGenerations": 5,
   "normalizeOutput":1,
   "continueMCMC":0,
   "graphMetaTime": 600,
+  "finalGradRefinement": 1,
   "parameters": [
     {
       "transform": "norm_log",

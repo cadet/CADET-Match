@@ -791,14 +791,19 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                     hf["meta_score"][:] = data_meta
 
                 if len(grad_param):
-                    hf["grad_population"].resize((grad_param.shape[0]), axis = 0)
-                    hf["grad_population"][:] = grad_param
+                    if "grad_population" in hf:
+                        hf["grad_population"].resize((grad_param.shape[0]), axis = 0)
+                        hf["grad_population"][:] = grad_param
 
-                    hf["grad_population_transform"].resize((grad_param_transform.shape[0]), axis = 0)
-                    hf["grad_population_transform"][:] = grad_param_transform
+                        hf["grad_population_transform"].resize((grad_param_transform.shape[0]), axis = 0)
+                        hf["grad_population_transform"][:] = grad_param_transform
 
-                    hf["grad_score"].resize((grad_score.shape[0]), axis = 0)
-                    hf["grad_score"][:] = grad_score
+                        hf["grad_score"].resize((grad_score.shape[0]), axis = 0)
+                        hf["grad_score"][:] = grad_score
+                    else:
+                        hf.create_dataset('grad_population', data=grad_param, maxshape=(None, grad_param.shape[1] ))
+                        hf.create_dataset('grad_population_transform', data=grad_param_transform, maxshape=(None, grad_param_transform.shape[1] ))
+                        hf.create_dataset('grad_score', data=data_grad, maxshape=(None, data_grad.shape[1] ))
                 
                 if cache.fullTrainingData:
 

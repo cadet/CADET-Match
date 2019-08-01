@@ -126,6 +126,8 @@ class Cache:
 
         self.debugWrite = bool(self.settings.get('debugWrite', False))
 
+        self.finalGradRefinement = bool(self.settings.get('finalGradRefinement', False))
+
         if "MCMCpopulation" not in self.settings:
             self.settings['MCMCpopulation'] = self.settings['population']
 
@@ -240,8 +242,8 @@ class Cache:
 
             transform = parameter['transform']
 
-            parms, sensitivityOk = cache.transforms[transform].setupTarget(parameter)
-            parms.extend(parms)
+            sens_parms, sensitivityOk = cache.transforms[transform].setupTarget(parameter)
+            parms.extend(sens_parms)
 
         if sensitivityOk:
             self.target['sensitivities'] = parms
