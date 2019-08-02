@@ -1176,10 +1176,11 @@ def log_subprocess(name, ret):
 def finish(cache):
     graph_process(cache, "Last", last=True)
 
-    cwd = str(Path(__file__).parent)
-    ret = subprocess.run([sys.executable, 'video_spearman.py', str(cache.json_path)], 
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
-    log_subprocess('video_spearman.py', ret)
+    if cache.graphSpearman:
+        cwd = str(Path(__file__).parent)
+        ret = subprocess.run([sys.executable, 'video_spearman.py', str(cache.json_path)], 
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
+        log_subprocess('video_spearman.py', ret)
 
 def find_outliers(data, lower_percent=10, upper_percent=90):
     lb, ub = numpy.percentile(data, [lower_percent, upper_percent], 0)
