@@ -91,10 +91,12 @@ def gradSearch(x, json_path):
     try:
         x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
         #scores_start = fitness_sens(x, finished=1)
-        val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', bounds=(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE), 
-            gtol=1e-14, ftol=1e-5, xtol=1e-14, diff_step=1e-7, x_scale="jac")
+        val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', 
+                                           bounds=(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE), 
+                                           gtol=None, ftol=None, xtol=1e-6, x_scale="jac")
 
         #scores = fitness_sens(val.x, finished=1)
+        scoop.logger.info("gradSearch nfev=%s individual(%s) = %s", val.nfev, val.x, val.cost)
         return val
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt

@@ -105,7 +105,7 @@ def calcMetaScores(scores, cache):
     prod_score = product_score(scores)
     min_score = min(scores)
     mean_score = sum(scores)/len(scores)
-    norm_score = numpy.linalg.norm(scores)/numpy.sqrt(len(scores))
+    norm_score = numpy.sign(min_score) * numpy.linalg.norm(scores)/numpy.sqrt(len(scores))
     human = [prod_score, min_score, mean_score, norm_score]
     return human
 
@@ -843,7 +843,7 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
             population_product = numpy.prod(data)**(1.0/data.size)
             population_product_best = numpy.max(numpy.prod(data,1)**(1.0/data.shape[1]))
 
-            line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.3f \tBest: %.3f \tMinimum Score: %.3f \tBest: %.3f \tProduct Score: %.3f \tBest: %.3f'
+            line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.3g \tBest: %.3g \tMinimum Score: %.3g \tBest: %.3g \tProduct Score: %.3g \tBest: %.3g'
  
             if line_log:
                 scoop.logger.info(line_format, generation, len(population),

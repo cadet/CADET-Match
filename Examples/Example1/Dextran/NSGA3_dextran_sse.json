@@ -20,6 +20,7 @@
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 60,
+  "finalGradRefinement": 1,
   "parameters": [
     {
       "transform": "norm_log",

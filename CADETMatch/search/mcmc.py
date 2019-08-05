@@ -168,7 +168,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
         train_chain_stat = addChain(train_chain_stat, numpy.percentile(flatten(train_chain), [5, 50, 95], 0)[:, numpy.newaxis, :])
 
         converge_real = converge[~numpy.isnan(converge)]
-        scoop.logger.info('burn:  idx: %s accept: %.3f std: %.3f mean: %.3f converge: %.3f', generation, accept, 
+        scoop.logger.info('burn:  idx: %s accept: %.3g std: %.3g mean: %.3g converge: %.3g', generation, accept, 
                             numpy.std(converge_real), numpy.mean(converge_real), numpy.std(converge_real)/tol)
 
         generation += 1
