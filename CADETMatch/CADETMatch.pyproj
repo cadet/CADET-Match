@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda37-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"M:\ibt71\Parameter Estimation\Synthetic\Dextran\NSGA3_dextran_refine.json"  1</CommandLineArguments>
+    <CommandLineArguments>"M:\ibt71\Parameter Estimation\Synthetic\Dextran\Gradient_score_dextran.json"  1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>

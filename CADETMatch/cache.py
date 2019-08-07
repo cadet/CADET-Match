@@ -195,6 +195,8 @@ class Cache:
 
         self.score_headers = []
 
+        badScore = []
+
         for idx, experiment in enumerate(self.settings['experiments']):
             experimentName = experiment['name']
             experiment['headers'] = []
@@ -204,10 +206,12 @@ class Cache:
 
                     if self.scores[feature['type']].settings.meta_mask:
                         self.numGoals += len(temp)
-                    self.badScore = self.scores[feature['type']].settings.badScore
+                    badScore.append(self.scores[feature['type']].settings.badScore)
 
                     self.score_headers.extend(temp)
                     experiment['headers'].extend(temp)
+
+        self.badScore = min(badScore)
 
         self.headers.extend(self.score_headers)                      
         

@@ -89,6 +89,10 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
 def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
     """if there is no overlap between the simulation and the data there is no gradient to follow and these entries need to be skipped
     This only applies if the score is SSE or gradVector is True"""
+    if not cache.gradVector or (cache.gradVector and cache.badScore == 0):
+        scoop.logger.info("overlap restriction not necessary")
+        return map(list, checkOffspring)
+
     temp = cache.toolbox.map(cache.toolbox.evaluate, map(list, checkOffspring))
 
     temp_offspring = []
@@ -114,7 +118,8 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
         else:
             scoop.logger.info('removed %s for failure', ind)
 
-    scoop.logger.info("overlap okay offspring %s", temp_offspring)
+    if checkOffspring:
+        scoop.logger.info("overlap okay offspring %s", temp_offspring)
     return temp_offspring
     
 def gradSearch(x, json_path):
