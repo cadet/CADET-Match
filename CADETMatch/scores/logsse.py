@@ -21,7 +21,8 @@ def run(sim_data, feature):
 
     temp = [-numpy.log(util.sse(sim_data_values, exp_data_values)),]
 
-    return temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values), sim_data_values - exp_data_values, [-i for i in temp]
+    return (temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values), 
+            sim_time_values, sim_data_values, exp_data_values, [-i for i in temp])
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     return {}

@@ -41,7 +41,7 @@ def run(sim_data, feature):
 
     sse = util.sse(sim_data_zero, exp_data_zero)
 
-    data = [-sse,], sse, len(sim_data_zero), sim_data_zero - exp_data_zero, [sse,]
+    data = [-sse,], sse, len(sim_data_zero), sim_time_values, sim_data_zero, exp_data_zero, [sse,]
 
     return data
 

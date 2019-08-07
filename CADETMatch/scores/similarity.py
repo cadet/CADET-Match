@@ -24,7 +24,8 @@ def run(sim_data, feature):
     time_high, value_high = high
 
     temp = [score.pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]), feature['value_function'](value_high), feature['time_function'](time_high)]
-    return temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values), sim_data_values - exp_data_values, [1.0 - i for i in temp]
+    return (temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values), 
+            sim_time_values, sim_data_values, exp_data_values, [1.0 - i for i in temp])
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}

@@ -20,6 +20,10 @@ def run(sim_data, feature):
     numComponents = len(components)
     samplesPerComponent = feature['samplesPerComponent']
     multiplier = 1.0/samplesPerComponent
+    start = feature['start']
+    stop = feature['stop']
+
+    time_centers = (start + stop)/2.0
 
     times = simulation.root.output.solution.solution_times
 
@@ -64,12 +68,19 @@ def run(sim_data, feature):
 
     temp = [scores[comp] for comp in components]
     
-    return temp, util.sse(numpy.array(sim_values), numpy.array(exp_values)), len(sim_values), numpy.array(sim_values) - numpy.array(exp_values), [1.0 - i for i in temp]
+    return (temp, util.sse(numpy.array(sim_values), numpy.array(exp_values)), len(sim_values), 
+        time_centers, numpy.array(sim_values), numpy.array(exp_values), [1.0 - i for i in temp])
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     data = pandas.read_csv(feature['csv'])
     rows, cols = data.shape
+
+    start = numpy.array(data.iloc[:, 0])
+    stop = numpy.array(data.iloc[:, 1])
+
+    temp['start'] = start
+    temp['stop'] = stop
 
     headers = data.columns.values.tolist()
 

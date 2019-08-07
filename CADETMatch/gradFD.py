@@ -20,7 +20,9 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
         checkOffspring = offspring
     else:
         checkOffspring = (ind for ind in offspring if util.product_score(ind.fitness.values) > gradCheck)
-    newOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad, map(list, checkOffspring))
+    checkOffspring = map(list, checkOffspring)
+    checkOffspring = filterOverlapArea(cache, checkOffspring)
+    newOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad, checkOffspring)
 
     temp = []
     #failed = []
@@ -59,7 +61,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
                     cache.lastProgressGeneration = generation
 
             #failed.append(0)
-            ind.fitness.values = fit
+            #ind.fitness.values = fit
             temp.append(ind)
     
     if temp:
@@ -84,26 +86,54 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
 
     return gradCheck, temp
 
+def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
+    """if there is no overlap between the simulation and the data there is no gradient to follow and these entries need to be skipped
+    This only applies if the score is SSE or gradVector is True"""
+    temp = cache.toolbox.map(cache.toolbox.evaluate, checkOffspring)
+
+    temp_offspring = []
+
+    for ind, (fit, csv_line, results) in zip(checkOffspring, temp):
+        temp_area_total = 0.0
+        temp_area_overlap = 0.0
+        if results is not None:
+            for exp in results.values():
+                sim_times = exp['sim_time']
+                sim_values = exp['sim_value']
+                exp_values = exp['exp_value']
+
+                for sim_time, sim_value, exp_value in zip(sim_times, sim_values, exp_values):
+                    temp_area_total += numpy.trapz(exp_value, sim_time)
+                    temp_area_overlap += numpy.trapz(numpy.min([sim_value, exp_value], 0), sim_time)
+
+            percent = temp_area_overlap / temp_area_total
+            if percent > cutoff:
+                temp_offspring.append(ind)
+            else:
+                scoop.logger.info('removed %s for insufficient overlap in gradient descent', ind)
+        else:
+            scoop.logger.info('removed %s for failure', ind)
+
+    return temp_offspring
+    
 def gradSearch(x, json_path):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path)
-
+    
     try:
         x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
-        #scores_start = fitness_sens(x, finished=1)
         val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', 
                                            bounds=(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE), 
-                                           gtol=None, ftol=None, xtol=1e-6, x_scale="jac")
-
+                                           gtol=None, ftol=None, xtol=1e-8, x_scale="jac")
+        
         #scores = fitness_sens(val.x, finished=1)
-        scoop.logger.info("gradSearch nfev=%s individual(%s) = %s", val.nfev, val.x, val.cost)
         return val
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
         return None
 
 def fitness_sens_grad(individual, finished=0):
-    return fitness_sens(individual, finished)
+    return numpy.sum(fitness_sens(individual, finished))
 
 def fitness_sens(individual, finished=1):
     minimize = []

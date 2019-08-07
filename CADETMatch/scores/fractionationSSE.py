@@ -20,7 +20,11 @@ settings.failure = [0.0] * settings.count, 1e6, 1, [], [1.0] * settings.count
 def run(sim_data, feature):
     "similarity, value, start stop"
     simulation = sim_data['simulation']
+    start = feature['start']
+    stop = feature['stop']
     funcs = feature['funcs']
+
+    time_center = (start + stop)/2.0
 
     times = simulation.root.output.solution.solution_times
 
@@ -60,12 +64,18 @@ def run(sim_data, feature):
 
     sse = util.sse(numpy.array(sim_values), numpy.array(exp_values))
 
-    return [-sse,], sse, len(sim_values), numpy.array(sim_values) - numpy.array(exp_values), [sse,]
+    return [-sse,], sse, len(sim_values), time_center, numpy.array(sim_values), numpy.array(exp_values), [sse,]
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     data = pandas.read_csv(feature['csv'])
     rows, cols = data.shape
+
+    start = numpy.array(data.iloc[:, 0])
+    stop = numpy.array(data.iloc[:, 1])
+
+    temp['start'] = start
+    temp['stop'] = stop
 
     smallestTime = min(data['Stop'] - data['Start'])
     abstolFraction = abstol * smallestTime

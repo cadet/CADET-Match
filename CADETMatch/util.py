@@ -345,6 +345,9 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         temp['individual'] = tuple(individual)
     temp['diff'] = []
     temp['minimize'] = []
+    temp['sim_time'] = []
+    temp['sim_value'] = []
+    temp['exp_value'] = []
 
     for feature in experiment['features']:
         start = float(feature['start'])
@@ -353,13 +356,17 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         featureName = feature['name']
 
         if featureType in cache.scores:
-            scores, sse, sse_count, diff, minimize = cache.scores[featureType].run(temp, target[experiment['name']][featureName])
+            scores, sse, sse_count, sim_time, sim_value, exp_value, minimize = cache.scores[featureType].run(temp, target[experiment['name']][featureName])
+            diff = sim_value - exp_value
  
         temp['scores'].extend(scores)
         temp['error'] += sse
         temp['error_count'] += sse_count
         temp['diff'].extend(diff)
         temp['minimize'].extend(minimize)
+        temp['sim_time'].append(sim_time)
+        temp['sim_value'].append(sim_value)
+        temp['exp_value'].append(exp_value)
 
     return temp
 

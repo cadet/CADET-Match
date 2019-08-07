@@ -8,7 +8,7 @@
   "stopBest": 60.0,
   "gradCheck": 10.0,
   "gradVector": 1,
-  "searchMethod": "Multistart",
+  "searchMethod": "NSGA3",
   "mutationRate": 0.1,
   "crossoverRate": 0.9,
   "generations": 1000,
@@ -49,7 +49,7 @@
       "features": [
         {
             "name": "Pulse",
-            "type": "SSE"
+            "type": "DextranShape"
         }
       ]
     }

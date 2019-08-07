@@ -52,7 +52,8 @@ def run(sim_data, feature):
             feature['valueFunction'](angle),
             ]
 
-    data = temp, util.sse(sim_data_zero, exp_data_zero), len(sim_data_zero), sim_data_zero - exp_data_zero, [1.0 - i for i in temp]
+    data = (temp, util.sse(sim_data_zero, exp_data_zero), len(sim_data_zero), 
+            sim_time_values, sim_data_zero, exp_data_zero, [1.0 - i for i in temp])
 
     return data
 

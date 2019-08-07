@@ -17,7 +17,11 @@ def run(sim_data, feature):
     components = feature['components']
     numComponents = len(components)
     samplesPerComponent = feature['samplesPerComponent']
+    start = feature['start']
+    stop = feature['stop']
     multiplier = 1.0/samplesPerComponent
+
+    time_centers = (start + stop)/2.0
 
     times = simulation.root.output.solution.solution_times
 
@@ -49,7 +53,8 @@ def run(sim_data, feature):
     sim_data['graph_exp'] = graph_exp
     sim_data['graph_sim'] = graph_sim
 
-    return scores, util.sse(numpy.array(sim_values_sse), numpy.array(exp_values_sse)), len(sim_values_sse), numpy.array(sim_values_sse) - numpy.array(exp_values_sse), [1.0 - i for i in scores]
+    return (scores, util.sse(numpy.array(sim_values_sse), numpy.array(exp_values_sse)), len(sim_values_sse), 
+        time_centers, numpy.array(sim_values_sse), numpy.array(exp_values_sse), [1.0 - i for i in scores])
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
@@ -62,6 +67,9 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     stop = numpy.array(data.iloc[:, 1])
 
     time_center = (start + stop)/2.0
+
+    temp['start'] = start
+    temp['stop'] = stop
 
     smallestTime = min(data['Stop'] - data['Start'])
     abstolFraction = abstol * smallestTime
