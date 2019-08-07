@@ -20,7 +20,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
         checkOffspring = offspring
     else:
         checkOffspring = (ind for ind in offspring if util.product_score(ind.fitness.values) > gradCheck)
-    checkOffspring = map(list, checkOffspring)
+    #checkOffspring = list(checkOffspring)
     checkOffspring = filterOverlapArea(cache, checkOffspring)
     newOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad, checkOffspring)
 
@@ -89,11 +89,11 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
 def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
     """if there is no overlap between the simulation and the data there is no gradient to follow and these entries need to be skipped
     This only applies if the score is SSE or gradVector is True"""
-    temp = cache.toolbox.map(cache.toolbox.evaluate, checkOffspring)
+    temp = cache.toolbox.map(cache.toolbox.evaluate, map(list, checkOffspring))
 
     temp_offspring = []
 
-    for ind, (fit, csv_line, results) in zip(checkOffspring, temp):
+    for ind, (fit, csv_line, results) in zip(map(list, checkOffspring), temp):
         temp_area_total = 0.0
         temp_area_overlap = 0.0
         if results is not None:
@@ -114,6 +114,7 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
         else:
             scoop.logger.info('removed %s for failure', ind)
 
+    scoop.logger.info("overlap okay offspring %s", temp_offspring)
     return temp_offspring
     
 def gradSearch(x, json_path):
@@ -133,7 +134,7 @@ def gradSearch(x, json_path):
         return None
 
 def fitness_sens_grad(individual, finished=0):
-    return numpy.sum(fitness_sens(individual, finished))
+    return fitness_sens(individual, finished)
 
 def fitness_sens(individual, finished=1):
     minimize = []
