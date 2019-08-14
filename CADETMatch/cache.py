@@ -79,6 +79,7 @@ class Cache:
         self.WORST = [self.badScore] * self.numGoals
 
         self.settings['transform'] = self.transform
+        self.settings['grad_transform'] = self.grad_transform
 
         self.correct = None
         if "correct" in cache.settings:
@@ -367,17 +368,20 @@ class Cache:
         self.MIN_VALUE_GRAD = []
         self.MAX_VALUE_GRAD = []
         self.transform = []
+        self.grad_transform = []
 
         for parameter in self.settings['parameters']:
             transform = parameter['transform']
             minValues, maxValues = self.transforms[transform].getBounds(parameter)
             minGradValues, maxGradValues = self.transforms[transform].getGradBounds(parameter)
             transforms = self.transforms[transform].transform(parameter)
+            grad_transforms = self.transforms[transform].grad_transform(parameter)
 
             if minValues:
                 self.MIN_VALUE.extend(minValues)
                 self.MAX_VALUE.extend(maxValues)
                 self.transform.extend(transforms)
+                self.grad_transform.extend(grad_transforms)
                 self.MIN_VALUE_GRAD.extend(minGradValues)
                 self.MAX_VALUE_GRAD.extend(maxGradValues)
 

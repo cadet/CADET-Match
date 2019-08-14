@@ -17,6 +17,8 @@ def transform(parameter):
 
     return [trans,]
 
+grad_transform = transform
+
 def untransform(seq, cache, parameter):
     minValue = numpy.log(parameter['min'])
     maxValue = numpy.log(parameter['max'])
@@ -26,6 +28,9 @@ def untransform(seq, cache, parameter):
     values = [numpy.exp(values[0]),]
     headerValues = values
     return values, headerValues
+
+def grad_untransform(seq, cache, parameter):
+    return untransform(seq, cache,parameter)[0]
 
 def untransform_matrix(matrix, cache, parameter):
     minValue = numpy.log(parameter['min'])

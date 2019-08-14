@@ -21,7 +21,7 @@
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 5,
-  "normalizeOutput":1,
+  "normalizeOutput":0,
   "continueMCMC":0,
   "graphMetaTime": 600,
   "finalGradRefinement": 1,
@@ -70,8 +70,8 @@
         "unit":1,
         "comps":[0],
         "csv":"dextran_pulse.csv",
-        "start":250,
-        "stop":450
+        "start":0,
+        "stop":500
         }
       ],
       "features": [

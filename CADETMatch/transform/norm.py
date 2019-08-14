@@ -16,6 +16,8 @@ def transform(parameter):
 
     return [trans,]
 
+grad_transform = transform
+
 def untransform(seq, cache, parameter):
     minValue = parameter['min']
     maxValue = parameter['max']
@@ -23,6 +25,9 @@ def untransform(seq, cache, parameter):
     values = [(maxValue - minValue) * seq[0] + minValue,]
     headerValues = values
     return values, headerValues
+
+def grad_untransform(seq, cache, parameter):
+    return untransform(seq, cache,parameter)[0]
 
 def untransform_matrix(matrix, cache, parameter):
     minValue = parameter['min']

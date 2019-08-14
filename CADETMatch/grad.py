@@ -132,14 +132,23 @@ def gradSearch(x, json_path):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path)
 
-    jac_cache = {}
+    jac_cache = []
 
     #try:
     scoop.logger.info("gradSearch least_squares")
-    return scipy.optimize.least_squares(fitness_sens_grad, x, jac=jacobian, method='trf', 
+
+    x = util.convert_individual_grad(x, cache.cache)
+
+    result = scipy.optimize.least_squares(fitness_sens_grad, x, jac=jacobian, method='trf', 
                                            bounds=(cache.cache.MIN_VALUE_GRAD, cache.cache.MAX_VALUE_GRAD), 
-                                           gtol=1e-12, ftol=1e-12, xtol=1e-12, x_scale="jac",
-                                           kwargs={'jac_cache':jac_cache}, verbose=2)
+                                           gtol=None, ftol=None, xtol=1e-10, x_scale="jac",
+                                           kwargs={'jac_cache':jac_cache}, verbose=0)
+
+
+    scoop.logger.info("start: %s  stop: %s distance: %s  sse: %s", x, result.x, numpy.linalg.norm(x - result.x), numpy.sum(result.fun**2))
+
+    result.x = util.convert_individual_inverse_grad(result.x, cache.cache)
+    return result
     #except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
     #    scoop.logger.error("Gradient Failure", exc_info=True)
@@ -149,6 +158,7 @@ def gradSearch(x, json_path):
     #    return None
 
 def fitness_sens_grad(individual, jac_cache, finished=0):
+    individual = util.convert_individual_inverse_grad(individual, cache.cache)
     return fitness_sens(individual, jac_cache, finished)
 
 def fitness_sens(individual, jac_cache, finished=1):
@@ -177,12 +187,18 @@ def fitness_sens(individual, jac_cache, finished=1):
    
     
 
-    jac_cache[tuple(individual)] = numpy.concatenate(jac_temp, 0)
+    #jac_cache[tuple(individual)] = numpy.concatenate(jac_temp, 0)
+    jac_cache.append(numpy.concatenate(jac_temp, 0))
 
-    cond = numpy.linalg.cond(jac_cache[tuple(individual)])
+    #cond = numpy.linalg.cond(jac_cache[tuple(individual)])
+
+    cond = numpy.linalg.cond(jac_cache[0])
+
+    #scoop.logger.info('condition number %s = %s', individual, cond)
 
     #need to minimize
     diff = numpy.array(diff)
+    sse = numpy.sum(diff**2)
     return diff
 
 def getDiff(result, experiment):
@@ -214,7 +230,12 @@ def getDiff(result, experiment):
     
 
 def jacobian(x, jac_cache):
-    return jac_cache[tuple(x)]
+    return jac_cache.pop()
+    #x = util.convert_individual_inverse_grad(x, cache.cache)
+    #try:
+    #    return jac_cache[tuple(x)]
+    #except KeyError:
+    #    scoop.logger.info('keyerror %s %s', repr(x), [repr(key) for key in jac_cache.keys()])
 
 def saveExperimentsSens(save_name_base, settings, target, results):
     return util.saveExperiments(save_name_base, settings, target, results, settings['resultsDirGrad'], '%s_%s_GRAD.h5')

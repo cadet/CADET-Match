@@ -232,12 +232,26 @@ def convert_individual(individual, cache):
         transform = parameter['transform']
         count = cache.transforms[transform].count
         seq = individual[idx:idx+count]
-        values, headerValues = cache.transforms[transform].untransform(seq, cache, parameter, False)
+        values, headerValues = cache.transforms[transform].untransform(seq, cache, parameter)
         cadetValues.extend(values)
         cadetValuesExtended.extend(headerValues)
         idx += count
 
     return cadetValues, cadetValuesExtended
+
+def convert_individual_grad(individual, cache):
+    cadetValues = []
+
+    idx = 0
+    for parameter in cache.settings['parameters']:
+        transform = parameter['transform']
+        count = cache.transforms[transform].count
+        seq = individual[idx:idx+count]
+        values = cache.transforms[transform].grad_untransform(seq, cache, parameter)
+        cadetValues.extend(values)
+        idx += count
+
+    return cadetValues
 
 def convert_population(population, cache):
     cadetValues = numpy.zeros(population.shape)
@@ -256,6 +270,9 @@ def convert_population(population, cache):
 
 def convert_individual_inverse(individual, cache):
     return numpy.array([f(v) for f, v in zip(cache.settings['transform'], individual)])
+
+def convert_individual_inverse_grad(individual, cache):
+    return numpy.array([f(v) for f, v in zip(cache.settings['grad_transform'], individual)])
 
 def set_simulation(individual, simulation, settings, cache, experiment):
     scoop.logger.debug("individual %s", individual)
