@@ -18,6 +18,7 @@ import csv
 import time
 from cadet import Cadet
 import scoop
+import cache
 
 class ConditionException(Exception):
     pass
@@ -26,7 +27,9 @@ class GradientException(Exception):
     pass
 
 
-def setupTemplates(settings, target):
+def setupTemplates(cache):
+    settings = cache.settings
+    target = cache.target
     parms = target['sensitivities']
 
     for experiment in settings['experiments']:
@@ -61,125 +64,162 @@ def setupTemplates(settings, target):
         experiment['simulationSens'] = simulationSens
 
 
-def search(gradCheck, offspring, toolbox):
-    checkOffspring = (ind for ind in offspring if min(ind.fitness.values) > gradCheck)
-    newOffspring = toolbox.map(gradSearch, checkOffspring)
-
+def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, generation, check_all=False, result_data=None):
+    if check_all:
+        checkOffspring = offspring
+    else:
+        checkOffspring = (ind for ind in offspring if util.product_score(ind.fitness.values) > gradCheck)
+    checkOffspring = filterOverlapArea(cache, checkOffspring)
+    newOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad, checkOffspring)
+        
     temp = []
-    failed = []
+    csv_lines = []
+    meta_csv_lines = []
+
     for i in newOffspring:
         if i is None:
-            failed.append(1)
+            pass
         elif i.success:
-            a = toolbox.individual_guess(i.x)
-            fit = toolbox.evaluate(a)
-            failed.append(0)
-            a.fitness.values = fit
-            temp.append(a)
+            ind = cache.toolbox.individual_guess(i.x)
+            fit, csv_line, results = cache.toolbox.evaluate(ind)
+
+            ind.fitness.values = fit
+
+            csv_line[0] = 'GRAD'
+
+            save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
+
+            ind_meta = cache.toolbox.individualMeta(ind)
+            ind_meta.fitness.values = util.calcMetaScores(fit, cache)
+
+            util.update_result_data(cache, ind, fit, result_data, results)
+
+            if csv_line:
+                csv_lines.append([time.ctime(), save_name_base] + csv_line)
+                onFront = util.updateParetoFront(grad_hof, ind, cache)
+                if onFront and not cache.metaResultsOnly:
+                    util.processResultsGrad(save_name_base, ind, cache, results)
+
+                onFrontMeta = util.updateParetoFront(meta_hof, ind_meta, cache)
+                if onFrontMeta:
+                    meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
+                    util.processResultsMeta(save_name_base, ind, cache, results)
+                    cache.lastProgressGeneration = generation
+
+            temp.append(ind)
     
     if temp:
-        avg, bestMin = util.averageFitness(temp, cache)
-        if 0.9 * bestMin > gradCheck:
-            gradCheck = 0.9 * bestMin
-        #if len(temp) > 0 or all(failed):
-        #    gradCheck = (1-gradCheck)/2.0 + gradCheck
+        avg, bestMin, bestProd = util.averageFitness(temp, cache)
+        if 0.9 * bestProd > gradCheck:
+            gradCheck = 0.9 * bestProd
+
+    writer.writerows(csv_lines)
+    
+    #flush before returning
+    csvfile.flush()
+
+    path_meta_csv = cache.settings['resultsDirMeta'] / 'results.csv'
+    with path_meta_csv.open('a', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
+        writer.writerows(meta_csv_lines)
+
+    util.cleanupFront(cache, None, meta_hof, grad_hof)
+    util.writeMetaFront(cache, meta_hof, path_meta_csv)
+
     return gradCheck, temp
 
-def gradSearch(x):
-    cache = {}
-    try:
-        return scipy.optimize.least_squares(fitness_sens, x, jac=jacobian, method='trf', bounds=(evo.MIN_VALUE, evo.MAX_VALUE), 
-                                            kwargs={'cache':cache}, x_scale='jac')
-    except GradientException:
+def gradSearch(x, json_path):
+    if json_path != cache.cache.json_path:
+        cache.cache.setup(json_path)
+
+    jac_cache = {}
+
+    #try:
+    scoop.logger.info("gradSearch least_squares")
+    return scipy.optimize.least_squares(fitness_sens_grad, x, jac=jacobian, method='trf', 
+                                           bounds=(cache.cache.MIN_VALUE_GRAD, cache.cache.MAX_VALUE_GRAD), 
+                                           gtol=1e-12, ftol=1e-12, xtol=1e-12, x_scale="jac",
+                                           kwargs={'jac_cache':jac_cache}, verbose=2)
+    #except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
-        scoop.logger.error("Gradient Failure", exc_info=True)
-        return None
-    except ConditionException:
-        scoop.logger.error("Condition Failure", exc_info=True)
-        return None
+    #    scoop.logger.error("Gradient Failure", exc_info=True)
+    #    return None
+    #except ConditionException:
+    #    scoop.logger.error("Condition Failure", exc_info=True)
+    #    return None
 
-def jacobian(x, cache):
-    jac = numpy.concatenate(cache[tuple(x)], 1)
-    return jac.transpose()
+def fitness_sens_grad(individual, jac_cache, finished=0):
+    return fitness_sens(individual, jac_cache, finished)
 
-def fitness_sens(individual, cache):
-    scoop.logger.debug('Gradient Running for %s', individual)
-    scores = []
+def fitness_sens(individual, jac_cache, finished=1):
+    minimize = []
     error = 0.0
 
+    diff = []
+
+    jac_temp = []
+
     results = {}
-    diffs = []
-    cache[tuple(individual)] = []
-    for experiment in evo.settings['experiments']:
-        result = runExperimentSens(individual, experiment, evo.settings, evo.target, cache[tuple(individual)])
+    for experiment in cache.cache.settings['experiments']:
+        result = runExperimentSens(individual, experiment, cache.cache.settings, cache.cache.target, cache.cache)
         if result is not None:
+            jac = getJacobianSimulation(result['simulation'], experiment)
+            jac_temp.append(jac)
             results[experiment['name']] = result
-            scores.extend(results[experiment['name']]['scores'])
-            error += results[experiment['name']]['error']
-            diffs.append(result['diff'])
+            minimize.extend(result['minimize'])
+            error += result['error']
+
+            #need to get the right diff for SSE
+            temp_diff = getDiff(result, experiment)
+            diff.extend(temp_diff)
         else:
             raise GradientException("Gradient caused simulation failure, aborting")
-
-    #need
-
-    #human scores
-    humanScores = numpy.concatenate([util.calcMetaScores(scores, cache), [-error,]])
-
-    #save
-    keep_result = 1
-        
-    #flip sign of SSE for writing out to file
-    humanScores[-1] = -1 * humanScores[-1]
-
-    #generate save name
-    save_name_base = hashlib.md5(str(individual).encode('utf-8', 'ignore')).hexdigest()
-
-    for result in results.values():
-        if result['cadetValues']:
-            cadetValues = result['cadetValues']
-            break
-
-    #generate csv
-    path = Path(evo.settings['resultsDirBase'], evo.settings['CSV'])
-    with path.open('a', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
-        writer.writerow([time.ctime(), save_name_base, 'GRAD', numpy.linalg.cond(jacobian(tuple(individual), cache))] + ["%.5g" % i for i in cadetValues] + ["%.5g" % i for i in scores] + list(humanScores)) 
-
-    notDuplicate = saveExperimentsSens(save_name_base, evo.settings, evo.target, results)
-    if notDuplicate:
-        plotExperimentsSens(save_name_base, evo.settings, evo.target, results)
+   
     
-    cond = numpy.linalg.cond(jacobian(tuple(individual), cache))
-    if cond > 1000:
-        raise ConditionException("Condition Number is %s. This location is poorly conditioned. Aborting gradient search" % cond)
+
+    jac_cache[tuple(individual)] = numpy.concatenate(jac_temp, 0)
+
+    cond = numpy.linalg.cond(jac_cache[tuple(individual)])
+
+    #need to minimize
+    diff = numpy.array(diff)
+    return diff
+
+def getDiff(result, experiment):
+    gradsetup = experiment['gradsetup']
+    sim = result['simulation']
+    solution = sim.root.output.solution
+    times = solution.solution_times
     
-    return numpy.concatenate(diffs, 0)
+
+    sim_value = []
+    exp_value = []
+    for grad in gradsetup:
+        selected = (times >= grad['start']) & (times <= grad['stop'])
+        temp = [solution["unit_%03d" % grad['unit']]["solution_outlet_comp_%03d" % comp] for comp in grad['comps']]
+        sim_value.append(numpy.sum(numpy.array(temp), axis=0)[selected])
+
+        data = numpy.loadtxt(grad['csv'], delimiter=',')
+
+        time = data[:, 0]
+        value = data[:, 1]
+        selected = (time >= grad['start']) & (time <= grad['stop'])
+        exp_value.append(value[selected])
+
+
+    sim_value = numpy.concatenate(sim_value, axis=0)
+    exp_value = numpy.concatenate(exp_value, axis=0)
+    diff_value = sim_value - exp_value
+    return diff_value
+    
+
+def jacobian(x, jac_cache):
+    return jac_cache[tuple(x)]
 
 def saveExperimentsSens(save_name_base, settings, target, results):
-    for experiment in settings['experiments']:
-        experimentName = experiment['name']
-        src = results[experimentName]['path']
-        dst = Path(settings['resultsDirGrad'], '%s_%s_GRAD.h5' % (save_name_base, experimentName))
+    return util.saveExperiments(save_name_base, settings, target, results, settings['resultsDirGrad'], '%s_%s_GRAD.h5')
 
-        if dst.is_file():  #File already exists don't try to write over it
-            return False
-        else:
-            shutil.copy(src, bytes(dst))
-
-            with h5py.File(dst, 'a') as h5:
-                scoreGroup = h5.create_group("score")
-
-                for (header, score) in zip(experiment['headers'], results[experimentName]['scores']):
-                    scoreGroup.create_dataset(header, data=numpy.array(score, 'f8'))
-    return True
-
-def plotExperimentsSens(save_name_base, settings, target, results):
-    util.plotExperiments(save_name_base, settings, target, results, settings['resultsDirGrad'], '%s_%s_GRAD.png')
-
-def runExperimentSens(individual, experiment, settings, target, jac):
-    handle, path = tempfile.mkstemp(suffix='.h5')
-    os.close(handle)
-
+def runExperimentSens(individual, experiment, settings, target, cache):
     if 'simulationSens' not in experiment:
         templatePath = Path(settings['resultsDirMisc'], "template_%s_sens.h5" % experiment['name'])
         templateSim = Cadet()
@@ -187,117 +227,57 @@ def runExperimentSens(individual, experiment, settings, target, jac):
         templateSim.load()
         experiment['simulationSens'] = templateSim
 
+    return util.runExperiment(individual, experiment, settings, target, experiment['simulationSens'], float(experiment['timeout']), cache)
 
-    simulation = Cadet(experiment['simulationSens'].root)
-    simulation.filename = path.as_posix()
-
-    simulation.root.input.solver.nthreads = 1
-    cadetValues, cadetValuesKEQ = util.set_simulation(individual, simulation, evo.settings, experiment)
-
-    simulation.save()
-
-    try:
-        simulation.run(timeout = experiment['timeout'] * len(target['sensitivities']))
-    except subprocess.TimeoutExpired:
-        scoop.logger.warn("Simulation Timed Out %s", individual)
-        os.remove(path)
-        return None
-
-    #read sim data
-    simulation.load()
-    os.remove(path)
-
-    try:
-        #get the solution times
-        times = simulation.root.output.solution.solution_times
-    except KeyError:
-        #sim must have failed
-        scoop.logger.error("%s sim must have failed %s", individual, path)
-        return None
-
-    scoop.logger.debug("Everything ran fine")
-
-    gradient_components = experiment['gradient']['components']
-    gradient_CSV = experiment['gradient']['CSV']
-    gradient_stop = experiment['gradient']['stop']
-    gradient_start = experiment['gradient']['start']
-
-    if len(gradiegradient_componentsnt_CSV) > 1 and len(gradient_CSV) == 1:
-        combine_components = True
-    else:
-        combine_components = False
-
-    selected = (times >= gradient_start) & (times <= gradient_stop)
-
+def getJacobianSimulation(sim, experiment):
     #write out jacobian to jac
-    temp = []
-    sens = simulation.root.output.sensitivity
-    for idx, parm in enumerate( target['sensitivities']):
-        name, unit, comp, bound = parm
-        #-1 means comp independent but the entry is still stored in comp 0
-        if comp == -1:
-            comp = 0
+    gradsetup = experiment['gradsetup']
+    params = len(cache.cache.target['sensitivities'])
+    sens = sim.root.output.sensitivity
+    times = sim.root.output.solution.solution_times
 
-        temp.append([sens["param_%03d" % idx]["unit_%03d" % unit]["sens_column_outlet_comp_%03d" % comp]])
+    jacobians = []
+    for grad in gradsetup:
+        temp_jac = []
+        selected = (times >= grad['start']) & (times <= grad['stop'])
+        for idx in range(params):
+            temp = [sens["param_%03d" % idx]["unit_%03d" % grad['unit']]["sens_outlet_comp_%03d" % comp] for comp in grad['comps']]
+            temp_jac.append(numpy.sum(numpy.array(temp), axis=0))
+        jacobian = numpy.squeeze(numpy.array(temp_jac)).T
+        jacobian = jacobian[selected,:]
+        jacobians.append(jacobian)
+    
+    jacobian = numpy.concatenate(jacobians, axis=0)
+    return jacobian
 
-    temp = transform(temp, target, settings, cadetValues)
-    jacobian = numpy.array(temp)
-    jac.append(numpy.array(temp))
+def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
+    """if there is no overlap between the simulation and the data there is no gradient to follow and these entries need to be skipped
+    This only applies if the score is SSE or gradVector is True"""
+    temp = cache.toolbox.map(cache.toolbox.evaluate, map(list, checkOffspring))
 
-    temp = {}
-    temp['time'] = times
-    if isinstance(experiment['isotherm'], list):
-        temp['value'] = numpy.sum([numpy.array(h5[i]) for i in experiment['isotherm']], 0)
-    else:
-        temp['value'] = numpy.array(h5[experiment['isotherm']])
-    temp['path'] = path
-    temp['scores'] = []
-    temp['error'] = 0.0
-    temp['cond'] = numpy.linalg.cond(jacobian, None)
-    temp['cadetValues'] = cadetValues
-    temp['simulation'] = simulation
+    temp_offspring = []
 
-    for feature in experiment['features']:
-        start = feature['start']
-        stop = feature['stop']
-        featureType = feature['type']
-        featureName = feature['name']
+    for ind, (fit, csv_line, results) in zip(map(list, checkOffspring), temp):
+        temp_area_total = 0.0
+        temp_area_overlap = 0.0
+        if results is not None:
+            for exp in results.values():
+                sim_times = exp['sim_time']
+                sim_values = exp['sim_value']
+                exp_values = exp['exp_value']
 
-        if featureType in ('similarity', 'similarityDecay'):
-            scores, sse = score.scoreSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
-        elif featureType in ('similarityCross', 'similarityCrossDecay'):
-            scores, sse = score.scoreSimilarityCrossCorrelate(temp, target[experiment['name']], target[experiment['name']][featureName])
-        elif featureType == 'derivative_similarity':
-            scores, sse = score.scoreDerivativeSimilarity(temp, target[experiment['name']], target[experiment['name']][featureName])
-        elif featureType == 'curve':
-            scores, sse = score.scoreCurve(temp, target[experiment['name']], target[experiment['name']][featureName])
-        elif featureType == 'breakthrough':
-            scores, sse = score.scoreBreakthrough(temp, target[experiment['name']], target[experiment['name']][featureName])
-        elif featureType == 'breakthroughCross':
-            scores, sse = score.scoreBreakthroughCross(temp, target[experiment['name']], target[experiment['name']][featureName])
-        elif featureType == 'dextrane':
-            scores, sse = score.scoreDextrane(temp, target[experiment['name']], target[experiment['name']][featureName])
-        temp['scores'].extend(scores)
-        temp['error'] += sse
+                for sim_time, sim_value, exp_value in zip(sim_times, sim_values, exp_values):
+                    temp_area_total += numpy.trapz(exp_value, sim_time)
+                    temp_area_overlap += numpy.trapz(numpy.min([sim_value, exp_value], 0), sim_time)
 
-    return temp
+            percent = temp_area_overlap / temp_area_total
+            if percent > cutoff:
+                temp_offspring.append(ind)
+            else:
+                scoop.logger.info('removed %s for insufficient overlap in gradient descent', ind)
+        else:
+            scoop.logger.info('removed %s for failure', ind)
 
-def transform(tempJac, target, settings, cadetValues):
-    jac = []
-
-    # (name, unit, comp, bound)
-    idx = 0
-    for parameter in settings['parameters']:
-        transform = parameter['transform']
-
-        if transform == 'keq':
-            for bound in parameter['bound']:
-                jac.append(tempJac[idx+1] * cadetValues[idx+1] + cadetValues[idx] * tempJac[idx])   
-                jac.append(-tempJac[idx+1] * cadetValues[idx+1])   
-                idx += 2
-
-        elif transform == "log":
-            for bound in parameter['bound']:
-                jac.append(tempJac[idx] * cadetValues[idx])
-                idx += 1
-    return jac
+    if checkOffspring:
+        scoop.logger.info("overlap okay offspring %s", temp_offspring)
+    return temp_offspring

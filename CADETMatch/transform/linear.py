@@ -18,7 +18,7 @@ def transform(parameter):
 
     return [trans_a, trans_b]
 
-def untransform(seq, cache, parameter, fullPrecision=False):
+def untransform(seq, cache, parameter):
     values = [seq[0], seq[1]]
     headerValues = values
     return values, headerValues
@@ -27,8 +27,8 @@ def untransform_matrix(matrix, cache, parameter):
     values = numpy.array(matrix)
     return values
 
-def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
-    values, headerValues = untransform(seq, cache, parameter, fullPrecision)
+def setSimulation(sim, parameter, seq, cache, experiment):
+    values, headerValues = untransform(seq, cache, parameter)
 
     if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
         location = parameter['location']

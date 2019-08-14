@@ -20,12 +20,10 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
         checkOffspring = offspring
     else:
         checkOffspring = (ind for ind in offspring if util.product_score(ind.fitness.values) > gradCheck)
-    #checkOffspring = list(checkOffspring)
     checkOffspring = filterOverlapArea(cache, checkOffspring)
     newOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad, checkOffspring)
 
     temp = []
-    #failed = []
     csv_lines = []
     meta_csv_lines = []
 
@@ -176,4 +174,4 @@ def runExperimentSens(individual, experiment, settings, target, cache):
         templateSim.load()
         experiment['simulationSens'] = templateSim
 
-    return util.runExperiment(individual, experiment, settings, target, experiment['simulationSens'], float(experiment['timeout']), cache, fullPrecision=True)
+    return util.runExperiment(individual, experiment, settings, target, experiment['simulationSens'], float(experiment['timeout']), cache)

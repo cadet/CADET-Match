@@ -364,17 +364,22 @@ class Cache:
         "build the minimum and maximum parameter boundaries"
         self.MIN_VALUE = []
         self.MAX_VALUE = []
+        self.MIN_VALUE_GRAD = []
+        self.MAX_VALUE_GRAD = []
         self.transform = []
 
         for parameter in self.settings['parameters']:
             transform = parameter['transform']
             minValues, maxValues = self.transforms[transform].getBounds(parameter)
+            minGradValues, maxGradValues = self.transforms[transform].getGradBounds(parameter)
             transforms = self.transforms[transform].transform(parameter)
 
             if minValues:
                 self.MIN_VALUE.extend(minValues)
                 self.MAX_VALUE.extend(maxValues)
                 self.transform.extend(transforms)
+                self.MIN_VALUE_GRAD.extend(minGradValues)
+                self.MAX_VALUE_GRAD.extend(maxGradValues)
 
 cache = Cache()
 

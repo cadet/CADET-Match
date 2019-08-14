@@ -17,7 +17,7 @@ def transform(parameter):
 
     return [trans,]
 
-def untransform(seq, cache, parameter, fullPrecision=False):
+def untransform(seq, cache, parameter):
     minValue = parameter['min']
     maxValue = parameter['max']
 
@@ -35,8 +35,8 @@ def untransform_matrix(matrix, cache, parameter):
     values[:,0] = math.pi * matrix[:,0]**2/4.0
     return values
 
-def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
-    values, headerValues = untransform(seq, cache, parameter, fullPrecision)
+def setSimulation(sim, parameter, seq, cache, experiment):
+    values, headerValues = untransform(seq, cache, parameter)
 
     if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
         location = parameter['location']

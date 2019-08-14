@@ -9,7 +9,7 @@
   "stopBest": 1.1,
   "gradCheck": 1.1,
   "gradVector": 1,
-  "searchMethod": "NSGA3",
+  "searchMethod": "Multistart",
   "mutationRate": 0.2,
   "crossoverRate": 0.8,
   "generations": 1000,
@@ -65,6 +65,15 @@
       "HDF5": "dextran_pulse.h5",
       "name": "main",
       "timeout": 3.4842967987060547,
+      "gradsetup":[
+        {
+        "unit":1,
+        "comps":[0],
+        "csv":"dextran_pulse.csv",
+        "start":250,
+        "stop":450
+        }
+      ],
       "features": [
         {
             "name": "Pulse",

@@ -257,7 +257,7 @@ def convert_population(population, cache):
 def convert_individual_inverse(individual, cache):
     return numpy.array([f(v) for f, v in zip(cache.settings['transform'], individual)])
 
-def set_simulation(individual, simulation, settings, cache, fullPrecision, experiment):
+def set_simulation(individual, simulation, settings, cache, experiment):
     scoop.logger.debug("individual %s", individual)
 
     cadetValues = []
@@ -268,7 +268,7 @@ def set_simulation(individual, simulation, settings, cache, fullPrecision, exper
         transform = parameter['transform']
         count = cache.transforms[transform].count
         seq = individual[idx:idx+count]
-        values, headerValues = cache.transforms[transform].setSimulation(simulation, parameter, seq, cache, experiment, fullPrecision)
+        values, headerValues = cache.transforms[transform].setSimulation(simulation, parameter, seq, cache, experiment)
         cadetValues.extend(values)
         cadetValuesKEQ.extend(headerValues)
         idx += count
@@ -289,7 +289,7 @@ def getBoundOffset(unit):
     boundOffset = numpy.cumsum(numpy.concatenate([[0,], NBOUND]))
     return boundOffset
 
-def runExperiment(individual, experiment, settings, target, template_sim, timeout, cache, fullPrecision=False, post_function=None):
+def runExperiment(individual, experiment, settings, target, template_sim, timeout, cache, post_function=None):
     handle, path = tempfile.mkstemp(suffix='.h5', dir=cache.tempDir)
     os.close(handle)
 
@@ -299,7 +299,7 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     simulation.root.input.solver.nthreads = int(settings.get('nThreads', 1))
 
     if individual is not None:
-        cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings, cache, fullPrecision, experiment)
+        cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings, cache, experiment)
     else:
         cadetValues = []
         cadetValuesKEQ = []

@@ -10,7 +10,7 @@ def getUnit(location):
 def transform(parameter):
     return []
 
-def untransform(seq, cache, parameter, fullPrecision=False):
+def untransform(seq, cache, parameter):
     return [], []
 
 def untransform_matrix(matrix, cache, parameter):
@@ -52,7 +52,7 @@ def setValue(sim, value, location, bound=None, comp=None, index=None):
         else:
             sim[location.lower()][index] = value
         
-def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
+def setSimulation(sim, parameter, seq, cache, experiment):
     if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
         location1 = parameter['location1']
         location2 = parameter['location2']

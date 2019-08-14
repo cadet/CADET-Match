@@ -8,7 +8,7 @@ count_extended = 3
 def getUnit(location):
     return location.split('/')[3]
 
-def untransform(seq, cache, parameter, fullPrecision=False):
+def untransform(seq, cache, parameter):
     minNu = parameter['minNu']
     maxNu = parameter['maxNu']
     minSigma = parameter['minSigma']
@@ -42,8 +42,8 @@ def untransform_matrix(matrix, cache, parameter):
 
     return values
 
-def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
-    values, headerValues = untransform(seq, cache, parameter, fullPrecision)
+def setSimulation(sim, parameter, seq, cache, experiment):
+    values, headerValues = untransform(seq, cache, parameter)
     
     if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
         nu_location = parameter['nu_location']

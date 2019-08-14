@@ -22,7 +22,7 @@ def transform(parameter):
 
     return [trans_volume, trans_area]
 
-def untransform(seq, cache, parameter, fullPrecision=False):
+def untransform(seq, cache, parameter):
     minVolume = parameter['minVolume']
     maxVolume = parameter['maxVolume']
     minArea = parameter['minArea']
@@ -56,8 +56,8 @@ def untransform_matrix(matrix, cache, parameter):
 
     return values
 
-def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
-    values, headerValues = untransform(seq, cache, parameter, fullPrecision)
+def setSimulation(sim, parameter, seq, cache, experiment):
+    values, headerValues = untransform(seq, cache, parameter)
     
     if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
         area_location = parameter['area_location']

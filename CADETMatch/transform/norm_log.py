@@ -17,7 +17,7 @@ def transform(parameter):
 
     return [trans,]
 
-def untransform(seq, cache, parameter, fullPrecision=False):
+def untransform(seq, cache, parameter):
     minValue = numpy.log(parameter['min'])
     maxValue = numpy.log(parameter['max'])
 
@@ -37,8 +37,8 @@ def untransform_matrix(matrix, cache, parameter):
 
     return values
 
-def setSimulation(sim, parameter, seq, cache, experiment, fullPrecision=False):
-    values, headerValues = untransform(seq, cache, parameter, fullPrecision)
+def setSimulation(sim, parameter, seq, cache, experiment):
+    values, headerValues = untransform(seq, cache, parameter)
 
     if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
         location = parameter['location']
@@ -84,6 +84,9 @@ def setupTarget(parameter):
 
 def getBounds(parameter):
     return [0.0,], [1.0,]
+
+def getGradBounds(parameter):
+    return [parameter['min'],], [parameter['max'],]
 
 def getHeaders(parameter):
     location = parameter['location']
