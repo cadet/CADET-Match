@@ -487,7 +487,7 @@ def createSimulationBestIndividual(individual, cache):
         templateSim.filename = templatePath.as_posix()
         templateSim.load()
 
-        cadetValues, cadetValuesKEQ = set_simulation(individual, templateSim, cache.settings, cache, True, experiment)
+        cadetValues, cadetValuesKEQ = set_simulation(individual, templateSim, cache.settings, cache, experiment)
 
         bestPath = Path(cache.settings['resultsDirMisc'], "best_%s_base.h5" % name)
         templateSim.filename = bestPath.as_posix()
@@ -1173,13 +1173,13 @@ def graph_process(cache, generation, last=0):
         log_subprocess('graph_spearman.py', ret)
     
     if last:
-        ret = subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
+        ret = subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), str(cache.graphType)], 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
         graph_process.lastGraphTime = time.time()
     elif (time.time() - graph_process.lastGraphTime) > cache.graphGenerateTime:
         #graph_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
         #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
-        subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
+        subprocess.run([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), str(cache.graphType)], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_process.lastGraphTime = time.time()
     else:
@@ -1317,30 +1317,31 @@ def biasSimulation(simulation, experiment, cache):
 
     bias_simulation = Cadet(simulation.root)
 
-    name = experiment['name']
+    if cache.errorBias:
+        name = experiment['name']
 
-    error_model = None
-    for error in cache.settings['kde_synthetic']:
-        if error['name'] == name:
-            error_model = error
-            break
+        error_model = None
+        for error in cache.settings['kde_synthetic']:
+            if error['name'] == name:
+                error_model = error
+                break
 
-    delay_settings = error_model['delay']
-    flow_settings = error_model['flow']
-    load_settings = error_model['load']
+        delay_settings = error_model['delay']
+        flow_settings = error_model['flow']
+        load_settings = error_model['load']
 
-    nsec = bias_simulation.root.input.solver.sections.nsec
+        nsec = bias_simulation.root.input.solver.sections.nsec
 
-    delays = numpy.ones(nsec) * sum(delay_settings)/2.0    
+        delays = numpy.ones(nsec) * sum(delay_settings)/2.0    
  
-    synthetic_error.pump_delay(bias_simulation, delays)
+        synthetic_error.pump_delay(bias_simulation, delays)
 
-    flow = numpy.ones(nsec) * flow_settings[0]
+        flow = numpy.ones(nsec) * flow_settings[0]
     
-    synthetic_error.error_flow(bias_simulation, flow)
+        synthetic_error.error_flow(bias_simulation, flow)
 
-    load = numpy.ones(nsec) * load_settings[0]
+        load = numpy.ones(nsec) * load_settings[0]
   
-    synthetic_error.error_load(bias_simulation, load)
+        synthetic_error.error_load(bias_simulation, load)
 
     return bias_simulation

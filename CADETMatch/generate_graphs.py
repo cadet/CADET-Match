@@ -53,7 +53,7 @@ cmap = matplotlib.cm.winter
 my_cmap = cmap(numpy.arange(cmap.N))
 
 # Set alpha
-my_cmap[:,-1] = 0.05
+my_cmap[:,-1] = 1.0
 
 # Create new colormap
 my_cmap = ListedColormap(my_cmap)
@@ -409,16 +409,6 @@ def graphSpace(fullGeneration, cache):
     comp_two = list(itertools.combinations(input_indexes, 2))
     comp_one = list(itertools.combinations(input_indexes, 1))
 
-    #3d plots
-    if fullGeneration >= 2:
-        seq = []
-        for (x, y), z in itertools.product(comp_two, output_indexes):
-            seq.append( [output_3d.as_posix(), input_headers[x], input_headers[y], output_headers[z], input[:,x], input[:,y], output[:,z]] )
-
-        for (x, y), z in itertools.product(comp_two, meta_indexes):
-            seq.append( [output_3d.as_posix(), input_headers[x], meta_headers[y], input_headers[z], input[:,x], input[:,y], output_meta[:,z]] )
-        list(map_function(plot_3d, seq))
-    
     #2d plots
     if fullGeneration >= 1:
         graphDistance(cache)
@@ -430,6 +420,16 @@ def graphSpace(fullGeneration, cache):
         for (x,), y in itertools.product(comp_one, meta_indexes):
             seq.append( [output_2d.as_posix(), input_headers[x], meta_headers[y], input[:,x], output_meta[:,y]] )
         list(map_function(plot_2d, seq))
+
+    #3d plots
+    if fullGeneration >= 2:
+        seq = []
+        for (x, y), z in itertools.product(comp_two, output_indexes):
+            seq.append( [output_3d.as_posix(), input_headers[x], input_headers[y], output_headers[z], input[:,x], input[:,y], output[:,z]] )
+
+        for (x, y), z in itertools.product(comp_two, meta_indexes):
+            seq.append( [output_3d.as_posix(), input_headers[x], input_headers[y], meta_headers[z], input[:,x], input[:,y], output_meta[:,z]] )
+        list(map_function(plot_3d, seq))
 
 def plot_3d(arg):
     "This leaks memory and is run in a separate short-lived process, do not integrate into the matching main process"
@@ -459,9 +459,17 @@ def plot_2d(arg):
     directory_path, header_x, scoreName, data, scores = arg
     directory = Path(directory_path)
 
-    if scoreName == 'SSE':
-        scores = -numpy.log(scores)
-        scoreName = '-log(%s)' % scoreName
+    #if scoreName == 'SSE':
+    #    scores = -numpy.log(scores)
+    #    scoreName = '-log(%s)' % scoreName
+    if numpy.all(scores <= 0):
+        scores = numpy.abs(scores)
+
+    score_scale = numpy.max(scores)/numpy.min(scores)
+
+    if  score_scale > 1e2:
+        scores = numpy.log(scores)
+        scoreName = 'log(%s)' % scoreName
 
     fig = figure.Figure()
     canvas = FigureCanvas(fig)

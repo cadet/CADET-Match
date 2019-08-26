@@ -14,10 +14,9 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda37-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\NSGA3_dextran.json"  1</CommandLineArguments>
+    <CommandLineArguments>"F:\temp\fit_j\NSGA3_dextran.json"  2</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>
-    </InterpreterArguments>
+    <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -201,6 +200,9 @@
     <Compile Include="scores\shapeDecaySimple.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\shapeOnly.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="scores\shapeSimple.py">
       <SubType>Code</SubType>
     </Compile>
@@ -241,6 +243,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\graphSpace.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\mcmc.py">

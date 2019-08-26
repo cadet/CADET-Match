@@ -1,7 +1,7 @@
 import sys
 
 import evo
-import grad
+#import grad
 import gradFD
 import util
 import time
@@ -32,7 +32,7 @@ import h5py
 
 def main():
     setup(cache, sys.argv[1])
-    grad.setupTemplates(cache)
+    #grad.setupTemplates(cache)
     hof = evo.run(cache)
 
     continue_mcmc(cache)
@@ -215,8 +215,8 @@ def setupDeap(cache):
     else:
         map_function = futures.map
 
-    #cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, map_function, creator, base, tools)
-    cache.search[searchMethod].setupDEAP(cache, evo.fitness, grad.gradSearch, grad.search, map_function, creator, base, tools)
+    cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, map_function, creator, base, tools)
+    #cache.search[searchMethod].setupDEAP(cache, evo.fitness, grad.gradSearch, grad.search, map_function, creator, base, tools)
 
 def find_percentile(cache):
     "find the percentile boundaries for the input variables"

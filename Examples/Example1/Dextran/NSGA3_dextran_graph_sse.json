@@ -2,20 +2,20 @@
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Dextran",
     "tempDir": "L:/",
-  "resultsDir": "fit_nsga3",
+  "resultsDir": "fit_nsga3_sse_narrow",
   "CSV": "dextran_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 1.1,
   "stopBest": 1.1,
   "gradCheck": 1.1,
   "gradVector": 1,
-  "searchMethod": "NSGA3",
+  "searchMethod": "GraphSpace",
   "mutationRate": 0.2,
   "crossoverRate": 0.8,
   "generations": 1000,
-  "population": 32,
-  "minPopulation": 32,
-  "maxPopulation":32,
+  "population": 500,
+  "minPopulation": 500,
+  "maxPopulation":500,
   "roundParameters": -1,
   "roundScores": -1,
   "metaResultsOnly": 1,
@@ -25,38 +25,24 @@
   "continueMCMC":0,
   "graphMetaTime": 600,
   "finalGradRefinement": 1,
+  "graphType":2,
   "parameters": [
     {
       "transform": "norm_log",
       "component": -1,
       "bound": -1,
       "location": "/input/model/unit_001/COL_DISPERSION",
-      "min": 1e-12,
-      "max": 1e-5
+      "min": 1e-7,
+      "max": 5e-7
     },
     {
       "transform": "norm",
       "component": -1,
       "bound": -1,
       "location": "/input/model/unit_001/COL_POROSITY",
-      "min": 0.2,
-      "max": 0.5
+      "min": 0.39,
+      "max": 0.41
     }
-  ],
-  "kde_synthetic":[
-      {
-        "file_path":"dextran_pulse.h5",
-        "experimental_csv":"dextran_pulse.csv",
-        "name":"main",
-        "units":[2],
-        "delay":[0.0, 2.0],
-        "flow":[1.0, 0.06],
-        "load":[1.0, 0.03],
-        "error_slope":[1.0, 0.001],
-        "error_base":100.0,
-        "base":100.0,
-        "count":4000
-      }
   ],
   "experiments": [
     {
@@ -64,7 +50,7 @@
       "isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
       "HDF5": "dextran_pulse.h5",
       "name": "main",
-      "timeout": 30.0,
+      "timeout": 3.4842967987060547,
       "gradsetup":[
         {
         "unit":1,
@@ -77,7 +63,7 @@
       "features": [
         {
             "name": "Pulse",
-            "type": "DextranShape"
+            "type": "SSE"
         },
         {
             "name": "Height",

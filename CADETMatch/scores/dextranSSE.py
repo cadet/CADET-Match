@@ -13,7 +13,7 @@ settings.adaptive = False
 settings.badScore = -sys.float_info.max
 settings.meta_mask = True
 settings.count = 1
-settings.failure = [0.0] * settings.count, 1e6, 1, [], [1.0] * settings.count
+settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
 
 def run(sim_data, feature):
     "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"

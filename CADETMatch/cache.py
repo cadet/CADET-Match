@@ -45,6 +45,7 @@ class Cache:
         self.sobolGeneration = False
         self.graphSpearman = False
         self.continueMCMC = False
+        self.errorBias = True
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
                                  'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score',
@@ -61,6 +62,8 @@ class Cache:
 
         self.json_path = json_path
         self.setupSettings()
+
+        self.errorBias = bool(self.settings.get('errorBias', True))
 
         baseDir = self.settings.get('baseDir', None)
         if baseDir is not None:
@@ -79,7 +82,7 @@ class Cache:
         self.WORST = [self.badScore] * self.numGoals
 
         self.settings['transform'] = self.transform
-        self.settings['grad_transform'] = self.grad_transform
+        #self.settings['grad_transform'] = self.grad_transform
 
         self.correct = None
         if "correct" in cache.settings:
@@ -121,6 +124,7 @@ class Cache:
         self.gradVector = bool(self.settings.get('gradVector', 0))
 
         self.tempDir = self.settings.get('tempDir', None)
+        self.graphType = self.settings.get('graphType', 1)
 
         self.checkpointInterval = self.settings.get('checkpointInterval', 600)
         self.setupMetaMask()
@@ -365,25 +369,25 @@ class Cache:
         "build the minimum and maximum parameter boundaries"
         self.MIN_VALUE = []
         self.MAX_VALUE = []
-        self.MIN_VALUE_GRAD = []
-        self.MAX_VALUE_GRAD = []
+        #self.MIN_VALUE_GRAD = []
+        #self.MAX_VALUE_GRAD = []
         self.transform = []
-        self.grad_transform = []
+        #self.grad_transform = []
 
         for parameter in self.settings['parameters']:
             transform = parameter['transform']
             minValues, maxValues = self.transforms[transform].getBounds(parameter)
-            minGradValues, maxGradValues = self.transforms[transform].getGradBounds(parameter)
+            #minGradValues, maxGradValues = self.transforms[transform].getGradBounds(parameter)
             transforms = self.transforms[transform].transform(parameter)
-            grad_transforms = self.transforms[transform].grad_transform(parameter)
+            #grad_transforms = self.transforms[transform].grad_transform(parameter)
 
             if minValues:
                 self.MIN_VALUE.extend(minValues)
                 self.MAX_VALUE.extend(maxValues)
                 self.transform.extend(transforms)
-                self.grad_transform.extend(grad_transforms)
-                self.MIN_VALUE_GRAD.extend(minGradValues)
-                self.MAX_VALUE_GRAD.extend(maxGradValues)
+                #self.grad_transform.extend(grad_transforms)
+                #self.MIN_VALUE_GRAD.extend(minGradValues)
+                #self.MAX_VALUE_GRAD.extend(maxGradValues)
 
 cache = Cache()
 

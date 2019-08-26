@@ -9,7 +9,7 @@ settings.adaptive = False
 settings.badScore = -sys.float_info.max
 settings.meta_mask = True
 settings.count = 1
-settings.failure = [0.0] * settings.count, 1e6, 1, [], [1.0] * settings.count
+settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
 
 def run(sim_data, feature):
     "log of SSE score, not composable, negative so score is maximized"

@@ -134,28 +134,28 @@ def gradSearch(x, json_path):
 
     jac_cache = []
 
-    #try:
-    scoop.logger.info("gradSearch least_squares")
+    try:
+        scoop.logger.info("gradSearch least_squares")
 
-    x = util.convert_individual_grad(x, cache.cache)
+        x = util.convert_individual_grad(x, cache.cache)
 
-    result = scipy.optimize.least_squares(fitness_sens_grad, x, jac=jacobian, method='trf', 
-                                           bounds=(cache.cache.MIN_VALUE_GRAD, cache.cache.MAX_VALUE_GRAD), 
-                                           gtol=None, ftol=None, xtol=1e-10, x_scale="jac",
-                                           kwargs={'jac_cache':jac_cache}, verbose=0)
+        result = scipy.optimize.least_squares(fitness_sens_grad, x, jac=jacobian, method='trf', 
+                                               bounds=(cache.cache.MIN_VALUE_GRAD, cache.cache.MAX_VALUE_GRAD), 
+                                               gtol=None, ftol=None, xtol=1e-10, x_scale="jac",
+                                               kwargs={'jac_cache':jac_cache}, verbose=0)
 
 
-    scoop.logger.info("start: %s  stop: %s distance: %s  sse: %s", x, result.x, numpy.linalg.norm(x - result.x), numpy.sum(result.fun**2))
-
-    result.x = util.convert_individual_inverse_grad(result.x, cache.cache)
-    return result
-    #except GradientException:
+        scoop.logger.info("start: %s  stop: %s distance: %s  sse: %s", x, result.x, numpy.linalg.norm(x - result.x), numpy.sum(result.fun**2))
+        #scoop.logger.info("result %s", result)
+        result.x = util.convert_individual_inverse_grad(result.x, cache.cache)
+        return result
+    except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
-    #    scoop.logger.error("Gradient Failure", exc_info=True)
-    #    return None
-    #except ConditionException:
-    #    scoop.logger.error("Condition Failure", exc_info=True)
-    #    return None
+        scoop.logger.error("Gradient Failure", exc_info=True)
+        return None
+    except ConditionException:
+        scoop.logger.error("Condition Failure", exc_info=True)
+        return None
 
 def fitness_sens_grad(individual, jac_cache, finished=0):
     individual = util.convert_individual_inverse_grad(individual, cache.cache)
@@ -211,16 +211,16 @@ def getDiff(result, experiment):
     sim_value = []
     exp_value = []
     for grad in gradsetup:
-        selected = (times >= grad['start']) & (times <= grad['stop'])
+        selected_sim = (times >= grad['start']) & (times <= grad['stop'])
         temp = [solution["unit_%03d" % grad['unit']]["solution_outlet_comp_%03d" % comp] for comp in grad['comps']]
-        sim_value.append(numpy.sum(numpy.array(temp), axis=0)[selected])
+        sim_value.append(numpy.sum(numpy.array(temp), axis=0)[selected_sim])
 
         data = numpy.loadtxt(grad['csv'], delimiter=',')
 
         time = data[:, 0]
         value = data[:, 1]
-        selected = (time >= grad['start']) & (time <= grad['stop'])
-        exp_value.append(value[selected])
+        selected_grad = (time >= grad['start']) & (time <= grad['stop'])
+        exp_value.append(value[selected_grad])
 
 
     sim_value = numpy.concatenate(sim_value, axis=0)

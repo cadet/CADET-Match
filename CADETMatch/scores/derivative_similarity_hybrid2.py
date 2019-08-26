@@ -3,6 +3,7 @@ import score
 import scipy.stats
 import scipy.interpolate
 from addict import Dict
+import numpy
 
 name = "derivative_similarity_hybrid2"
 settings = Dict()
@@ -10,7 +11,7 @@ settings.adaptive = True
 settings.badScore = 0
 settings.meta_mask = True
 settings.count = 4
-settings.failure = [0.0] * settings.count, 1e6, 1, [], [1.0] * settings.count
+settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
 
 def run(sim_data, feature):
     "Order is Pearson, Value High, Time High, Value Low, Time Low"
