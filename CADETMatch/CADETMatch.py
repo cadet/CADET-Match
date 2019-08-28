@@ -35,6 +35,15 @@ def main():
     #grad.setupTemplates(cache)
     hof = evo.run(cache)
 
+    scoop.logger.info("altFeatures %s", cache.altFeatures)
+    scoop.logger.info("altFeatureNames %s", cache.altFeatureNames)
+
+    if cache.altFeatures:
+        for name in cache.altFeatureNames:
+            json_path = util.setupAltFeature(cache, name)
+            setup(cache, json_path)
+            hof = evo.run(cache)
+
     continue_mcmc(cache)
 
     if "repeat" in cache.settings:

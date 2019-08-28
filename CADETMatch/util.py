@@ -478,6 +478,47 @@ def setupMCMC(cache, lb, ub):
             json.dump(settings, json_data, indent=4, sort_keys=True)
         return new_settings_file
 
+def setupAltFeature(cache, name):
+    "read the original json file and make an mcmc file based on it with new boundaries"
+    settings_file = Path(sys.argv[1])
+    with settings_file.open() as json_data:
+        settings = json.load(json_data)
+
+        baseDir = settings.get('baseDir', None)
+        if baseDir is not None:
+            baseDir = Path(baseDir)
+            settings['resultsDir'] = baseDir / settings['resultsDir']
+        
+        resultDirOriginal = Path(settings['resultsDir'])
+        resultsOriginal = resultDirOriginal / "result.h5"
+        resultDir = resultDirOriginal / "altScore" / name
+        resultDir.mkdir(parents=True, exist_ok=True)        
+
+        settings['resultsDirOriginal'] = resultDirOriginal.as_posix()
+        settings['resultsDir'] = resultDir.as_posix()
+        settings['PreviousResults'] = resultsOriginal.as_posix()
+
+        if baseDir is not None:
+            settings['baseDir'] = baseDir.as_posix()
+
+        settings['searchMethod'] = 'ScoreTest'
+
+        data = H5()
+        data.filename = resultsOriginal.as_posix()
+        data.load(paths=['/meta_population_transform',])
+
+        settings['seeds'] = [list(i) for i in data.root.meta_population_transform]
+
+        for experiment in settings['experiments']:
+            for feature in experiment['featuresAlt']:
+                if feature['name'] == name:
+                    experiment['features'] = feature['features']
+         
+        new_settings_file = resultDir / settings_file.name
+        with new_settings_file.open(mode="w") as json_data:
+            json.dump(settings, json_data, indent=4, sort_keys=True)
+        return new_settings_file
+
 def createSimulationBestIndividual(individual, cache):
     temp = {}
     for experiment in cache.settings['experiments']:

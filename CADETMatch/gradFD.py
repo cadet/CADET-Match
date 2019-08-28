@@ -84,7 +84,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
 
     return gradCheck, temp
 
-def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
+def filterOverlapArea(cache, checkOffspring, cutoff=0.05):
     """if there is no overlap between the simulation and the data there is no gradient to follow and these entries need to be skipped
     This only applies if the score is SSE or gradVector is True"""
     if not cache.gradVector or (cache.gradVector and cache.badScore == 0):

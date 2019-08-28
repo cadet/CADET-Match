@@ -46,6 +46,8 @@ class Cache:
         self.graphSpearman = False
         self.continueMCMC = False
         self.errorBias = True
+        self.altFeatures = False
+        self.altFeatureNames = []
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
                                  'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
                                  'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score',
@@ -318,6 +320,10 @@ class Cache:
             else:
                 temp['factor'] = 1.0
             temp['valueFactor'] = temp['value'] * temp['factor']
+
+        if "featuresAlt" in experiment:
+            self.altFeatures = True
+            self.altFeatureNames = [altFeature['name'] for altFeature in experiment['featuresAlt']]
 
         for feature in experiment['features']:
             featureName = feature['name']

@@ -16,7 +16,8 @@ def run(cache, tools, creator):
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
         pop = cache.toolbox.population(n=0)
         sim_start = generation_start = time.time()
-        result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[]}
+        result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
+                   'mean':[], 'confidence':[]}
 
         if "seeds" in cache.settings:
             seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]
@@ -45,7 +46,7 @@ def run(cache, tools, creator):
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
-    creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
+    creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None)
 
     creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0] * 4)
     creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None)
