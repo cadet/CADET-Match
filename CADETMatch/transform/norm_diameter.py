@@ -28,11 +28,15 @@ def untransform(seq, cache, parameter):
     return values, headerValues
 
 def untransform_matrix(matrix, cache, parameter):
+    values = untransform_matrix_inputorder(matrix, cache, parameter)
+    values[:,0] = math.pi * values[:,0]**2/4.0
+    return values
+
+def untransform_matrix_inputorder(matrix, cache, parameter):
     minValue = parameter['min']
     maxValue = parameter['max']
 
     values = (maxValue - minValue) * matrix + minValue
-    values[:,0] = math.pi * matrix[:,0]**2/4.0
     return values
 
 def setSimulation(sim, parameter, seq, cache, experiment):

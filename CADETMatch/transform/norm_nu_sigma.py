@@ -26,6 +26,11 @@ def untransform(seq, cache, parameter):
     return values, headerValues
 
 def untransform_matrix(matrix, cache, parameter):
+    values = untransform_matrix_inputorder(matrix, cache, parameter)
+    values[:,1] = values[:,1] - values[:,0]
+    return values
+
+def untransform_matrix_inputorder(matrix, cache, parameter):
     minNu = parameter['minNu']
     maxNu = parameter['maxNu']
     minSigma = parameter['minSigma']
@@ -38,7 +43,7 @@ def untransform_matrix(matrix, cache, parameter):
 
     values = numpy.zeros(temp.shape)
     values[:,0] = temp[:,0]
-    values[:,1] = temp[:,1] - temp[:,0]
+    values[:,1] = temp[:,1]
 
     return values
 

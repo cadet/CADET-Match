@@ -22,9 +22,16 @@ def untransform(seq, cache, parameter):
     return values, headerValues
 
 def untransform_matrix(matrix, cache, parameter):
+    temp = untransform_matrix_inputorder(matrix, cache, parameter)
+    values = numpy.zeros(temp.shape)
+    values[:,1] = temp[:,0] / temp[:,1]
+    values[:,0] = temp[:,1]
+    return values
+
+def untransform_matrix_inputorder(matrix, cache, parameter):
     values = numpy.zeros(matrix.shape)
-    values[:,1] = matrix[:,0] / matrix[:,1]
-    values[:,0] = matrix[:,1]
+    values[:,0] = matrix[:,0]
+    values[:,1] = matrix[:,1]
     return values
 
 def setSimulation(sim, parameter, seq, cache, experiment):

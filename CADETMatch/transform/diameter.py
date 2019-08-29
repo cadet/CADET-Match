@@ -24,6 +24,8 @@ def untransform_matrix(matrix, cache, parameter):
     values[:,0] = math.pi * matrix[:,0]**2/4.0
     return values
 
+untransform_matrix_inputorder = untransform_matrix
+
 def setSimulation(sim, parameter, seq, cache, experiment):
     values, headerValues = untransform(seq, cache, parameter)
 

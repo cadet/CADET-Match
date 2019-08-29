@@ -36,6 +36,8 @@ def untransform_matrix(matrix, cache, parameter):
     values = (maxValue - minValue) * matrix + minValue
     return values
 
+untransform_matrix_inputorder = untransform_matrix
+
 def setSimulation(sim, parameter, seq, cache, experiment):
     values, headerValues = untransform(seq, cache, parameter)
 

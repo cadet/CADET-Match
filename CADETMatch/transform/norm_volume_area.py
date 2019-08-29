@@ -40,6 +40,13 @@ def untransform(seq, cache, parameter):
     return values, headerValues
 
 def untransform_matrix(matrix, cache, parameter):
+    temp = untransform_matrix_inputorder(matrix, cache, parameter)
+    values = numpy.zeros(temp.shape)
+    values[:,0] = temp[:,1]
+    values[:,1] = temp[:,0] / temp[:,1]
+    return values
+
+def untransform_matrix_inputorder(matrix, cache, parameter):
     minVolume = parameter['minVolume']
     maxVolume = parameter['maxVolume']
     minArea = parameter['minArea']
@@ -51,8 +58,8 @@ def untransform_matrix(matrix, cache, parameter):
     temp = (maxValues - minValues) * matrix + minValues
 
     values = numpy.zeros(temp.shape)
-    values[:,0] = temp[:,1]
-    values[:,1] = temp[:,0] / temp[:,1]
+    values[:,0] = temp[:,0]
+    values[:,1] = temp[:,1]
 
     return values
 

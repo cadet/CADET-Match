@@ -16,6 +16,8 @@ def untransform(seq, cache, parameter):
 def untransform_matrix(matrix, cache, parameter):
     return None
 
+untransform_matrix_inputorder = untransform_matrix
+
 def getValue(sim, location, bound=None, comp=None, index=None):
     if bound is not None:
         unit = getUnit(location)

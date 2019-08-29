@@ -23,9 +23,12 @@ def untransform(seq, cache, parameter):
     return values, headerValues
 
 def untransform_matrix(matrix, cache, parameter):
-    values = numpy.exp(matrix)
+    values = untransform_matrix_inputorder(matrix, cache, parameter)
     values[:,1] = values[:,0] / values[:,1]
- 
+    return values
+
+def untransform_matrix_inputorder(matrix, cache, parameter):
+    values = numpy.exp(matrix)
     return values
 
 def setSimulation(sim, parameter, seq, cache, experiment):

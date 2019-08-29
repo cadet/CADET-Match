@@ -22,8 +22,13 @@ def untransform(seq, cache, parameter):
     return values, headerValues
 
 def untransform_matrix(matrix, cache, parameter):
+    values = untransform_matrix_inputorder(matrix, cache, parameter)
+    values[:,0] = values[:,0] / values[:,1]
+    return values
+
+def untransform_matrix_inputorder(matrix, cache, parameter):
     values = numpy.zeros(matrix.shape)
-    values[:,0] = matrix[:,0] / matrix[:,1]
+    values[:,0] = matrix[:,0]
     values[:,1] = matrix[:,1]
     return values
 

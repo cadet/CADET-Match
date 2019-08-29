@@ -268,6 +268,21 @@ def convert_population(population, cache):
 
     return cadetValues
 
+def convert_population_inputorder(population, cache):
+    cadetValues = numpy.zeros(population.shape)
+
+    idx = 0
+    for parameter in cache.settings['parameters']:
+        transform = parameter['transform']
+        count = cache.transforms[transform].count
+        if count:
+            matrix = population[:,idx:idx+count]
+            values = cache.transforms[transform].untransform_matrix_inputorder(matrix, cache, parameter)
+            cadetValues[:,idx:idx+count] = values
+            idx += count
+
+    return cadetValues
+
 def convert_individual_inverse(individual, cache):
     return numpy.array([f(v) for f, v in zip(cache.settings['transform'], individual)])
 
@@ -505,9 +520,11 @@ def setupAltFeature(cache, name):
 
         data = H5()
         data.filename = resultsOriginal.as_posix()
-        data.load(paths=['/meta_population_transform',])
+        data.load(paths=['/meta_population',])
 
-        settings['seeds'] = [list(i) for i in data.root.meta_population_transform]
+        population = convert_population_inputorder(data.root.meta_population, cache)
+
+        settings['seeds'] = [list(i) for i in population]
 
         for experiment in settings['experiments']:
             for feature in experiment['featuresAlt']:

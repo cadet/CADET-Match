@@ -40,6 +40,11 @@ def untransform(seq, cache, parameter):
     return values, headerValues
 
 def untransform_matrix(matrix, cache, parameter):
+    values = untransform_matrix_inputorder(matrix, cache, parameter)
+    values[:,1] = values[:,0] / values[:,1]
+    return values
+
+def untransform_matrix_inputorder(matrix, cache, parameter):
     minKA = parameter['minKA']
     maxKA = parameter['maxKA']
     minKEQ = parameter['minKEQ']
@@ -51,8 +56,6 @@ def untransform_matrix(matrix, cache, parameter):
     values = (maxValues - minValues) * matrix + minValues
 
     values = numpy.exp(values)
-
-    values[:,1] = values[:,0] / values[:,1]
 
     return values
 
