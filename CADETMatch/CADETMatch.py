@@ -171,7 +171,7 @@ def createErrorCSV(cache):
 
 def setTemplateValues(simulation, set_values):
     for path, index, value in set_values:
-        if index > 0:
+        if index >= 0:
             simulation[path][index] = value
         else:
             simulation[path] = value
