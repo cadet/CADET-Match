@@ -50,9 +50,9 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             gradCheck = settings['gradCheck']
 
-            halloffame = pareto.ParetoFront(similar=util.similar)
-            meta_hof = pareto.ParetoFront(similar=util.similar)
-            grad_hof = pareto.ParetoFront(similar=util.similar)
+            halloffame = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+            meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+            grad_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
 
 
             # Evaluate the individuals with an invalid fitness
@@ -160,9 +160,9 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             gradCheck = settings['gradCheck']
 
-            halloffame = pareto.ParetoFront(similar=util.similar)
-            meta_hof = pareto.ParetoFront(similar=util.similar)
-            grad_hof = pareto.ParetoFront(similar=util.similar)
+            halloffame = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+            meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+            grad_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -285,9 +285,9 @@ def nsga2(populationSize, ngen, cache, tools):
 
             start_gen = 0    
 
-            halloffame = pareto.ParetoFront(similar=util.similar)
-            meta_hof = pareto.ParetoFront(similar=util.similar)
-            grad_hof = pareto.ParetoFront(similar=util.similar)
+            halloffame = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+            meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+            grad_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
             gradCheck = cache.settings['gradCheck']
 
 

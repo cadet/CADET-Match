@@ -26,14 +26,11 @@ def run(cache, tools, creator):
         seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]
         pop.extend(seed_pop)
 
-    hof = tools.ParetoFront(similar=util.similar)
-    meta_hof = tools.ParetoFront(similar=util.similar)
-
     gradCheck = cache.badScore
 
-    hof = pareto.ParetoFront(similar=util.similar)
-    meta_hof = pareto.ParetoFront(similar=util.similar)
-    grad_hof = pareto.ParetoFront(similar=util.similar)
+    hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+    meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+    grad_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
     with path.open('a', newline='') as csvfile:

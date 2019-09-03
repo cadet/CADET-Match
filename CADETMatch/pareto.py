@@ -4,9 +4,13 @@ from operator import eq
 class ParetoFront(tools.ParetoFront):
     "Modification of the pareto front in DEAP that takes cache as an argument to update to use for similar comparison"
 
-    def __init__(self, similar=None):
+    def __init__(self, similar=None, similar_fit = None):
         if similar is None:
             similar = eq
+        if similar_fit is not None:
+            self.similar_fit = similar_fit
+        else:
+            self.similar_fit = eq
         super().__init__(similar)
 
     def update(self, population, cache):
@@ -30,7 +34,7 @@ class ParetoFront(tools.ParetoFront):
                 elif ind.fitness.dominates(hofer.fitness):
                     dominates_one = True
                     to_remove.append(i)
-                elif ind.fitness == hofer.fitness and self.similar(ind, hofer, cache):
+                elif self.similar_fit(ind.fitness.values, hofer.fitness.values) and self.similar(ind, hofer, cache):
                     has_twin = True
                     break
             

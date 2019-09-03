@@ -23,9 +23,9 @@ def run(cache, tools, creator):
             seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]
             pop.extend(seed_pop)
 
-        hof = pareto.ParetoFront(similar=util.similar)
-        meta_hof = pareto.ParetoFront(similar=util.similar)
-        grad_hof = pareto.ParetoFront(similar=util.similar)
+        hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+        meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+        grad_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
         stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof, -1, result_data)

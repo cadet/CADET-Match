@@ -617,7 +617,14 @@ def similar(a, b, cache):
     a = numpy.array(convert_individual(a,cache)[0])
     b = numpy.array(convert_individual(b,cache)[0])
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-3)
+    return numpy.all(diff < 1e-4)
+
+def similar_fit(a, b):
+    "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
+    a = numpy.array(a)
+    b = numpy.array(b)
+    diff = numpy.abs((a-b)/a)
+    return numpy.all(diff < 1e-4)
 
 def RoundToSigFigs( x, sigfigs ):
     """
