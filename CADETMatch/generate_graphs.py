@@ -485,7 +485,7 @@ def plot_2d(arg):
     graph.set_ylabel(scoreName)
     graph.set_xlim(min(data), max(data), auto=True)
     filename = "%s_%s.png" % (header_x, scoreName)
-    filename = filename.replace(':', '_')
+    filename = filename.replace(':', '_').replace('/', '_')
     fig.savefig(str(directory / filename))
 
 def graphProgress(cache):

@@ -27,12 +27,12 @@ def run(sim_data, feature):
     except:  #I know a bare exception is based but it looks like the exception is not exposed inside UnivariateSpline
         return settings.failure
 
-    exp_data_values = exp_spline(exp_time_values)
-    sim_data_values = sim_spline(exp_time_values)
+    exp_data_values_spline = exp_spline(exp_time_values)
+    sim_data_values_spline = sim_spline(exp_time_values)
 
-    score_corr, diff_time = score.cross_correlate(exp_time_values, sim_data_values, exp_data_values)
+    score_corr, diff_time = score.cross_correlate(exp_time_values, sim_data_values_spline, exp_data_values_spline)
 
-    [highs, lows] = util.find_peak(exp_time_values, sim_data_values)
+    [highs, lows] = util.find_peak(exp_time_values, sim_data_values_spline)
 
     temp = [score.pear_corr(scipy.stats.pearsonr(sim_spline(exp_time_values), exp_spline(exp_time_values))[0]),
             feature['time_function'](diff_time),

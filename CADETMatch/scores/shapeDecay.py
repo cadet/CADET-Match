@@ -33,12 +33,12 @@ def run(sim_data, feature):
 
     pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_values, exp_data_values)
 
-    exp_data_values = exp_spline(exp_time_values)
-    sim_data_values = sim_spline(exp_time_values)
+    exp_data_values_spline = exp_spline(exp_time_values)
+    sim_data_values_spline = sim_spline(exp_time_values)
 
-    pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_data_values, exp_data_values)
+    pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_data_values_spline, exp_data_values_spline)
 
-    [highs_der, lows_der] = util.find_peak(exp_time_values, sim_data_values)
+    [highs_der, lows_der] = util.find_peak(exp_time_values, sim_data_values_spline)
 
     
     temp = [pearson, 

@@ -929,9 +929,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
  
             if line_log:
                 scoop.logger.info(line_format, generation, len(population),
-                      RoundToSigFigs(population_average,3), RoundToSigFigs(population_average_best,3),
-                      RoundToSigFigs(population_min,3), RoundToSigFigs(population_min_best,3),
-                      RoundToSigFigs(population_product,3), RoundToSigFigs(population_product_best,3))
+                      population_average, population_average_best,
+                      population_min, population_min_best,
+                      population_product, population_product_best)
         else:
             if line_log:
                 scoop.logger.info("Generation: %s \tPopulation: %s \t No Stats Avaialable", generation, len(population))
@@ -1094,8 +1094,6 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
     for ind, result in zip(population, fitnesses):
         fit, csv_line, results = result
-
-        csv_line[2:] = RoundToSigFigs(csv_line[2:], 4)
         
         save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
         

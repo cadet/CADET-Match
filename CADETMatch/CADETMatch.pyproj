@@ -14,9 +14,10 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda37-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\temp\salt_lambda\NSGA3_lambda.json"  2</CommandLineArguments>
+    <CommandLineArguments>"M:\ibt71\Parameter Estimation\Synthetic\SMA\NSGA3_SSE\altScore\Shape\NSGA3_sma_SSE_test.json"  2</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
+    <InterpreterArguments>
+    </InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
