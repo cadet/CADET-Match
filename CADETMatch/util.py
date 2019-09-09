@@ -163,18 +163,48 @@ def mutPolynomialBounded(individual, eta, low, up, indpb):
     individual =  tools.mutPolynomialBounded(individual, eta, low, up, indpb)
     return individual
 
+def mutationNSGA3_cross(ind1, ind2, low, up):
+    scores_1 = ind1.fitness.values
+    mult_1 = min(scores_1)
+
+    scores_2 = ind2.fitness.values
+    mult_2 = min(scores_2)
+
+    mult = min(mult_1, mult_2)
+
+    eta = get_eta(mult, [0.0, 0.9, 0.99], [2.0, 10.0, 20.0])
+    #eta = 2.0
+
+    return tools.cxSimulatedBinaryBounded(ind1, ind2, eta, low, up)
+
+def mutationNSGA3_mutate(individual, low, up, indpb):
+    scores = individual.fitness.values
+    mult = min(scores)
+
+    eta = get_eta(mult, [0.0, 0.9, 0.95], [2.0, 10.0, 20.0])
+    #eta = get_eta(mult, [0.0, 0.9, 0.95], [2.0, 20.0, 50.0])
+    #eta=2.0
+    
+    return tools.mutPolynomialBounded(individual, eta, low, up, indpb)
+
+def get_eta(mult, x, y):
+
+    def f(x, a, b, c):
+        return a*numpy.exp(b*x)+c
+
+    ret = scipy.optimize.curve_fit(f, x, y)
+
+    vals = ret[0]
+    a = vals[0]
+    b = vals[1]
+    c = vals[2]
+    return f(mult, a, b, c)
+
 def mutationBoundedAdaptive(individual, low, up, indpb):
     scores = individual.fitness.values
     mult = min(scores)
     
-    rand = numpy.random.rand(len(individual))
-
-    for idx, i in enumerate(individual):
-        if rand[idx] <= indpb:
-            #scale = (1e-3 - 1.0) * prod + 1  (linear does not work well)
-            scale = numpy.exp(-5.824*mult) * (up[idx] - low[idx])/1.0
-            dist = numpy.random.normal(scale, scale/2.0) * random.sample([-1, 1], 1)[0]
-            individual[idx] = max(min(i + dist, up[idx]), low[idx])
+    return util.mutPolynomialBounded()
     return individual,
 
 def mutationBoundedAdaptive2(individual, low, up, indpb):
@@ -617,14 +647,14 @@ def similar(a, b, cache):
     a = numpy.array(convert_individual(a,cache)[0])
     b = numpy.array(convert_individual(b,cache)[0])
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-4)
+    return numpy.all(diff < 1e-3)
 
 def similar_fit(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
     a = numpy.array(a)
     b = numpy.array(b)
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-4)
+    return numpy.all(diff < 1e-3)
 
 def RoundToSigFigs( x, sigfigs ):
     """
@@ -705,10 +735,6 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
     results = Path(cache.settings['resultsDirBase'])
 
-    hof = results / "hof.npy"
-    meta_hof = results / "meta_hof.npy"
-    grad_hof = results / "grad_hof.npy"
-
     data = numpy.array([i.fitness.values for i in halloffame])
     data_meta = numpy.array([i.fitness.values for i in meta_halloffame])
     data_grad = numpy.array([i.fitness.values for i in grad_halloffame])
@@ -720,15 +746,6 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
     hof_param_transform = numpy.array([convert_individual(i, cache)[0] for i in halloffame])
     meta_param_transform = numpy.array([convert_individual(i, cache)[0] for i in meta_halloffame])
     grad_param_transform = numpy.array([convert_individual(i, cache)[0] for i in grad_halloffame])
-
-    with hof.open('wb') as hof_file:
-        numpy.save(hof_file, data)
-
-    with meta_hof.open('wb') as hof_file:
-        numpy.save(hof_file, data_meta)
-
-    with grad_hof.open('wb') as hof_file:
-        numpy.save(hof_file, data_grad)
 
     gen_data = numpy.array([generation, len(result_data['input'])]).reshape(1,2)
 
@@ -917,20 +934,19 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
     with cache.progress_path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        #row, col = data.shape
         meta_mean = numpy.mean(data_meta, 0)
         meta_max = numpy.max(data_meta, 0)
 
         if len(data) and data.ndim > 1:
 
             population_average = numpy.mean(data)
-            population_average_best = numpy.max(numpy.mean(data, 1))
+            population_average_best = meta_max[2]
 
-            population_min = numpy.min(data)
-            population_min_best = numpy.max(numpy.min(data, 1))
+            population_min = numpy.mean(numpy.min(data, 1))
+            population_min_best = meta_max[1]
 
-            population_product = numpy.prod(data)**(1.0/data.size)
-            population_product_best = numpy.max(numpy.prod(data,1)**(1.0/data.shape[1]))
+            population_product = numpy.mean(numpy.prod(data, 1)**(1.0/data.shape[1]))
+            population_product_best = meta_max[0]
 
             line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.3g \tBest: %.3g \tMinimum Score: %.3g \tBest: %.3g \tProduct Score: %.3g \tBest: %.3g'
  
@@ -947,7 +963,7 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                          len(population),
                          len(cache.MIN_VALUE),
                          cache.numGoals,
-                         cache.settings.get('searchMethod', 'SPEA2'),
+                         cache.settings.get('searchMethod', 'NSGA3'),
                          len(halloffame),
                          average_score,
                          minimum_score,
@@ -955,6 +971,10 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                          meta_mean[2],
                          meta_mean[1],
                          meta_mean[0],
+                         meta_max[0],
+                         meta_max[1],
+                         meta_max[3],
+                         meta_max[3],
                          now - sim_start,
                          now - generation_start,
                          cpu_time.user + cpu_time.system,

@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "Debug CADETMatch",
-            "type": "pythonExperimental",
+            "type": "python",
             "request": "launch",
             "program": "${workspaceRoot}/CADETMatch/CADETMatch.py",
             "console": "integratedTerminal",

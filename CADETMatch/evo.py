@@ -76,5 +76,5 @@ def runExperiment(individual, experiment, settings, target, cache):
 
 def run(cache):
     "run the parameter estimation"
-    searchMethod = cache.settings.get('searchMethod', 'SPEA2')
+    searchMethod = cache.settings.get('searchMethod', 'NSGA3')
     return cache.search[searchMethod].run(cache, tools, creator)

@@ -496,9 +496,10 @@ def graphProgress(cache):
 
     output = cache.settings['resultsDirProgress']
 
-    x = ['Generation', 'Total CPU Time', 'Population']
+    x = ['Generation', 'Total CPU Time',]
     y = ['Average Score', 'Minimum Score', 'Product Score',
-         'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score', 'Population']
+         'Pareto Meta Product Score', 'Pareto Meta Min Score', 
+         'Pareto Meta Mean Score', 'Pareto Meta Norm Score',]
 
     temp = []
     for x,y in itertools.product(x,y):
@@ -512,7 +513,7 @@ def singleGraphProgress(arg):
 
     i,j = list(df)
 
-    fig = figure.Figure()
+    fig = figure.Figure(figsize=(10,10))
     canvas = FigureCanvas(fig)
 
     graph = fig.add_subplot(1, 1, 1)
@@ -525,6 +526,24 @@ def singleGraphProgress(arg):
     graph.set_ylabel(j)
 
     filename = "%s vs %s.png" % (i,j)
+    file_path = output / filename
+    fig.savefig(str(file_path))
+
+
+
+    fig = figure.Figure(figsize=(10,10))
+    canvas = FigureCanvas(fig)
+
+    graph = fig.add_subplot(1, 1, 1)
+
+    graph.plot(df[i],numpy.log(1-df[j]))
+    a = max(df[j])
+    #graph.set_ylim((0,1.1*max(df[j])))
+    graph.set_title('%s vs log(1-%s)' % (i,j))
+    graph.set_xlabel(i)
+    graph.set_ylabel('log(1-%s)' % j)
+
+    filename = "%s vs log(1-%s).png" % (i,j)
     file_path = output / filename
     fig.savefig(str(file_path))
 
