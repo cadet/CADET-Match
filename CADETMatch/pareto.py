@@ -36,7 +36,6 @@ class ParetoFront(tools.ParetoFront):
                     to_remove.append(i)
                 elif self.similar_fit(ind.fitness.values, hofer.fitness.values) and self.similar(ind, hofer, cache):
                     has_twin = True
-                    break
             
             for i in reversed(to_remove):       # Remove the dominated hofer
                 self.remove(i)
