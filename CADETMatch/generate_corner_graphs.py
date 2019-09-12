@@ -223,14 +223,12 @@ def graphCorner(cache):
             data_input_transform = data.root.input_transform[indexes]
             weight_min = data.root.output_meta[indexes,1]
             weight_prod = data.root.output_meta[indexes,2]
-            weight_norm = data.root.output_meta[indexes,3]
             all_scores = data.root.output[indexes]
         else:
             data_input = data.root.input
             data_input_transform = data.root.input_transform
             weight_min = data.root.output_meta[:,1]
             weight_prod = data.root.output_meta[:,2]
-            weight_norm = data.root.output_meta[:,3]
             all_scores = data.root.output
 
         max_scores = numpy.max(all_scores, 1)
@@ -243,20 +241,17 @@ def graphCorner(cache):
             data_input_transform = data_input_transform[acceptable]
             weight_min = weight_min[acceptable]
             weight_prod = weight_prod[acceptable]
-            weight_norm = weight_norm[acceptable]
 
         out_dir = cache.settings['resultsDirProgress']
 
         create_corner(out_dir, "corner.png", headers, data_input, weights=None)
         create_corner(out_dir, "corner_min.png", headers, data_input, weights=weight_min)
         create_corner(out_dir, "corner_prod.png", headers, data_input, weights=weight_prod)
-        create_corner(out_dir, "corner_norm.png", headers, data_input, weights=weight_norm)
 
         #transformed entries
         create_corner(out_dir, "corner_transform.png", headers, data_input_transform, weights=None)
         create_corner(out_dir, "corner_min_transform.png", headers, data_input_transform, weights=weight_min)
         create_corner(out_dir, "corner_prod_transform.png", headers, data_input_transform, weights=weight_prod)
-        create_corner(out_dir, "corner_norm_transform.png", headers, data_input_transform, weights=weight_norm)
 
 def create_corner(dir, filename, headers, data, weights=None):
     if  numpy.all(numpy.min(data,0) < numpy.max(data,0)):

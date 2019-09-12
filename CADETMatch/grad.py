@@ -90,7 +90,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
             save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
 
             ind_meta = cache.toolbox.individualMeta(ind)
-            ind_meta.fitness.values = util.calcMetaScores(fit, cache)
+            ind_meta.fitness.values = csv_line[-4:] #util.calcMetaScores(fit, cache)
 
             util.update_result_data(cache, ind, fit, result_data, results)
 

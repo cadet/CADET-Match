@@ -459,9 +459,6 @@ def plot_2d(arg):
     directory_path, header_x, scoreName, data, scores = arg
     directory = Path(directory_path)
 
-    #if scoreName == 'SSE':
-    #    scores = -numpy.log(scores)
-    #    scoreName = '-log(%s)' % scoreName
     if numpy.all(scores <= 0):
         scores = numpy.abs(scores)
 
@@ -496,10 +493,10 @@ def graphProgress(cache):
 
     output = cache.settings['resultsDirProgress']
 
-    x = ['Generation', 'Total CPU Time',]
+    x = ['Generation',]
     y = ['Average Score', 'Minimum Score', 'Product Score',
          'Pareto Meta Product Score', 'Pareto Meta Min Score', 
-         'Pareto Meta Mean Score', 'Pareto Meta Norm Score',]
+         'Pareto Meta Mean Score',]
 
     temp = []
     for x,y in itertools.product(x,y):

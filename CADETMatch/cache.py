@@ -49,10 +49,9 @@ class Cache:
         self.altFeatures = False
         self.altFeatureNames = []
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
-                                 'Pareto Front', 'Average Score', 'Minimum Score', 'Product Score',
-                                 'Pareto Mean Average Score', 'Pareto Mean Minimum Score', 'Pareto Mean Product Score',
+                                 'Pareto Front', 'Product Score', 'Minimum Score', 'Average Score',
+                                 'Pareto Mean Product Score', 'Pareto Mean Minimum Score', 'Pareto Mean Average Score',
                                  'Pareto Meta Product Score', 'Pareto Meta Min Score', 'Pareto Meta Mean Score',
-                                 'Pareto Meta Norm Score',
                                  'Elapsed Time', 'Generation Time', 'Total CPU Time', 'Last Progress Generation',
                                  'Generations of Progress']
 
@@ -224,10 +223,9 @@ class Cache:
 
         self.headers.extend(self.score_headers)                      
         
-        self.meta_headers = ['Product Root Score', 'Min Score', 'Mean Score', 'Norm']
+        self.meta_headers = ['Product Root Score', 'Min Score', 'Mean Score', 'SSE']
 
         self.headers.extend(self.meta_headers)
-        self.headers.append('SSE')
 
         scores = len(self.headers)
         self.score_indexes = list(range(parameters, scores))

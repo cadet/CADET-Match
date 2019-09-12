@@ -103,13 +103,11 @@ def sobolGenerator(icls, cache, n):
         return []
 
 def calcMetaScores(scores, cache):
-    #scoop.logger.info("calcMetaScores %s %s", scores, cache.meta_mask)
     scores = numpy.array(scores)[cache.meta_mask]
     prod_score = product_score(scores)
     min_score = min(scores)
     mean_score = sum(scores)/len(scores)
-    norm_score = numpy.sign(min_score) * numpy.linalg.norm(scores)/numpy.sqrt(len(scores))
-    human = [prod_score, min_score, mean_score, norm_score]
+    human = [prod_score, min_score, mean_score]
     return human
 
 def product_score(values):
@@ -969,16 +967,15 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                          cache.numGoals,
                          cache.settings.get('searchMethod', 'NSGA3'),
                          len(halloffame),
-                         average_score,
-                         minimum_score,
                          product_score,
-                         meta_mean[2],
-                         meta_mean[1],
+                         minimum_score,
+                         average_score,
                          meta_mean[0],
+                         meta_mean[1],
+                         meta_mean[2],
                          meta_max[0],
                          meta_max[1],
-                         meta_max[3],
-                         meta_max[3],
+                         meta_max[2],
                          now - sim_start,
                          now - generation_start,
                          cpu_time.user + cpu_time.system,
@@ -1132,7 +1129,7 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
         ind_meta = toolbox.individualMeta(ind)
 
-        ind_meta.fitness.values = calcMetaScores(fit, cache)
+        ind_meta.fitness.values = csv_line[-4:] #calcMetaScores(fit, cache)
        
         update_result_data(cache, ind, fit, result_data, results)
 
