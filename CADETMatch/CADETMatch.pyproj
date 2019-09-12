@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda37-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\NonBindingProtein\NSGA3_protein.json"  2</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\NSGA3_dextran.json"  2</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -255,6 +255,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\nsga2_improved.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\nsga3_deap.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\nsga3_improved.py">

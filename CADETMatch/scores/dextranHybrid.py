@@ -34,11 +34,8 @@ def run(sim_data, feature):
 
     score_corr, diff_time = score.cross_correlate(exp_time_values, sim_data_values, exp_data_values)
 
-    try:
-        sim_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, sim_data_values), s=util.smoothing_factor(sim_data_values)).derivative(1)
-        exp_spline = scipy.interpolate.UnivariateSpline(exp_time_values, util.smoothing(exp_time_values, exp_data_values), s=util.smoothing_factor(exp_data_values)).derivative(1)
-    except:  #I know a bare exception is bad but it looks like the exception is not exposed inside UnivariateSpline
-        return settings.failure
+    sim_spline = util.create_spline(exp_time_values, sim_data_values).derivative(1)
+    exp_spline = util.create_spline(exp_time_values, exp_data_values).derivative(1)
 
     exp_der_data_values = exp_spline(exp_time_values)
     sim_der_data_values = sim_spline(exp_time_values)
@@ -57,7 +54,8 @@ def run(sim_data, feature):
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     #change the stop point to be where the max positive slope is along the searched interval
-    exp_spline = scipy.interpolate.UnivariateSpline(selectedTimes, selectedValues, s=util.smoothing_factor(selectedValues), k=3).derivative(1)
+    exp_spline = util.create_spline(selectedTimes, selectedValues).derivative(1)
+    
     values = exp_spline(selectedTimes)
     max_index = numpy.argmax(values)
     max_time = selectedTimes[max_index]

@@ -121,7 +121,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
 
 def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
-                   stats=None, verbose=__debug__, tools=None, cache=None):
+                   stats=None, verbose=__debug__, tools=None, cache=None, varOr=True):
     """from DEAP function but with checkpoiting"""
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
@@ -184,7 +184,10 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
         for gen in range(start_gen, ngen+1):
             generation_start = time.time()
             # Vary the population
-            offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
+            if varOr:
+                offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
+            else:
+                offspring = algorithms.varAnd(population, toolbox, cxpb, mutpb)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]

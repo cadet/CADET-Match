@@ -46,6 +46,9 @@ def find_extreme(seq):
     except ValueError:
         return [0, 0]
 
+def create_spline(times, values):
+    return scipy.interpolate.PchipInterpolator(times, smoothing(times, values, 11))
+
 def get_times_values(simulation, target, selected = None):
 
     try:
@@ -135,13 +138,14 @@ def averageFitness(offspring, cache):
 
     return result
 
-def smoothing(times, values):
+def smoothing(times, values, filter_length=None):
     #temporarily get rid of smoothing for debugging
     #return values
     #filter length must be odd, set to 10% of the feature size and then make it odd if necesary
-    filter_length = int(.1 * len(values))
-    if filter_length % 2 == 0:
-        filter_length += 1
+    if filter_length is None:
+        filter_length = int(.1 * len(values))
+        if filter_length % 2 == 0:
+            filter_length += 1
     return scipy.signal.savgol_filter(values, filter_length, 3)
 
 def mutPolynomialBoundedAdaptive(individual, eta, low, up, indpb):
@@ -172,8 +176,8 @@ def mutationNSGA3_cross(ind1, ind2, low, up):
 
     mult = min(mult_1, mult_2)
 
-    eta = get_eta(mult, [0.0, 0.9, 0.99], [2.0, 10.0, 20.0])
-    #eta = 2.0
+    eta = get_eta(mult, [0.0, 0.9, 0.99], [1.0, 2.0, 4.0])
+    #eta = 1.0
 
     return tools.cxSimulatedBinaryBounded(ind1, ind2, eta, low, up)
 
@@ -181,9 +185,9 @@ def mutationNSGA3_mutate(individual, low, up, indpb):
     scores = individual.fitness.values
     mult = min(scores)
 
-    eta = get_eta(mult, [0.0, 0.9, 0.95], [2.0, 10.0, 20.0])
+    eta = get_eta(mult, [0.0, 0.9, 0.95], [1.0, 5.0, 10.0])
     #eta = get_eta(mult, [0.0, 0.9, 0.95], [2.0, 20.0, 50.0])
-    #eta=2.0
+    #eta= 10.0
     
     return tools.mutPolynomialBounded(individual, eta, low, up, indpb)
 
