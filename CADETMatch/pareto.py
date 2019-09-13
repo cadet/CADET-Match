@@ -13,7 +13,7 @@ class ParetoFront(tools.ParetoFront):
             self.similar_fit = eq
         super().__init__(similar)
 
-    def update(self, population, cache):
+    def update(self, population):
         """Update the Pareto front hall of fame with the *population* by adding 
         the individuals from the population that are not dominated by the hall
         of fame. If any individual in the hall of fame is dominated it is
@@ -34,7 +34,7 @@ class ParetoFront(tools.ParetoFront):
                 elif ind.fitness.dominates(hofer.fitness):
                     dominates_one = True
                     to_remove.append(i)
-                elif self.similar_fit(ind.fitness.values, hofer.fitness.values) and self.similar(ind, hofer, cache):
+                elif self.similar_fit(ind.fitness.values, hofer.fitness.values) and self.similar(ind, hofer):
                     has_twin = True
                     break
             

@@ -647,10 +647,10 @@ def bestMinScore(hof):
     idxMax = numpy.argmax([min(i.fitness.values) for i in hof])
     return hof[idxMax]
 
-def similar(a, b, cache):
+def similar(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
-    a = numpy.array(convert_individual(a,cache)[0])
-    b = numpy.array(convert_individual(b,cache)[0])
+    a = numpy.array(a)
+    b = numpy.array(b)
     
     #used to catch division by zero
     a[a == 0.0] = smallest
@@ -1206,7 +1206,7 @@ def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, me
 
 def updateParetoFront(halloffame, offspring, cache):
     before = set(map(tuple, halloffame.items))
-    halloffame.update([offspring,], cache)
+    halloffame.update([offspring,])
     after = set(map(tuple, halloffame.items))
 
     return tuple(offspring) in after and tuple(offspring) not in before
