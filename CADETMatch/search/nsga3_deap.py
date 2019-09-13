@@ -36,7 +36,7 @@ def run(cache, tools, creator):
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
-    ref_points = tools.uniform_reference_points(cache.numGoals, 12)
+    ref_points = tools.uniform_reference_points(cache.numGoals, 4)
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
     creator.create("Individual", array.array, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None)
 
