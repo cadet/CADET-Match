@@ -24,7 +24,7 @@ def run(cache, tools, creator):
             pop.extend(seed_pop)
 
         hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
-        meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+        meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit_meta)
         grad_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]

@@ -31,7 +31,7 @@ def run(cache, tools, creator):
     gradCheck = cache.badScore
 
     hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
-    meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+    meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit_meta)
     grad_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])

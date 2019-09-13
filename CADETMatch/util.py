@@ -658,6 +658,22 @@ def similar_fit(a, b):
     diff = numpy.abs((a-b)/a)
     return numpy.all(diff < 1e-3)
 
+def similar_fit_meta(a, b):
+    "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
+    a = numpy.array(a)
+    b = numpy.array(b)
+
+    #SSE is in the last slot of the scores and needs to be handled differently since it changes so rapidly compared to other scores
+    a[-1] = numpy.log(a[-1])
+    b[-1] = numpy.log(b[-1])
+
+    diff = numpy.abs((a-b)/a)
+
+    #for the SSE score 1e-2 is an acceptable relative difference in log space
+    diff[-1] = diff[-1] * 1e-1
+
+    return numpy.all(diff < 1e-3)
+
 def RoundToSigFigs( x, sigfigs ):
     """
     Rounds the value(s) in x to the number of significant figures in sigfigs.
@@ -1062,7 +1078,7 @@ def metaCSV(cache):
                          numpy.mean(paretoProductScore), numpy.std(paretoProductScore),
                          numpy.mean(totalCPUTime), numpy.std(totalCPUTime),])
 
-def update_result_data(cache, ind, fit, result_data, results):
+def update_result_data(cache, ind, fit, result_data, results, meta_scores):
     if result_data is not None and results is not None:
         result_data['input'].append(tuple(ind))
 
@@ -1073,7 +1089,7 @@ def update_result_data(cache, ind, fit, result_data, results):
         if ind.confidence is not None:
             result_data['confidence'].append(tuple(ind.confidence))
         result_data['output'].append(tuple(fit))
-        result_data['output_meta'].append(tuple(calcMetaScores(fit, cache)))
+        result_data['output_meta'].append(tuple(meta_scores))
 
         for result in results.values():
             result_data['input_transform'].append(tuple(result['cadetValues']))
@@ -1131,7 +1147,7 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
         ind_meta.fitness.values = csv_line[-4:] #calcMetaScores(fit, cache)
        
-        update_result_data(cache, ind, fit, result_data, results)
+        update_result_data(cache, ind, fit, result_data, results, csv_line[-4:])
 
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)

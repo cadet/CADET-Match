@@ -372,7 +372,7 @@ def run(cache, tools, creator):
         result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[], 'mcmc_score':[]}
         halloffame = pareto.DummyFront(similar=util.similar, similar_fit=util.similar_fit)
-        meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+        meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit_meta)
         grad_hof = pareto.DummyFront(similar=util.similar, similar_fit=util.similar_fit)
 
         def local(results):
