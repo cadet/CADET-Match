@@ -143,11 +143,19 @@ def smoothing(times, values, filter_length=None):
     #temporarily get rid of smoothing for debugging
     #return values
     #filter length must be odd, set to 10% of the feature size and then make it odd if necesary
-    if filter_length is None:
-        filter_length = int(.1 * len(values))
-        if filter_length % 2 == 0:
-            filter_length += 1
-    return scipy.signal.savgol_filter(values, filter_length, 3)
+    
+    #if filter_length is None:
+    #    filter_length = int(.1 * len(values))
+    #    if filter_length % 2 == 0:
+    #        filter_length += 1
+    #return scipy.signal.savgol_filter(values, filter_length, 3)
+
+    N  = 3    # Filter order
+    Wn = 0.005 # Cutoff frequency
+    dt = times[1] - times[0]
+    Fs = 1 / dt 
+    B, A = scipy.signal.butter(N, Wn, output='ba', fs=Fs, btype='lowpass')
+    return scipy.signal.filtfilt(B,A, values)
 
 def mutPolynomialBoundedAdaptive(individual, eta, low, up, indpb):
     """Adaptive eta for mutPolynomialBounded"""
@@ -1350,8 +1358,6 @@ def test_eta(eta, xl, xu, size):
     
     delta_1 = (x - xl)/(xu - xl)
     delta_2 = (xu - x)/(xu - xl)
-    
-    print(x, delta_1, delta_2)
     
     rand = numpy.random.rand(size)
     
