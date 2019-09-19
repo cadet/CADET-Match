@@ -1,9 +1,9 @@
-import util
-import pareto
+import CADETMatch.util as util
+import CADETMatch.pareto as pareto
 import csv
 from pathlib import Path
 import time
-import jacobian
+import CADETMatch.jacobian as jacobian
 import scoop
 import array
 

@@ -1,13 +1,13 @@
 import math
-import util
-import checkpoint_algorithms
+import CADETMatch.util as util
+import CADETMatch.checkpoint_algorithms as checkpoint_algorithms
 import random
 
 import numpy
 from scipy.spatial.distance import cdist
 
 import deap.tools.emo
-import pareto
+import CADETMatch.pareto as pareto
 
 name = 'SPEA2a'
 

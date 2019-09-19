@@ -1,4 +1,4 @@
-import util
+import CADETMatch.util as util
 import numpy
 
 name = "keq"

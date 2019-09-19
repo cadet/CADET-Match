@@ -3,22 +3,22 @@ import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore",category=FutureWarning)
     import h5py
-import util
+import CADETMatch.util as util
 from pathlib import Path
-import evo
+import CADETMatch.evo as evo
 import scipy.optimize
 import numpy
 import numpy.linalg
 import hashlib
-import score
+import CADETMatch.score as score
 import tempfile
 import os
 import subprocess
 import csv
 import time
-from cadet import Cadet
+import CADETMatch.cadet as cadet
 import scoop
-import cache
+import CADETMatch.cache as cache
 
 class ConditionException(Exception):
     pass

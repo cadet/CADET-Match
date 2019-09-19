@@ -1,6 +1,6 @@
-import util
+import CADETMatch.util as util
 import numpy
-import calc_coeff
+import CADETMatch.calc_coeff as calc_coeff
 
 name = "norm_linear"
 count = 2

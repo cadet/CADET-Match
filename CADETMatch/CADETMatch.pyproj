@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>0067cb6f-0de6-4dd6-8086-20ea899a691d</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>CADETMatch.py</StartupFile>
+    <StartupFile>match.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda37-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example3\Isotherm\NSGA3_sma_hybrid.json"  2</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\NSGA3_dextran.json"  2</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -36,7 +36,10 @@
     <Compile Include="cadet.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CADETMatch.py" />
+    <Compile Include="jupyter.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="match.py" />
     <Compile Include="calc_coeff.py">
       <SubType>Code</SubType>
     </Compile>
@@ -381,9 +384,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="video_spearman.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="__init__.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

@@ -1,10 +1,9 @@
-import util
-import score
+import CADETMatch.util as util
+import CADETMatch.score as score
 import scipy.stats
 import numpy
 import numpy.linalg
 from addict import Dict
-from cadet import H5
 import sys
 
 name = "DextranSSE"

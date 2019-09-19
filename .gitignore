@@ -298,3 +298,5 @@ __pycache__/
 /Examples/Example1/Dextran/dextran_pulse_extended.h5
 /Examples/Example1/Dextran/dextran_pulse_temp.h5
 /Examples/Example3/Isotherm/fit
+/Examples/Example1/NonBindingProtein/fit_deap
+/dist/CADETMatch-0.1.tar.gz

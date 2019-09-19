@@ -1,8 +1,8 @@
-import util
+import CADETMatch.util as util
 import random
 from pathlib import Path
 import csv
-import pareto
+import CADETMatch.pareto as pareto
 import scoop
 import time
 import array

@@ -11,7 +11,7 @@ from addict import Dict
 
 import tempfile
 import os
-from cadet import Cadet, H5
+from CADETMatch.cadet import Cadet, H5
 import subprocess
 import sys
 import json
@@ -20,7 +20,7 @@ import csv
 import psutil
 
 import random
-import calc_coeff
+import CADETMatch.calc_coeff as calc_coeff
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore",category=FutureWarning)
@@ -34,8 +34,8 @@ __logBase10of2_decim = decim.Decimal(2).log10()
 __logBase10of2 = float(__logBase10of2_decim)
 
 import SALib.sample.sobol_sequence
-import loggerwriter
-import synthetic_error
+import CADETMatch.loggerwriter as loggerwriter
+import CADETMatch.synthetic_error as synthetic_error
 
 #smallest number close to 0, used to make sure we don't divide by zero
 smallest = numpy.finfo(1.0).tiny
@@ -1358,7 +1358,7 @@ def test_eta(eta, xl, xu, size):
     
     delta_1 = (x - xl)/(xu - xl)
     delta_2 = (xu - x)/(xu - xl)
-    
+     
     rand = numpy.random.rand(size)
     
     mut_pow = 1.0 / (eta + 1.0)

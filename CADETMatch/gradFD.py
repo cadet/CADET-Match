@@ -1,4 +1,4 @@
-import util
+import CADETMatch.util as util
 from pathlib import Path
 import scipy.optimize
 import numpy
@@ -7,9 +7,7 @@ import hashlib
 import csv
 import time
 
-from cadet import Cadet
-
-import cache
+import CADETMatch.cache as cache
 import scoop
 
 class GradientException(Exception):

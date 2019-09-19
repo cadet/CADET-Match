@@ -1,12 +1,12 @@
 import random
 import pickle
-import util
+import CADETMatch.util as util
 import numpy
 import scipy
 from pathlib import Path
 import time
 import csv
-import cadet
+import CADETMatch.cadet as cadet
 
 import emcee
 import SALib.sample.sobol_sequence
@@ -32,18 +32,18 @@ plt.rc('legend', fontsize=size)    # legend fontsize
 plt.rc('figure', titlesize=size)  # fontsize of the figure title
 plt.rc('figure', autolayout=True)
 
-import evo
-import cache
+import CADETMatch.evo as evo
+import CADETMatch.cache as cache
 
-import pareto
+import CADETMatch.pareto as pareto
 
 import scoop
 import pandas
 import array
-import mle
-import autocorr
+import CADETMatch.mle as mle
+import CADETMatch.autocorr as autocorr
 
-import kde_generator
+import CADETMatch.kde_generator as kde_generator
 from sklearn.neighbors.kde import KernelDensity
 
 name = "MCMC"

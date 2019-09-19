@@ -8,8 +8,8 @@
 #Signal noise
 
 import itertools
-import score
-from cadet import Cadet, H5
+import CADETMatch.score as score
+from CADETMatch.cadet import Cadet, H5
 from pathlib import Path
 import numpy
 import scoop
@@ -31,11 +31,11 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-import util
-import cache
+import CADETMatch.util as util
+import CADETMatch.cache as cache
 
 from scoop import futures
-import synthetic_error
+import CADETMatch.synthetic_error as synthetic_error
 
 import joblib
 

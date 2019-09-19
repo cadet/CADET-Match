@@ -1,5 +1,5 @@
-import util
-import score
+import CADETMatch.util as util
+import CADETMatch.score as score
 from addict import Dict
 import numpy
 

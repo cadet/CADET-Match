@@ -2,16 +2,16 @@
 
 from pathlib import Path
 import json
-from cadet import Cadet
+from CADETMatch.cadet import Cadet
 
 import numpy
 
-import plugins
+import CADETMatch.plugins as plugins
 import os
 from deap import tools
 from sklearn import preprocessing
 
-import kde_generator
+import CADETMatch.kde_generator as kde_generator
 
 import scoop
 
@@ -62,7 +62,6 @@ class Cache:
             self.search = plugins.get_plugins('search')
             self.transforms = plugins.get_plugins('transform')
 
-
         self.json_path = json_path
         self.setupSettings()
 
@@ -88,8 +87,8 @@ class Cache:
         #self.settings['grad_transform'] = self.grad_transform
 
         self.correct = None
-        if "correct" in cache.settings:
-            self.correct = numpy.array([f(v) for f, v in zip(cache.settings['transform'], cache.settings['correct'])])
+        if "correct" in self.settings:
+            self.correct = numpy.array([f(v) for f, v in zip(self.settings['transform'], self.settings['correct'])])
 
         #create used paths in settings, only the root process will make the directories later
         self.settings['resultsDirEvo'] = Path(self.settings['resultsDir']) / "evo"
@@ -102,7 +101,7 @@ class Cache:
         self.settings['resultsDirMCMC'] = Path(self.settings['resultsDir']) / "mcmc"
         self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
 
-        self.error_path = Path(cache.settings['resultsDirBase'], "error.csv")
+        self.error_path = Path(self.settings['resultsDirBase'], "error.csv")
 
         self.graphGenerateTime = int(self.settings.get('graphGenerateTime', 3600))
         self.graphMetaTime = int(self.settings.get('graphMetaTime', 1200))
@@ -253,7 +252,7 @@ class Cache:
 
             transform = parameter['transform']
 
-            sens_parms, sensitivityOk = cache.transforms[transform].setupTarget(parameter)
+            sens_parms, sensitivityOk = self.transforms[transform].setupTarget(parameter)
             parms.extend(sens_parms)
 
         if sensitivityOk:

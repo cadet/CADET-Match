@@ -7,12 +7,12 @@ import scoop
 from scoop import futures
 import sys
 
-import cadet
-import util
-import evo
+import CADETMatch.cadet as cadet
+import CADETMatch.util as util
+import CADETMatch.evo as evo
 import pandas
 from addict import Dict
-from cache import cache
+import CADETMatch.cache as cache
 from pathlib import Path
 import warnings
 import joblib
@@ -32,7 +32,7 @@ import matplotlib.cm
 cm_plot = matplotlib.cm.gist_rainbow
 
 import logging
-import loggerwriter
+import CADETMatch.loggerwriter as loggerwriter
 
 import kde_generator
 

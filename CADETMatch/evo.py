@@ -1,14 +1,14 @@
 import numpy
-import util
+import CADETMatch.util as util
 
 from pathlib import Path
 
 from deap import creator
 from deap import tools
 
-from cadet import Cadet
+from CADETMatch.cadet import Cadet
 
-import cache
+import CADETMatch.cache as cache
 
 ERROR = {'scores': None,
          'path': None,

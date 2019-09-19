@@ -1,4 +1,4 @@
-import util
+import CADETMatch.util as util
 
 name = "nu_sigma"
 count = 2

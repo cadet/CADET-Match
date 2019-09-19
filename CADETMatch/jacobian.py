@@ -1,7 +1,7 @@
 from scipy.optimize._numdiff import approx_derivative
-from cadet import Cadet
+import CADETMatch.cadet as cadet
 from pathlib import Path
-import util
+import CADETMatch.util as util
 import numpy
 import scoop
 

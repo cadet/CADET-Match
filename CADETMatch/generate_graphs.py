@@ -18,7 +18,7 @@ from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D  
 
-from cache import cache
+from CADETMatch.cache import cache
 
 from pathlib import Path
 import pandas
@@ -26,8 +26,7 @@ import numpy
 import scipy.interpolate
 import itertools
 
-from cadet import Cadet
-from cadet import H5
+from CADETMatch.cadet import Cadet, H5
 from addict import Dict
 
 #parallelization
@@ -37,9 +36,9 @@ import scoop
 import os
 import warnings
 import corner
-import util
+import CADETMatch.util as util
 import logging
-import loggerwriter
+import CADETMatch.loggerwriter as loggerwriter
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}

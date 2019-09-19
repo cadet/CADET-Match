@@ -1,5 +1,5 @@
-import util
-import calc_coeff
+import CADETMatch.util as util
+import CADETMatch.calc_coeff as calc_coeff
 import numpy
 from addict import Dict
 

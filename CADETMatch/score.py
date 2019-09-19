@@ -4,7 +4,7 @@ import scipy.optimize
 import scipy.interpolate
 import scipy.signal
 import numpy.linalg
-import calc_coeff
+import CADETMatch.calc_coeff as calc_coeff
 import scoop
 
 def roll(x, shift):

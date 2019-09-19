@@ -1,9 +1,9 @@
-import util
-import checkpoint_algorithms
+import CADETMatch.util as util
+import CADETMatch.checkpoint_algorithms as checkpoint_algorithms
 import random
-import nsga3_selection
+import CADETMatch.nsga3_selection as nsga3_selection
 from deap import tools
-import pareto
+import CADETMatch.pareto as pareto
 import array
 import numpy
 

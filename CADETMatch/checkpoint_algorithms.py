@@ -2,11 +2,11 @@ from pathlib import Path
 import pickle
 import random
 import numpy
-import util
+import CADETMatch.util as util
 from deap import algorithms
 import time
 import csv
-import pareto
+import CADETMatch.pareto as pareto
 import scoop
 
 stallRate = 1.25

@@ -1,14 +1,14 @@
 import sys
 
-import evo
+import CADETMatch.evo as evo
 #import grad
-import gradFD
-import util
+import CADETMatch.gradFD as gradFD
+import CADETMatch.util as util
 import time
 import numpy
 import shutil
 import csv
-from cadet import Cadet
+from CADETMatch.cadet import Cadet
 from pathlib import Path
 
 from deap import creator
@@ -21,17 +21,20 @@ import scoop
 
 import logging
 
-from cache import cache
-import loggerwriter
+from CADETMatch.cache import cache
+import CADETMatch.loggerwriter as loggerwriter
 import h5py
+import subprocess
 
 #due to how scoop works and the need to break things up into multiple processes it is hard to use class based systems
 #As a result most of the code is broken up into modules but is still based on pure functions
 
 #setup scoop logging for all processes
 
-def main():
-    setup(cache, sys.argv[1])
+def main(path=None, map_function=None):
+    if path is None:
+        path = sys.argv[1]
+    setup(cache, path, map_function)
     #grad.setupTemplates(cache)
     hof = evo.run(cache)
 
@@ -97,7 +100,7 @@ def main():
             cov = numpy.cov(numpy_temp.transpose())
             scoop.logger.info("final cov %s data %s det %s", cov, numpy_temp, numpy.linalg.det(cov))
 
-def setup(cache, json_path):
+def setup(cache, json_path, map_function):
     "run seutp for the current json_file"
     cache.setup(json_path)
 
@@ -106,7 +109,7 @@ def setup(cache, json_path):
     createProgressCSV(cache)
     createErrorCSV(cache)
     setupTemplates(cache)
-    setupDeap(cache)
+    setupDeap(cache, map_function)
     setupLog(cache.settings['resultsDirLog'])
 
 def setupLog(log_directory):
@@ -214,15 +217,16 @@ def setupTemplates(cache):
 
         experiment['simulation'] = template
 
-def setupDeap(cache):
+def setupDeap(cache, map_function):
     "setup the DEAP variables"
     searchMethod = cache.settings.get('searchMethod', 'SPEA2')
     cache.toolbox = base.Toolbox()
 
-    if getattr(scoop, 'SIZE', 1) == 1:
-        map_function = map
-    else:
-        map_function = futures.map
+    if map_function is None:
+        if getattr(scoop, 'SIZE', 1) == 1:
+            map_function = map
+        else:
+            map_function = futures.map
 
     cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, map_function, creator, base, tools)
     #cache.search[searchMethod].setupDEAP(cache, evo.fitness, grad.gradSearch, grad.search, map_function, creator, base, tools)
@@ -267,4 +271,3 @@ if __name__ == "__main__":
     main()
     scoop.logger.info('Sysem has finished')
     scoop.logger.info("The total runtime was %s seconds" % (time.time() - start))
-

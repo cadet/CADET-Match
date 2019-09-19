@@ -1,6 +1,6 @@
 import random
-import util
-import checkpoint_algorithms
+import CADETMatch.util as util
+import CADETMatch.checkpoint_algorithms as checkpoint_algorithms
 
 name = "NSGA2_mut_norm"
 

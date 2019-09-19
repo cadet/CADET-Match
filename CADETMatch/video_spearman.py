@@ -1,5 +1,5 @@
 import sys
-from cache import cache
+from CADETMatch.cache import cache
 from pathlib import Path
 
 import matplotlib
