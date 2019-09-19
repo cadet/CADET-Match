@@ -1,5 +1,5 @@
 from scipy.optimize._numdiff import approx_derivative
-import CADETMatch.cadet as cadet
+from CADETMatch.cache import cache
 from pathlib import Path
 import CADETMatch.util as util
 import numpy

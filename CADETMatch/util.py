@@ -11,7 +11,7 @@ from addict import Dict
 
 import tempfile
 import os
-from CADETMatch.cadet import Cadet, H5
+from cadet import Cadet, H5
 import subprocess
 import sys
 import json

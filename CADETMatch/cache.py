@@ -2,7 +2,7 @@
 
 from pathlib import Path
 import json
-from CADETMatch.cadet import Cadet
+from cadet import Cadet
 
 import numpy
 

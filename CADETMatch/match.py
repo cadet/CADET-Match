@@ -8,7 +8,7 @@ import time
 import numpy
 import shutil
 import csv
-from CADETMatch.cadet import Cadet
+from cadet import Cadet
 from pathlib import Path
 
 from deap import creator

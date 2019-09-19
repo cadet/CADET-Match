@@ -6,7 +6,7 @@ import scipy
 from pathlib import Path
 import time
 import csv
-import CADETMatch.cadet as cadet
+import cadet
 
 import emcee
 import SALib.sample.sobol_sequence

@@ -16,7 +16,6 @@ import os
 import subprocess
 import csv
 import time
-import CADETMatch.cadet as cadet
 import scoop
 import CADETMatch.cache as cache
 

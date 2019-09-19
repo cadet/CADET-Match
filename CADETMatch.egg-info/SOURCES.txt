@@ -4,7 +4,6 @@ setup.py
 CADETMatch/__init__.py
 CADETMatch/autocorr.py
 CADETMatch/cache.py
-CADETMatch/cadet.py
 CADETMatch/calc_coeff.py
 CADETMatch/checkpoint_algorithms.py
 CADETMatch/evo.py

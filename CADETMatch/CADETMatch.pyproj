@@ -33,9 +33,6 @@
     <Compile Include="cache.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="cadet.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="jupyter.py">
       <SubType>Code</SubType>
     </Compile>

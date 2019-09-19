@@ -7,7 +7,7 @@ import scoop
 from scoop import futures
 import sys
 
-import CADETMatch.cadet as cadet
+import cadet
 import CADETMatch.util as util
 import CADETMatch.evo as evo
 import pandas

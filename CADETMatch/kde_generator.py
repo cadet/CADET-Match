@@ -9,7 +9,7 @@
 
 import itertools
 import CADETMatch.score as score
-from CADETMatch.cadet import Cadet, H5
+from cadet import Cadet, H5
 from pathlib import Path
 import numpy
 import scoop

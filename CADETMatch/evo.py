@@ -6,7 +6,7 @@ from pathlib import Path
 from deap import creator
 from deap import tools
 
-from CADETMatch.cadet import Cadet
+from cadet import Cadet
 
 import CADETMatch.cache as cache
 

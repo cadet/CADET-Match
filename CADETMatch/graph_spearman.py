@@ -5,7 +5,7 @@ matplotlib.use('Agg')
 from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
-import CADETMatch.cadet as cache
+from CADETMatch.cache import cache
 
 from pathlib import Path
 import warnings

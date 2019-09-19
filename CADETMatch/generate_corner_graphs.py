@@ -26,7 +26,6 @@ import numpy
 import scipy.interpolate
 import itertools
 
-import CADETMatch.cadet as cadet
 from cadet import H5
 from addict import Dict
 

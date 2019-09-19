@@ -26,7 +26,7 @@ import numpy
 import scipy.interpolate
 import itertools
 
-from CADETMatch.cadet import Cadet, H5
+from cadet import Cadet, H5
 from addict import Dict
 
 #parallelization
