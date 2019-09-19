@@ -302,3 +302,4 @@ __pycache__/
 /dist/CADETMatch-0.1.tar.gz
 /dist
 /CADETMatch_kosh.egg-info
+/Examples/Example1/Dextran/fit_nsga3_deap

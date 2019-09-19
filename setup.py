@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
     
 setuptools.setup(
-    name="CADETMatch-kosh",
-    version="0.1",
+    name="CADETMatch",
+    version="0.2",
     author="William Heymann",
     author_email="w.heymann@fz-juelich.de",
     description="CADETMatch is a parameter estimation and error modeling library for CADET",
@@ -13,6 +13,22 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/modsim/CADET-Match",
     packages=setuptools.find_packages(),
+    install_requires=[
+          'joblib',
+          'addict',
+          'emcee',
+          'SAlib',
+          'corner',
+          'deap',
+          'scoop',
+          'psutil',
+          'openpyxl',
+          'numpy',
+          'scipy',
+          'matplotlib',
+          'pandas',
+          'h5py'
+      ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",

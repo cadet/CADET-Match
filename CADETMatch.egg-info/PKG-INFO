@@ -1,0 +1,26 @@
+Metadata-Version: 2.1
+Name: CADETMatch
+Version: 0.2
+Summary: CADETMatch is a parameter estimation and error modeling library for CADET
+Home-page: https://github.com/modsim/CADET-Match
+Author: William Heymann
+Author-email: w.heymann@fz-juelich.de
+License: UNKNOWN
+Description: # CADET-Match
+        CADET Parameter estimation engine
+        
+        This software is a work in progress. The file formats will break as changes as made.
+        
+        This software is designed to do parameter estimation for CADET. The required libraries are in the README.txt file
+        in the CADETMatch directory.
+        
+        The documentation is also a work in progress.
+        
+        If you use this software in your research please give credit.
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
