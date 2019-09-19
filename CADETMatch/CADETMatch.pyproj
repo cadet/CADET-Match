@@ -380,10 +380,16 @@
     <Compile Include="transform\volume_length.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="transform\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="util.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="video_spearman.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="__init__.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
