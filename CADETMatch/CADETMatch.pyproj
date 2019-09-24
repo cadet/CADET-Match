@@ -16,7 +16,8 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>"F:\temp\example\fit\example.json"  2</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
+    <InterpreterArguments>
+    </InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -95,7 +96,7 @@
     <Compile Include="plugins.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scoop_match.py">
+    <Compile Include="__main__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="score.py">

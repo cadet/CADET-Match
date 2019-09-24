@@ -43,13 +43,17 @@ def makeParser():
                         action='store_true')
 
     parser.add_argument('-n',
-                        help="Number of scoop processes to use. Use 1 for debugging")
+                        help="Number of scoop processes to use. Use 1 for debugging",
+                        default=0)
 
     return parser
 
 
 def run_command(module, json, number_of_jobs, additional=None):
-    command = [sys.executable, '-m', 'scoop', '-n', str(number_of_jobs), module.__file__, str(json)]
+    command = [sys.executable, '-m', 'scoop']
+    if int(number_of_jobs) > 0:
+        command.extend(['-n', str(number_of_jobs)])
+    command.extend([module.__file__, str(json)])
     if additional is not None:
         command.extend(additional)
 

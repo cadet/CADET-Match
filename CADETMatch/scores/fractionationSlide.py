@@ -75,7 +75,7 @@ def run(sim_data, feature):
 
     for component, value_func in funcs:
         exp_values = numpy.array(data[str(component)])
-        sim_value = simulation.root.output.solution[feature['unit']["solution_outlet_comp_%03d" % component]
+        sim_value = simulation.root.output.solution[feature['unit']]["solution_outlet_comp_%03d" % component]
 
         rollLeft, rollRight, searchMax = rollRange(times, sim_value, searchIndexStart, searchIndexStop)
 
