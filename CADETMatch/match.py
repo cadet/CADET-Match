@@ -271,3 +271,4 @@ if __name__ == "__main__":
     main()
     scoop.logger.info('Sysem has finished')
     scoop.logger.info("The total runtime was %s seconds" % (time.time() - start))
+    sys.exit()

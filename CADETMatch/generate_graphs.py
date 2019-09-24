@@ -35,7 +35,6 @@ import scoop
 
 import os
 import warnings
-import corner
 import CADETMatch.util as util
 import logging
 import CADETMatch.loggerwriter as loggerwriter

@@ -941,8 +941,8 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                         hf["grad_population_transform"].resize((grad_param_transform.shape[0]), axis = 0)
                         hf["grad_population_transform"][:] = grad_param_transform
 
-                        hf["grad_score"].resize((grad_score.shape[0]), axis = 0)
-                        hf["grad_score"][:] = grad_score
+                        hf["grad_score"].resize((data_grad.shape[0]), axis = 0)
+                        hf["grad_score"][:] = data_grad
                     else:
                         hf.create_dataset('grad_population', data=grad_param, maxshape=(None, grad_param.shape[1] ))
                         hf.create_dataset('grad_population_transform', data=grad_param_transform, maxshape=(None, grad_param_transform.shape[1] ))

@@ -28,7 +28,8 @@ setuptools.setup(
           'matplotlib',
           'pandas',
           'h5py',
-          'CADET'
+          'CADET',
+          'seaborn'
       ],
     classifiers=[
         "Programming Language :: Python :: 3",

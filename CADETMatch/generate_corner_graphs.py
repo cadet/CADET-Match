@@ -36,6 +36,7 @@ import scoop
 import os
 import warnings
 import corner
+import seaborn as sns
 import CADETMatch.util as util
 import logging
 import CADETMatch.loggerwriter as loggerwriter
@@ -105,6 +106,7 @@ def plotChain(flat_chain, flat_chain_transform, headers, out_dir, prefix):
         chain = flat_chain
         chain_transform = flat_chain_transform
     
+    #stat corner plot
     fig_size = 6 * len(headers)
     fig = corner.corner(chain, quantiles=(0.16, 0.5, 0.84),
                    show_titles=True, labels=headers, 
@@ -255,13 +257,31 @@ def graphCorner(cache):
 def create_corner(dir, filename, headers, data, weights=None):
     if  numpy.all(numpy.min(data,0) < numpy.max(data,0)):
         if weights is None or numpy.max(weights) > numpy.min(weights):
+            bounds = new_range(data).T
+
             fig_size = 6 * len(headers)
             fig = corner.corner(data, quantiles=(0.16, 0.5, 0.84),
                    show_titles=True, labels=headers, 
                     bins=20, range=new_range(data).T, 
                      use_math_text=True, title_fmt='.2g')
             fig.set_size_inches((fig_size,fig_size))
-            fig.savefig(str(dir / filename))
+            fig.savefig(str(dir / filename))        
+
+            df = pandas.DataFrame(data, columns=headers)
+            fig = sns.PairGrid(df, diag_sharey=False, height=fig_size)
+            fig.map_lower(sns.kdeplot)
+            fig.map_upper(sns.scatterplot)
+            fig.map_diag(sns.kdeplot, lw=3)
+
+            for row_num, row in enumerate(bounds):
+                for col_num, col in enumerate(bounds):
+                    if row_num == col_num:
+                        fig.axes[row_num, col_num].set_xlim(*row)
+                    else:
+                        fig.axes[row_num, col_num].set_xlim(*col)
+                        fig.axes[row_num, col_num].set_ylim(*row)
+
+            fig.savefig(str(dir / ('sns_%s' % filename) ))
 
 if __name__ == "__main__":
     main()

@@ -9,6 +9,7 @@ import time
 
 import CADETMatch.cache as cache
 import scoop
+from cadet import Cadet
 
 class GradientException(Exception):
     pass

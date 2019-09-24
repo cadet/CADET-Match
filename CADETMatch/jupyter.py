@@ -24,8 +24,8 @@ class Match:
     def plot_corner(self):
         process_dir = self.cache.settings['resultsDirProgress']
 
-        corner = process_dir / 'corner.png'
-        corner_transform = process_dir / 'corner_transform.png'
+        corner = process_dir / 'sns_corner.png'
+        corner_transform = process_dir / 'sns_corner_transform.png'
 
         if corner.exists():
             print("Corner plot in search space")
@@ -39,24 +39,8 @@ class Match:
 
     def plot_best(self):
         meta_dir = self.cache.settings['resultsDirMeta']
-        csv = meta_dir / 'results.csv'
-        data = pandas.read_csv(csv.as_posix())
-    
-        best = {}
-        score = {}
-    
-        cols = [('Product Root Score', False), ('Min Score', False), ('Mean Score', False), ('SSE', False)]
-    
-        for col_name, order in cols:
-            temp = data.sort_values(by=[col_name,], ascending=order)
-            head = temp.head(1)
-            name = str(head.Name.iloc[0])
-            score[name] = head
-            if name not in best:
-                best[name] = [col_name]
-            else:
-                best[name].append(col_name)
-            
+        best, score, best_score = self.get_best()
+     
         for name, col_names in best.items():
         
             print("Best item %s for meta score(s) %s" % (name, ' , '.join(col_names)))
@@ -65,3 +49,28 @@ class Match:
             for image in images:
                 img = dp.Image(filename=image, embed=True)
                 dp.display(img)
+
+    def get_best(self):
+        "return the best values for each score"
+        meta_dir = self.cache.settings['resultsDirMeta']
+        csv = meta_dir / 'results.csv'
+        data = pandas.read_csv(csv.as_posix())
+    
+        best = {}
+        score = {}
+        best_score = {}
+    
+        cols = [('Product Root Score', False), ('Min Score', False), ('Mean Score', False), ('SSE', False)]
+    
+        for col_name, order in cols:
+            temp = data.sort_values(by=[col_name,], ascending=order)
+            head = temp.head(1)
+            name = str(head.Name.iloc[0])
+            score[name] = head
+            best_score[col_name] = head[self.cache.parameter_headers].values[0]
+            if name not in best:
+                best[name] = [col_name]
+            else:
+                best[name].append(col_name)
+
+        return best, score, best_score
