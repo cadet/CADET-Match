@@ -25,6 +25,7 @@ CADETMatch/nsga2_simple.py
 CADETMatch/nsga3_selection.py
 CADETMatch/pareto.py
 CADETMatch/plugins.py
+CADETMatch/scoop_match.py
 CADETMatch/score.py
 CADETMatch/similarityDecay.py
 CADETMatch/synthetic_error.py

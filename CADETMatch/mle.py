@@ -12,7 +12,7 @@ import CADETMatch.util as util
 import CADETMatch.evo as evo
 import pandas
 from addict import Dict
-import CADETMatch.cache as cache
+from CADETMatch.cache import cache
 from pathlib import Path
 import warnings
 import joblib

@@ -95,6 +95,9 @@
     <Compile Include="plugins.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scoop_match.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="score.py">
       <SubType>Code</SubType>
     </Compile>
