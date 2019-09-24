@@ -29,7 +29,8 @@ setuptools.setup(
           'pandas',
           'h5py',
           'CADET',
-          'seaborn'
+          'seaborn',
+          'sklearn'
       ],
     classifiers=[
         "Programming Language :: Python :: 3",

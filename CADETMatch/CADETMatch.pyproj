@@ -7,14 +7,14 @@
     <StartupFile>match.py</StartupFile>
     <SearchPath>
     </SearchPath>
-    <WorkingDirectory>.</WorkingDirectory>
+    <WorkingDirectory>..</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>CADETMatch</Name>
     <RootNamespace>CADETMatch</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>Global|ContinuumAnalytics|Anaconda37-64</InterpreterId>
+    <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\temp\example\fit\example.json"  2</CommandLineArguments>
+    <CommandLineArguments>"F:\DS9\fractionation\NSGA3_binding_fractions.json"  2</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>
@@ -390,7 +390,7 @@
     <Compile Include="video_spearman.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="__init__.py">
+    <Compile Include="init__.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -405,6 +405,7 @@
     <Folder Include="search\retired\" />
   </ItemGroup>
   <ItemGroup>
+    <InterpreterReference Include="CondaEnv|CondaEnv|CADETMatch" />
     <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda37-64" />
     <InterpreterReference Include="Global|PythonCore|3.7" />
   </ItemGroup>
