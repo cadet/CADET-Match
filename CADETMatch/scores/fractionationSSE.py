@@ -37,7 +37,7 @@ def run(sim_data, feature):
         selected = (times >= start) & (times <= stop)
 
         local_times = times[selected]
-        local_values = simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component][selected]
+        local_values = simulation.root.output.solution[feature['unit']]["solution_outlet_comp_%03d" % component][selected]
 
         sim_value = numpy.trapz(local_values, local_times)
 
@@ -76,6 +76,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
 
     temp['start'] = start
     temp['stop'] = stop
+    temp['unit'] = feature['unit_name']
 
     smallestTime = min(data['Stop'] - data['Start'])
     abstolFraction = abstol * smallestTime

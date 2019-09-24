@@ -35,7 +35,7 @@ def run(sim_data, feature):
     for (start, stop, component, values, func_mean_time, func_variance_time, func_mean_value, func_variance_value) in funcs:
         time_center = (start + stop)/2.0
                 
-        sim_values = util.fractionate(start, stop, times, simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component])
+        sim_values = util.fractionate(start, stop, times, simulation.root.output.solution[feature['unit']["solution_outlet_comp_%03d" % component])
        
         mean_sim_time, variance_sim_time, skew_sim_time, mean_sim_value, variance_sim_value, skew_sim_value = util.fracStat(time_center, sim_values)
 
@@ -93,6 +93,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['funcs'] = funcs
     temp['components'] = [int(i) for i in headers[2:]]
     temp['samplesPerComponent'] = rows
+    temp['unit'] = feature['unit_name']
     return temp
 
 def headers(experimentName, feature):

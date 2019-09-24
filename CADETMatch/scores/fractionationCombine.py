@@ -40,7 +40,7 @@ def run(sim_data, feature):
         selected = (times >= start) & (times <= stop)
 
         local_times = times[selected]
-        local_values = simulation.root.output.solution.unit_001["solution_outlet_comp_%03d" % component][selected]
+        local_values = simulation.root.output.solution[feature['unit']["solution_outlet_comp_%03d" % component][selected]
 
         sim_value = numpy.trapz(local_values, local_times)
 
@@ -104,6 +104,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['funcs'] = funcs
     temp['components'] = [int(i) for i in headers[2:]]
     temp['samplesPerComponent'] = rows
+    temp['unit'] = feature['unit_name']
     return temp
 
 def headers(experimentName, feature):

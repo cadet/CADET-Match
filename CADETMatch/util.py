@@ -1401,12 +1401,16 @@ def setupSimulation(sim, times):
 
     sim.root.input.solver.user_solution_times = times
     sim.root.input.solver.sections.section_times[-1] = times[-1]
-    sim.root.input['return'].unit_001.write_solution_particle = 0
-    sim.root.input['return'].unit_001.write_solution_column_inlet = 1
-    sim.root.input['return'].unit_001.write_solution_column_outlet = 1
-    sim.root.input['return'].unit_001.write_solution_inlet = 1
-    sim.root.input['return'].unit_001.write_solution_outlet = 1
-    sim.root.input['return'].unit_001.split_components_data = 0
+
+    for i in range(sim.root.input.model.nunits):
+        unit = 'unit_%03d' % i
+
+        sim.root.input['return'][unit].write_solution_particle = 0
+        sim.root.input['return'][unit].write_solution_column_inlet = 1
+        sim.root.input['return'][unit].write_solution_column_outlet = 1
+        sim.root.input['return'][unit].write_solution_inlet = 1
+        sim.root.input['return'][unit].write_solution_outlet = 1
+        sim.root.input['return'][unit].split_components_data = 0
     sim.root.input.solver.nthreads = 1
 
 def graph_corner_process(cache, last=False, interval=1200):
