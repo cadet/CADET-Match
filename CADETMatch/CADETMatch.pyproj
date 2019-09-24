@@ -390,9 +390,6 @@
     <Compile Include="video_spearman.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="init__.py">
-      <SubType>Code</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include=".pylintrc" />
