@@ -1,6 +1,7 @@
 README.md
 setup.cfg
 setup.py
+CADETMatch/__init__.py
 CADETMatch/__main__.py
 CADETMatch/autocorr.py
 CADETMatch/cache.py

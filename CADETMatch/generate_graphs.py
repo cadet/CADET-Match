@@ -224,14 +224,14 @@ def graph_simulation(simulation, graph):
         graph.set_xlabel('time (s)')
         
         # Make the y-axis label, ticks and tick labels match the line color.
-        graph.set_ylabel('mMol Salt', color='b')
+        graph.set_ylabel('mM Salt', color='b')
         graph.tick_params('y', colors='b')
 
         #colors = ['r', 'g', 'c', 'm', 'y', 'k']
         axis2 = graph.twinx()
         for idx, comp in enumerate(comps[1:]):
             axis2.plot(solution_times, comp, '-', color=get_color(idx, len(comps) - 1, cm_plot), label="P%s" % idx)
-        axis2.set_ylabel('mMol Protein', color='r')
+        axis2.set_ylabel('mM Protein', color='r')
         axis2.tick_params('y', colors='r')
 
 
@@ -244,7 +244,7 @@ def graph_simulation(simulation, graph):
         #colors = ['r', 'g', 'c', 'm', 'y', 'k']
         for idx, comp in enumerate(comps):
             graph.plot(solution_times, comp, '-', color=get_color(idx, len(comps), cm_plot), label="P%s" % idx)
-        graph.set_ylabel('mMol Protein', color='r')
+        graph.set_ylabel('mM Protein', color='r')
         graph.tick_params('y', colors='r')
         graph.set_xlabel('time (s)')
 

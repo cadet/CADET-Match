@@ -261,7 +261,7 @@
     <Compile Include="search\nsga2_improved.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\nsga3_deap.py">
+    <Compile Include="search\nsga3.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\nsga3_improved.py">
@@ -285,7 +285,7 @@
     <Compile Include="search\nsga2.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\nsga3.py">
+    <Compile Include="search\nsga3_old.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\scoretest.py">
