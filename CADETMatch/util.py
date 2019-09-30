@@ -622,21 +622,21 @@ def copyCSVWithNoise(idx, center, noise):
 
         #find CSV files
         for experiment in settings['experiments']:
-            if 'CSV' in experiment:
-                data = numpy.genfromtxt(experiment['CSV'], delimiter=',')
+            if 'csv' in experiment:
+                data = numpy.genfromtxt(experiment['csv'], delimiter=',')
                 addNoise(data, center, noise)
-                csv_path = Path(experiment['CSV'])
+                csv_path = Path(experiment['csv'])
                 new_csv_path = baseDir / csv_path.name
                 numpy.savetxt(str(new_csv_path), data, delimiter=',')
-                experiment['CSV'] = str(new_csv_path)
+                experiment['csv'] = str(new_csv_path)
             for feature in experiment['features']:
-                if 'CSV' in feature:
-                    data = numpy.genfromtxt(feature['CSV'], delimiter=',')
+                if 'csv' in feature:
+                    data = numpy.genfromtxt(feature['csv'], delimiter=',')
                     addNoise(data, center, noise)
-                    csv_path = Path(feature['CSV'])
+                    csv_path = Path(feature['csv'])
                     new_csv_path = baseDir / csv_path.name
                     numpy.savetxt(str(new_csv_path), data, delimiter=',')
-                    feature['CSV'] = str(new_csv_path)
+                    feature['csv'] = str(new_csv_path)
 
         new_settings_file = baseDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:

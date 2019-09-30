@@ -68,7 +68,7 @@ def run(sim_data, feature):
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
-    data = pandas.read_csv(feature['csv'])
+    data = pandas.read_csv(feature['fraction_csv'])
     rows, cols = data.shape
 
     start = numpy.array(data.iloc[:, 0])

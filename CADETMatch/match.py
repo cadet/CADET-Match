@@ -144,7 +144,7 @@ def createDirectories(cache, json_path):
         pass
 
 def createCSV(cache):
-    path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
+    path = Path(cache.settings['resultsDirBase'], cache.settings['csv'])
     if not path.exists():
         with path.open('w', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)

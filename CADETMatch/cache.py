@@ -169,6 +169,9 @@ class Cache:
         with settings_file.open() as json_data:
             self.settings = json.load(json_data)
 
+            if 'CSV' in self.settings:
+                self.settings['csv'] = self.settings['CSV']
+
             self.settings['population'] = int(self.settings['population'])
             self.settings['maxPopulation'] = int(self.settings.get('maxPopulation', self.settings['population'] * 10))
             self.settings['minPopulation'] = int(self.settings.get('minPopulation', self.settings['population']))
@@ -305,11 +308,15 @@ class Cache:
             else:
                 CV_time = (area * length) / flow
 
+        #force CSV to lowercase
+        if 'CSV' in experiment:
+            experiment['csv'] = experiment['CSV']
+
         if dataFromSim:
             temp['time'], temp['value'] = get_times_values(sim, {'isotherm':experiment['isotherm']})
 
-        elif 'CSV' in experiment:
-            data = numpy.loadtxt(experiment['CSV'], delimiter=',')
+        elif 'csv' in experiment:
+            data = numpy.loadtxt(experiment['csv'], delimiter=',')
 
             temp['time'] = data[:, 0]
             temp['value'] = data[:, 1]
@@ -330,11 +337,15 @@ class Cache:
             
             temp[featureName] = {}
 
+            #switch to lower case
             if 'CSV' in feature:
+                feature['csv'] = feature['CSV']
+
+            if 'csv' in feature:
                 if dataFromSim:
                     temp[featureName]['time'], temp[featureName]['value'] = get_times_values(sim, {'isotherm':feature['isotherm']})
                 else:
-                    dataLocal = numpy.loadtxt(feature['CSV'], delimiter=',')
+                    dataLocal = numpy.loadtxt(feature['csv'], delimiter=',')
                     temp[featureName]['time'] = dataLocal[:, 0]
                     temp[featureName]['value'] = dataLocal[:, 1]
             else:

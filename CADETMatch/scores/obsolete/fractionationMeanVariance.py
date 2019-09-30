@@ -58,7 +58,7 @@ def run(sim_data, feature):
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
-    data = pandas.read_csv(feature['csv'])
+    data = pandas.read_csv(feature['fraction_csv'])
     rows, cols = data.shape
 
     headers = data.columns.values.tolist()
@@ -97,7 +97,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     return temp
 
 def headers(experimentName, feature):
-    data = pandas.read_csv(feature['csv'])
+    data = pandas.read_csv(feature['fraction_csv'])
     rows, cols = data.shape
 
     data_headers = data.columns.values.tolist()

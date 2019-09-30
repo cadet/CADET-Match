@@ -34,7 +34,7 @@ def run(cache, tools, creator):
     meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit_meta)
     grad_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
 
-    path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
+    path = Path(cache.settings['resultsDirBase'], cache.settings['csv'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 

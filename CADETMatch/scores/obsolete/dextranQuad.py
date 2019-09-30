@@ -42,10 +42,6 @@ def run(sim_data, feature):
 
     pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_zero, exp_data_zero)
 
-    #sse_diff, diff_time = score.sse_spline(exp_time_values, sim_data_zero, exp_data_zero)
-
-    #sim_data_zero = score.roll_spline(exp_time_values, sim_data_zero, diff_time)
-
     p = poly_fit(exp_time_values, sim_data_zero)
     if p is None:
         return settings.failure

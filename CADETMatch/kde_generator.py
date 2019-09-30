@@ -398,12 +398,12 @@ def setupReferenceResult(cache):
     for experiment in cache.settings['experiments']:
         temp_exp = dict(experiment)
 
-        if 'CSV' in temp_exp:
-            temp_exp['data'] = numpy.loadtxt(temp_exp['CSV'], delimiter=',')
+        if 'csv' in temp_exp:
+            temp_exp['data'] = numpy.loadtxt(temp_exp['csv'], delimiter=',')
 
         for feature in temp_exp['features']:
-            if 'CSV' in feature:
-                feature['data'] = numpy.loadtxt(feature['CSV'], delimiter=',')
+            if 'csv' in feature:
+                feature['data'] = numpy.loadtxt(feature['csv'], delimiter=',')
         temp.append(temp_exp)
 
     return temp
@@ -472,7 +472,7 @@ def pump_delay(cache, data, pump_delay_time=None):
     #delay = quantize_delay(delay[0], interval)
 
     #data[:,1] = score.roll(data[:,1], delay)
-    data[:,1] = score.roll_spline(data[:,0], data[:,1], -delay)
+    data[:,1] = score.roll_spline(data[:,0], data[:,1], delay)
 
     return delay
 

@@ -22,7 +22,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
     sim_start = generation_start = time.time()
 
-    path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
+    path = Path(cache.settings['resultsDirBase'], cache.settings['csv'])
     result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[]}
     with path.open('a', newline='') as csvfile:
@@ -133,7 +133,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
     sim_start = generation_start = time.time()
 
-    path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
+    path = Path(cache.settings['resultsDirBase'], cache.settings['csv'])
     result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[]}
     with path.open('a', newline='') as csvfile:
@@ -255,7 +255,7 @@ def nsga2(populationSize, ngen, cache, tools):
     cxpb = cache.settings['crossoverRate']
     checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings['checkpointFile'])
 
-    path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
+    path = Path(cache.settings['resultsDirBase'], cache.settings['csv'])
     result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[]}
     with path.open('a', newline='') as csvfile:

@@ -23,7 +23,7 @@ def roll_spline(times, values, shift):
 
     spline = scipy.interpolate.InterpolatedUnivariateSpline(times, values, ext=1)
 
-    times_new = times + shift
+    times_new = times - shift
 
     values_new = spline(times_new)
 

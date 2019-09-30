@@ -358,7 +358,7 @@ def run(cache, tools, creator):
         scoop.logger.info("loading kde")
         kde, kde_scaler = kde_generator.getKDE(cache)
 
-    path = Path(cache.settings['resultsDirBase'], cache.settings['CSV'])
+    path = Path(cache.settings['resultsDirBase'], cache.settings['csv'])
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 

@@ -14,7 +14,7 @@ settings.count = None
 
 
 def goal(offset, frac_exp, sim_data_time, sim_data_value, start, stop):
-    sim_data_value = score.roll(sim_data_value, int(offset))
+    sim_data_value = score.roll_spline(sim_data_time, sim_data_value, offset)
     frac_sim = util.fractionate(start, stop, sim_data_time, sim_data_value)
     return numpy.sum((frac_exp-frac_sim)**2)
 
@@ -31,21 +31,6 @@ def searchRange(times, start_frac, stop_frac, CV_time):
     searchIndexStart = numpy.argmax( times[times <= searchStart])
     searchIndexStop = numpy.argmax( times[times <= searchStop])
     return searchIndexStart, searchIndexStop
-
-def rollRange(times, sim_value, searchIndexStart, searchIndexStop):
-    peakMaxIndex = numpy.argmax(sim_value)
-    peakMaxTime = times[peakMaxIndex]
-    peakMaxValue = sim_value[peakMaxIndex]
-
-    above1 = sim_value < 0.1 * peakMaxValue
-    beforePeak = times < peakMaxTime
-
-    search = sim_value[beforePeak & above1]
-    searchMax = numpy.argmax(search)
-
-    rollLeft = searchIndexStart - searchMax
-    rollRight = searchIndexStop - searchMax
-    return rollLeft, rollRight, searchMax
 
 def run(sim_data, feature):
     simulation = sim_data['simulation']
@@ -77,14 +62,13 @@ def run(sim_data, feature):
         exp_values = numpy.array(data[str(component)])
         sim_value = simulation.root.output.solution[feature['unit']]["solution_outlet_comp_%03d" % component]
 
-        rollLeft, rollRight, searchMax = rollRange(times, sim_value, searchIndexStart, searchIndexStop)
-
         bounds = find_bounds(times, sim_value)
         result = scipy.optimize.differential_evolution(goal, bounds = [bounds,], 
                                                        args = (exp_values, times, sim_value, start, stop))
 
-        time_offset = times[int(abs(result.x[0]))]
-        sim_data_value = score.roll(sim_value, int(result.x[0]))
+        time_offset = abs(result.x[0])
+        sim_data_value = score.roll_spline(times, sim_value, result.x[0])
+
         fracOffset = util.fractionate(start, stop, times, sim_data_value)
 
         value_score = value_func(max(fracOffset))
@@ -121,7 +105,7 @@ def find_bounds(times, values):
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
-    data = pandas.read_csv(feature['csv'])
+    data = pandas.read_csv(feature['fraction_csv'])
     rows, cols = data.shape
 
     headers = data.columns.values.tolist()
@@ -152,7 +136,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     return temp
 
 def headers(experimentName, feature):
-    data = pandas.read_csv(feature['csv'])
+    data = pandas.read_csv(feature['fraction_csv'])
     rows, cols = data.shape
 
     data_headers = data.columns.values.tolist()
