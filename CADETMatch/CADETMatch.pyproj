@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>0067cb6f-0de6-4dd6-8086-20ea899a691d</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>match.py</StartupFile>
+    <StartupFile>generate_corner_graphs.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>..</WorkingDirectory>
@@ -14,9 +14,9 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\temp\cadet_tutorial\lesson_5\multiple_components\example_nsga3_fractionation.json"  2</CommandLineArguments>
+    <CommandLineArguments>"F:\temp\cadet_tutorial\lesson_5\multiple_parameters\fit_nsga3\example_nsga3.json"  2</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
+    <InterpreterArguments>-m scoop -n 1</InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>

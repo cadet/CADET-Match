@@ -150,10 +150,21 @@ def plotMCMCVars(out_dir, headers, data):
             plotMCMCParam(out_dir, param_idx, data.root.run_chain_stat, "Run " + header + str(param_idx))
             plotMCMCParam(out_dir, param_idx, data.root.run_chain_stat_transform, "Run " + header + " Transform" + str(param_idx))
 
+def keep_header(char):
+    allowed = set('-0123456789')
+    return char in allowed
+
+def clean_header(header):
+    splits = header.split()
+    temp = [splits[0]]
+    for string in splits[1:]:
+        temp.append(''.join([i for i in string if keep_header(i)]))
+    return ' '.join(temp)
+
 def graphCorner(cache):
     scoop.logger.info("plotting corner plots")
     headers = list(cache.parameter_headers_actual)
-    headers = [header.split()[0] for header in headers]
+    headers = [clean_header(header) for header in headers]
     
     resultDir = Path(cache.settings['resultsDir'])
     result_h5 = resultDir / "result.h5"
