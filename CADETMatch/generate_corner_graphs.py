@@ -266,6 +266,9 @@ def graphCorner(cache):
         create_corner(out_dir, "corner_prod_transform.png", headers, data_input_transform, weights=weight_prod)
 
 def create_corner(dir, filename, headers, data, weights=None):
+    if len(data) <= len(headers):
+        scoop.logger.info("There is not enough data to generate corner plots")
+        return
     if  numpy.all(numpy.min(data,0) < numpy.max(data,0)):
         if weights is None or numpy.max(weights) > numpy.min(weights):
             bounds = new_range(data).T
