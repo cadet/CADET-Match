@@ -455,6 +455,12 @@ def plot_3d(arg):
     
 def plot_2d(arg):
     directory_path, header_x, scoreName, data, scores = arg
+    plot_2d_single(directory_path, header_x, scoreName, data, scores)
+
+    plot_2d_single(directory_path, header_x, '1- ' + scoreName, data, 1-scores)
+    
+
+def plot_2d_single(directory_path, header_x, scoreName, data, scores):
     directory = Path(directory_path)
 
     if numpy.all(scores <= 0):
@@ -466,7 +472,7 @@ def plot_2d(arg):
         scores = numpy.log(scores)
         scoreName = 'log(%s)' % scoreName
 
-    fig = figure.Figure()
+    fig = figure.Figure(figsize=[10,10])
     canvas = FigureCanvas(fig)
     graph = fig.add_subplot(1, 1, 1)
 

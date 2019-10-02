@@ -74,3 +74,12 @@ class Match:
                 best[name].append(col_name)
 
         return best, score, best_score
+
+    def plot_space(self):
+        space_dir = self.cache.settings['resultsDirSpace'] / '2d'
+
+        for image in space_dir.glob('*.png'):
+            if '1- ' in image.name or 'SSE' in image.name:
+                print(image.name)
+                img = dp.Image(filename=image, embed=True)
+                dp.display(img)
