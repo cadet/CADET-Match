@@ -1155,6 +1155,12 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
     made_progress = False
 
+    if meta_hof:
+        best_min = max([i.fitness.values[2] for i in meta_hof.items])
+    else:
+        #just in case if the SSE score is used this will make sure that it has to be greater
+        best_min = -1e308
+
     for ind, result in zip(population, fitnesses):
         fit, csv_line, results = result
         
@@ -1182,6 +1188,16 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
                 made_progress = True
 
     writer.writerows(csv_lines)
+
+    new_best_min = max([i.fitness.values[2] for i in meta_hof.items])
+
+    #if the min value is zero then use the old method to determine progress of adding to the pareto front
+    #this should catch later stages where real progress is not being made but you have a variable that is not identifiable
+    if new_best_min > 0:
+        if new_best_min > best_min:
+            made_progress = True
+        else:
+            made_progress = False
 
     #flush before returning
     csvfile.flush()
