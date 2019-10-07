@@ -71,6 +71,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['max_value'] = max_value
     temp['exp_data_zero'] = exp_data_zero
     temp['offsetTimeFunction'] = score.time_function_decay_cv(CV_time, selectedTimes, max_time)
+    temp['peak_max'] = max_value
     return temp
 
 def headers(experimentName, feature):

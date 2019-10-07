@@ -65,6 +65,11 @@ class Cache:
         self.json_path = json_path
         self.setupSettings()
 
+        self.abstolFactor = self.settings.get('abstolFactor', 1e-4)
+        self.reltol = self.settings.get('reltol', 1e-4)
+        self.abstolFactorGrad = self.settings.get('abstolFactorGrad', 1e-10)
+        self.reltolGrad = self.settings.get('reltolGrad', 1e-10)
+
         self.errorBias = bool(self.settings.get('errorBias', True))
 
         baseDir = self.settings.get('baseDir', None)
@@ -331,6 +336,7 @@ class Cache:
             self.altFeatures = True
             self.altFeatureNames = [altFeature['name'] for altFeature in experiment['featuresAlt']]
 
+        peak_maxes = []
         for feature in experiment['features']:
             featureName = feature['name']
             featureType = feature['type']
@@ -378,7 +384,10 @@ class Cache:
             if featureType in self.scores:
                 temp[featureName].update(self.scores[featureType].setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol))
                 self.adaptive = self.scores[featureType].settings.adaptive
-            
+                if 'peak_max' in temp[featureName]:
+                    peak_maxes.append(temp[featureName]['peak_max'])
+         
+        temp['smallest_peak'] = min(peak_maxes)        
         return temp
 
     def setupMinMax(self):

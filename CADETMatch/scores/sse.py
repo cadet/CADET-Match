@@ -24,6 +24,7 @@ def run(sim_data, feature):
     return ([-sse,], sse, len(sim_data_values), sim_time_values, sim_data_values, exp_data_values, [sse,])
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
+    temp['peak_max'] = max(selectedValues)
     return {}
 
 def headers(experimentName, feature):

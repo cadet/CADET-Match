@@ -14,6 +14,35 @@ from cadet import Cadet
 class GradientException(Exception):
     pass
 
+def setupTemplates(cache):
+    settings = cache.settings
+    target = cache.target
+
+    for experiment in settings['experiments']:
+        name = experiment['name']
+
+        simulationGrad = Cadet(experiment['simulation'].root)
+
+        template_path_grad = Path(settings['resultsDirMisc'], "template_%s_grad.h5" % name)
+        simulationGrad.filename = template_path_grad.as_posix()
+
+        simulationGrad.root.input.solver.time_integrator.abstol = cache.abstolFactorGrad * cache.target[name]['smallest_peak']
+        simulationGrad.root.input.solver.time_integrator.reltol = cache.reltolGrad
+
+        start = time.time()
+        util.runExperiment(None, experiment, cache.settings, cache.target, simulationGrad, float(experiment['timeout'])*10, cache)
+        elapsed = time.time() - start
+
+        #timeout needs to be stored in the template so all processes have it without calculating it
+        simulationGrad.root.timeout = elapsed * 10
+        simulationGrad.save()
+
+        scoop.logger.info("grad simulation took %s", elapsed)
+
+        scoop.logger.info('grad %s abstol=%.3g  reltol=%.3g', simulationGrad.filename, 
+                          simulationGrad.root.input.solver.time_integrator.abstol,
+                          simulationGrad.root.input.solver.time_integrator.reltol)
+
 def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, generation, check_all=False, result_data=None):
     if check_all:
         checkOffspring = offspring
@@ -166,10 +195,10 @@ def saveExperimentsSens(save_name_base, settings, target, results):
 
 def runExperimentSens(individual, experiment, settings, target, cache):
     if 'simulationSens' not in experiment:
-        templatePath = Path(settings['resultsDirMisc'], "template_%s.h5" % experiment['name'])
+        templatePath = Path(settings['resultsDirMisc'], "template_%s_grad.h5" % experiment['name'])
         templateSim = Cadet()
         templateSim.filename = templatePath.as_posix()
         templateSim.load()
         experiment['simulationSens'] = templateSim
 
-    return util.runExperiment(individual, experiment, settings, target, experiment['simulationSens'], float(experiment['timeout']), cache)
+    return util.runExperiment(individual, experiment, settings, target, experiment['simulationSens'], experiment['simulationSens'].root.timeout, cache)

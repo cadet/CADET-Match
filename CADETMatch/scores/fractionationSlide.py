@@ -133,6 +133,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['CV_time'] = CV_time
     temp['funcs'] = funcs
     temp['unit'] = feature['unit_name']
+    temp['peak_max'] = data.iloc[:,2:].max().min()
     return temp
 
 def headers(experimentName, feature):

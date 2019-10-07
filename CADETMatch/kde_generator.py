@@ -188,7 +188,7 @@ def synthetic_error_simulation(json_path):
         temp.filename = file.as_posix()
         temp.load()
 
-        util.setupSimulation(temp, times)
+        util.setupSimulation(temp, times, cache.cache.target[name]['smallest_peak'], cache.cache)
 
         nsec = temp.root.input.solver.sections.nsec
 
@@ -219,7 +219,7 @@ def synthetic_error_simulation(json_path):
                 exp_info = exp
                 break
 
-        result = util.runExperiment(None, exp_info, cache.cache.settings, cache.cache.target, error_delay, 60.0, cache.cache, post_function=post_function)
+        result = util.runExperiment(None, exp_info, cache.cache.settings, cache.cache.target, error_delay, error_delay.root.timeout, cache.cache, post_function=post_function)
 
         if result is not None:
             scores.extend(result['scores'])

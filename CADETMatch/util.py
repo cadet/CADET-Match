@@ -1386,7 +1386,7 @@ def confidence_eta(eta, xl, xu):
 
     return mean, confidence
 
-def setupSimulation(sim, times):
+def setupSimulation(sim, times, smallest_peak, cache):
     "set the user solution times to match the times vector and adjust other sim parameters to required settings"
 
     try:
@@ -1401,6 +1401,12 @@ def setupSimulation(sim, times):
 
     sim.root.input.solver.user_solution_times = times
     sim.root.input.solver.sections.section_times[-1] = times[-1]
+    sim.root.input.solver.time_integrator.abstol = cache.abstolFactor * smallest_peak
+    sim.root.input.solver.time_integrator.reltol = cache.reltol
+
+    scoop.logger.info('%s abstol=%.3g  reltol=%.3g', sim.filename, 
+                      sim.root.input.solver.time_integrator.abstol,
+                      sim.root.input.solver.time_integrator.reltol)
 
     for i in range(sim.root.input.model.nunits):
         unit = 'unit_%03d' % i

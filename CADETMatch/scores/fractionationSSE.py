@@ -82,6 +82,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     abstolFraction = abstol * smallestTime
 
     headers = data.columns.values.tolist()
+    temp['peak_max'] = data.iloc[:,2:].max().min()
     return temp
 
 def headers(experimentName, feature):

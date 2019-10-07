@@ -59,6 +59,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['value_function'] = score.value_function(temp['peak'][1], abstol)
     temp['value_function_high'] = score.value_function(high[1], abstol)
     temp['value_function_low'] = score.value_function(low[1], abstol)
+    temp['peak_max'] = max(selectedValues)
     return temp
 
 def headers(experimentName, feature):

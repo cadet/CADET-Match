@@ -41,4 +41,4 @@ def runExperiment(individual, experiment, settings, target, cache):
         templateSim.load()
         experiment['simulation'] = templateSim
 
-    return util.runExperiment(individual, experiment, settings, target, experiment['simulation'], float(experiment['timeout']), cache)
+    return util.runExperiment(individual, experiment, settings, target, experiment['simulation'], experiment['simulation'].root.timeout, cache)

@@ -34,6 +34,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['width_25'] = score.value_function(find_width(selectedTimes, selectedValues, 0.25), abstol)
     temp['width_50'] = score.value_function(find_width(selectedTimes, selectedValues, 0.50), abstol)
     temp['width_75'] = score.value_function(find_width(selectedTimes, selectedValues, 0.75), abstol)
+    temp['peak_max'] = max(selectedValues)
     return temp
 
 def find_width(times, values, percent):

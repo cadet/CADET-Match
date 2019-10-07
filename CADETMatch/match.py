@@ -35,6 +35,7 @@ def main(path=None, map_function=None):
     if path is None:
         path = sys.argv[1]
     setup(cache, path, map_function)
+    gradFD.setupTemplates(cache)
     #grad.setupTemplates(cache)
     hof = evo.run(cache)
 
@@ -196,7 +197,7 @@ def setupTemplates(cache):
         if 'set_values' in experiment:
             setTemplateValues(template, experiment['set_values'])
 
-        util.setupSimulation(template, cache.target[name]['time'])
+        util.setupSimulation(template, cache.target[name]['time'], cache.target[name]['smallest_peak'], cache)
 
         if cache.settings['searchMethod'] != 'MCMC' and "kde_synthetic" in cache.settings:
             #the base case needs to be saved since the normal template file is what the rest of the code will look for
@@ -211,8 +212,18 @@ def setupTemplates(cache):
             template_bias.save()
             template = template_bias
 
+        start = time.time()
+        util.runExperiment(None, experiment, cache.settings, cache.target, template, float(experiment['timeout'])*10, cache)
+        elapsed = time.time() - start
+
+        scoop.logger.info("simulation took %s", elapsed)
+
         #change to where we want the template created
         template.filename = template_path.as_posix()
+
+        #timeout needs to be stored in the template so all processes have it without calculating it
+        template.root.timeout = elapsed * 10
+
         template.save()
 
         experiment['simulation'] = template

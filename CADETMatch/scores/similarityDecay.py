@@ -33,6 +33,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
     temp['time_function'] = score.time_function_decay(CV_time, temp['peak'][0], diff_input = False)
     temp['value_function'] = score.value_function(temp['peak'][1], abstol)
+    temp['peak_max'] = max(selectedValues)
     return temp
 
 def headers(experimentName, feature):
