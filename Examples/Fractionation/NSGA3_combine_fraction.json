@@ -2,26 +2,29 @@
 	"CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
     "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Fractionation",
 	"searchMethod": "NSGA3",
-	"resultsDir": "fit",
+	"resultsDir": "fit_shape",
 	"CSV": "NSGA3.csv",
-	"crossoverRate": 0.8,
-	"checkpointFile": "check",
-	"stopAverage": 0.999,
-	"stopBest": 0.95,
-	"gradCheck": 1.0,
-	"generations": 100,
-    "population": 25,
-    "minPopulation": 25,
-    "maxPopulation":25,
-	"keep": 0.2,
-	"mutationRate": 0.05,
-	"stallGenerations": 20,
-	"stallCorrect": 5,
-	"progressCorrect": 5,
-	"metaResultsOnly": 1,
-	"roundScores": 3,
-	"roundParameters": 3,
-    "sobolGeneration":1,
+      "checkpointFile": "check",
+  "stopAverage": 1.0,
+  "stopBest": 1.0,
+  "gradCheck": 1.0,
+  "gradVector": 1,
+  "searchMethod": "NSGA3",
+  "mutationRate": 1.0,
+  "crossoverRate": 1.0,
+  "generations": 1000,
+  "population": 12,
+  "minPopulation": 12,
+  "maxPopulation":12,
+  "roundParameters": -1,
+  "roundScores": -1,
+  "metaResultsOnly": 1,
+  "sobolGeneration":1,
+  "stallGenerations": 10,
+  "normalizeOutput":1,
+  "continueMCMC":0,
+  "graphMetaTime": 600,
+  "finalGradRefinement": 1,
 	"parameters": [
 		{
 			"transform": "norm_keq",
@@ -59,16 +62,7 @@
 			"features": [
 				{
 					"name": "PulseComb",
-					"type": "similarityHybrid2",
-					"CSV": "linear2_pulse_comb.csv",
-					"isotherm": [
-						"/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
-						"/output/solution/unit_001/SOLUTION_OUTLET_COMP_001"
-					]
-				},
-				{
-					"name": "DerivComb",
-					"type": "derivative_similarity_hybrid2",
+					"type": "Shape",
 					"CSV": "linear2_pulse_comb.csv",
 					"isotherm": [
 						"/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
@@ -78,7 +72,8 @@
 				{
 					"name": "Fraction",
 					"type": "fractionationSlide",
-					"csv": "linear_fraction.csv",
+					"fraction_csv": "linear_fraction.csv",
+                    "unit_name": "unit_002",
 					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001"
 				}
 			]

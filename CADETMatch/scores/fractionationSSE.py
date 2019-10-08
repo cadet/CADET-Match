@@ -22,36 +22,30 @@ def run(sim_data, feature):
     simulation = sim_data['simulation']
     start = feature['start']
     stop = feature['stop']
-    funcs = feature['funcs']
+    comps = feature['comps']
+    data = feature['data']
 
     time_center = (start + stop)/2.0
 
     times = simulation.root.output.solution.solution_times
 
-    sim_values = []
-    exp_values = []
+    sim_values_sse = []
+    exp_values_sse = []
    
     graph_sim = {}
     graph_exp = {}
-    for (start, stop, component, exp_value, func) in funcs:
-        selected = (times >= start) & (times <= stop)
 
-        local_times = times[selected]
-        local_values = simulation.root.output.solution[feature['unit']]["solution_outlet_comp_%03d" % component][selected]
+    for component  in comps:
+        exp_values = numpy.array(data[str(component)])
+        sim_value = simulation.root.output.solution[feature['unit']]["solution_outlet_comp_%03d" % component]
 
-        sim_value = numpy.trapz(local_values, local_times)
+        fractions = util.fractionate(start, stop, times, sim_value)
 
-        exp_values.append(exp_value)
-        sim_values.append(sim_value)
+        exp_values_sse.extend(exp_values)
+        sim_values_sse.extend(fractions)
 
-        if component not in graph_sim:
-            graph_sim[component] = []
-            graph_exp[component] = []
-
-        time_center = (start + stop)/2.0
-        graph_sim[component].append( (time_center, sim_value) )
-        graph_exp[component].append( (time_center, exp_value) )
-
+        graph_sim[component] = list(zip(time_center, fractions))
+        graph_exp[component] = list(zip(time_center, exp_values))
 
     #sort lists
     for key, value in graph_sim.items():
@@ -62,20 +56,31 @@ def run(sim_data, feature):
     sim_data['graph_exp'] = graph_exp
     sim_data['graph_sim'] = graph_sim
 
-    sse = util.sse(numpy.array(sim_values), numpy.array(exp_values))
+    sse = util.sse(numpy.array(sim_values_sse), numpy.array(exp_values_sse))
 
-    return [-sse,], sse, len(sim_values), time_center, numpy.array(sim_values), numpy.array(exp_values), [sse,]
+    return [-sse,], sse, len(sim_values_sse), time_center, numpy.array(sim_values_sse), numpy.array(exp_values_sse), [sse,]
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     data = pandas.read_csv(feature['fraction_csv'])
     rows, cols = data.shape
+    
+    #funcs = []
+    #headers = data.columns.values.tolist()
 
-    start = numpy.array(data.iloc[:, 0])
-    stop = numpy.array(data.iloc[:, 1])
+    #for sample in range(rows):
+    #    for component in headers[2:]:
+    #        start = data['Start'][sample]
+    #        stop = data['Stop'][sample]
+    #        value = data[component][sample]
 
-    temp['start'] = start
-    temp['stop'] = stop
+    #         funcs.append( (start, stop, int(component), value) )
+
+    temp['comps'] = [int(i) for i in data.columns.values.tolist()[2:]]
+
+    temp['data'] = data
+    temp['start'] = numpy.array(data.iloc[:, 0])
+    temp['stop'] = numpy.array(data.iloc[:, 1])
     temp['unit'] = feature['unit_name']
 
     smallestTime = min(data['Stop'] - data['Start'])

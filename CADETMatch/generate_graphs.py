@@ -333,7 +333,8 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                 #except:
                 #    pass
             
-            if featureType in ('fractionation', 'fractionationCombine', 'fractionationMeanVariance', 'fractionationMoment', 'fractionationSlide'):
+            if featureType in ('fractionation', 'fractionationCombine', 'fractionationMeanVariance', 
+                               'fractionationMoment', 'fractionationSlide', 'fractionationSSE'):
                 cache.scores[featureType].run(results, feat)
 
 

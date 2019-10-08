@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: CADETMatch
-Version: 0.4.5
+Version: 0.4.6
 Summary: CADETMatch is a parameter estimation and error modeling library for CADET
 Home-page: https://github.com/modsim/CADET-Match
 Author: William Heymann

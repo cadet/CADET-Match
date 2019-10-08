@@ -38,6 +38,8 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             meta_hof = cp['meta_halloffame']
             grad_hof = cp['grad_halloffame']
             random.setstate(cp["rndstate"])
+            cache.generationsOfProgress = cp['generationsOfProgress']
+            cache.lastProgressGeneration = cp['lastProgressGeneration']
 
             if cp['gradCheck'] > cache.settings['gradCheck']:
                 gradCheck = cp['gradCheck']
@@ -66,7 +68,8 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
                 util.graph_corner_process(cache, last=False)
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)
+                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
+                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
 
             with checkpointFile.open('wb')as cp_file:
                 pickle.dump(cp, cp_file)
@@ -103,7 +106,8 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
                 lambda_ = max(newLambda_, minPopulation)
                                    
             cp = dict(population=population, generation=gen, halloffame=halloffame,
-                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)
+                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
+                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
 
             hof = Path(settings['resultsDirMisc'], 'hof')
             with hof.open('wb') as data:
@@ -149,6 +153,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             meta_hof = cp['meta_halloffame']
             grad_hof = cp['grad_halloffame']
             random.setstate(cp["rndstate"])
+            cache.generationsOfProgress = cp['generationsOfProgress']
+            cache.lastProgressGeneration = cp['lastProgressGeneration']
             
             if cp['gradCheck'] > cache.settings['gradCheck']:
                 gradCheck = cp['gradCheck']
@@ -175,7 +181,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 util.graph_corner_process(cache, last=False)
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)
+                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
+                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
 
             with checkpointFile.open('wb')as cp_file:
                 pickle.dump(cp, cp_file)
@@ -206,7 +213,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             util.graph_corner_process(cache, last=False)
 
             cp = dict(population=population, generation=gen, halloffame=halloffame,
-                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)
+                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
+                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
 
             if stallWarn:
                 maxPopulation = cache.settings['maxPopulation'] * len(cache.MIN_VALUE)
@@ -271,6 +279,8 @@ def nsga2(populationSize, ngen, cache, tools):
             meta_hof = cp['meta_halloffame']
             grad_hof = cp['grad_halloffame']
             random.setstate(cp["rndstate"])
+            cache.generationsOfProgress = cp['generationsOfProgress']
+            cache.lastProgressGeneration = cp['lastProgressGeneration']
 
             if cp['gradCheck'] > cache.settings['gradCheck']:
                 gradCheck = cp['gradCheck']
@@ -313,7 +323,8 @@ def nsga2(populationSize, ngen, cache, tools):
     
 
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-            rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)
+            rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
+            generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(cp, cp_file)
@@ -382,7 +393,8 @@ def nsga2(populationSize, ngen, cache, tools):
                 populationSize = newPopulationSize
 
             cp = dict(population=population, generation=gen, halloffame=halloffame,
-                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof)
+                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
+                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
 
             hof = Path(cache.settings['resultsDirMisc'], 'hof')
             with hof.open('wb') as data:
