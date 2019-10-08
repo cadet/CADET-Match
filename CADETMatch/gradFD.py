@@ -131,12 +131,7 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.05):
                 sim_values = exp['sim_value']
                 exp_values = exp['exp_value']
 
-                scoop.logger.info("full trapz information sim_times %s len(%s)  sim_values %s len(%s) exp_values %s len(%s)",
-                                  sim_times, len(sim_times), sim_values, len(sim_values), exp_values, len(exp_values))
-
                 for sim_time, sim_value, exp_value in zip(sim_times, sim_values, exp_values):
-                    scoop.logger.info("trapz information %s len(%s) %s len(%s)", exp_value, len(exp_value), sim_time, len(sim_time))
-
                     if len(sim_time) < len(exp_value) and len(exp_value) % len(sim_time) == 0:
                         #dealing with fractionation data, there are multiple data sets of len(sim_time)
                         exp_value = exp_value.reshape(-1, len(sim_time))
