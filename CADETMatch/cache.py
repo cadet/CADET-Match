@@ -176,9 +176,11 @@ class Cache:
 
             if 'CSV' in self.settings:
                 self.settings['csv'] = self.settings['CSV']
+            if 'csv' not in self.settings:
+                self.settings['csv'] = 'results.csv'
 
             self.settings['population'] = int(self.settings['population'])
-            self.settings['maxPopulation'] = int(self.settings.get('maxPopulation', self.settings['population'] * 10))
+            self.settings['maxPopulation'] = int(self.settings.get('maxPopulation', self.settings['population']))
             self.settings['minPopulation'] = int(self.settings.get('minPopulation', self.settings['population']))
 
 

@@ -35,7 +35,6 @@
     "load":[1.0, 0.03],
     "error_slope":[1.0, 0.001],
     "error_base":50.0,
-    "base":50.0,
     "count":40
   }
   ],

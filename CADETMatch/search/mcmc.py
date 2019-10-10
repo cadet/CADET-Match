@@ -330,7 +330,7 @@ def write_interval(interval, cache, checkpoint, checkpointFile, train_chain, run
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
-    checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings['checkpointFile'])
+    checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings.get('checkpointFile', 'check'))
     checkpoint = getCheckPoint(checkpointFile,cache)
 
     burn_seq = checkpoint.get('burn_seq', [])

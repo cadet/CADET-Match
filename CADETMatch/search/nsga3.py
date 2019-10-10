@@ -12,10 +12,11 @@ def run(cache, tools, creator):
     random.seed()
     parameters = len(cache.MIN_VALUE)
 
-    populationSize=parameters * cache.settings['population']
-    CXPB = cache.settings['crossoverRate']
+    populationSize=parameters * cache.settings.get('population', 100)
+    CXPB = cache.settings.get('crossoverRate', 1.0)
+    MUTPB = cache.settings.get('mutationRate', 1.0)
 
-    totalGenerations = parameters * cache.settings['generations']
+    totalGenerations = parameters * cache.settings.get('generations', 1000)
 
     pop = cache.toolbox.population(n=populationSize)
 
@@ -26,7 +27,7 @@ def run(cache, tools, creator):
                               mu=populationSize, 
                               lambda_=populationSize, 
                               cxpb=CXPB, 
-                              mutpb=cache.settings['mutationRate'],
+                              mutpb=MUTPB,
                               ngen=totalGenerations,
                               settings=cache.settings,
                               tools=tools,
@@ -56,14 +57,9 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=30.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
 
-    #if cache.adaptive:
-    #    cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
-    #    cache.toolbox.register("force_mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
-    #else:
     cache.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
     cache.toolbox.register("force_mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
 
-    #cache.toolbox.register("select", nsga3_selection.sel_nsga_iii)
     cache.toolbox.register("select", tools.selNSGA3, ref_points=ref_points)
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
     cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)

@@ -18,7 +18,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
-    checkpointFile = Path(settings['resultsDirMisc'], settings['checkpointFile'])
+    checkpointFile = Path(settings['resultsDirMisc'], settings.get('checkpointFile', 'check'))
 
     sim_start = generation_start = time.time()
 
@@ -41,16 +41,16 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             cache.generationsOfProgress = cp['generationsOfProgress']
             cache.lastProgressGeneration = cp['lastProgressGeneration']
 
-            if cp['gradCheck'] > cache.settings['gradCheck']:
+            if cp['gradCheck'] > cache.settings.get('gradCheck', 1.0):
                 gradCheck = cp['gradCheck']
             else:
-                gradCheck = cache.settings['gradCheck']
+                gradCheck = cache.settings.get('gradCheck', 1.0)
 
         else:
             # Start a new evolution
             start_gen = 0    
 
-            gradCheck = settings['gradCheck']
+            gradCheck = settings.get('gradCheck', 1.0)
 
             halloffame = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
             meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit_meta)
@@ -115,7 +115,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
 
-            if avg >= settings['stopAverage'] or bestMin >= settings['stopBest'] or stalled:
+            if avg >= settings.get('stopAverage', 1.0) or bestMin >= settings.get('stopBest', 1.0) or stalled:
                 util.finish(cache)
                 util.graph_corner_process(cache, last=True)
                 return halloffame
@@ -133,7 +133,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
     #from line_profiler import LineProfiler
     #profile = LineProfiler(search.spea2.selSPEA2)
 
-    checkpointFile = Path(settings['resultsDirMisc'], settings['checkpointFile'])
+    checkpointFile = Path(settings['resultsDirMisc'], settings.get('checkpointFile', 'check'))
 
     sim_start = generation_start = time.time()
 
@@ -156,15 +156,15 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             cache.generationsOfProgress = cp['generationsOfProgress']
             cache.lastProgressGeneration = cp['lastProgressGeneration']
             
-            if cp['gradCheck'] > cache.settings['gradCheck']:
+            if cp['gradCheck'] > cache.settings.get('gradCheck', 1.0):
                 gradCheck = cp['gradCheck']
             else:
-                gradCheck = cache.settings['gradCheck']
+                gradCheck = cache.settings.get('gradCheck', 1.0)
         else:
             # Start a new evolution
             start_gen = 0    
 
-            gradCheck = settings['gradCheck']
+            gradCheck = settings.get('gradCheck', 1.0)
 
             halloffame = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
             meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit_meta)
@@ -233,7 +233,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
 
-            if avg >= settings['stopAverage'] or bestMin >= settings['stopBest'] or stalled:
+            if avg >= settings.get('stopAverage', 1.0) or bestMin >= settings.get('stopBest', 1.0) or stalled:
                 break
                 #util.finish(cache)
                 #util.graph_corner_process(cache, last=True)
@@ -261,7 +261,7 @@ def nsga2(populationSize, ngen, cache, tools):
     cache.settings['maxPopulation'] = cache.settings['maxPopulation'] + (-cache.settings['maxPopulation'] % 4)
 
     cxpb = cache.settings['crossoverRate']
-    checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings['checkpointFile'])
+    checkpointFile = Path(cache.settings['resultsDirMisc'], cache.settings.get('checkpointFile', 'check'))
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['csv'])
     result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
@@ -282,10 +282,10 @@ def nsga2(populationSize, ngen, cache, tools):
             cache.generationsOfProgress = cp['generationsOfProgress']
             cache.lastProgressGeneration = cp['lastProgressGeneration']
 
-            if cp['gradCheck'] > cache.settings['gradCheck']:
+            if cp['gradCheck'] > cache.settings.get('gradCheck', 1.0):
                 gradCheck = cp['gradCheck']
             else:
-                gradCheck = cache.settings['gradCheck']
+                gradCheck = cache.settings.get('gradCheck', 1.0)
 
         else:
             # Start a new evolution
@@ -301,7 +301,7 @@ def nsga2(populationSize, ngen, cache, tools):
             halloffame = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
             meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit_meta)
             grad_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
-            gradCheck = cache.settings['gradCheck']
+            gradCheck = cache.settings.get('gradCheck', 1.0)
 
 
         sim_start = generation_start = time.time()
@@ -402,7 +402,7 @@ def nsga2(populationSize, ngen, cache, tools):
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
 
-            if avg >= cache.settings['stopAverage'] or bestMin >= cache.settings['stopBest'] or stalled:
+            if avg >= cache.settings.get('stopAverage', 1.0) or bestMin >= cache.settings.get('stopBest', 1.0) or stalled:
                 util.finish(cache)
                 util.graph_corner_process(cache, last=True)
                 return halloffame

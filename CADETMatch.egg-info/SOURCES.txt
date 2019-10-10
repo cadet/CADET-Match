@@ -58,15 +58,8 @@ CADETMatch/search/__init__.py
 CADETMatch/search/graphSpace.py
 CADETMatch/search/mcmc.py
 CADETMatch/search/multistart.py
-CADETMatch/search/nsga2.py
-CADETMatch/search/nsga2_improved.py
 CADETMatch/search/nsga3.py
-CADETMatch/search/nsga3_improved.py
-CADETMatch/search/nsga3_old.py
-CADETMatch/search/nsga3_strategy.py
 CADETMatch/search/scoretest.py
-CADETMatch/search/spea2.py
-CADETMatch/search/spea2_improved.py
 CADETMatch/transform/__init__.py
 CADETMatch/transform/diameter.py
 CADETMatch/transform/keq.py

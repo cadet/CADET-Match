@@ -50,7 +50,15 @@ def find_extreme(seq):
         return [0, 0]
 
 def create_spline(times, values):
-    return scipy.interpolate.PchipInterpolator(times, smoothing(times, values, 11))
+
+    def goal(cutoff):
+        smooth_values = smoothing(times, values, cutoff[0])
+        sse = numpy.sum((values-smooth_values)**2)
+        return sse
+
+    result = scipy.optimize.differential_evolution(goal, bounds = [(1e-5,0.499),], polish=False)
+    cutoff = result.x[0]
+    return scipy.interpolate.PchipInterpolator(times, smoothing(times, values, cutoff))
 
 def get_times_values(simulation, target, selected = None):
 
@@ -126,32 +134,18 @@ def averageFitness(offspring, cache):
     bestMin = -sys.float_info.max
     bestProd = -sys.float_info.max
 
-    #scoop.logger.info(offspring)
-
     for i in offspring:
-        #scoop.logger.info('idx: %s  value:%s', i, i.fitness.values)
         total += sum(i.fitness.values)
         number += len(i.fitness.values)
         bestMin = max(bestMin, min(i.fitness.values))
         bestProd = max(bestProd, product_score(i.fitness.values))
-    #scoop.logger.info('number: %s', number)
     result = [total/number, bestMin, bestProd]
 
     return result
 
-def smoothing(times, values, filter_length=None):
-    #temporarily get rid of smoothing for debugging
-    #return values
-    #filter length must be odd, set to 10% of the feature size and then make it odd if necesary
-    
-    #if filter_length is None:
-    #    filter_length = int(.1 * len(values))
-    #    if filter_length % 2 == 0:
-    #        filter_length += 1
-    #return scipy.signal.savgol_filter(values, filter_length, 3)
-
+def smoothing(times, values, cutoff_frequency=0.005):
     N  = 3    # Filter order
-    Wn = 0.005 # Cutoff frequency
+    Wn = cutoff_frequency # Cutoff frequency
     dt = times[1] - times[0]
     Fs = 1 / dt 
     B, A = scipy.signal.butter(N, Wn, output='ba', fs=Fs, btype='lowpass')

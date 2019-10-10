@@ -48,7 +48,7 @@ def main(path=None, map_function=None):
             setup(cache, json_path)
             hof = evo.run(cache)
 
-    continue_mcmc(cache)
+    continue_mcmc(cache, map_function)
 
     if "repeat" in cache.settings:
         repeat = int(cache.settings['repeat'])
@@ -266,20 +266,20 @@ def find_percentile(cache):
 
         return lb_trans, ub_trans
 
-def continue_mcmc(cache):
+def continue_mcmc(cache, map_function):
     if cache.continueMCMC:
         lb, ub = find_percentile(cache)
 
         json_path = util.setupMCMC(cache, lb, ub)
         scoop.logger.info(json_path)
 
-        setup(cache, json_path)
+        setup(cache, json_path, map_function)
 
         hof = evo.run(cache)
 
 if __name__ == "__main__":
     start = time.time()
     main()
-    scoop.logger.info('Sysem has finished')
+    scoop.logger.info('System has finished')
     scoop.logger.info("The total runtime was %s seconds" % (time.time() - start))
     sys.exit()

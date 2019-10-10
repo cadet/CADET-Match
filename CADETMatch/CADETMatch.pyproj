@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Fractionation\NSGA3_combine_fraction.json"  2</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\CADET\lessons\lesson_0\example.json"  2</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -257,16 +257,16 @@
     <Compile Include="search\multistart.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\nsga2_improved.py">
+    <Compile Include="search\retired\nsga2_improved.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\nsga3.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\nsga3_improved.py">
+    <Compile Include="search\retired\nsga3_improved.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\nsga3_strategy.py">
+    <Compile Include="search\retired\nsga3_strategy.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\retired\nsga2_mut.py">
@@ -281,16 +281,16 @@
     <Compile Include="search\retired\multiswarm.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\nsga2.py">
+    <Compile Include="search\retired\nsga2.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\nsga3_old.py">
+    <Compile Include="search\retired\nsga3_old.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\scoretest.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\spea2.py">
+    <Compile Include="search\retired\spea2.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\retired\spea2a.py">
@@ -314,7 +314,7 @@
     <Compile Include="search\retired\theta_nsga3.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\spea2_improved.py">
+    <Compile Include="search\retired\spea2_improved.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\__init__.py">

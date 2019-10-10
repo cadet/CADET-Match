@@ -172,7 +172,6 @@ def synthetic_error_simulation(json_path):
         load_settings = experiment['load']
         error_slope_settings = experiment['error_slope']
         error_base_settings = experiment['error_base']
-        base_settings = experiment['base']
         count_settings = experiment['count']
         experimental_csv = experiment['experimental_csv']
         units = experiment['units']
