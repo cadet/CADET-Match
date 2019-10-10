@@ -199,6 +199,15 @@ def setupTemplates(cache):
 
         util.setupSimulation(template, cache.target[name]['time'], cache.target[name]['smallest_peak'], cache)
 
+        start = time.time()
+        util.runExperiment(None, experiment, cache.settings, cache.target, template, float(experiment['timeout'])*10, cache)
+        elapsed = time.time() - start
+
+        scoop.logger.info("simulation took %s", elapsed)
+        
+        #timeout needs to be stored in the template so all processes have it without calculating it
+        template.root.timeout = elapsed * 10
+        
         if cache.settings['searchMethod'] != 'MCMC' and "kde_synthetic" in cache.settings:
             #the base case needs to be saved since the normal template file is what the rest of the code will look for
             template_base_path = Path(cache.settings['resultsDirMisc'], "template_%s_base.h5" % name)
@@ -212,18 +221,9 @@ def setupTemplates(cache):
             template_bias.save()
             template = template_bias
 
-        start = time.time()
-        util.runExperiment(None, experiment, cache.settings, cache.target, template, float(experiment['timeout'])*10, cache)
-        elapsed = time.time() - start
-
-        scoop.logger.info("simulation took %s", elapsed)
-
         #change to where we want the template created
         template.filename = template_path.as_posix()
-
-        #timeout needs to be stored in the template so all processes have it without calculating it
-        template.root.timeout = elapsed * 10
-
+        
         template.save()
 
         experiment['simulation'] = template

@@ -52,6 +52,6 @@ class DummyFront(tools.ParetoFront):
             similar = eq
         super().__init__(similar)
 
-    def update(self, population, cache):
+    def update(self, population):
         "do not put anything in this front, it is just needed to maintain compatibility"
         pass
