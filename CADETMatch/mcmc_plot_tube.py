@@ -224,20 +224,30 @@ def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue):
     minValues = value["min"]
     maxValues = value["max"]
 
-    plt.plot(times, mean)
+    plt.figure(figsize=[10,10])
+    plt.plot(times, mean, label='mean')
     plt.fill_between(times, mean - std, mean + std,
-                color='green', alpha=0.2)
+                color='green', alpha=0.2, label='high prob')
     plt.fill_between(times, minValues, maxValues,
-                color='red', alpha=0.2)
-    plt.plot(expTime, expValue, 'r')
+                color='red', alpha=0.2, label='low prob')
+    plt.plot(expTime, expValue, 'r', label='exp')
+    plt.xlabel('time(s)')
+    plt.ylabel('conc(mM)')
+    plt.legend()
     plt.savefig(str(output_mcmc / ("%s_%s.png" % (expName, name) ) ))
     plt.close()
 
     row, col = data.shape
-    alpha = 0.005
+    alpha = 0.01
+    plt.figure(figsize=[10,10])
+    plt.plot(times, data[0,:], 'g', alpha=0.5, label='prob')
     plt.plot(times, data.transpose(), 'g', alpha=alpha)
-    plt.plot(times, mean, 'k')
-    plt.plot(expTime, expValue, 'r')
+    plt.plot(times, mean, 'k', label='mean')
+    plt.plot(expTime, expValue, 'r', label='exp')
+    plt.xlabel('time(s)')
+    plt.ylabel('conc(mM)')
+    plt.legend()
+
     plt.savefig(str(output_mcmc / ("%s_%s_lines.png" % (expName, name) ) ))
     plt.close()
 

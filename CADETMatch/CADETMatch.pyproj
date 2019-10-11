@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\temp\cadet_tutorial\lesson_7\bypass\example_bypass.json"  2</CommandLineArguments>
+    <CommandLineArguments>"F:\temp\cadet_tutorial\lesson_7\bypass\fit_mcmc\mcmc_refine\example_bypass.json"  2</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>

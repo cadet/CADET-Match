@@ -58,12 +58,14 @@ def get_bandwidth(scores, cache):
     store = numpy.array(store)
 
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
-    plt.scatter(numpy.log10(store[:,0]), store[:,1])
+    plt.figure(figsize=[10,10])
+    plt.scatter(numpy.log10(store[:,0]), numpy.log10(store[:,1]))
     plt.xlabel('bandwidth')
     plt.ylabel('cross_val_score')
     plt.savefig(str(mcmcDir / "log_bandwidth.png" ), bbox_inches='tight')
     plt.close()
 
+    plt.figure(figsize=[10,10])
     plt.scatter(store[:,0], store[:,1])
     plt.xlabel('bandwidth')
     plt.ylabel('cross_val_score')
