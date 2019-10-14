@@ -1,9 +1,4 @@
-import CADETMatch.match
-import CADETMatch.generate_corner_graphs
-import CADETMatch.generate_graphs
-import CADETMatch.graph_spearman
-import CADETMatch.mcmc_plot_tube
-import CADETMatch.mle
+import importlib
 import argparse
 import sys
 import subprocess
@@ -53,7 +48,7 @@ def run_command(module, json, number_of_jobs, additional=None):
     command = [sys.executable, '-m', 'scoop']
     if int(number_of_jobs) > 0:
         command.extend(['-n', str(number_of_jobs)])
-    command.extend([module.__file__, str(json)])
+    command.extend([importlib.util.find_spec(module).origin, str(json)])
     if additional is not None:
         command.extend(additional)
 
@@ -67,14 +62,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.match:
-        sys.exit(run_command(CADETMatch.match, args.json, args.n))
+        sys.exit(run_command('CADETMatch.match', args.json, args.n))
     if args.generate_corner:
-        sys.exit(run_command(CADETMatch.generate_corner_graphs, args.json, args.n))
+        sys.exit(run_command('CADETMatch.generate_corner_graphs', args.json, args.n))
     if args.generate_graphs:
-        sys.exit(run_command(CADETMatch.generate_graphs, args.json, args.n, ['2']))
+        sys.exit(run_command('CADETMatch.generate_graphs', args.json, args.n, ['2']))
     if args.generate_spearman:
-        sys.exit(run_command(CADETMatch.graph_spearman, args.json, args.n, ['end']))
+        sys.exit(run_command('CADETMatch.graph_spearman', args.json, args.n, ['end']))
     if args.generate_mcmc_plot_tube:
-        sys.exit(run_command(CADETMatch.mcmc_plot_tube, args.json, args.n))
+        sys.exit(run_command('CADETMatch.mcmc_plot_tube', args.json, args.n))
     if args.generate_mle:
-        sys.exit(run_command(CADETMatch.mle, args.json, args.n))
+        sys.exit(run_command('CADETMatch.mle', args.json, args.n))

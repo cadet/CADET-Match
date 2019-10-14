@@ -200,7 +200,8 @@ def setupTemplates(cache):
         util.setupSimulation(template, cache.target[name]['time'], cache.target[name]['smallest_peak'], cache)
 
         start = time.time()
-        util.runExperiment(None, experiment, cache.settings, cache.target, template, float(experiment['timeout'])*10, cache)
+        util.runExperiment(None, experiment, cache.settings, cache.target, template, 
+                           experiment.get('timeout', 1800), cache)
         elapsed = time.time() - start
 
         scoop.logger.info("simulation took %s", elapsed)

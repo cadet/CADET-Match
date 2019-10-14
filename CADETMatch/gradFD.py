@@ -30,7 +30,8 @@ def setupTemplates(cache):
         simulationGrad.root.input.solver.time_integrator.reltol = cache.reltolGrad
 
         start = time.time()
-        util.runExperiment(None, experiment, cache.settings, cache.target, simulationGrad, float(experiment['timeout'])*10, cache)
+        util.runExperiment(None, experiment, cache.settings, cache.target, simulationGrad, 
+                           experiment.get('timeout', 1800), cache)
         elapsed = time.time() - start
 
         #timeout needs to be stored in the template so all processes have it without calculating it

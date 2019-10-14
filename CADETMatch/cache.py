@@ -11,8 +11,6 @@ import os
 from deap import tools
 from sklearn import preprocessing
 
-import CADETMatch.kde_generator as kde_generator
-
 import scoop
 
 class Cache:
@@ -67,8 +65,8 @@ class Cache:
 
         self.abstolFactor = self.settings.get('abstolFactor', 1e-4)
         self.reltol = self.settings.get('reltol', 1e-4)
-        self.abstolFactorGrad = self.settings.get('abstolFactorGrad', 1e-10)
-        self.reltolGrad = self.settings.get('reltolGrad', 1e-10)
+        self.abstolFactorGrad = self.settings.get('abstolFactorGrad', 1e-8)
+        self.reltolGrad = self.settings.get('reltolGrad', 1e-8)
 
         self.errorBias = bool(self.settings.get('errorBias', True))
 
@@ -179,7 +177,11 @@ class Cache:
             if 'csv' not in self.settings:
                 self.settings['csv'] = 'results.csv'
 
-            self.settings['population'] = int(self.settings['population'])
+            if self.settings['searchMethod'] == 'Gradient':
+                self.settings['population'] = 1
+            else:
+                self.settings['population'] = int(self.settings['population'])
+            
             self.settings['maxPopulation'] = int(self.settings.get('maxPopulation', self.settings['population']))
             self.settings['minPopulation'] = int(self.settings.get('minPopulation', self.settings['population']))
 

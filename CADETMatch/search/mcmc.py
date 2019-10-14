@@ -11,26 +11,8 @@ import cadet
 import emcee
 import SALib.sample.sobol_sequence
 
-import matplotlib
-matplotlib.use('Agg')
-
-from matplotlib import figure
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
-import matplotlib.pyplot as plt
 import subprocess
 import sys
-
-size = 20
-
-plt.rc('font', size=size)          # controls default text sizes
-plt.rc('axes', titlesize=size)     # fontsize of the axes title
-plt.rc('axes', labelsize=size)    # fontsize of the x and y labels
-plt.rc('xtick', labelsize=size)    # fontsize of the tick labels
-plt.rc('ytick', labelsize=size)    # fontsize of the tick labels
-plt.rc('legend', fontsize=size)    # legend fontsize
-plt.rc('figure', titlesize=size)  # fontsize of the figure title
-plt.rc('figure', autolayout=True)
 
 import CADETMatch.evo as evo
 import CADETMatch.cache as cache
@@ -40,7 +22,6 @@ import CADETMatch.pareto as pareto
 import scoop
 import pandas
 import array
-import CADETMatch.mle as mle
 import CADETMatch.autocorr as autocorr
 
 import CADETMatch.kde_generator as kde_generator
@@ -49,18 +30,10 @@ from sklearn.neighbors.kde import KernelDensity
 name = "MCMC"
 
 from addict import Dict
-import matplotlib.cm
-cm_plot = matplotlib.cm.gist_rainbow
 
 import joblib
 
-def get_color(idx, max_colors, cmap):
-    return cmap(1.*float(idx)/max_colors)
-
 log2 = numpy.log(2)
-
-saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
-                 b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
 
 def log_previous(cadetValues, kde_previous, kde_previous_scaler):
     #find the right values to use

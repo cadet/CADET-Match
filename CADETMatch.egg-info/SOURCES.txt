@@ -13,6 +13,7 @@ CADETMatch/generate_corner_graphs.py
 CADETMatch/generate_graphs.py
 CADETMatch/grad.py
 CADETMatch/gradFD.py
+CADETMatch/graph_kde.py
 CADETMatch/graph_spearman.py
 CADETMatch/jacobian.py
 CADETMatch/jupyter.py
@@ -55,6 +56,7 @@ CADETMatch/scores/similarityDecay.py
 CADETMatch/scores/sse.py
 CADETMatch/scores/width.py
 CADETMatch/search/__init__.py
+CADETMatch/search/gradient.py
 CADETMatch/search/graphSpace.py
 CADETMatch/search/mcmc.py
 CADETMatch/search/multistart.py

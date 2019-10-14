@@ -27,10 +27,6 @@ with warnings.catch_warnings():
 
 import scipy.optimize
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
 import CADETMatch.util as util
 import CADETMatch.cache as cache
 
@@ -56,22 +52,6 @@ def get_bandwidth(scores, cache):
     scoop.logger.info("selected bandwidth %s", bandwidth)
 
     store = numpy.array(store)
-
-    mcmcDir = Path(cache.settings['resultsDirMCMC'])
-    plt.figure(figsize=[10,10])
-    plt.scatter(numpy.log10(store[:,0]), numpy.log10(store[:,1]))
-    plt.xlabel('bandwidth')
-    plt.ylabel('cross_val_score')
-    plt.savefig(str(mcmcDir / "log_bandwidth.png" ), bbox_inches='tight')
-    plt.close()
-
-    plt.figure(figsize=[10,10])
-    plt.scatter(store[:,0], store[:,1])
-    plt.xlabel('bandwidth')
-    plt.ylabel('cross_val_score')
-    plt.savefig(str(mcmcDir / "bandwidth.png" ), bbox_inches='tight')
-    plt.close()
-
     return bandwidth, store
 
 def mirror(data):
@@ -111,6 +91,10 @@ def setupKDE(cache):
     h5_data.root.scores_mirror = scores_mirror
     h5_data.root.scores_mirror_scaled = scores_scaler
     h5_data.save()
+
+    ret = subprocess.run([sys.executable, 'graph_kde.py', str(cache.json_path),], 
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
+    util.log_subprocess('graph_kde.py', ret)
 
     return kde, scaler
 
