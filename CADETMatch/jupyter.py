@@ -32,12 +32,12 @@ class Match:
 
         if corner.exists():
             print("Corner plot in search space")
-            image = dp.Image(filename=corner, embed=True)
+            image = dp.Image(filename=corner.as_posix(), embed=True)
             dp.display(image)
 
         if corner_transform.exists():
             print("Corner plot in original space")
-            image = dp.Image(filename=corner_transform, embed=True)
+            image = dp.Image(filename=corner_transform.as_posix(), embed=True)
             dp.display(image)
 
     def plot_best(self):
@@ -50,7 +50,7 @@ class Match:
             dp.display(score[name])
             images = meta_dir.glob('%s_*.png' % name)
             for image in images:
-                img = dp.Image(filename=image, embed=True)
+                img = dp.Image(filename=image.as_posix(), embed=True)
                 dp.display(img)
 
     def get_best(self):
@@ -84,5 +84,5 @@ class Match:
         for image in space_dir.glob('*.png'):
             if '1- ' in image.name or 'SSE' in image.name:
                 print(image.name)
-                img = dp.Image(filename=image, embed=True)
+                img = dp.Image(filename=image.as_posix(), embed=True)
                 dp.display(img)
