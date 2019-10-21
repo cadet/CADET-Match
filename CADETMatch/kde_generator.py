@@ -34,6 +34,8 @@ from scoop import futures
 import CADETMatch.synthetic_error as synthetic_error
 
 import joblib
+import subprocess
+import sys
 
 def bandwidth_score(bw, data, store):
     bandwidth = 10**bw[0]
@@ -92,6 +94,7 @@ def setupKDE(cache):
     h5_data.root.scores_mirror_scaled = scores_scaler
     h5_data.save()
 
+    cwd = str(Path(__file__).parent)
     ret = subprocess.run([sys.executable, 'graph_kde.py', str(cache.json_path),], 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
     util.log_subprocess('graph_kde.py', ret)

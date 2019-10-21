@@ -44,12 +44,13 @@ def setupTemplates(cache):
                           simulationGrad.root.input.solver.time_integrator.abstol,
                           simulationGrad.root.input.solver.time_integrator.reltol)
 
-def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, generation, check_all=False, result_data=None):
+def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, generation, check_all=False, result_data=None, filterOverlap=True):
     if check_all:
         checkOffspring = offspring
     else:
         checkOffspring = (ind for ind in offspring if util.product_score(ind.fitness.values) > gradCheck)
-    checkOffspring = filterOverlapArea(cache, checkOffspring)
+    if filterOverlap:
+        checkOffspring = filterOverlapArea(cache, checkOffspring)
     newOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad, checkOffspring)
 
     temp = []
@@ -60,7 +61,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
         if i is None:
             #failed.append(1)
             pass
-        elif i.success:
+        elif i.x is not None:
             ind = cache.toolbox.individual_guess(i.x)
             fit, csv_line, results = cache.toolbox.evaluate(ind)
 
