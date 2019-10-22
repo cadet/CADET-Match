@@ -13,8 +13,8 @@ class Match:
         self.cache.setup(json_path)
 
     def start_sim(self):
-        ncpus = psutil.cpu_count(logical=False)
-        command = [sys.executable, '-m', 'scoop', '-n', str(ncpus),
+        #ncpus = psutil.cpu_count(logical=False)
+        command = [sys.executable, '-m', 'scoop', #'-n', str(ncpus),
                    CADETMatch.match.__file__, str(self.json_path), str(1)]
         pipe = subprocess.PIPE
 

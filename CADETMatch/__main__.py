@@ -49,9 +49,9 @@ def run_command(module, json, number_of_jobs, additional=None):
     command = [sys.executable, '-m', 'scoop']
     if int(number_of_jobs) > 0:
         command.extend(['-n', str(number_of_jobs)])
-    else:
-        ncpus = psutil.cpu_count(logical=False)
-        command.extend(['-n', str(ncpus)])
+    #else:
+    #    ncpus = psutil.cpu_count(logical=False)
+    #    command.extend(['-n', str(ncpus)])
 
     command.extend([importlib.util.find_spec(module).origin, str(json)])
     if additional is not None:
