@@ -5,6 +5,7 @@ import subprocess
 import sys
 import pandas
 import psutil
+import signal
 
 class Match:
     def __init__(self, json_path):
@@ -19,6 +20,15 @@ class Match:
         pipe = subprocess.PIPE
 
         proc = subprocess.Popen(command, stdout=pipe, stderr=subprocess.STDOUT, bufsize=1)
+
+        def signal_handler(sig, frame):
+            for child in psutil.Process(proc.pid).children(recursive=True):
+                child.kill()
+            proc.kill()
+            print('Terminating')
+            sys.exit(0)
+
+        signal.signal(signal.SIGINT, signal_handler)
     
         for line in iter(proc.stdout.readline, b''):
             print(line.decode('utf-8'))
