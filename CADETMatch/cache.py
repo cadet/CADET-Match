@@ -138,6 +138,8 @@ class Cache:
 
         self.finalGradRefinement = bool(self.settings.get('finalGradRefinement', False))
 
+        self.multiStartPercent = self.settings.get('multiStartPercent', 0.1)
+
         if "MCMCpopulation" not in self.settings:
             self.settings['MCMCpopulation'] = self.settings['population']
 
@@ -389,7 +391,7 @@ class Cache:
                 temp[featureName].update(self.scores[featureType].setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol))
                 self.adaptive = self.scores[featureType].settings.adaptive
                 if 'peak_max' in temp[featureName]:
-                    peak_maxes.append(temp[featureName]['peak_max'])
+                    peak_maxes.append(temp[featureName]['peak_max']/temp[featureName]['factor'])
          
         temp['smallest_peak'] = min(peak_maxes)        
         return temp

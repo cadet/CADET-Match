@@ -57,7 +57,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
     csv_lines = []
     meta_csv_lines = []
 
-    for i in newOffspring:
+    for i, orig_ind in zip(newOffspring, checkOffspring):
         if i is None:
             #failed.append(1)
             pass
@@ -72,7 +72,9 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
             save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
 
             ind_meta = cache.toolbox.individualMeta(ind)
-            ind_meta.fitness.values = csv_line[-4:] #util.calcMetaScores(fit, cache)
+            ind_meta.fitness.values = csv_line[-4:]
+
+            scoop.logger.info('%s (%s) %s %s', ind, orig_ind, fit, ind_meta.fitness.values)
 
             util.update_result_data(cache, ind, fit, result_data, results, csv_line[-4:])
 
@@ -88,16 +90,12 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
                     util.processResultsMeta(save_name_base, ind, cache, results)
                     cache.lastProgressGeneration = generation
 
-            #failed.append(0)
-            #ind.fitness.values = fit
             temp.append(ind)
     
     if temp:
         avg, bestMin, bestProd = util.averageFitness(temp, cache)
         if 0.9 * bestProd > gradCheck:
             gradCheck = 0.9 * bestProd
-        #if len(temp) > 0 or all(failed):
-        #    gradCheck = (1-gradCheck)/2.0 + gradCheck
 
     writer.writerows(csv_lines)
     
@@ -114,13 +112,11 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
 
     return gradCheck, temp
 
-def filterOverlapArea(cache, checkOffspring, cutoff=0.05):
+def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
     """if there is no overlap between the simulation and the data there is no gradient to follow and these entries need to be skipped
-    This only applies if the score is SSE or gradVector is True"""
-    if not cache.gradVector or (cache.gradVector and cache.badScore == 0):
-        return map(list, checkOffspring)
-
-    temp = cache.toolbox.map(cache.toolbox.evaluate, map(list, checkOffspring))
+    This function also sorts from highest to lowest overlap and keeps the top multiStartPercent"""
+    checkOffspring = list(checkOffspring)
+    temp = list(cache.toolbox.map(cache.toolbox.evaluate, map(list, checkOffspring)))
 
     temp_offspring = []
 
@@ -147,11 +143,19 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.05):
 
             percent = temp_area_overlap / temp_area_total
             if percent > cutoff:
-                temp_offspring.append(ind)
+                temp_offspring.append( (percent, ind) )
             else:
                 scoop.logger.info('removed %s for insufficient overlap in gradient descent', ind)
         else:
             scoop.logger.info('removed %s for failure', ind)
+
+    #sort in descending order, this has the best chance of converging so we can quick abort
+    temp_offspring.sort(reverse=True)
+    temp_offspring = [ind for (percent, ind) in temp_offspring]
+
+    if cache.multiStartPercent < 1.0:
+        #cut to the top multiStartPercent items with a minimum of 1 item
+        temp_offspring = temp_offspring[:max(int(cache.multiStartPercent*len(checkOffspring)),1)]
 
     if checkOffspring:
         scoop.logger.info("overlap okay offspring %s", temp_offspring)
@@ -165,7 +169,7 @@ def gradSearch(x, json_path):
         x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
         val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', 
                                            bounds=(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE), 
-                                           gtol=None, ftol=None, xtol=1e-8, x_scale="jac")
+                                           gtol=None, ftol=None, xtol=1e-7, x_scale="jac")
         
         #scores = fitness_sens(val.x, finished=1)
         return val

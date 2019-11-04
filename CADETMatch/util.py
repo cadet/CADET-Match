@@ -52,8 +52,11 @@ def find_extreme(seq):
 def create_spline(times, values):
 
     def goal(cutoff):
-        smooth_values = smoothing(times, values, cutoff[0])
-        sse = numpy.sum((values-smooth_values)**2)
+        try:
+            smooth_values = smoothing(times, values, cutoff[0])
+            sse = numpy.sum((values-smooth_values)**2)
+        except ValueError:
+            sse = sys.float_info.max
         return sse
 
     result = scipy.optimize.differential_evolution(goal, bounds = [(1e-5,0.499),], polish=False)
@@ -143,7 +146,7 @@ def averageFitness(offspring, cache):
 
     return result
 
-def smoothing(times, values, cutoff_frequency=0.005):
+def smoothing(times, values, cutoff_frequency=1.0):
     N  = 3    # Filter order
     Wn = cutoff_frequency # Cutoff frequency
     dt = times[1] - times[0]
@@ -1418,15 +1421,16 @@ def setupSimulation(sim, times, smallest_peak, cache):
                       sim.root.input.solver.time_integrator.abstol,
                       sim.root.input.solver.time_integrator.reltol)
 
-    for i in range(sim.root.input.model.nunits):
-        unit = 'unit_%03d' % i
+    for unit in sim.root.input.model.keys():
+        if "unit_" in unit:
+            #unit = 'unit_%03d' % i
 
-        sim.root.input['return'][unit].write_solution_particle = 0
-        sim.root.input['return'][unit].write_solution_column_inlet = 1
-        sim.root.input['return'][unit].write_solution_column_outlet = 1
-        sim.root.input['return'][unit].write_solution_inlet = 1
-        sim.root.input['return'][unit].write_solution_outlet = 1
-        sim.root.input['return'][unit].split_components_data = 0
+            sim.root.input['return'][unit].write_solution_particle = 0
+            sim.root.input['return'][unit].write_solution_column_inlet = 1
+            sim.root.input['return'][unit].write_solution_column_outlet = 1
+            sim.root.input['return'][unit].write_solution_inlet = 1
+            sim.root.input['return'][unit].write_solution_outlet = 1
+            sim.root.input['return'][unit].split_components_data = 0
     sim.root.input.solver.nthreads = 1
 
 def graph_corner_process(cache, last=False, interval=1200):
