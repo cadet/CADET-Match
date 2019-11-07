@@ -151,7 +151,7 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
     #sort in descending order, this has the best chance of converging so we can quick abort
     temp_offspring.sort(reverse=True)
 
-    if cache.multiStartPercent < 1.0:
+    if cache.multiStartPercent < 1.0 and temp_offspring:
         #cut to the top multiStartPercent items with a minimum of 1 item
         temp_offspring = temp_offspring[:max(int(cache.multiStartPercent*len(checkOffspring)),1)]
         scoop.logger.info("gradient overlap cutoff %.2g", temp_offspring[-1][0])
