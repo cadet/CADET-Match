@@ -1167,7 +1167,7 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
         ind_meta = toolbox.individualMeta(ind)
 
-        ind_meta.fitness.values = csv_line[-4:] #calcMetaScores(fit, cache)
+        ind_meta.fitness.values = csv_line[-4:]
        
         update_result_data(cache, ind, fit, result_data, results, csv_line[-4:])
 

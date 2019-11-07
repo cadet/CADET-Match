@@ -57,24 +57,23 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
     csv_lines = []
     meta_csv_lines = []
 
-    for i, orig_ind in zip(newOffspring, checkOffspring):
+    for i in newOffspring:
         if i is None:
-            #failed.append(1)
             pass
         elif i.x is not None:
             ind = cache.toolbox.individual_guess(i.x)
-            fit, csv_line, results = cache.toolbox.evaluate(ind)
+
+            fit, csv_line, results = cache.toolbox.evaluate(ind, run_experiment=runExperimentSens)
 
             ind.fitness.values = fit
 
             csv_line[0] = 'GRAD'
+            csv_line[1] = numpy.linalg.cond(i.jac)
 
             save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
 
             ind_meta = cache.toolbox.individualMeta(ind)
             ind_meta.fitness.values = csv_line[-4:]
-
-            scoop.logger.info('%s (%s) %s %s', ind, orig_ind, fit, ind_meta.fitness.values)
 
             util.update_result_data(cache, ind, fit, result_data, results, csv_line[-4:])
 
@@ -151,14 +150,17 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
 
     #sort in descending order, this has the best chance of converging so we can quick abort
     temp_offspring.sort(reverse=True)
-    temp_offspring = [ind for (percent, ind) in temp_offspring]
 
     if cache.multiStartPercent < 1.0:
         #cut to the top multiStartPercent items with a minimum of 1 item
         temp_offspring = temp_offspring[:max(int(cache.multiStartPercent*len(checkOffspring)),1)]
+        scoop.logger.info("gradient overlap cutoff %.2g", temp_offspring[-1][0])
+    
+    temp_offspring = [ind for (percent, ind) in temp_offspring]
 
     if checkOffspring:
         scoop.logger.info("overlap okay offspring %s", temp_offspring)
+
     return temp_offspring
     
 def gradSearch(x, json_path):
@@ -169,9 +171,9 @@ def gradSearch(x, json_path):
         x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
         val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', 
                                            bounds=(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE), 
-                                           gtol=None, ftol=None, xtol=1e-7, x_scale="jac")
+                                           gtol=None, ftol=None, xtol=1e-8, x_scale="jac",
+                                           max_nfev=50, loss="soft_l1")
         
-        #scores = fitness_sens(val.x, finished=1)
         return val
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt

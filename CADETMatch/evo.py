@@ -17,16 +17,19 @@ ERROR = {'scores': None,
          'cadetValues':None,
          'cadetValuesKEQ': None}
 
-def fitness(individual, json_path):
+def fitness(individual, json_path, run_experiment=None):
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path)
+
+    if run_experiment is None:
+        run_experiment = runExperiment
 
     scores = []
     error = 0.0
 
     results = {}
     for experiment in cache.cache.settings['experiments']:
-        result = runExperiment(individual, experiment, cache.cache.settings, cache.cache.target, cache.cache)
+        result = run_experiment(individual, experiment, cache.cache.settings, cache.cache.target, cache.cache)
         if result is not None:
             results[experiment['name']] = result
             scores.extend(results[experiment['name']]['scores'])

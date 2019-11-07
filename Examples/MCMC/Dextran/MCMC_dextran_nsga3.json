@@ -1,52 +1,44 @@
 {
-  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+  "CADETPath": "C:/Users/kosh_000/CADET/cadet/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
-  "resultsDir": "fit_nsga3_mcmc_all_large_auto/",
+  "resultsDir": "nsga3_mcmc_100/",
   "tempDir": "L:/",
   "CSV": "dextran_MCMC.csv",
-  "checkpointFile": "check",
-  "stopAverage": 0.995,
-  "stopBest": 0.995,
-  "gradCheck": 1.0,
-  "gradVector": 1,
-  "searchMethod": "NSGA3",
-  "mutationRate": 0.2,
-  "crossoverRate": 0.8,
-  "generations": 1000,
-  "population": 6,
-  "minPopulation": 6,
-  "maxPopulation":6,
-  "roundParameters": 3,
-  "roundScores": 3,
-  "metaResultsOnly": 1,
-  "sobolGeneration":1,
-  "stallGenerations": 5,
-  "normalizeOutput":1,
-  "continueMCMC":1,
-  "MCMCTauMult":50,
-  "kde": 
-  {
-      "power": 1,
-      "variations": 100,
-      "pump_delay_mean": 2,
-      "pump_delay_std": 10,
-      "base_noise_std": 1e-7,
-      "signal_noise_std": 1e-2      
-  },
-  "kde_synthetic":[
-  {
-    "file_path":"dextran_pulse.h5",
-    "experimental_csv": "dextran_pulse.csv",
-    "name": "main",
-    "units":[2],
-    "delay":[0.0, 1.0],
-    "flow":[1.0, 0.09],
-    "load":[1.0, 0.09],
-    "error_slope":[1.0, 0.001],
-    "error_base":50.0,
-    "base":50.0,
-    "count":100
-  }],
+    "checkpointFile": "check",
+    "searchMethod": "NSGA3",
+    "population": 50,
+    "finalGradRefinement": 0,
+    "stallGenerations": 10,
+    "continueMCMC": 1,
+  "kde_synthetic": [
+		{
+			"file_path": "dextran_pulse.h5",
+			"experimental_csv": "dextran_pulse.csv",
+			"name": "main",
+			"units": [
+				1
+			],
+			"delay": [
+				0.0,
+				3.0
+			],
+			"flow": [
+				1.0,
+				0.03
+			],
+			"load": [
+				1.0,
+				0.03
+			],
+			"error_slope": [
+				1.0,
+				0.001
+			],
+			"error_base": 50.0,
+			"base": 50.0,
+			"count": 1000
+		}
+	],
   "parameters": [
     {
       "transform": "norm_log",
@@ -70,13 +62,11 @@
       "CSV": "dextran_pulse.csv",
       "isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
       "HDF5": "dextran_pulse.h5",
-      "reference": "dextran_pulse.h5",
       "name": "main",
-      "timeout": 3.4842967987060547,
       "features": [
         {
 			"name": "Pulse",
-			"type": "Dextran"
+			"type": "DextranShape"
 		}
       ]
     }

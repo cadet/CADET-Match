@@ -45,7 +45,7 @@ def main(path=None, map_function=None):
     if cache.altFeatures:
         for name in cache.altFeatureNames:
             json_path = util.setupAltFeature(cache, name)
-            setup(cache, json_path)
+            setup(cache, json_path, map_function)
             hof = evo.run(cache)
 
     continue_mcmc(cache, map_function)
@@ -231,7 +231,7 @@ def setupTemplates(cache):
 
 def setupDeap(cache, map_function):
     "setup the DEAP variables"
-    searchMethod = cache.settings.get('searchMethod', 'SPEA2')
+    searchMethod = cache.settings.get('searchMethod', 'NSGA3')
     cache.toolbox = base.Toolbox()
 
     if map_function is None:
@@ -241,7 +241,6 @@ def setupDeap(cache, map_function):
             map_function = futures.map
 
     cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, map_function, creator, base, tools)
-    #cache.search[searchMethod].setupDEAP(cache, evo.fitness, grad.gradSearch, grad.search, map_function, creator, base, tools)
 
 def find_percentile(cache):
     "find the percentile boundaries for the input variables"
