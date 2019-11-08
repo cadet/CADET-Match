@@ -9,6 +9,7 @@ from cadet import H5
 from CADETMatch.cache import cache
 
 from pathlib import Path
+import numpy
 
 def main():
     cache.setup(sys.argv[1])
