@@ -67,7 +67,7 @@ class Cache:
         self.reltol = self.settings.get('reltol', 1e-4)
         self.abstolFactorGrad = self.settings.get('abstolFactorGrad', 1e-8)
         self.reltolGrad = self.settings.get('reltolGrad', 1e-8)
-        self.dynamicTolerance = bool(self.settings.get('dynamicTolerance', True))
+        self.dynamicTolerance = bool(self.settings.get('dynamicTolerance', False))
 
         self.errorBias = bool(self.settings.get('errorBias', True))
 
