@@ -46,6 +46,9 @@ def find_smoothing_factor(times, values, samples=200, min=-2, max=-9):
     knots = []
     all_s = []
 
+    min = numpy.log10(numpy.max(values))-2
+    max = numpy.log10(numpy.max(values))-10
+
     for s in numpy.logspace(min, max, samples):
         spline = scipy.interpolate.UnivariateSpline(times, values, s=s)
 
