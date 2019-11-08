@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     
 setuptools.setup(
     name="CADETMatch",
-    version="0.4.12",
+    version="0.4.13",
     author="William Heymann",
     author_email="w.heymann@fz-juelich.de",
     description="CADETMatch is a parameter estimation and error modeling library for CADET",
@@ -31,7 +31,8 @@ setuptools.setup(
           'CADET>=0.2',
           'seaborn>=0.9',
           'sklearn',
-          'scikit-learn>=0.21'
+          'scikit-learn>=0.21',
+          'kneed>=0.5',
       ],
     classifiers=[
         "Programming Language :: Python :: 3",

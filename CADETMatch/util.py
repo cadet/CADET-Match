@@ -27,6 +27,7 @@ with warnings.catch_warnings():
     import h5py
 
 import scoop
+import kneed
 
 import decimal as decim
 decim.getcontext().prec = 64
@@ -40,8 +41,27 @@ import CADETMatch.synthetic_error as synthetic_error
 #smallest number close to 0, used to make sure we don't divide by zero
 smallest = numpy.finfo(1.0).tiny
 
-def smoothing_factor(y):
-    return max(y)/1000000.0
+def find_smoothing_factor(times, values, samples=200, min=-2, max=-9):
+    res = []
+    knots = []
+    all_s = []
+
+    for s in numpy.logspace(min, max, samples):
+        spline = scipy.interpolate.UnivariateSpline(times, values, s=s)
+
+        res.append(spline.get_residual())
+        knots.append(len(spline.get_knots()))
+        all_s.append(s)
+        
+    kneedle = kneed.KneeLocator(numpy.log10(all_s), knots, S=1.0, curve='convex', direction='decreasing', interp_method='polynomial')
+    
+    #kneedle.plot_knee_normalized()
+    
+    res = numpy.array(res)
+    knots = numpy.array(knots)
+    all_s = numpy.array(all_s)
+    
+    return 10**kneedle.knee
 
 def find_extreme(seq):
     try:
@@ -49,19 +69,11 @@ def find_extreme(seq):
     except ValueError:
         return [0, 0]
 
-def create_spline(times, values):
+def create_spline(times, values, s=None):
+    if s is None:
+        s = find_smoothing_factor(times, values)
 
-    def goal(cutoff):
-        try:
-            smooth_values = smoothing(times, values, cutoff[0])
-            sse = numpy.sum((values-smooth_values)**2)
-        except ValueError:
-            sse = sys.float_info.max
-        return sse
-
-    result = scipy.optimize.differential_evolution(goal, bounds = [(1e-5,0.499),], polish=False)
-    cutoff = result.x[0]
-    return scipy.interpolate.PchipInterpolator(times, smoothing(times, values, cutoff))
+    return scipy.interpolate.UnivariateSpline(times, values, s=s)
 
 def get_times_values(simulation, target, selected = None):
 
@@ -145,105 +157,6 @@ def averageFitness(offspring, cache):
     result = [total/number, bestMin, bestProd]
 
     return result
-
-def smoothing(times, values, cutoff_frequency=1.0):
-    N  = 3    # Filter order
-    Wn = cutoff_frequency # Cutoff frequency
-    dt = times[1] - times[0]
-    Fs = 1 / dt 
-    B, A = scipy.signal.butter(N, Wn, output='ba', fs=Fs, btype='lowpass')
-    return scipy.signal.filtfilt(B,A, values)
-
-def mutPolynomialBoundedAdaptive(individual, eta, low, up, indpb):
-    """Adaptive eta for mutPolynomialBounded"""
-    scores = individual.fitness.values
-    mult = min(scores)
-    eta = eta + mult * 0
-    return tools.mutPolynomialBounded(individual, eta, low, up, indpb)
-
-def mutPolynomialBounded(individual, eta, low, up, indpb):
-    """Adaptive eta for mutPolynomialBounded"""
-    
-    scores = individual.fitness.values
-    mult = min(scores)
-
-    a,b = calc_coeff.linear_coeff(0.0, 1, 0.996, 10)
-    eta = calc_coeff.linear(mult, a, b) * eta
-
-    individual =  tools.mutPolynomialBounded(individual, eta, low, up, indpb)
-    return individual
-
-def mutationNSGA3_cross(ind1, ind2, low, up):
-    scores_1 = ind1.fitness.values
-    mult_1 = min(scores_1)
-
-    scores_2 = ind2.fitness.values
-    mult_2 = min(scores_2)
-
-    mult = min(mult_1, mult_2)
-
-    eta = get_eta(mult, [0.0, 0.9, 0.99], [1.0, 2.0, 4.0])
-    #eta = 1.0
-
-    return tools.cxSimulatedBinaryBounded(ind1, ind2, eta, low, up)
-
-def mutationNSGA3_mutate(individual, low, up, indpb):
-    scores = individual.fitness.values
-    mult = min(scores)
-
-    eta = get_eta(mult, [0.0, 0.9, 0.95], [1.0, 5.0, 10.0])
-    #eta = get_eta(mult, [0.0, 0.9, 0.95], [2.0, 20.0, 50.0])
-    #eta= 10.0
-    
-    return tools.mutPolynomialBounded(individual, eta, low, up, indpb)
-
-def get_eta(mult, x, y):
-
-    def f(x, a, b, c):
-        return a*numpy.exp(b*x)+c
-
-    ret = scipy.optimize.curve_fit(f, x, y)
-
-    vals = ret[0]
-    a = vals[0]
-    b = vals[1]
-    c = vals[2]
-    return f(mult, a, b, c)
-
-def mutationBoundedAdaptive(individual, low, up, indpb):
-    scores = individual.fitness.values
-    mult = min(scores)
-    
-    return util.mutPolynomialBounded()
-    return individual,
-
-def mutationBoundedAdaptive2(individual, low, up, indpb):
-    scores = individual.fitness.values
-    mult = min(scores)
-
-    if numpy.isnan(mult):
-        mult = 0.0
-
-    if mult < 0.9:
-        m,b = calc_coeff.linear_coeff(0.1, 4, 0.9, 1)
-        center = calc_coeff.linear(mult, m, b)
-        sigma = center/2
-    else:
-        m,b = calc_coeff.exponential_coeff(0.9, 1, 1.0, 1e-2)
-
-        center = 0
-        sigma = calc_coeff.exponential(mult, m, b)
-    
-    rand = numpy.random.rand(len(individual))
-
-    for idx, i in enumerate(individual):
-        if rand[idx] <= indpb:
-            if sigma == 0:
-                dist = numpy.random.normal(center, sigma)
-            else:
-                dist = numpy.random.normal(center, sigma) * random.sample([-1, 1], 1)[0]
-            individual[idx] = max(min(i + dist, up[idx]), low[idx])
-    return individual,
 
 def saveExperiments(save_name_base, settings, target, results, directory, file_pattern):
     for experiment in settings['experiments']:
@@ -689,53 +602,6 @@ def similar_fit_meta(a, b):
     diff = numpy.abs((a-b)/a)
 
     return numpy.all(diff < 1e-2)
-
-def RoundToSigFigs( x, sigfigs ):
-    """
-    Rounds the value(s) in x to the number of significant figures in sigfigs.
-    Return value has the same type as x.
-    Restrictions:
-    sigfigs must be an integer type and store a positive value.
-    x must be a real value or an array like object containing only real values.
-    """
-    if not ( type(sigfigs) is int or isinstance(sigfigs, numpy.integer) ):
-        raise TypeError( "RoundToSigFigs: sigfigs must be an integer." )
-
-    if sigfigs <= 0:
-        raise ValueError( "RoundtoSigFigs: sigfigs must be positive." )
-    
-    if not numpy.all(numpy.isreal( x )):
-        raise TypeError( "RoundToSigFigs: all x must be real." )
-
-    matrixflag = False
-    if isinstance(x, numpy.matrix): #Convert matrices to arrays
-        matrixflag = True
-        x = numpy.asarray(x)
-    
-    xsgn = numpy.sign(x)
-    absx = xsgn * x
-    mantissas, binaryExponents = numpy.frexp( absx )
-    
-    decimalExponents = __logBase10of2 * binaryExponents
-    omags = numpy.floor(decimalExponents)
-
-    mantissas *= 10.0**(decimalExponents - omags)
-    
-    if type(mantissas) is float or isinstance(mantissas, numpy.floating):
-        if mantissas < 1.0:
-            mantissas *= 10.0
-            omags -= 1.0
-            
-    else: #elif np.all(np.isreal( mantissas )):
-        fixmsk = mantissas < 1.0
-        mantissas[fixmsk] *= 10.0
-        omags[fixmsk] -= 1.0
-
-    result = xsgn * numpy.around( mantissas, decimals=sigfigs - 1 ) * 10.0**omags
-    if matrixflag:
-        result = numpy.matrix(result, copy=False)
-    
-    return result
 
 def fracStat(time_center, value):
     mean_time = numpy.sum(time_center*value)/numpy.sum(value)

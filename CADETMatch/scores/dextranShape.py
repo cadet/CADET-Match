@@ -54,7 +54,9 @@ def run(sim_data, feature):
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     #change the stop point to be where the max positive slope is along the searched interval
-    exp_spline = util.create_spline(selectedTimes, selectedValues).derivative(1)
+    s = util.find_smoothing_factor(selectedTimes, selectedValues)
+
+    exp_spline = util.create_spline(selectedTimes, selectedValues, s).derivative(1)
 
     values = exp_spline(selectedTimes)
     
@@ -75,6 +77,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp['exp_data_zero'] = exp_data_zero
     temp['offsetTimeFunction'] = score.time_function_decay_cv(CV_time, selectedTimes, max_time)
     temp['peak_max'] = max_value
+    temp['smoothing_factor'] = s
     return temp
 
 def headers(experimentName, feature):

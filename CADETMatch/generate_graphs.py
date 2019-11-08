@@ -323,8 +323,8 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                                  'derivative_similarity_hybrid2_spline', 'similarityHybridDecay2_spline',
                                  'Shape', 'ShapeDecay'):
                 #try:
-                sim_spline = util.create_spline(sim_time, sim_value).derivative(1)
-                exp_spline = util.create_spline(exp_time, exp_value).derivative(1)
+                sim_spline = util.create_spline(sim_time, sim_value, feat['smoothing_factor']).derivative(1)
+                exp_spline = util.create_spline(exp_time, exp_value, feat['smoothing_factor']).derivative(1)
                 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 graph.plot(sim_time, sim_spline(sim_time), 'r--', label='Simulation')
