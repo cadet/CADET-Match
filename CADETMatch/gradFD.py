@@ -26,8 +26,9 @@ def setupTemplates(cache):
         template_path_grad = Path(settings['resultsDirMisc'], "template_%s_grad.h5" % name)
         simulationGrad.filename = template_path_grad.as_posix()
 
-        simulationGrad.root.input.solver.time_integrator.abstol = cache.abstolFactorGrad * cache.target[name]['smallest_peak']
-        simulationGrad.root.input.solver.time_integrator.reltol = cache.reltolGrad
+        if cache.dynamicTolerance:
+            simulationGrad.root.input.solver.time_integrator.abstol = cache.abstolFactorGrad * cache.target[name]['smallest_peak']
+            simulationGrad.root.input.solver.time_integrator.reltol = cache.reltolGrad
 
         start = time.time()
         util.runExperiment(None, experiment, cache.settings, cache.target, simulationGrad, 

@@ -1280,8 +1280,10 @@ def setupSimulation(sim, times, smallest_peak, cache):
 
     sim.root.input.solver.user_solution_times = times
     sim.root.input.solver.sections.section_times[-1] = times[-1]
-    sim.root.input.solver.time_integrator.abstol = cache.abstolFactor * smallest_peak
-    sim.root.input.solver.time_integrator.reltol = cache.reltol
+
+    if cache.dynamicTolerance:
+        sim.root.input.solver.time_integrator.abstol = cache.abstolFactor * smallest_peak
+        sim.root.input.solver.time_integrator.reltol = cache.reltol
 
     scoop.logger.info('%s abstol=%.3g  reltol=%.3g', sim.filename, 
                       sim.root.input.solver.time_integrator.abstol,
