@@ -41,7 +41,7 @@ import CADETMatch.synthetic_error as synthetic_error
 #smallest number close to 0, used to make sure we don't divide by zero
 smallest = numpy.finfo(1.0).tiny
 
-def find_smoothing_factor(times, values, samples=200, min=-2, max=-9):
+def find_smoothing_factor(times, values, name, samples=200, min=-2, max=-9):
     res = []
     knots = []
     all_s = []

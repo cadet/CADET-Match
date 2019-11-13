@@ -103,7 +103,7 @@ def find_bounds(times, values):
 
     return [-min_index, len(values) - max_index - 1]
 
-def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
+def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
     data = pandas.read_csv(feature['fraction_csv'])
     rows, cols = data.shape

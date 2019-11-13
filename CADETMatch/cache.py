@@ -53,6 +53,27 @@ class Cache:
                                  'Elapsed Time', 'Generation Time', 'Total CPU Time', 'Last Progress Generation',
                                  'Generations of Progress']
 
+    def setup_dir(self, json_path):
+        self.json_path = json_path
+        self.setupSettings()
+
+        baseDir = self.settings.get('baseDir', None)
+        if baseDir is not None:
+            os.chdir(baseDir)
+            self.settings['resultsDir'] = Path(baseDir) / self.settings['resultsDir']
+        #create used paths in settings, only the root process will make the directories later
+
+        self.settings['resultsDirEvo'] = Path(self.settings['resultsDir']) / "evo"
+        self.settings['resultsDirMeta'] = Path(self.settings['resultsDir']) / "meta"
+        self.settings['resultsDirGrad'] = Path(self.settings['resultsDir']) / "grad"
+        self.settings['resultsDirMisc'] = Path(self.settings['resultsDir']) / "misc"
+        self.settings['resultsDirSpace'] = Path(self.settings['resultsDir']) / "space"
+        self.settings['resultsDirProgress'] = Path(self.settings['resultsDir']) / "progress"
+        self.settings['resultsDirLog'] = Path(self.settings['resultsDir']) / "log"
+        self.settings['resultsDirMCMC'] = Path(self.settings['resultsDir']) / "mcmc"
+        self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
+
+
     def setup(self, json_path, load_plugins=True):
         "setup the cache based on the json file being used"
         if load_plugins:
@@ -60,8 +81,9 @@ class Cache:
             self.search = plugins.get_plugins('search')
             self.transforms = plugins.get_plugins('transform')
 
-        self.json_path = json_path
-        self.setupSettings()
+        if json_path != self.json_path:
+            self.json_path = json_path
+            self.setupSettings()
 
         self.abstolFactor = self.settings.get('abstolFactor', 1e-4)
         self.reltol = self.settings.get('reltol', 1e-4)
@@ -70,11 +92,6 @@ class Cache:
         self.dynamicTolerance = bool(self.settings.get('dynamicTolerance', False))
 
         self.errorBias = bool(self.settings.get('errorBias', True))
-
-        baseDir = self.settings.get('baseDir', None)
-        if baseDir is not None:
-            os.chdir(baseDir)
-            self.settings['resultsDir'] = Path(baseDir) / self.settings['resultsDir']
 
         Cadet.cadet_path = self.settings['CADETPath']
 
@@ -88,23 +105,11 @@ class Cache:
         self.WORST = [self.badScore] * self.numGoals
 
         self.settings['transform'] = self.transform
-        #self.settings['grad_transform'] = self.grad_transform
 
         self.correct = None
         if "correct" in self.settings:
             self.correct = numpy.array([f(v) for f, v in zip(self.settings['transform'], self.settings['correct'])])
-
-        #create used paths in settings, only the root process will make the directories later
-        self.settings['resultsDirEvo'] = Path(self.settings['resultsDir']) / "evo"
-        self.settings['resultsDirMeta'] = Path(self.settings['resultsDir']) / "meta"
-        self.settings['resultsDirGrad'] = Path(self.settings['resultsDir']) / "grad"
-        self.settings['resultsDirMisc'] = Path(self.settings['resultsDir']) / "misc"
-        self.settings['resultsDirSpace'] = Path(self.settings['resultsDir']) / "space"
-        self.settings['resultsDirProgress'] = Path(self.settings['resultsDir']) / "progress"
-        self.settings['resultsDirLog'] = Path(self.settings['resultsDir']) / "log"
-        self.settings['resultsDirMCMC'] = Path(self.settings['resultsDir']) / "mcmc"
-        self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
-
+            
         self.error_path = Path(self.settings['resultsDirBase'], "error.csv")
 
         self.graphGenerateTime = int(self.settings.get('graphGenerateTime', 3600))
@@ -389,7 +394,7 @@ class Cache:
             selectedValues = temp[featureName]['value'][temp[featureName]['selected']]
 
             if featureType in self.scores:
-                temp[featureName].update(self.scores[featureType].setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol))
+                temp[featureName].update(self.scores[featureType].setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, self))
                 self.adaptive = self.scores[featureType].settings.adaptive
                 if 'peak_max' in temp[featureName]:
                     peak_maxes.append(temp[featureName]['peak_max']/temp[featureName]['factor'])

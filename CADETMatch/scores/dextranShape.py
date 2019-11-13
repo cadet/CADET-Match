@@ -51,10 +51,11 @@ def run(sim_data, feature):
 
     return data
 
-def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
+def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
     #change the stop point to be where the max positive slope is along the searched interval
-    s = util.find_smoothing_factor(selectedTimes, selectedValues)
+    name = '%s_%s' % (sim.root.experiment_name,   feature['name'])
+    s = util.find_smoothing_factor(selectedTimes, selectedValues, name)
 
     exp_spline = util.create_spline(selectedTimes, selectedValues, s).derivative(1)
 

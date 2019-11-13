@@ -60,7 +60,7 @@ def run(sim_data, feature):
 
     return [-sse,], sse, len(sim_values_sse), time_center, numpy.array(sim_values_sse), numpy.array(exp_values_sse), [sse,]
 
-def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
+def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
     data = pandas.read_csv(feature['fraction_csv'])
     rows, cols = data.shape
