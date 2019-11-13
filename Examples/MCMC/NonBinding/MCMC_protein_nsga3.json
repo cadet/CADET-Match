@@ -1,72 +1,61 @@
 {
-  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+  "CADETPath": "C:/Users/kosh_000/CADET/cadet/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/NonBinding",
   "resultsDir": "fit_large_nsga3/",
-  "tempDir": "M:/",
+  "tempDir": "L:/",
   "CSV": "nonbinding_MCMC.csv",
-  "checkpointFile": "check",
-  "stopAverage": 0.995,
-  "stopBest": 0.995,
-  "gradCheck": 0.99,
-  "gradVector": 1,
-  "searchMethod": "NSGA3",
-  "mutationRate": 0.2,
-  "crossoverRate": 0.8,
-  "generations": 1000,
-  "population": 12,
-  "minPopulation": 12,
-  "maxPopulation":12,
-  "roundParameters": 3,
-  "roundScores": 3,
-  "metaResultsOnly": 1,
-  "sobolGeneration":1,
-  "stallGenerations": 15,
-  "normalizeOutput":1,
-  "continueMCMC":1,
-  "kde": 
-  {
-      "power": 1,
-      "variations": 100,
-      "pump_delay_mean": 2,
-      "pump_delay_std": 10,
-      "base_noise_std": 1e-7,
-      "signal_noise_std": 1e-2      
-  },
-  "kde_synthetic":
+    "checkpointFile": "check",
+    "searchMethod": "NSGA3",
+    "population": 12,
+    "finalGradRefinement": 0,
+    "stallGenerations": 10,
+    "continueMCMC": 1,
+    "normalizeOutput": 0,
+    "checkpointFile": "check",
+    "searchMethod": "NSGA3",
+    "population": 12,
+    "finalGradRefinement": 0,
+    "stallGenerations": 50,
+    "continueMCMC": 1,
+    "normalizeOutput": 1,
+  "kde_synthetic":[
   {
     "file_path":"protein_pulse.h5",
-    "delay":[0.0, 1.0],
+    "experimental_csv": "protein_pulse.csv",
+    "name": "main",
+    "units": [1],
+    "delay":[0.0, 3.0],
     "flow":[1.0, 0.09],
     "load":[1.0, 0.09],
     "error_slope":[1.0, 0.001],
     "error_base":50.0,
     "base":50.0,
-    "count":2000
-  },
+    "count":4000
+  }],
 	"parameters": [
 		{
 			"transform": "norm_log",
 			"component": -1,
 			"bound": -1,
 			"location": "/input/model/unit_001/FILM_DIFFUSION",
-			"min": 1e-10,
-			"max": 0.01
+			"min": 1e-9,
+			"max": 1e-6
 		},
 		{
 			"transform": "norm",
 			"component": -1,
 			"bound": -1,
 			"location": "/input/model/unit_001/PAR_POROSITY",
-			"min": 0.1,
-			"max": 0.9
+			"min": 0.2,
+			"max": 0.4
 		},
 		{
 			"transform": "norm_log",
 			"component": -1,
 			"bound": -1,
 			"location": "/input/model/unit_001/PAR_DIFFUSION",
-			"min": 1e-14,
-			"max": 0.01
+			"min": 1e-10,
+			"max": 1e-6
 		}
 	],
 	"experiments": [
@@ -75,7 +64,6 @@
 			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
 			"HDF5": "protein_pulse.h5",
 			"name": "main",
-			"timeout": 4.01073694229126,
 			"features": [
 				{
                     "name": "Pulse",

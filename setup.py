@@ -16,7 +16,7 @@ setuptools.setup(
     install_requires=[
           'joblib>=0.14.0',
           'addict>=2.2.1',
-          'emcee>=2.2.1,<3',
+          'emcee>=3',
           'SAlib',
           'corner>=2.0.1',
           'deap>=1.3.0',

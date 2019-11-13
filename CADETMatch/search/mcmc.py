@@ -2,6 +2,7 @@ import random
 import pickle
 import CADETMatch.util as util
 import numpy
+import numpy as np
 import scipy
 from pathlib import Path
 import time
@@ -22,7 +23,7 @@ import CADETMatch.pareto as pareto
 import scoop
 import pandas
 import array
-import CADETMatch.autocorr as autocorr
+import emcee.autocorr as autocorr
 
 import CADETMatch.kde_generator as kde_generator
 from sklearn.neighbors.kde import KernelDensity
@@ -118,7 +119,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
     tol = 5e-4
     power = 0.0
     distance = 1.0
-    distance_a = sampler.a
+    #distance_a = sampler.a
     stop_next = False
     finished = False
 
@@ -126,10 +127,15 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
 
     sampler.iterations = checkpoint['sampler_iterations']
     sampler.naccepted = checkpoint['sampler_naccepted']
-    sampler.a = checkpoint['sampler_a']
+    #sampler.a = checkpoint['sampler_a']
 
     while not finished:
-        p, ln_prob, random_state = next(sampler.sample(checkpoint['p_burn'], lnprob0=checkpoint['ln_prob_burn'], rstate0=checkpoint['rstate_burn'], iterations=1 ))
+        state = next(sampler.sample(checkpoint['p_burn'], log_prob0=checkpoint['ln_prob_burn'], rstate0=checkpoint['rstate_burn'], iterations=1,
+                                                        tune=False))
+
+        p = state.coords
+        ln_prob = state.log_prob
+        random_state = state.random_state
 
         accept = numpy.mean(sampler.acceptance_fraction)
         burn_seq.append(accept)
@@ -157,44 +163,44 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
         checkpoint['sampler_naccepted'] = sampler.naccepted
         checkpoint['train_chain_stat'] = train_chain_stat
         checkpoint['run_chain_stat'] = run_chain_stat
-        checkpoint['sampler_a'] = sampler.a
+        #checkpoint['sampler_a'] = sampler.a
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
         util.graph_corner_process(cache, last=False)
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
             average_converge = numpy.mean(converge)
-            if 0.16 < average_converge < 0.30:
-                scoop.logger.info("burn in completed at iteration %s", generation)
-                finished = True
+            #if 0.16 < average_converge < 0.30:
+            scoop.logger.info("burn in completed at iteration %s", generation)
+            finished = True
 
-            if stop_next is True:
-                scoop.logger.info("burn in completed at iteration %s based on minimum distances", generation)
-                finished = True
+            #if stop_next is True:
+            #    scoop.logger.info("burn in completed at iteration %s based on minimum distances", generation)
+            #    finished = True
 
-            if not finished:
-                new_distance = numpy.abs(average_converge - 0.234)
-                if new_distance < distance:
-                    distance = new_distance
-                    distance_a = sampler.a
+            #if not finished:
+            #    new_distance = numpy.abs(average_converge - 0.234)
+            #    if new_distance < distance:
+            #        distance = new_distance
+            #        distance_a = sampler.a
 
-                    scoop.logger.info("burn in acceptance is out of tolerance and alpha must be adjusted while burn in continues")
-                    converge[:] = numpy.nan
-                    prev_a = sampler.a
-                    if average_converge > 0.3:
-                        #a must be increased to decrease the acceptance rate (step size)
-                        power += 1
-                    else:
-                        #a must be decreased to increase the acceptance rate (step size)
-                        power -= 1
-                    new_a = 1.0 + 2.0*power
-                    sampler.a = new_a
-                    sampler.reset()
-                    scoop.logger.info('previous alpha: %s    new alpha: %s', prev_a, new_a)
-                else:
-                    sampler.a = distance_a
-                    sampler.reset()
-                    stop_next = True
+            #        scoop.logger.info("burn in acceptance is out of tolerance and alpha must be adjusted while burn in continues")
+            #        converge[:] = numpy.nan
+            #        prev_a = sampler.a
+            #        if average_converge > 0.3:
+            #            #a must be increased to decrease the acceptance rate (step size)
+            #            power += 1
+            #        else:
+            #            #a must be decreased to increase the acceptance rate (step size)
+            #            power -= 1
+            #        new_a = 1.0 + 2.0*power
+            #        sampler.a = new_a
+            #        sampler.reset()
+            #        scoop.logger.info('previous alpha: %s    new alpha: %s', prev_a, new_a)
+            #    else:
+            #        sampler.a = distance_a
+            #        sampler.reset()
+            #        stop_next = True
  
     sampler.reset()
 
@@ -204,7 +210,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
     checkpoint['p_chain'] = p
     checkpoint['ln_prob_chain'] = None
     checkpoint['rstate_chain'] = None
-    checkpoint['sampler_a'] = sampler.a
+    #checkpoint['sampler_a'] = sampler.a
 
     write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
             
@@ -229,11 +235,15 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
 
     sampler.iterations = checkpoint['sampler_iterations']
     sampler.naccepted = checkpoint['sampler_naccepted']
-    sampler.a = checkpoint['sampler_a']
+    #sampler.a = checkpoint['sampler_a']
     tau_percent = None
 
     while not finished:
-        p, ln_prob, random_state = next(sampler.sample(checkpoint['p_chain'], lnprob0=checkpoint['ln_prob_chain'], rstate0=checkpoint['rstate_chain'], iterations=1 ))
+        state = next(sampler.sample(checkpoint['p_chain'], log_prob0=checkpoint['ln_prob_chain'], rstate0=checkpoint['rstate_chain'], iterations=1 ))
+
+        p = state.coords
+        ln_prob = state.log_prob
+        random_state = state.random_state
 
         accept = numpy.mean(sampler.acceptance_fraction)
         chain_seq.append(accept)
@@ -323,10 +333,16 @@ def run(cache, tools, creator):
     #Population must be even
     populationSize = populationSize + populationSize % 2  
 
+    #due to emcee 3.0 and RedBlueMove there is a minimum population size to work correctly based on the number of paramters
+    populationSize = max(parameters*2, populationSize)
+
     if checkpoint['state'] == 'start':
         scoop.logger.info("setting up kde")
         kde, kde_scaler = kde_generator.setupKDE(cache)
         checkpoint['state'] = 'burn_in'
+
+        with checkpointFile.open('wb') as cp_file:
+            pickle.dump(checkpoint, cp_file)
     else:
         scoop.logger.info("loading kde")
         kde, kde_scaler = kde_generator.getKDE(cache)
@@ -335,12 +351,19 @@ def run(cache, tools, creator):
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox, a=2.0)
-        emcee.EnsembleSampler._get_lnprob = _get_lnprob
-        emcee.EnsembleSampler._propose_stretch = _propose_stretch
+        import de
+        import de_snooker
 
-        if 'sampler_a' not in checkpoint:
-            checkpoint['sampler_a'] = sampler.a
+        #sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox,
+        #                                moves=[(emcee.moves.DESnookerMove(), 0.1), (emcee.moves.DEMove(), 0.9)])
+
+        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox,
+                                        moves=[(de_snooker.DESnookerMove(), 0.1), (de.DEMove(), 0.9)])
+        emcee.EnsembleSampler.compute_log_prob = compute_log_prob
+        #emcee.EnsembleSampler._propose_stretch = _propose_stretch
+
+        #if 'sampler_a' not in checkpoint:
+        #    checkpoint['sampler_a'] = sampler.a
 
         result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[], 'mcmc_score':[]}
@@ -555,7 +578,72 @@ def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer,
 
     process.gen += 1
     process.generation_start = time.time()
-    return [i[0] for i in results]
+    return [float(i[0]) for i in results]
+
+def compute_log_prob(self, coords):
+    """Calculate the vector of log-probability for the walkers
+    Args:
+        coords: (ndarray[..., ndim]) The position vector in parameter
+            space where the probability should be calculated.
+    This method returns:
+    * log_prob: A vector of log-probabilities with one entry for each
+        walker in this sub-ensemble.
+    * blob: The list of meta data returned by the ``log_post_fn`` at
+        this position or ``None`` if nothing was returned.
+    """
+    p = coords
+
+    # Check that the parameters are in physical ranges.
+    if np.any(np.isinf(p)):
+        raise ValueError("At least one parameter value was infinite")
+    if np.any(np.isnan(p)):
+        raise ValueError("At least one parameter value was NaN")
+
+    # Run the log-probability calculations (optionally in parallel).
+    if self.vectorize:
+        results = self.log_prob_fn(p)
+    else:
+        # If the `pool` property of the sampler has been set (i.e. we want
+        # to use `multiprocessing`), use the `pool`'s map method.
+        # Otherwise, just use the built-in `map` function.
+        if self.pool is not None:
+            map_func = self.pool.map
+        else:
+            map_func = map
+        results = list(
+            map_func(self.log_prob_fn, (p[i] for i in range(len(p))))
+        )
+        results = self.process(results)
+
+    try:
+        log_prob = np.array([float(l[0]) for l in results])
+        blob = [l[1:] for l in results]
+    except (IndexError, TypeError):
+        log_prob = np.array([float(l) for l in results])
+        blob = None
+    else:
+        # Get the blobs dtype
+        if self.blobs_dtype is not None:
+            dt = self.blobs_dtype
+        else:
+            try:
+                dt = np.atleast_1d(blob[0]).dtype
+            except ValueError:
+                dt = np.dtype("object")
+        blob = np.array(blob, dtype=dt)
+
+        # Deal with single blobs properly
+        shape = blob.shape[1:]
+        if len(shape):
+            axes = np.arange(len(shape))[np.array(shape) == 1] + 1
+            if len(axes):
+                blob = np.squeeze(blob, tuple(axes))
+
+    # Check for log_prob returning NaN.
+    if np.any(np.isnan(log_prob)):
+        raise ValueError("Probability function returned NaN")
+
+    return log_prob, blob
 
 def _get_lnprob(self, pos=None):
     """

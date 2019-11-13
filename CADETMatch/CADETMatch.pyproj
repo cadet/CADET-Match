@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\MCMC\Dextran\MCMC_dextran_nsga3.json" 1</CommandLineArguments>
+    <CommandLineArguments>"F:\PREP2019\transport\non_binding\MCMC_protein_prep_carry_2.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>-m scoop -n 6</InterpreterArguments>
   </PropertyGroup>
@@ -27,12 +27,11 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="autocorr.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="cache.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="de.py" />
+    <Compile Include="de_snooker.py" />
     <Compile Include="graph_kde.py">
       <SubType>Code</SubType>
     </Compile>
