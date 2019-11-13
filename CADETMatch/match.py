@@ -104,8 +104,11 @@ def main(path=None, map_function=None):
 def setup(cache, json_path, map_function):
     "run seutp for the current json_file"
     cache.setup_dir(json_path)
+    
     createDirectories(cache, json_path)
+    
     cache.setup(json_path)
+    
     createCSV(cache)
     createProgressCSV(cache)
     createErrorCSV(cache)

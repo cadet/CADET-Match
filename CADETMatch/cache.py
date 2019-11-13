@@ -61,8 +61,8 @@ class Cache:
         if baseDir is not None:
             os.chdir(baseDir)
             self.settings['resultsDir'] = Path(baseDir) / self.settings['resultsDir']
-        #create used paths in settings, only the root process will make the directories later
 
+        #create used paths in settings, only the root process will make the directories later
         self.settings['resultsDirEvo'] = Path(self.settings['resultsDir']) / "evo"
         self.settings['resultsDirMeta'] = Path(self.settings['resultsDir']) / "meta"
         self.settings['resultsDirGrad'] = Path(self.settings['resultsDir']) / "grad"
@@ -84,6 +84,21 @@ class Cache:
         if json_path != self.json_path:
             self.json_path = json_path
             self.setupSettings()
+
+            baseDir = self.settings.get('baseDir', None)
+            if baseDir is not None:
+                os.chdir(baseDir)
+                self.settings['resultsDir'] = Path(baseDir) / self.settings['resultsDir']
+
+            self.settings['resultsDirEvo'] = Path(self.settings['resultsDir']) / "evo"
+            self.settings['resultsDirMeta'] = Path(self.settings['resultsDir']) / "meta"
+            self.settings['resultsDirGrad'] = Path(self.settings['resultsDir']) / "grad"
+            self.settings['resultsDirMisc'] = Path(self.settings['resultsDir']) / "misc"
+            self.settings['resultsDirSpace'] = Path(self.settings['resultsDir']) / "space"
+            self.settings['resultsDirProgress'] = Path(self.settings['resultsDir']) / "progress"
+            self.settings['resultsDirLog'] = Path(self.settings['resultsDir']) / "log"
+            self.settings['resultsDirMCMC'] = Path(self.settings['resultsDir']) / "mcmc"
+            self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
 
         self.abstolFactor = self.settings.get('abstolFactor', 1e-4)
         self.reltol = self.settings.get('reltol', 1e-4)
@@ -287,7 +302,7 @@ class Cache:
             sim = Cadet()
             sim.filename = Path(experiment['HDF5']).as_posix()
             sim.load()
-            sim.root.experiment_name = name
+            sim.root.experiment_name = experiment['name']
 
         abstol = sim.root.input.solver.time_integrator.abstol
 
