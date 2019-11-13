@@ -207,7 +207,7 @@ def setupTemplates(cache):
         scoop.logger.info("simulation took %s", elapsed)
         
         #timeout needs to be stored in the template so all processes have it without calculating it
-        template.root.timeout = elapsed * 10
+        template.root.timeout = max(10, elapsed * 10)
         
         if cache.settings['searchMethod'] != 'MCMC' and "kde_synthetic" in cache.settings:
             #the base case needs to be saved since the normal template file is what the rest of the code will look for

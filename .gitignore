@@ -307,3 +307,7 @@ __pycache__/
 /Examples/MCMC/Dextran/nsga3_mcmc_100
 /Examples/MCMC/Dextran/nsga3_mcmc_10
 /Examples/MCMC/Dextran/nsga3_mcmc_1000
+/Examples/MCMC/Dextran/nsga3_mcmc_10_emcee3
+/Examples/MCMC/Dextran/nsga3_mcmc_24_emcee3
+/Examples/MCMC/Dextran/nsga3_mcmc_6_emcee3
+/Examples/MCMC/NonBinding/fit_large_nsga3
