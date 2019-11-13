@@ -287,6 +287,7 @@ class Cache:
             sim = Cadet()
             sim.filename = Path(experiment['HDF5']).as_posix()
             sim.load()
+            sim.root.experiment_name = name
 
         abstol = sim.root.input.solver.time_integrator.abstol
 

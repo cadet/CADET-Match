@@ -193,6 +193,7 @@ def setupTemplates(cache):
         #load based on where the HDF5 file is
         template.filename = HDF5
         template.load()
+        template.root.experiment_name = name
 
         if 'set_values' in experiment:
             setTemplateValues(template, experiment['set_values'])
