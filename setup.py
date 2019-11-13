@@ -32,7 +32,6 @@ setuptools.setup(
           'seaborn>=0.9',
           'sklearn',
           'scikit-learn>=0.21',
-          'kneed>=0.5',
       ],
     classifiers=[
         "Programming Language :: Python :: 3",

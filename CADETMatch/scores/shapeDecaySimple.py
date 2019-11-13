@@ -41,8 +41,9 @@ def run(sim_data, feature):
     return (temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values), 
             sim_time_values, sim_data_values, exp_data_values, [1.0 - i for i in temp])
 
-def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
-    s = util.find_smoothing_factor(selectedTimes, selectedValues)
+def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
+    name = '%s_%s' % (sim.root.experiment_name,   feature['name'])
+    s = util.find_smoothing_factor(selectedTimes, selectedValues, name, cache)
     exp_spline = util.create_spline(selectedTimes, selectedValues, s).derivative(1)
 
     [high, low] = util.find_peak(selectedTimes, exp_spline(selectedTimes))

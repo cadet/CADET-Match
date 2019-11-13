@@ -27,7 +27,6 @@ with warnings.catch_warnings():
     import h5py
 
 import scoop
-import kneed
 
 import decimal as decim
 decim.getcontext().prec = 64
@@ -41,30 +40,73 @@ import CADETMatch.synthetic_error as synthetic_error
 #smallest number close to 0, used to make sure we don't divide by zero
 smallest = numpy.finfo(1.0).tiny
 
-def find_smoothing_factor(times, values, samples=200, min=-2, max=-9):
-    res = []
+def smoothing_filter(times, values, filter_time=60.0):
+    idx = numpy.argmax(times > filter_time)
+
+    #find next higher odd number
+    length = idx // 2 * 2 + 1
+
+    values = scipy.signal.savgol_filter(values, length, 3)
+    return values
+
+def find_smoothing_factor(times, values, name, cache):
+    #system has to be at least smooth on the order of 1% of the height of the main peak
+    min = 1e-2 * max(values)
+
+    #setup 1 minute smoothing savgol filter (lowers spline knots and improves filtering)
+    values = smoothing_filter(times, values, 60.0)
+
+    spline = scipy.interpolate.UnivariateSpline(times, values, s=min)
     knots = []
     all_s = []
 
-    min = numpy.log10(numpy.max(values))-2
-    max = numpy.log10(numpy.max(values))-10
+    knots.append(len(spline.get_knots()))
+    all_s.append(min)
 
-    for s in numpy.logspace(min, max, samples):
+    scoop.logger.info("find_smoothing_factor starting knot search %s", name)
+
+    while knots[-1] < (knots[0]*50):
+        s = all_s[-1]/1.5
         spline = scipy.interpolate.UnivariateSpline(times, values, s=s)
-
-        res.append(spline.get_residual())
         knots.append(len(spline.get_knots()))
         all_s.append(s)
-        
-    kneedle = kneed.KneeLocator(numpy.log10(all_s), knots, S=1.0, curve='convex', direction='decreasing', interp_method='polynomial')
     
-    #kneedle.plot_knee_normalized()
-    
-    res = numpy.array(res)
     knots = numpy.array(knots)
     all_s = numpy.array(all_s)
+
+    p3 = numpy.array([all_s, knots]).T
+    p3 = p3/numpy.max(p3, 0)
+    p1 = p3[0,:]
+    p2 = p3[-1,:]
+        
+    d = numpy.cross(p2-p1,p3-p1)/numpy.linalg.norm(p2-p1)
     
-    return 10**kneedle.knee
+    max_idx = numpy.argmax(d)
+    s = all_s[max_idx]
+
+    #make the smoothing spline just a little less smooth and more precise, this will add a little noise but helps catch the shape of the front of the peak
+    s = s/10
+
+    factor_file = cache.settings['resultsDirMisc'] / "find_smoothing_factor.h5"
+
+    data = H5()
+    data.filename = factor_file.as_posix()
+
+    if factor_file.exists():
+        data.load()
+    if name not in data.root:
+        data.root[name].knots = knots
+        data.root[name].all_s = all_s
+
+        spline = scipy.interpolate.UnivariateSpline(times, values, s=s)
+
+        data.root[name].s = s
+        data.root[name].s_knots = len(spline.get_knots())
+        data.save()
+
+    scoop.logger.info("smoothing_factor %s  %.3e", name, s)
+    
+    return s
 
 def find_extreme(seq):
     try:
@@ -72,9 +114,9 @@ def find_extreme(seq):
     except ValueError:
         return [0, 0]
 
-def create_spline(times, values, s=None):
-    if s is None:
-        s = find_smoothing_factor(times, values)
+def create_spline(times, values, s):
+    #setup 1 minute smoothing savgol filter (lowers spline knots and improves filtering)
+    values = smoothing_filter(times, values, 60.0)
 
     return scipy.interpolate.UnivariateSpline(times, values, s=s)
 

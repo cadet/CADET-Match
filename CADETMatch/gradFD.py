@@ -36,7 +36,7 @@ def setupTemplates(cache):
         elapsed = time.time() - start
 
         #timeout needs to be stored in the template so all processes have it without calculating it
-        simulationGrad.root.timeout = elapsed * 10
+        simulationGrad.root.timeout = max(10, elapsed * 10)
         simulationGrad.save()
 
         scoop.logger.info("grad simulation took %s", elapsed)

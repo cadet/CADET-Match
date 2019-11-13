@@ -18,7 +18,7 @@
   "maxPopulation":32,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "stallGenerations": 5,
+  "stallGenerations": 30,
   "progressCorrect": 2,
   "normalizeOutput":0,
   "continueMCMC":0,
@@ -77,14 +77,6 @@
         {
             "name": "Pulse",
             "type": "DextranShape"
-        },
-        {
-            "name": "Height",
-            "type": "AbsoluteHeight"
-        },
-        {
-            "name": "Time",
-            "type": "AbsoluteTime"
         }
       ]
     }

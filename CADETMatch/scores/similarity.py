@@ -31,7 +31,7 @@ def run(sim_data, feature):
     return (temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values), 
             sim_time_values, sim_data_values, exp_data_values, [1.0 - i for i in temp])
 
-def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
+def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
     temp['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
     temp['time_function'] = score.time_function_cv(CV_time, selectedTimes, temp['peak'][0])
