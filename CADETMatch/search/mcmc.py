@@ -360,10 +360,6 @@ def run(cache, tools, creator):
         sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox,
                                         moves=[(de_snooker.DESnookerMove(), 0.1), (de.DEMove(), 0.9)])
         emcee.EnsembleSampler.compute_log_prob = compute_log_prob
-        #emcee.EnsembleSampler._propose_stretch = _propose_stretch
-
-        #if 'sampler_a' not in checkpoint:
-        #    checkpoint['sampler_a'] = sampler.a
 
         result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[], 'mcmc_score':[]}
@@ -476,7 +472,10 @@ def getCheckPoint(checkpointFile, cache):
             populationSize = parameters * cache.settings['MCMCpopulation']
 
         #Population must be even
-        populationSize = populationSize + populationSize % 2  
+        populationSize = populationSize + populationSize % 2
+        
+        #due to emcee 3.0 and RedBlueMove there is a minimum population size to work correctly based on the number of paramters
+        populationSize = max(parameters*2, populationSize)
 
         checkpoint = {}
         checkpoint['state'] = 'start'

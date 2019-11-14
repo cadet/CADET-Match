@@ -40,13 +40,31 @@ import CADETMatch.synthetic_error as synthetic_error
 #smallest number close to 0, used to make sure we don't divide by zero
 smallest = numpy.finfo(1.0).tiny
 
-def smoothing_filter(times, values, filter_time=60.0):
+def find_width(times, values, percent):
+    idx_max = numpy.argmax(values)
+
+    max_value = values[idx_max]
+    max_time = times[idx_max]
+    
+    idx_upper = numpy.argmax(values[idx_max:] <= (max_value * percent))
+    
+    idx_lower = numpy.argmin(values[:idx_max] <= (max_value * percent))
+    
+    diff_time = times[idx_max + idx_upper] - times[idx_lower]
+    
+    return diff_time
+
+def smoothing_filter(times, values):
+    #we should smooth no more than 10% of the width of the largest peak
+    filter_time = find_width(times, values, 0.1) * 0.1
+
     idx = numpy.argmax(times > filter_time)
 
     #find next higher odd number
     length = idx // 2 * 2 + 1
 
-    values = scipy.signal.savgol_filter(values, length, 3)
+    if length >= 5:
+        values = scipy.signal.savgol_filter(values, length, 3)
     return values
 
 def find_smoothing_factor(times, values, name, cache):
@@ -54,7 +72,7 @@ def find_smoothing_factor(times, values, name, cache):
     min = 1e-2 * max(values)
 
     #setup 1 minute smoothing savgol filter (lowers spline knots and improves filtering)
-    values = smoothing_filter(times, values, 60.0)
+    values = smoothing_filter(times, values)
 
     spline = scipy.interpolate.UnivariateSpline(times, values, s=min)
     knots = []
@@ -116,7 +134,7 @@ def find_extreme(seq):
 
 def create_spline(times, values, s):
     #setup 1 minute smoothing savgol filter (lowers spline knots and improves filtering)
-    values = smoothing_filter(times, values, 60.0)
+    values = smoothing_filter(times, values)
 
     return scipy.interpolate.UnivariateSpline(times, values, s=s)
 
