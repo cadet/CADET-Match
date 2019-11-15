@@ -65,10 +65,6 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     exp_data_zero = numpy.zeros(len(selectedValues))
     exp_data_zero[min_index:max_index+1] = selectedValues[min_index:max_index+1]
 
-    exp_spline = util.create_spline(selectedTimes, exp_data_zero, s).derivative(1)
-
-    [high, low] = util.find_peak(selectedTimes, exp_spline(selectedTimes))
-
     temp['min_time'] = feature['start']
     temp['max_time'] = feature['stop']
     temp['max_value'] = max_value

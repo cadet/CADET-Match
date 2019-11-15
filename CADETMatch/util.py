@@ -48,7 +48,12 @@ def find_width(times, values, percent):
     
     idx_upper = numpy.argmax(values[idx_max:] <= (max_value * percent))
     
-    idx_lower = numpy.argmin(values[:idx_max] <= (max_value * percent))
+    try:
+        idx_lower = numpy.argmin(values[:idx_max] <= (max_value * percent))
+    except ValueError:
+        #if the max point is also the zero point (happens when the area is flat) then finding the lower index results in a ValueError
+        #in which case we should just give a diff_time of 0.0 so that no savgol smoothing is applied
+        return 0.0
     
     diff_time = times[idx_max + idx_upper] - times[idx_lower]
     
@@ -56,7 +61,7 @@ def find_width(times, values, percent):
 
 def smoothing_filter(times, values):
     #we should smooth no more than 10% of the width of the largest peak
-    filter_time = find_width(times, values, 0.1) * 0.1
+    filter_time = find_width(times, values, 0.1) * 0.05
 
     idx = numpy.argmax(times > filter_time)
 
@@ -74,18 +79,16 @@ def find_smoothing_factor(times, values, name, cache):
     #setup 1 minute smoothing savgol filter (lowers spline knots and improves filtering)
     values = smoothing_filter(times, values)
 
-    spline = scipy.interpolate.UnivariateSpline(times, values, s=min)
+    spline = scipy.interpolate.UnivariateSpline(times, values, s=min, k=5, ext=3)
     knots = []
     all_s = []
 
     knots.append(len(spline.get_knots()))
     all_s.append(min)
 
-    scoop.logger.info("find_smoothing_factor starting knot search %s", name)
-
-    while knots[-1] < (knots[0]*50):
+    while knots[-1] < (knots[0]*25):
         s = all_s[-1]/1.5
-        spline = scipy.interpolate.UnivariateSpline(times, values, s=s)
+        spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=5, ext=3)
         knots.append(len(spline.get_knots()))
         all_s.append(s)
     
@@ -103,7 +106,7 @@ def find_smoothing_factor(times, values, name, cache):
     s = all_s[max_idx]
 
     #make the smoothing spline just a little less smooth and more precise, this will add a little noise but helps catch the shape of the front of the peak
-    s = s/10
+    s = s/14
 
     factor_file = cache.settings['resultsDirMisc'] / "find_smoothing_factor.h5"
 
@@ -133,10 +136,9 @@ def find_extreme(seq):
         return [0, 0]
 
 def create_spline(times, values, s):
-    #setup 1 minute smoothing savgol filter (lowers spline knots and improves filtering)
     values = smoothing_filter(times, values)
 
-    return scipy.interpolate.UnivariateSpline(times, values, s=s)
+    return scipy.interpolate.UnivariateSpline(times, values, s=s, k=5, ext=3)
 
 def get_times_values(simulation, target, selected = None):
 

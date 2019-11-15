@@ -63,18 +63,6 @@ def run(sim_data, feature):
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
     data = pandas.read_csv(feature['fraction_csv'])
-    rows, cols = data.shape
-    
-    #funcs = []
-    #headers = data.columns.values.tolist()
-
-    #for sample in range(rows):
-    #    for component in headers[2:]:
-    #        start = data['Start'][sample]
-    #        stop = data['Stop'][sample]
-    #        value = data[component][sample]
-
-    #         funcs.append( (start, stop, int(component), value) )
 
     temp['comps'] = [int(i) for i in data.columns.values.tolist()[2:]]
 
