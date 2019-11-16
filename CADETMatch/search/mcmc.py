@@ -196,13 +196,13 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
                     elif average_converge > 0.3:
                         #n must be increased to decrease the acceptance rate (step size)
                         power += 1                    
-                    elif average_convert < 0.07:
+                    elif average_converge < 0.07:
                         #n must be decreased to increase the acceptance rate (step size)
                         power -= 4
-                    elif average_convert < 0.1:
+                    elif average_converge < 0.1:
                         #n must be decreased to increase the acceptance rate (step size)
                         power -= 2
-                    elif average_convert < 0.16:
+                    elif average_converge < 0.16:
                         #n must be decreased to increase the acceptance rate (step size)
                         power -= 1
                     new_n = power
