@@ -3,6 +3,7 @@
 import numpy as np
 
 from emcee.moves.red_blue import RedBlueMove
+import random
 
 __all__ = ["DEMove"]
 
@@ -24,9 +25,10 @@ class DEMove(RedBlueMove):
 
     """
 
-    def __init__(self, sigma=1.0e-5, gamma0=None, **kwargs):
+    def __init__(self, sigma=1.0e-5, gamma0=None, n=0, **kwargs):
         self.sigma = sigma
         self.gamma0 = gamma0
+        self.n = n
         kwargs["nsplits"] = 3
         super(DEMove, self).__init__(**kwargs)
 
@@ -35,7 +37,9 @@ class DEMove(RedBlueMove):
         if self.g0 is None:
             # Pure MAGIC:
             ndim = coords.shape[1]
-            self.g0 = 2.38 / np.sqrt(2 * ndim)
+            self.g0 = 2.38 / np.sqrt(2 * ndim) * 1.2**self.n
+        if random.random() < 0.1:
+            self.g0 = 1.0
 
     def get_proposal(self, s, c, random):
         Ns = len(s)

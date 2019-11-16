@@ -127,7 +127,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
 
     sampler.iterations = checkpoint['sampler_iterations']
     sampler.naccepted = checkpoint['sampler_naccepted']
-    #sampler.a = checkpoint['sampler_a']
+    sampler._moves[1].n = checkpoint['sampler_n']
 
     while not finished:
         state = next(sampler.sample(checkpoint['p_burn'], log_prob0=checkpoint['ln_prob_burn'], rstate0=checkpoint['rstate_burn'], iterations=1,
@@ -163,44 +163,56 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
         checkpoint['sampler_naccepted'] = sampler.naccepted
         checkpoint['train_chain_stat'] = train_chain_stat
         checkpoint['run_chain_stat'] = run_chain_stat
-        #checkpoint['sampler_a'] = sampler.a
+        checkpoint['sampler_n'] = sampler._moves[1].n
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
         util.graph_corner_process(cache, last=False)
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
             average_converge = numpy.mean(converge)
-            #if 0.16 < average_converge < 0.30:
-            scoop.logger.info("burn in completed at iteration %s", generation)
-            finished = True
+            if 0.16 < average_converge < 0.30:
+                scoop.logger.info("burn in completed at iteration %s", generation)
+                finished = True
 
-            #if stop_next is True:
-            #    scoop.logger.info("burn in completed at iteration %s based on minimum distances", generation)
-            #    finished = True
+            if stop_next is True:
+                scoop.logger.info("burn in completed at iteration %s based on minimum distances", generation)
+                finished = True
 
-            #if not finished:
-            #    new_distance = numpy.abs(average_converge - 0.234)
-            #    if new_distance < distance:
-            #        distance = new_distance
-            #        distance_a = sampler.a
+            if not finished:
+                new_distance = numpy.abs(average_converge - 0.234)
+                if new_distance < distance:
+                    distance = new_distance
+                    distance_n = sampler._moves[1].n
 
-            #        scoop.logger.info("burn in acceptance is out of tolerance and alpha must be adjusted while burn in continues")
-            #        converge[:] = numpy.nan
-            #        prev_a = sampler.a
-            #        if average_converge > 0.3:
-            #            #a must be increased to decrease the acceptance rate (step size)
-            #            power += 1
-            #        else:
-            #            #a must be decreased to increase the acceptance rate (step size)
-            #            power -= 1
-            #        new_a = 1.0 + 2.0*power
-            #        sampler.a = new_a
-            #        sampler.reset()
-            #        scoop.logger.info('previous alpha: %s    new alpha: %s', prev_a, new_a)
-            #    else:
-            #        sampler.a = distance_a
-            #        sampler.reset()
-            #        stop_next = True
+                    scoop.logger.info("burn in acceptance is out of tolerance and n must be adjusted while burn in continues")
+                    converge[:] = numpy.nan
+                    prev_n = sampler._moves[1].n
+                    if average_converge > 0.4:
+                        #n must be increased to decrease the acceptance rate (step size)
+                        power += 4
+                    elif average_converge > 0.35:
+                        #n must be increased to decrease the acceptance rate (step size)
+                        power += 2
+                    elif average_converge > 0.3:
+                        #n must be increased to decrease the acceptance rate (step size)
+                        power += 1                    
+                    elif average_convert < 0.07:
+                        #n must be decreased to increase the acceptance rate (step size)
+                        power -= 4
+                    elif average_convert < 0.1:
+                        #n must be decreased to increase the acceptance rate (step size)
+                        power -= 2
+                    elif average_convert < 0.16:
+                        #n must be decreased to increase the acceptance rate (step size)
+                        power -= 1
+                    new_n = power
+                    sampler._moves[1].n = power
+                    sampler.reset()
+                    scoop.logger.info('previous n: %s    new n: %s', prev_n, new_n)
+                else:
+                    sampler._moves[1].n = distance_n
+                    sampler.reset()
+                    stop_next = True
  
     sampler.reset()
 
@@ -210,7 +222,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
     checkpoint['p_chain'] = p
     checkpoint['ln_prob_chain'] = None
     checkpoint['rstate_chain'] = None
-    #checkpoint['sampler_a'] = sampler.a
+    checkpoint['sampler_a'] = sampler._moves[1].n
 
     write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
             
@@ -235,7 +247,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
 
     sampler.iterations = checkpoint['sampler_iterations']
     sampler.naccepted = checkpoint['sampler_naccepted']
-    #sampler.a = checkpoint['sampler_a']
+    sampler._moves[1].n = checkpoint['sampler_n']
     tau_percent = None
 
     while not finished:
@@ -361,6 +373,9 @@ def run(cache, tools, creator):
                                         moves=[(de_snooker.DESnookerMove(), 0.1), (de.DEMove(), 0.9)])
         emcee.EnsembleSampler.compute_log_prob = compute_log_prob
 
+        if 'sampler_n' not in checkpoint:
+            checkpoint['sampler_n'] = sampler._moves[1].n
+
         result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[], 'mcmc_score':[]}
         halloffame = pareto.DummyFront(similar=util.similar)
@@ -456,7 +471,9 @@ def get_population(base, size, diff=0.05):
         indexes = numpy.random.choice(new_population.shape[0], size, replace=False)
         scoop.logger.info('indexes: %s', indexes)
         new_population = new_population[indexes,:]
-    return new_population
+    change = numpy.random.normal(1.0, 0.01, new_population.shape)
+    scoop.logger.info("Initial population condition number before %s  after %s", numpy.linalg.cond(new_population), numpy.linalg.cond(new_population*change))
+    return new_population * change
 
 def getCheckPoint(checkpointFile, cache):
     if checkpointFile.exists():
