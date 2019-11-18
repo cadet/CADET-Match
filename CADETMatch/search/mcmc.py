@@ -39,6 +39,9 @@ import de_snooker
 
 log2 = numpy.log(2)
 
+acceptance_target = 0.234
+acceptance_delta = 0.07
+
 def log_previous(cadetValues, kde_previous, kde_previous_scaler):
     #find the right values to use
     col = len(kde_previous_scaler.scale_)
@@ -182,7 +185,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
             average_converge = numpy.mean(converge)
-            if 0.2 < average_converge < 0.26:
+            if (acceptance_target - acceptance_delta) < average_converge < (acceptance_target + acceptance_delta):
                 scoop.logger.info("burn in completed at iteration %s", generation)
                 finished = True
 
@@ -191,7 +194,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
                 finished = True
 
             if not finished:
-                new_distance = numpy.abs(average_converge - 0.234)
+                new_distance = numpy.abs(average_converge - acceptance_target)
                 if new_distance < distance:
                     distance_n = sampler._moves[1].n
                     distance = new_distance
@@ -199,22 +202,22 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
                     scoop.logger.info("burn in acceptance is out of tolerance and n must be adjusted while burn in continues")
                     converge[:] = numpy.nan
                     prev_n = sampler._moves[1].n
-                    if average_converge > 0.4:
+                    if average_converge > (acceptance_target + 2 * acceptance_delta):
                         #n must be increased to decrease the acceptance rate (step size)
                         power += 4
-                    elif average_converge > 0.35:
+                    elif average_converge > (acceptance_target + 1.5 * acceptance_delta):
                         #n must be increased to decrease the acceptance rate (step size)
                         power += 2
-                    elif average_converge > 0.26:
+                    elif average_converge > (acceptance_target + 1 * acceptance_delta):
                         #n must be increased to decrease the acceptance rate (step size)
                         power += 1                    
-                    elif average_converge < 0.07:
+                    elif average_converge < (acceptance_target - 2 * acceptance_delta):
                         #n must be decreased to increase the acceptance rate (step size)
                         power -= 4
-                    elif average_converge < 0.1:
+                    elif average_converge < (acceptance_target - 1.5 * acceptance_delta):
                         #n must be decreased to increase the acceptance rate (step size)
                         power -= 2
-                    elif average_converge < 0.2:
+                    elif average_converge < (acceptance_target - 1 * acceptance_delta):
                         #n must be decreased to increase the acceptance rate (step size)
                         power -= 1
                     new_n = power
@@ -386,13 +389,15 @@ def run(cache, tools, creator):
         grad_hof = pareto.DummyFront(similar=util.similar)
                 
 
-        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior_vectorize, args=[cache.json_path, cache,
-                                                                                                   halloffame, meta_hof, grad_hof, result_data,
-                                                                                                   writer, csvfile], pool=cache.toolbox,
+        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior_vectorize, 
+                                        args=[cache.json_path, cache,
+                                                halloffame, meta_hof, grad_hof, result_data,
+                                                writer, csvfile], 
                                         moves=[(de_snooker.DESnookerMove(), 0.1), 
                                                (de.DEMove(), 0.9 * 0.9),
                                                (emcee.moves.DEMove(gamma0=1.0), 0.9 * 0.1),],
                                         vectorize=True)
+
         if 'sampler_n' not in checkpoint:
             checkpoint['sampler_n'] = sampler._moves[1].n
 
