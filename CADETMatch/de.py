@@ -3,7 +3,6 @@
 import numpy as np
 
 from emcee.moves.red_blue import RedBlueMove
-import random
 
 __all__ = ["DEMove"]
 
@@ -37,9 +36,7 @@ class DEMove(RedBlueMove):
         if self.g0 is None:
             # Pure MAGIC:
             ndim = coords.shape[1]
-            self.g0 = 2.38 / np.sqrt(2 * ndim) * 1.2**self.n
-        if random.random() < 0.1:
-            self.g0 = 1.0
+            self.g0 = 2.38 / np.sqrt(2 * ndim) * 1.5**self.n
 
     def get_proposal(self, s, c, random):
         Ns = len(s)

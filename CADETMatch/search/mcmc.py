@@ -34,6 +34,9 @@ from addict import Dict
 
 import joblib
 
+import de
+import de_snooker
+
 log2 = numpy.log(2)
 
 def log_previous(cadetValues, kde_previous, kde_previous_scaler):
@@ -76,7 +79,16 @@ def log_likelihood(individual, json_path):
 
     return score, scores, csv_record, results 
 
-def log_posterior(theta, json_path):
+def log_posterior_vectorize(population, json_path, cache, halloffame, meta_hof, grad_hof, result_data, writer, csvfile):
+    results = list(
+            cache.toolbox.map(log_posterior, ( (population[i], json_path) for i in range(len(population))))
+        )
+
+    results = process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csvfile)
+    return results
+
+def log_posterior(x):
+    theta, json_path = x
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path)
 
@@ -170,7 +182,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
             average_converge = numpy.mean(converge)
-            if 0.16 < average_converge < 0.30:
+            if 0.2 < average_converge < 0.26:
                 scoop.logger.info("burn in completed at iteration %s", generation)
                 finished = True
 
@@ -181,8 +193,8 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
             if not finished:
                 new_distance = numpy.abs(average_converge - 0.234)
                 if new_distance < distance:
-                    distance = new_distance
                     distance_n = sampler._moves[1].n
+                    distance = new_distance
 
                     scoop.logger.info("burn in acceptance is out of tolerance and n must be adjusted while burn in continues")
                     converge[:] = numpy.nan
@@ -193,7 +205,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
                     elif average_converge > 0.35:
                         #n must be increased to decrease the acceptance rate (step size)
                         power += 2
-                    elif average_converge > 0.3:
+                    elif average_converge > 0.26:
                         #n must be increased to decrease the acceptance rate (step size)
                         power += 1                    
                     elif average_converge < 0.07:
@@ -202,16 +214,20 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
                     elif average_converge < 0.1:
                         #n must be decreased to increase the acceptance rate (step size)
                         power -= 2
-                    elif average_converge < 0.16:
+                    elif average_converge < 0.2:
                         #n must be decreased to increase the acceptance rate (step size)
                         power -= 1
                     new_n = power
                     sampler._moves[1].n = power
                     sampler.reset()
+                    checkpoint['p_burn'] = checkpoint['starting_population']
+                    checkpoint['ln_prob_burn'] = None
                     scoop.logger.info('previous n: %s    new n: %s', prev_n, new_n)
                 else:
                     sampler._moves[1].n = distance_n
                     sampler.reset()
+                    checkpoint['p_burn'] = checkpoint['starting_population']
+                    checkpoint['ln_prob_burn'] = None
                     stop_next = True
  
     sampler.reset()
@@ -363,28 +379,22 @@ def run(cache, tools, creator):
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        import de
-        import de_snooker
-
-        #sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox,
-        #                                moves=[(emcee.moves.DESnookerMove(), 0.1), (emcee.moves.DEMove(), 0.9)])
-
-        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior, args=[cache.json_path], pool=cache.toolbox,
-                                        moves=[(de_snooker.DESnookerMove(), 0.1), (de.DEMove(), 0.9)])
-        emcee.EnsembleSampler.compute_log_prob = compute_log_prob
-
-        if 'sampler_n' not in checkpoint:
-            checkpoint['sampler_n'] = sampler._moves[1].n
-
         result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[], 'mcmc_score':[]}
         halloffame = pareto.DummyFront(similar=util.similar)
         meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit_meta)
         grad_hof = pareto.DummyFront(similar=util.similar)
+                
 
-        def local(results):
-            return process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csvfile, sampler)
-        sampler.process = local
+        sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior_vectorize, args=[cache.json_path, cache,
+                                                                                                   halloffame, meta_hof, grad_hof, result_data,
+                                                                                                   writer, csvfile], pool=cache.toolbox,
+                                        moves=[(de_snooker.DESnookerMove(), 0.1), 
+                                               (de.DEMove(), 0.9 * 0.9),
+                                               (emcee.moves.DEMove(gamma0=1.0), 0.9 * 0.1),],
+                                        vectorize=True)
+        if 'sampler_n' not in checkpoint:
+            checkpoint['sampler_n'] = sampler._moves[1].n
 
         if checkpoint['state'] == 'burn_in':
             sampler_burn(cache, checkpoint, sampler, checkpointFile)
@@ -521,7 +531,7 @@ def getCheckPoint(checkpointFile, cache):
                 scoop.logger.info('row: %s  col:%s   shape: %s', row, col, previousResults.shape)
 
             population = get_population(previousResults, populationSize, diff=0.1)
-            checkpoint['p_burn'] = [util.convert_individual_inverse(i, cache) for i in population]
+            checkpoint['starting_population'] = checkpoint['p_burn'] = [util.convert_individual_inverse(i, cache) for i in population]
             scoop.logger.info('p_burn startup: %s', checkpoint['p_burn'])
         else:
             checkpoint['p_burn'] = SALib.sample.sobol_sequence.sample(populationSize, parameters)
@@ -560,7 +570,7 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register('map', map_function)
 
-def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csv_file, sampler):
+def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csv_file):
     if 'gen' not in process.__dict__:
         process.gen = 0
 
@@ -595,145 +605,6 @@ def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer,
     process.gen += 1
     process.generation_start = time.time()
     return [float(i[0]) for i in results]
-
-def compute_log_prob(self, coords):
-    """Calculate the vector of log-probability for the walkers
-    Args:
-        coords: (ndarray[..., ndim]) The position vector in parameter
-            space where the probability should be calculated.
-    This method returns:
-    * log_prob: A vector of log-probabilities with one entry for each
-        walker in this sub-ensemble.
-    * blob: The list of meta data returned by the ``log_post_fn`` at
-        this position or ``None`` if nothing was returned.
-    """
-    p = coords
-
-    # Check that the parameters are in physical ranges.
-    if np.any(np.isinf(p)):
-        raise ValueError("At least one parameter value was infinite")
-    if np.any(np.isnan(p)):
-        raise ValueError("At least one parameter value was NaN")
-
-    # Run the log-probability calculations (optionally in parallel).
-    if self.vectorize:
-        results = self.log_prob_fn(p)
-    else:
-        # If the `pool` property of the sampler has been set (i.e. we want
-        # to use `multiprocessing`), use the `pool`'s map method.
-        # Otherwise, just use the built-in `map` function.
-        if self.pool is not None:
-            map_func = self.pool.map
-        else:
-            map_func = map
-        results = list(
-            map_func(self.log_prob_fn, (p[i] for i in range(len(p))))
-        )
-        results = self.process(results)
-
-    try:
-        log_prob = np.array([float(l[0]) for l in results])
-        blob = [l[1:] for l in results]
-    except (IndexError, TypeError):
-        log_prob = np.array([float(l) for l in results])
-        blob = None
-    else:
-        # Get the blobs dtype
-        if self.blobs_dtype is not None:
-            dt = self.blobs_dtype
-        else:
-            try:
-                dt = np.atleast_1d(blob[0]).dtype
-            except ValueError:
-                dt = np.dtype("object")
-        blob = np.array(blob, dtype=dt)
-
-        # Deal with single blobs properly
-        shape = blob.shape[1:]
-        if len(shape):
-            axes = np.arange(len(shape))[np.array(shape) == 1] + 1
-            if len(axes):
-                blob = np.squeeze(blob, tuple(axes))
-
-    # Check for log_prob returning NaN.
-    if np.any(np.isnan(log_prob)):
-        raise ValueError("Probability function returned NaN")
-
-    return log_prob, blob
-
-def _get_lnprob(self, pos=None):
-    """
-    Calculate the vector of log-probability for the walkers.
-
-    :param pos: (optional)
-        The position vector in parameter space where the probability
-        should be calculated. This defaults to the current position
-        unless a different one is provided.
-
-    This method returns:
-
-    * ``lnprob`` - A vector of log-probabilities with one entry for each
-        walker in this sub-ensemble.
-
-    * ``blob`` - The list of meta data returned by the ``lnpostfn`` at
-        this position or ``None`` if nothing was returned.
-
-    """
-    if pos is None:
-        p = self.pos
-    else:
-        p = pos
-
-    # Check that the parameters are in physical ranges.
-    if numpy.any(numpy.isinf(p)):
-        raise ValueError("At least one parameter value was infinite.")
-    if numpy.any(numpy.isnan(p)):
-        raise ValueError("At least one parameter value was NaN.")
-
-    # If the `pool` property of the sampler has been set (i.e. we want
-    # to use `multiprocessing`), use the `pool`'s map method. Otherwise,
-    # just use the built-in `map` function.
-    if self.pool is not None:
-        M = self.pool.map
-    else:
-        M = map
-
-    # sort the tasks according to (user-defined) some runtime guess
-    if self.runtime_sortingfn is not None:
-        p, idx = self.runtime_sortingfn(p)
-
-    # Run the log-probability calculations (optionally in parallel).
-    results = list(M(self.lnprobfn, [p[i] for i in range(len(p))]))
-    results = self.process(results)
-
-    try:
-        lnprob = numpy.array([float(l[0]) for l in results])
-        blob = [l[1] for l in results]
-    except (IndexError, TypeError):
-        lnprob = numpy.array([float(l) for l in results])
-        blob = None
-
-    # sort it back according to the original order - get the same
-    # chain irrespective of the runtime sorting fn
-    if self.runtime_sortingfn is not None:
-        orig_idx = numpy.argsort(idx)
-        lnprob = lnprob[orig_idx]
-        p = [p[i] for i in orig_idx]
-        if blob is not None:
-            blob = [blob[i] for i in orig_idx]
-
-    # Check for lnprob returning NaN.
-    if numpy.any(numpy.isnan(lnprob)):
-        # Print some debugging stuff.
-        bad_pars = []
-        for pars in p[numpy.isnan(lnprob)]:
-            bad_pars.append(pars)
-        scoop.logger.info("NaN value of lnprob for parameters: %s", bad_pars)
-
-        # Finally raise exception.
-        raise ValueError("lnprob returned NaN.")
-
-    return lnprob, blob
 
 def process_chain(chain, cache, idx):
     chain_shape = chain.shape
@@ -821,52 +692,3 @@ def interval(flat_chain, cache):
     pd.insert(0, 'name', cache.parameter_headers_actual)
     pd.set_index('name')
     return pd
-
-def _propose_stretch(self, p0, p1, lnprob0):
-    """
-    Propose a new position for one sub-ensemble given the positions of
-    another.
-
-    :param p0:
-        The positions from which to jump.
-
-    :param p1:
-        The positions of the other ensemble.
-
-    :param lnprob0:
-        The log-probabilities at ``p0``.
-
-    This method returns:
-
-    * ``q`` - The new proposed positions for the walkers in ``ensemble``.
-
-    * ``newlnprob`` - The vector of log-probabilities at the positions
-        given by ``q``.
-
-    * ``accept`` - A vector of type ``bool`` indicating whether or not
-        the proposed position for each walker should be accepted.
-
-    * ``blob`` - The new meta data blobs or ``None`` if nothing was
-        returned by ``lnprobfn``.
-
-    """
-    s = numpy.atleast_2d(p0)
-    Ns = len(s)
-    c = numpy.atleast_2d(p1)
-    Nc = len(c)
-
-    # Generate the vectors of random numbers that will produce the
-    # proposal.
-    zz = ((self.a - 1.) * self._random.rand(Ns) + 1) ** 2. / self.a
-    rint = self._random.randint(Nc, size=(Ns,))
-
-    # Calculate the proposed positions and the log-probability there.
-    q = (c[rint] - zz[:, numpy.newaxis] * (c[rint] - s)) % 1
-        
-    newlnprob, blob = self._get_lnprob(q)
-
-    # Decide whether or not the proposals should be accepted.
-    lnpdiff = (self.dim - 1.) * numpy.log(zz) + newlnprob - lnprob0
-    accept = (lnpdiff > numpy.log(self._random.rand(len(lnpdiff))))
-
-    return q, newlnprob, accept, blob
