@@ -22,11 +22,6 @@ def run(sim_data, feature):
         
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
 
-    #diff = feature['value'] - sim_data_values
-
-    #sse = numpy.sum(diff)
-    #norm = numpy.linalg.norm(diff)
-
     if max(sim_data_values) < max_value: #the system has no point higher than the value we are looking for
         #remove hard failure
         max_value = max(sim_data_values)
