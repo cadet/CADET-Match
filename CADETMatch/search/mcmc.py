@@ -36,10 +36,11 @@ import joblib
 
 import de
 import de_snooker
+import stretch
 
 log2 = numpy.log(2)
 
-acceptance_target = 0.234
+acceptance_target = 0.5
 acceptance_delta = 0.07
 
 def log_previous(cadetValues, kde_previous, kde_previous_scaler):
@@ -318,6 +319,13 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
             tau = numpy.array(tau)
             tau_percent = generation / (tau * cache.MCMCTauMult)
 
+            try:
+                tau= sampler.get_autocorr_time(tol=cache.MCMCTauMult)
+            except autocorr.AutocorrError as err:
+                scoop.logger.info(str(err))
+                tau = err.tau
+            scoop.logger.info("(Sampler) Mean acceptance fraction: %s %0.3f tau: %s", generation, accept, tau)
+
     checkpoint['p_chain'] = p
     checkpoint['ln_prob_chain'] = ln_prob
     checkpoint['rstate_chain'] = random_state
@@ -397,6 +405,15 @@ def run(cache, tools, creator):
                                                (de.DEMove(), 0.9 * 0.9),
                                                (emcee.moves.DEMove(gamma0=1.0), 0.9 * 0.1),],
                                         vectorize=True)
+
+        
+        #sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior_vectorize, 
+        #                                args=[cache.json_path, cache,
+        #                                        halloffame, meta_hof, grad_hof, result_data,
+        #                                        writer, csvfile], 
+        #                                moves=[(de_snooker.DESnookerMove(), 0.0), 
+        #                                       (stretch.StretchMove(), 1.0),],
+        #                                vectorize=True)
 
         if 'sampler_n' not in checkpoint:
             checkpoint['sampler_n'] = sampler._moves[1].n

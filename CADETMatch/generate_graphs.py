@@ -303,7 +303,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
 
             selected = feat['selected']
             exp_time = feat['time'][selected]
-            exp_value = feat['value'][selected] / feat['factor']
+            exp_value = feat['value'][selected]
 
             sim_time, sim_value = get_times_values(simulation, target[experimentName][featureName])
             
@@ -564,7 +564,7 @@ def get_times_values(simulation, target, selected = None):
     if selected is None:
         selected = target['selected']
 
-    return times[selected], values[selected]
+    return times[selected], values[selected] * target['factor']
 
 def smoothing(times, values):
     #temporarily get rid of smoothing for debugging
