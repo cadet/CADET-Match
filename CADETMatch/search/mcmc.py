@@ -34,13 +34,13 @@ from addict import Dict
 
 import joblib
 
-import de
-import de_snooker
-import stretch
+import CADETMatch.de as de
+import CADETMatch.de_snooker as de_snooker
+import CADETMatch.stretch as stretch
 
 log2 = numpy.log(2)
 
-acceptance_target = 0.5
+acceptance_target = 0.234
 acceptance_delta = 0.07
 
 def log_previous(cadetValues, kde_previous, kde_previous_scaler):

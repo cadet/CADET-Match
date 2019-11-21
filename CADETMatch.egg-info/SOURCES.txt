@@ -30,6 +30,7 @@ CADETMatch/pareto.py
 CADETMatch/plugins.py
 CADETMatch/score.py
 CADETMatch/similarityDecay.py
+CADETMatch/smoothing.py
 CADETMatch/stretch.py
 CADETMatch/synthetic_error.py
 CADETMatch/util.py

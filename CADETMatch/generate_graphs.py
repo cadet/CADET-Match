@@ -567,17 +567,5 @@ def get_times_values(simulation, target, selected = None):
 
     return times[selected], values[selected] * target['factor']
 
-def smoothing(times, values):
-    #temporarily get rid of smoothing for debugging
-    #return values
-    #filter length must be odd, set to 10% of the feature size and then make it odd if necesary
-    filter_length = int(.1 * len(values))
-    if filter_length % 2 == 0:
-        filter_length += 1
-    return scipy.signal.savgol_filter(values, filter_length, 3)
-
-def smoothing_factor(y):
-    return numpy.max(y)/1000000.0
-
 if __name__ == "__main__":
     main()
