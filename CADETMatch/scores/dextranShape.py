@@ -4,6 +4,7 @@ import scipy.stats
 import numpy
 import numpy.linalg
 from addict import Dict
+import CADETMatch.smoothing as smoothing
 
 name = "DextranShape"
 settings = Dict()
@@ -50,11 +51,8 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
     #change the stop point to be where the max positive slope is along the searched interval
     name = '%s_%s' % (sim.root.experiment_name,   feature['name'])
-    s = util.find_smoothing_factor(selectedTimes, selectedValues, name, cache)
-
-    exp_spline = util.create_spline(selectedTimes, selectedValues, s).derivative(1)
-
-    values = exp_spline(selectedTimes)
+    s, crit_fs = smoothing.find_smoothing_factors(selectedTimes, selectedValues, name, cache)
+    values = smoothing.smooth_data_derivative(selectedTimes, selectedValues, crit_fs, s)
     
     max_index = numpy.argmax(values)
     max_time = selectedTimes[max_index]
@@ -74,6 +72,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp['offsetTimeFunction'] = score.time_function_decay_cv(CV_time, selectedTimes, max_time)
     temp['peak_max'] = max_value
     temp['smoothing_factor'] = s
+    temp['critical_frequency'] = crit_fs
     return temp
 
 def headers(experimentName, feature):

@@ -38,6 +38,7 @@ import warnings
 import CADETMatch.util as util
 import logging
 import CADETMatch.loggerwriter as loggerwriter
+import CADETMatch.smoothing as smoothing
 
 saltIsotherms = {b'STERIC_MASS_ACTION', b'SELF_ASSOCIATION', b'MULTISTATE_STERIC_MASS_ACTION', 
                  b'SIMPLE_MULTISTATE_STERIC_MASS_ACTION', b'BI_STERIC_MASS_ACTION'}
@@ -323,12 +324,12 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                                  'derivative_similarity_hybrid2_spline', 'similarityHybridDecay2_spline',
                                  'Shape', 'ShapeDecay'):
                 #try:
-                sim_spline = util.create_spline(sim_time, sim_value, feat['smoothing_factor']).derivative(1)
-                exp_spline = util.create_spline(exp_time, exp_value, feat['smoothing_factor']).derivative(1)
+                exp_spline = smoothing.smooth_data_derivative(exp_time, exp_value, feat['critical_frequency'], feat['smoothing_factor'])
+                sim_spline = smoothing.smooth_data_derivative(sim_time, sim_value, feat['critical_frequency'], feat['smoothing_factor'])
                 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
-                graph.plot(sim_time, sim_spline(sim_time), 'r--', label='Simulation')
-                graph.plot(exp_time, exp_spline(exp_time), 'g:', label='Experiment')
+                graph.plot(sim_time, sim_spline, 'r--', label='Simulation')
+                graph.plot(exp_time, exp_spline, 'g:', label='Experiment')
                 graphIdx += 1
                 #except:
                 #    pass

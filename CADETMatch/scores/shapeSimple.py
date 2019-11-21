@@ -4,6 +4,7 @@ import scipy.stats
 import scipy.interpolate
 import numpy
 from addict import Dict
+import CADETMatch.smoothing as smoothing
 
 name = "ShapeSimple"
 settings = Dict()
@@ -21,17 +22,14 @@ def run(sim_data, feature):
     exp_data_values = feature['value'][selected]
     exp_time_values = feature['time'][selected]
 
-    sim_spline = util.create_spline(exp_time_values, sim_data_values, feature['smoothing_factor']).derivative(1)
-    exp_spline = util.create_spline(exp_time_values, exp_data_values, feature['smoothing_factor']).derivative(1)
+    sim_data_values_spline = smoothing.smooth_data_derivative(exp_time_values, sim_data_values, feature['critical_frequency'], feature['smoothing_factor'])
+    exp_data_values_spline = smoothing.smooth_data_derivative(exp_time_values, exp_data_values, feature['critical_frequency'], feature['smoothing_factor'])
      
     [high, low] = util.find_peak(exp_time_values, sim_data_values)
 
     time_high, value_high = high
 
     pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_values, exp_data_values)
-
-    exp_data_values_spline = exp_spline(exp_time_values)
-    sim_data_values_spline = sim_spline(exp_time_values)
 
     pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_data_values_spline, exp_data_values_spline)
 
@@ -43,13 +41,14 @@ def run(sim_data, feature):
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     name = '%s_%s' % (sim.root.experiment_name,   feature['name'])
-    s = util.find_smoothing_factor(selectedTimes, selectedValues, name, cache)
+    s, crit_fs = smoothing.find_smoothing_factors(selectedTimes, selectedValues, name, cache)
 
     temp = {}
     temp['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
     temp['time_function'] = score.time_function_cv(CV_time, selectedTimes, temp['peak'][0])
     temp['peak_max'] = max(selectedValues)
     temp['smoothing_factor'] = s
+    temp['critical_frequency'] = crit_fs
     return temp
 
 def headers(experimentName, feature):

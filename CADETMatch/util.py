@@ -40,105 +40,22 @@ import CADETMatch.synthetic_error as synthetic_error
 #smallest number close to 0, used to make sure we don't divide by zero
 smallest = numpy.finfo(1.0).tiny
 
-def find_width(times, values, percent):
-    idx_max = numpy.argmax(values)
+def find_L(x,y):
+    x = numpy.array(x)
+    y = numpy.array(y)
 
-    max_value = values[idx_max]
-    max_time = times[idx_max]
-    
-    idx_upper = numpy.argmax(values[idx_max:] <= (max_value * percent))
-    
-    try:
-        idx_lower = numpy.argmin(values[:idx_max] <= (max_value * percent))
-    except ValueError:
-        #if the max point is also the zero point (happens when the area is flat) then finding the lower index results in a ValueError
-        #in which case we should just give a diff_time of 0.0 so that no savgol smoothing is applied
-        return 0.0
-    
-    diff_time = times[idx_max + idx_upper] - times[idx_lower]
-    
-    return diff_time
-
-def smoothing_filter(times, values):
-    #we should smooth no more than 10% of the width of the largest peak
-    filter_time = find_width(times, values, 0.1) * 0.05
-
-    idx = numpy.argmax(times > filter_time)
-
-    #find next higher odd number
-    length = idx // 2 * 2 + 1
-
-    if length >= 5:
-        values = scipy.signal.savgol_filter(values, length, 3)
-    return values
-
-def find_smoothing_factor(times, values, name, cache):
-    #system has to be at least smooth on the order of 1% of the height of the main peak
-    min = 1e-2 * max(values)
-
-    #setup 1 minute smoothing savgol filter (lowers spline knots and improves filtering)
-    values = smoothing_filter(times, values)
-
-    spline = scipy.interpolate.UnivariateSpline(times, values, s=min, k=5, ext=3)
-    knots = []
-    all_s = []
-
-    knots.append(len(spline.get_knots()))
-    all_s.append(min)
-
-    while knots[-1] < (knots[0]*25):
-        s = all_s[-1]/1.5
-        spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=5, ext=3)
-        knots.append(len(spline.get_knots()))
-        all_s.append(s)
-    
-    knots = numpy.array(knots)
-    all_s = numpy.array(all_s)
-
-    p3 = numpy.array([all_s, knots]).T
+    p3 = numpy.array([x, y]).T
     p3 = p3/numpy.max(p3, 0)
     p1 = p3[0,:]
     p2 = p3[-1,:]
         
-    d = numpy.cross(p2-p1,p3-p1)/numpy.linalg.norm(p2-p1)
+    d = numpy.abs( numpy.cross(p2-p1,p3-p1)/numpy.linalg.norm(p2-p1) )
     
     max_idx = numpy.argmax(d)
-    s = all_s[max_idx]
-
-    #make the smoothing spline just a little less smooth and more precise, this will add a little noise but helps catch the shape of the front of the peak
-    s = s/14
-
-    factor_file = cache.settings['resultsDirMisc'] / "find_smoothing_factor.h5"
-
-    data = H5()
-    data.filename = factor_file.as_posix()
-
-    if factor_file.exists():
-        data.load()
-    if name not in data.root:
-        data.root[name].knots = knots
-        data.root[name].all_s = all_s
-
-        spline = scipy.interpolate.UnivariateSpline(times, values, s=s)
-
-        data.root[name].s = s
-        data.root[name].s_knots = len(spline.get_knots())
-        data.save()
-
-    scoop.logger.info("smoothing_factor %s  %.3e", name, s)
+    l_x = x[max_idx]
+    l_y = y[max_idx]
     
-    return s
-
-def find_extreme(seq):
-    try:
-        return max(seq, key=lambda x: abs(x[1]))
-    except ValueError:
-        return [0, 0]
-
-def create_spline(times, values, s):
-    values = smoothing_filter(times, values)
-
-    return scipy.interpolate.UnivariateSpline(times, values, s=s, k=5, ext=3)
+    return l_x, l_y
 
 def get_times_values(simulation, target, selected = None):
 
@@ -171,7 +88,7 @@ def find_peak(times, data):
     return (times[maxIdx], data[maxIdx]), (times[minIdx], data[minIdx])
 
 def find_breakthrough(times, data):
-    "return tupe of time,value for the start breakthrough and end breakthrough"
+    "return tuple of time,value for the start breakthrough and end breakthrough"
     selected = data > 0.999 * max(data)
     selected_times = times[selected]
     return (selected_times[0], max(data)), (selected_times[-1], max(data))
