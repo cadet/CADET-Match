@@ -76,9 +76,9 @@ def record_smoothing(s, s_knots, crit_fs, knots, all_s, name, cache):
     if name not in data.root:
         data.root[name].knots = knots
         data.root[name].all_s = all_s
-        data.root[name].s = s
-        data.root[name].s_knots = s_knots
-        data.root[name].crit_fs = crit_fs
+        data.root[name].s = float(s)
+        data.root[name].s_knots = int(s_knots)
+        data.root[name].crit_fs = float(crit_fs)
         data.save()
 
     scoop.logger.info("smoothing_factor %s  %.3e  critical frequency %.3e  knots %d", name, s, crit_fs, s_knots)

@@ -18,7 +18,7 @@
   "maxPopulation":16,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "stallGenerations": 5,
+  "stallGenerations": 20,
   "normalizeOutput":0,
   "continueMCMC":0,
   "graphMetaTime": 600,
@@ -75,15 +75,7 @@
 				{
 					"name": "Pulse",
 					"type": "ShapeDecay"
-				},
-                {
-                    "name": "Height",
-                    "type": "AbsoluteHeight"
-                },
-                {
-                    "name": "Time",
-                    "type": "AbsoluteTime"
-                }
+				}
 			]
 		}
 	]
