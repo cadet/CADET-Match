@@ -64,7 +64,9 @@ def find_smoothing_factors(times, values, name, cache):
     
     return s, crit_fs
 
-def record_smoothing(s, s_knots, crit_fs, knots, all_s, name, cache):
+def record_smoothing(s, s_knots, crit_fs, knots, all_s, name=None, cache=None):
+    if name is None or cache is None:
+        return
     factor_file = cache.settings['resultsDirMisc'] / "find_smoothing_factor.h5"
 
     data = H5()
