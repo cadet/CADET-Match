@@ -15,17 +15,22 @@ def find_butter(times, values):
     fs = 1.0/(times[1] - times[0])
 
     for i in numpy.logspace(-1, -4, 100):
-        b, a = scipy.signal.butter(3, i, btype='lowpass', analog=False, fs=fs)
+        try:
+            b, a = scipy.signal.butter(3, i, btype='lowpass', analog=False, fs=fs)
+        except ValueError:
+            continue
         low_passed = scipy.signal.filtfilt(b, a, values)
 
         filters.append(i)
         sse.append(  numpy.sum( (low_passed - values)**2 ) )
         
-    L_x, L_y = util.find_L(filters, numpy.log(sse))
-    
+    L_x, L_y = util.find_Left_L(filters, numpy.log(sse))
+  
     return L_x
 
 def smoothing_filter_butter(times, values, crit_fs):
+    if crit_fs is None:
+        return values
     fs = 1.0/(times[1] - times[0])
 
     b, a = scipy.signal.butter(3, crit_fs, btype='lowpass', analog=False, fs=fs)
@@ -39,6 +44,9 @@ def find_smoothing_factors(times, values, name, cache):
     values = values * 1.0/max(values)
     
     crit_fs = find_butter(times, values)
+
+    if crit_fs is None:
+        scoop.logger.info("%s butter filter disabled, no viable L point found", name)
     
     values_filter = smoothing_filter_butter(times, values, crit_fs)    
 
@@ -58,7 +66,7 @@ def find_smoothing_factors(times, values, name, cache):
     knots = numpy.array(knots)
     all_s = numpy.array(all_s)
     
-    s, s_knots = util.find_L(all_s,knots)
+    s, s_knots = util.find_Left_L(all_s,knots)
 
     record_smoothing(s, s_knots, crit_fs, knots, all_s, name, cache)
     
@@ -80,7 +88,10 @@ def record_smoothing(s, s_knots, crit_fs, knots, all_s, name=None, cache=None):
         data.root[name].all_s = all_s
         data.root[name].s = float(s)
         data.root[name].s_knots = int(s_knots)
-        data.root[name].crit_fs = float(crit_fs)
+        if crit_fs is None:
+            data.root[name].crit_fs = -1.0
+        else:
+            data.root[name].crit_fs = float(crit_fs)
         data.save()
 
     scoop.logger.info("smoothing_factor %s  %.3e  critical frequency %.3e  knots %d", name, s, crit_fs, s_knots)

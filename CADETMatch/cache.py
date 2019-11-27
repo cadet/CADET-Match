@@ -264,12 +264,40 @@ class Cache:
         scores = len(self.headers)
         self.score_indexes = list(range(parameters, scores))
 
+    def add_units_isotherm(self, units_used, isotherm):
+        if not isinstance(isotherm, list):
+           isotherm = [isotherm,]
+        for path in isotherm:
+            for element in path.split('/'):
+                if element.startswith('unit_'):
+                    if element not in units_used:
+                        units_used.append(element)
+
+    def add_units_features_alt(self, units_used, features_alt):
+        for feature_alt in features_alt:
+            self.add_units_isotherm(units_used, feature_alt.get('isotherm', ''))
+            for feature in feature_alt['features']:
+                self.add_units_isotherm(units_used, feature.get('isotherm', ''))
+                self.add_units_isotherm(units_used, feature.get('unit_name', ''))
+
+    def add_units_error_model(self, kde_synthetic, target):
+        for error_model in kde_synthetic:
+            error_model_name = error_model['name']
+            if error_model_name in target:
+                units_used = target[error_model_name]['units_used']
+                for unit in error_model['units']:
+                    unit_name = 'unit_%03d' % int(unit)
+                    if unit_name not in units_used:
+                        units_used.append(unit_name)
+
     def setupTarget(self):
         self.target = {}
         self.adaptive = True
 
         for experiment in self.settings['experiments']:
             self.target[experiment["name"]] = self.setupExperiment(experiment)
+        if 'kde_synthetic' in self.settings:
+            self.add_units_error_model(self.settings['kde_synthetic'], self.target)
         self.target['bestHumanScores'] = numpy.ones(5) * self.badScore
 
         #SSE are negative so they sort correctly with better scores being less negative
@@ -297,6 +325,8 @@ class Cache:
 
     def setupExperiment(self, experiment, sim=None, dataFromSim=0):
         temp = {}
+
+        units_used = []
         
         if sim is None:
             sim = Cadet()
@@ -364,6 +394,8 @@ class Cache:
             self.altFeatures = True
             self.altFeatureNames = [altFeature['name'] for altFeature in experiment['featuresAlt']]
 
+            self.add_units_features_alt(units_used, experiment['featuresAlt'])
+
         peak_maxes = []
         for feature in experiment['features']:
             featureName = feature['name']
@@ -404,10 +436,15 @@ class Cache:
             else:
                 temp[featureName]['isotherm'] = experiment['isotherm']
 
+            self.add_units_isotherm(units_used, temp[featureName]['isotherm'])
+
             temp[featureName]['selected'] = (temp[featureName]['time'] >= featureStart) & (temp[featureName]['time'] <= featureStop)
             
             selectedTimes = temp[featureName]['time'][temp[featureName]['selected']]
             selectedValues = temp[featureName]['value'][temp[featureName]['selected']]
+
+            if "unit_name" in feature:
+                add_units_isotherm(units_used, feature['unit_name'])
 
             if featureType in self.scores:
                 temp[featureName].update(self.scores[featureType].setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, self))
@@ -415,7 +452,8 @@ class Cache:
                 if 'peak_max' in temp[featureName]:
                     peak_maxes.append(temp[featureName]['peak_max']/temp[featureName]['factor'])
          
-        temp['smallest_peak'] = min(peak_maxes)        
+        temp['smallest_peak'] = min(peak_maxes)   
+        temp['units_used'] = units_used
         return temp
 
     def setupMinMax(self):

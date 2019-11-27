@@ -182,9 +182,14 @@ def synthetic_error_simulation(json_path):
 
         def post_function(simulation):
             error_slope = numpy.random.normal(error_slope_settings[0], error_slope_settings[1], 1)[0]
-            base = numpy.max(simulation.root.output.solution.unit_002.solution_outlet_comp_000)/1000.0
-            error_base = numpy.random.normal(base, base/error_base_settings, len(simulation.root.output.solution.unit_002.solution_outlet_comp_000))
-            simulation.root.output.solution.unit_002.solution_outlet_comp_000 = simulation.root.output.solution.unit_002.solution_outlet_comp_000 * error_slope + error_base
+
+            for unit in units:
+                unit_name = 'unit_%03d' % unit
+                for comp in range(simulation.root.input.model[unit_name].ncomp):
+                    comp_name = 'solution_outlet_comp_%03d' % comp
+                    base = numpy.max(simulation.root.output.solution[unit_name][comp_name])/1000.0
+                    error_base = numpy.random.normal(base, base/error_base_settings, len(simulation.root.output.solution[unit_name][comp_name]))
+                    simulation.root.output.solution[unit_name][comp_name] = simulation.root.output.solution[unit_name][comp_name] * error_slope + error_base
     
         error_delay = Cadet(temp.root)
 

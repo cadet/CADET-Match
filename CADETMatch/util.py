@@ -49,12 +49,24 @@ def find_L(x,y):
     p1 = p3[0,:]
     p2 = p3[-1,:]
         
-    d = numpy.abs( numpy.cross(p2-p1,p3-p1)/numpy.linalg.norm(p2-p1) )
+    d = numpy.cross(p2-p1,p3-p1)/numpy.linalg.norm(p2-p1)
+    d_abs = numpy.abs(d)
     
     max_idx = numpy.argmax(d)
+
+    max_d = d[max_idx]
     l_x = x[max_idx]
     l_y = y[max_idx]
     
+    return l_x, l_y, max_d
+
+def find_Left_L(x,y):
+    "L_x and L_y set to none if distance is negative (to the right of the connecting line)"
+    "This is designed to cover a case found in experimental data"
+    l_x, l_y, max_d = find_L(x,y)
+
+    if max_d <= 0:
+        return None, None
     return l_x, l_y
 
 def get_times_values(simulation, target, selected = None):
@@ -1271,16 +1283,21 @@ def setupSimulation(sim, times, smallest_peak, cache):
                       sim.root.input.solver.time_integrator.abstol,
                       sim.root.input.solver.time_integrator.reltol)
 
+    experiment_name = sim.root.experiment_name
+    if isinstance(experiment_name, bytes):
+        experiment_name = experiment_name.decode()
+    units_used = cache.target[experiment_name]['units_used']
     for unit in sim.root.input.model.keys():
-        if "unit_" in unit:
-            #unit = 'unit_%03d' % i
-
-            sim.root.input['return'][unit].write_solution_particle = 0
-            sim.root.input['return'][unit].write_solution_column_inlet = 1
-            sim.root.input['return'][unit].write_solution_column_outlet = 1
-            sim.root.input['return'][unit].write_solution_inlet = 1
-            sim.root.input['return'][unit].write_solution_outlet = 1
-            sim.root.input['return'][unit].split_components_data = 0
+        sim.root.input['return'][unit].write_solution_particle = 0
+        sim.root.input['return'][unit].write_solution_column_inlet = 0
+        sim.root.input['return'][unit].write_solution_inlet = 0
+        sim.root.input['return'][unit].split_components_data = 0
+        if "unit_" in unit and unit in units_used:            
+            sim.root.input['return'][unit].write_solution_column_outlet = 1            
+            sim.root.input['return'][unit].write_solution_outlet = 1            
+        else:
+            sim.root.input['return'][unit].write_solution_column_outlet = 0
+            sim.root.input['return'][unit].write_solution_outlet = 0
     sim.root.input.solver.nthreads = 1
 
 def graph_corner_process(cache, last=False, interval=1200):
