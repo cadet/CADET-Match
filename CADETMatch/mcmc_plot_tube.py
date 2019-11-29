@@ -179,14 +179,14 @@ def genRandomChoice(cache, chain, kde, scaler):
 
                 sim = value['simulation']
 
-                outlets = util.findOutlets(sim)
+                outlets = [(name, sim.root.input.model[name].ncomp) for name in cache.target[key]['units_used']]
 
                 for outlet, ncomp in outlets:
                     units = sims.get(outlet, {})
 
                     for i in range(ncomp):
                         comps = units.get(i, [])
-                        comps.append(sim.root.output.solution[outlet]["solution_inlet_comp_%03d" % i])
+                        comps.append(sim.root.output.solution[outlet]["solution_outlet_comp_%03d" % i])
                         units[i] = comps
 
                     sims[outlet] = units

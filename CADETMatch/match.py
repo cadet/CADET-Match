@@ -246,35 +246,9 @@ def setupDeap(cache, map_function):
 
     cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, map_function, creator, base, tools)
 
-def find_percentile(cache):
-    "find the percentile boundaries for the input variables"
-    resultDir = Path(cache.settings['resultsDir'])
-    result_h5 = resultDir / "result.h5"
-
-    with h5py.File(result_h5, 'r') as hf:
-        data = hf["input"][:]
-        score = hf["output_meta"][:]
-
-        #product min average norm
-        best_norm = numpy.max(score[:,3])
-
-        data = data[score[:,3] > 0.9 * best_norm,:]
-
-        lb, ub = numpy.percentile(data, [0, 100], 0)
-
-        lb_trans = util.convert_individual(lb, cache)[1]
-        ub_trans = util.convert_individual(ub, cache)[1]
-
-        scoop.logger.info('lb %s  ub %s', lb, ub)
-        scoop.logger.info('lb_trans %s  ub_trans %s', lb_trans, ub_trans)
-
-        return lb_trans, ub_trans
-
 def continue_mcmc(cache, map_function):
     if cache.continueMCMC:
-        lb, ub = find_percentile(cache)
-
-        json_path = util.setupMCMC(cache, lb, ub)
+        json_path = util.setupMCMC(cache)
         scoop.logger.info(json_path)
 
         setup(cache, json_path, map_function)

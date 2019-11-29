@@ -38,6 +38,9 @@ import CADETMatch.de as de
 import CADETMatch.de_snooker as de_snooker
 import CADETMatch.stretch as stretch
 
+import json
+import shutil
+
 log2 = numpy.log(2)
 
 acceptance_target = 0.234
@@ -87,24 +90,20 @@ def log_posterior_vectorize(population, json_path, cache, halloffame, meta_hof, 
     results = list(
             cache.toolbox.map(log_posterior, ( (population[i], json_path) for i in range(len(population))))
         )
-
     results = process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csvfile)
     return results
 
 def log_posterior(x):
     theta, json_path = x
+    #scoop.logger.info(x)
     if json_path != cache.cache.json_path:
         cache.cache.setup(json_path)
 
-    #try:
     ll, scores, csv_record, results = log_likelihood(theta, json_path)
     if results is None:
         return -numpy.inf, None, None, None, None
     else:
         return ll, theta, scores, csv_record, results
-    #except:
-    #    # if model does not converge:
-    #    return -numpy.inf, None, None, None, None
 
 def addChain(*args):
     temp = [arg for arg in args if arg is not None]
@@ -113,17 +112,180 @@ def addChain(*args):
     else:
         return numpy.array(temp[0])
 
+def converged_bounds(chain, length, error_level):
+    if chain.shape[1] < (2*length):
+        return False, None, None
+    lb = []
+    ub = []
+    
+    start = chain.shape[1] - length
+    stop = chain.shape[1]
+    for i in range(start, stop):
+        temp_chain = chain[:,:i,:]
+        temp_chain_shape = temp_chain.shape
+        temp_chain_flat = temp_chain.reshape(temp_chain_shape[0] * temp_chain_shape[1], temp_chain_shape[2])
+        lb_1, ub_99 = numpy.percentile(temp_chain_flat, [1, 99], 0)
+        
+        lb.append(lb_1)
+        ub.append(ub_99)
+       
+    lb = numpy.array(lb)
+    ub = numpy.array(ub)
+    
+    if numpy.all(numpy.std(lb, axis=0) < error_level) and numpy.all(numpy.std(ub, axis=0) < error_level):
+        return True, numpy.mean(lb, axis=0), numpy.mean(ub, axis=0)
+    else:
+        return False, None, None
+
+def rescale(lb, ub, old_lb, old_ub):
+    "give a new lb and ub that will rescale so that the previous lb and ub takes up about 1/2 of the search width"
+    center = (ub+lb)/2.0
+    
+    new_lb = lb - (center - lb)
+
+    new_lb = numpy.max([new_lb, old_lb],axis=0)
+    
+    new_ub = ub + (ub - center)
+
+    new_ub = numpy.min([new_ub, old_ub],axis=0)
+    
+    return new_lb, center, new_ub
+
 def flatten(chain):
     chain_shape = chain.shape
     flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
     return flat_chain
 
-def sampler_burn(cache, checkpoint, sampler, checkpointFile):
+def change_bounds_json(cache, lb, ub):
+    "change the bounds based on lb and ub and then save it as a new json file and return the path to the new file"
+    scoop.logger.info("change_bounds_json  lb %s  ub %s", lb, ub)
+    lb_trans = util.convert_individual(lb, cache)[1]
+    ub_trans = util.convert_individual(ub, cache)[1]
+
+    settings_file = Path(cache.json_path)
+    settings_file_backup = settings_file.with_suffix('.json.backup')
+
+    new_name = "%s_bounds%s" % (settings_file.stem, settings_file.suffix)
+
+    new_settings_file = settings_file.with_name(new_name)
+
+    with settings_file.open() as json_data:
+        settings = json.load(json_data)
+
+        idx = 0
+        for parameter in settings['parameters']:
+            transform = cache.transforms[parameter['transform']]
+            count = transform.count_extended
+            scoop.logger.warn('%s %s %s', idx, count, transform)
+            lb_local = lb_trans[idx:idx+count]
+            ub_local = ub_trans[idx:idx+count]
+            transform.setBounds(parameter, lb_local, ub_local)
+            idx = idx + count
+
+        with new_settings_file.open(mode="w") as json_data:
+            json.dump(settings, json_data, indent=4, sort_keys=False)
+
+    #copy the original file to a backup name
+    shutil.copy(settings_file, settings_file_backup)
+
+    #copy over our new settings file to the original file also
+    #this is so that external programs also see the new bounds
+    with settings_file.open(mode="w") as json_data:
+        json.dump(settings, json_data, indent=4, sort_keys=False)
+
+    return new_settings_file.as_posix()
+
+def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile):
     burn_seq = checkpoint.get('burn_seq', [])
     chain_seq = checkpoint.get('chain_seq', [])
+    bounds_seq = checkpoint.get('bounds_seq', [])
         
     train_chain = checkpoint.get('train_chain', None)
     run_chain = checkpoint.get('run_chain', None)
+    bounds_chain = checkpoint.get('bounds_chain', None)
+
+    train_chain_stat = checkpoint.get('train_chain_stat', None)
+    run_chain_stat = checkpoint.get('run_chain_stat', None)
+
+    checkInterval = 25
+
+    parameters = len(cache.MIN_VALUE)
+
+    new_parameters = len(cache.settings['parameters']) - len(cache.settings.get('parameters_mcmc', []))
+
+    finished = False
+
+    generation = checkpoint['idx_bounds']
+
+    sampler.iterations = checkpoint['sampler_iterations']
+    sampler.naccepted = checkpoint['sampler_naccepted']
+    sampler._moves[1].n = checkpoint['sampler_n']
+    tau_percent = None
+
+    while not finished:
+        state = next(sampler.sample(checkpoint['p_bounds'], log_prob0=checkpoint['ln_prob_bounds'], rstate0=checkpoint['rstate_bounds'], iterations=1 ))
+
+        p = state.coords
+        ln_prob = state.log_prob
+        random_state = state.random_state
+
+        accept = numpy.mean(sampler.acceptance_fraction)
+        bounds_seq.append(accept)
+
+        bounds_chain = addChain(bounds_chain, p[:, numpy.newaxis, :])
+
+        scoop.logger.info('run:  idx: %s accept: %.3f', generation, accept)
+        
+        generation += 1
+
+        checkpoint['p_bounds'] = p
+        checkpoint['ln_prob_bounds'] = ln_prob
+        checkpoint['rstate_bounds'] = random_state
+        checkpoint['idx_bounds'] = generation
+        checkpoint['bounds_chain'] = bounds_chain
+        checkpoint['bounds_seq'] = bounds_seq
+        checkpoint['bounds_iterations'] = sampler.iterations
+        checkpoint['bounds_naccepted'] = sampler.naccepted
+
+        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
+        util.graph_corner_process(cache, last=False)
+
+        if generation % checkInterval == 0:
+            converged, lb, ub = converged_bounds(bounds_chain[:,:,:new_parameters], 100, 1e-3)
+
+            if converged:
+                finished = True
+
+                new_lb, center, new_ub = rescale(lb, ub, numpy.array(cache.MIN_VALUE[:new_parameters]), numpy.array(cache.MAX_VALUE[:new_parameters]))
+
+                new_min_value = list(cache.MIN_VALUE)
+                new_max_value = list(cache.MAX_VALUE)
+
+                new_min_value[:new_parameters] = new_lb
+                new_max_value[:new_parameters] = new_ub
+                json_path = change_bounds_json(cache, new_min_value, new_max_value)                
+                cache.resetTransform(json_path)                
+                sampler.log_prob_fn.args[0] = json_path
+                sampler.log_prob_fn.args[1] = cache
+
+                scoop.logger.info("new lower bounds %s   new upper bounds %s", new_lb, new_ub)
+            else:
+                scoop.logger.info("bounds have not yet converged in gen %s", generation)
+
+    sampler.reset()
+    checkpoint['state'] = 'burn_in'
+    checkpoint['p_burn'] = p
+
+    write_interval(-1, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
+
+def sampler_burn(cache, checkpoint, sampler, checkpointFile):
+    burn_seq = checkpoint.get('burn_seq', [])
+    chain_seq = checkpoint.get('chain_seq', [])
+    bounds_seq = checkpoint.get('bounds_seq', [])
+        
+    train_chain = checkpoint.get('train_chain', None)
+    run_chain = checkpoint.get('run_chain', None)
+    bounds_chain = checkpoint.get('bounds_chain', None)
 
     train_chain_stat = checkpoint.get('train_chain_stat', None)
     run_chain_stat = checkpoint.get('run_chain_stat', None)
@@ -181,7 +343,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
         checkpoint['run_chain_stat'] = run_chain_stat
         checkpoint['sampler_n'] = sampler._moves[1].n
 
-        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
+        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
         util.graph_corner_process(cache, last=False)
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
@@ -244,15 +406,17 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
     checkpoint['rstate_chain'] = None
     checkpoint['sampler_a'] = sampler._moves[1].n
 
-    write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
+    write_interval(-1, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, None)
             
 
 def sampler_run(cache, checkpoint, sampler, checkpointFile):
     burn_seq = checkpoint.get('burn_seq', [])
     chain_seq = checkpoint.get('chain_seq', [])
+    bounds_seq = checkpoint.get('bounds_seq', [])
         
     train_chain = checkpoint.get('train_chain', None)
     run_chain = checkpoint.get('run_chain', None)
+    bounds_chain = checkpoint.get('bounds_chain', None)
 
     train_chain_stat = checkpoint.get('train_chain_stat', None)
     run_chain_stat = checkpoint.get('run_chain_stat', None)
@@ -299,7 +463,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
         checkpoint['train_chain_stat'] = train_chain_stat
         checkpoint['run_chain_stat'] = run_chain_stat
 
-        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
+        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
         mle_process(last=False)
         util.graph_corner_process(cache, last=False)
 
@@ -319,13 +483,6 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
             tau = numpy.array(tau)
             tau_percent = generation / (tau * cache.MCMCTauMult)
 
-            try:
-                tau= sampler.get_autocorr_time(tol=cache.MCMCTauMult)
-            except autocorr.AutocorrError as err:
-                scoop.logger.info(str(err))
-                tau = err.tau
-            scoop.logger.info("(Sampler) Mean acceptance fraction: %s %0.3f tau: %s", generation, accept, tau)
-
     checkpoint['p_chain'] = p
     checkpoint['ln_prob_chain'] = ln_prob
     checkpoint['rstate_chain'] = random_state
@@ -334,9 +491,9 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
     checkpoint['chain_seq'] = chain_seq
     checkpoint['state'] = 'complete'
 
-    write_interval(-1, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
+    write_interval(-1, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
 
-def write_interval(interval, cache, checkpoint, checkpointFile, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent=None):
+def write_interval(interval, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent=None):
     "write the checkpoint and mcmc data at most every n seconds"
     if 'last_time' not in write_interval.__dict__:
         write_interval.last_time = time.time()
@@ -345,7 +502,7 @@ def write_interval(interval, cache, checkpoint, checkpointFile, train_chain, run
         with checkpointFile.open('wb') as cp_file:
             pickle.dump(checkpoint, cp_file)
 
-        writeMCMC(cache, train_chain, run_chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
+        writeMCMC(cache, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
         
         write_interval.last_time = time.time()
 
@@ -378,7 +535,7 @@ def run(cache, tools, creator):
     if checkpoint['state'] == 'start':
         scoop.logger.info("setting up kde")
         kde, kde_scaler = kde_generator.setupKDE(cache)
-        checkpoint['state'] = 'burn_in'
+        checkpoint['state'] = 'auto_bounds'
 
         with checkpointFile.open('wb') as cp_file:
             pickle.dump(checkpoint, cp_file)
@@ -406,17 +563,11 @@ def run(cache, tools, creator):
                                                (emcee.moves.DEMove(gamma0=1.0), 0.9 * 0.1),],
                                         vectorize=True)
 
-        
-        #sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior_vectorize, 
-        #                                args=[cache.json_path, cache,
-        #                                        halloffame, meta_hof, grad_hof, result_data,
-        #                                        writer, csvfile], 
-        #                                moves=[(de_snooker.DESnookerMove(), 0.0), 
-        #                                       (stretch.StretchMove(), 1.0),],
-        #                                vectorize=True)
-
         if 'sampler_n' not in checkpoint:
             checkpoint['sampler_n'] = sampler._moves[1].n
+
+        if checkpoint['state'] == 'auto_bounds':
+            sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile)
 
         if checkpoint['state'] == 'burn_in':
             sampler_burn(cache, checkpoint, sampler, checkpointFile)
@@ -507,6 +658,41 @@ def get_population(base, size, diff=0.05):
     scoop.logger.info("Initial population condition number before %s  after %s", numpy.linalg.cond(new_population), numpy.linalg.cond(new_population*change))
     return new_population * change
 
+def resetPopulation(checkpoint, cache):
+    populationSize = checkpoint['populationSize']
+    parameters = len(cache.MIN_VALUE)
+
+    if cache.settings.get('PreviousResults', None) is not None:
+        scoop.logger.info('running with previous best results')
+        previousResultsFile = Path(cache.settings['PreviousResults'])
+        results_h5 = cadet.H5()
+        results_h5.filename = previousResultsFile.as_posix()
+        results_h5.load()
+        previousResults = results_h5.root.meta_population_transform
+
+        row,col = previousResults.shape
+        scoop.logger.info('row: %s col: %s  parameters: %s', row, col, parameters)
+        if col < parameters:
+            mcmc_h5 = Path(cache.settings.get('mcmc_h5', None))
+            mcmcDir = mcmc_h5.parent
+            mle_h5 = mcmcDir / "mle.h5"
+
+            data = cadet.H5()
+            data.filename = mle_h5.as_posix()
+            data.load()
+            scoop.logger.info('%s', list(data.root.keys()))
+            stat_MLE = data.root.stat_MLE.reshape(1, -1)
+            previousResults = numpy.hstack([previousResults, numpy.repeat(stat_MLE, row, 0)])
+            scoop.logger.info('row: %s  col:%s   shape: %s', row, col, previousResults.shape)
+
+        population = get_population(previousResults, populationSize, diff=0.1)
+        checkpoint['starting_population'] = [util.convert_individual_inverse(i, cache) for i in population]
+        scoop.logger.info('p_burn startup population: %s', population)
+        scoop.logger.info('p_burn startup: %s', checkpoint['starting_population'])
+    else:
+        checkpoint['starting_population'] = SALib.sample.sobol_sequence.sample(populationSize, parameters)
+    checkpoint['p_burn'] = checkpoint['p_bounds'] = checkpoint['starting_population']
+
 def getCheckPoint(checkpointFile, cache):
     if checkpointFile.exists():
         with checkpointFile.open('rb') as cp_file:
@@ -528,35 +714,13 @@ def getCheckPoint(checkpointFile, cache):
 
         checkpoint = {}
         checkpoint['state'] = 'start'
+        checkpoint['populationSize'] = populationSize
+        resetPopulation(checkpoint, cache)
+        
 
-        if cache.settings.get('PreviousResults', None) is not None:
-            scoop.logger.info('running with previous best results')
-            previousResultsFile = Path(cache.settings['PreviousResults'])
-            results_h5 = cadet.H5()
-            results_h5.filename = previousResultsFile.as_posix()
-            results_h5.load()
-            previousResults = results_h5.root.meta_population_transform
-
-            row,col = previousResults.shape
-            scoop.logger.info('row: %s col: %s  parameters: %s', row, col, parameters)
-            if col < parameters:
-                mcmc_h5 = Path(cache.settings.get('mcmc_h5', None))
-                mcmcDir = mcmc_h5.parent
-                mle_h5 = mcmcDir / "mle.h5"
-
-                data = cadet.H5()
-                data.filename = mle_h5.as_posix()
-                data.load()
-                scoop.logger.info('%s', list(data.root.keys()))
-                stat_MLE = data.root.stat_MLE.reshape(1, -1)
-                previousResults = numpy.hstack([previousResults, numpy.repeat(stat_MLE, row, 0)])
-                scoop.logger.info('row: %s  col:%s   shape: %s', row, col, previousResults.shape)
-
-            population = get_population(previousResults, populationSize, diff=0.1)
-            checkpoint['starting_population'] = checkpoint['p_burn'] = [util.convert_individual_inverse(i, cache) for i in population]
-            scoop.logger.info('p_burn startup: %s', checkpoint['p_burn'])
-        else:
-            checkpoint['p_burn'] = SALib.sample.sobol_sequence.sample(populationSize, parameters)
+        checkpoint['ln_prob_bounds'] = None
+        checkpoint['rstate_bounds'] = None
+        checkpoint['idx_bounds'] = 0
 
         checkpoint['ln_prob_burn'] = None
         checkpoint['rstate_burn'] = None
@@ -637,26 +801,31 @@ def process_chain(chain, cache, idx):
 
     return chain, flat_chain, chain_transform, flat_chain_transform
 
-def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent):
+def writeMCMC(cache, bounds_chain, train_chain, chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent):
     "write out the mcmc data so it can be plotted"
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
     mcmc_h5 = mcmcDir / "mcmc.h5"
 
-    train_chain, train_chain_flat, train_chain_transform, train_chain_flat_transform = process_chain(train_chain, cache, len(burn_seq)-1)
+    bounds_chain, bounds_chain_flat, bounds_chain_transform, bounds_chain_flat_transform = process_chain(bounds_chain, cache, len(bounds_seq)-1)
+    interval_chain = None
+    interval_chain_transform = None
+
+    if train_chain is not None:
+        train_chain, train_chain_flat, train_chain_transform, train_chain_flat_transform = process_chain(train_chain, cache, len(burn_seq)-1)
+        interval_chain = train_chain_flat
+        interval_chain_transform = train_chain_flat_transform
 
     if chain is not None:
         chain, chain_flat, chain_transform, chain_flat_transform = process_chain(chain, cache, len(chain_seq)-1)
         interval_chain = chain_flat
         interval_chain_transform = chain_flat_transform
-    else:
-        interval_chain = train_chain_flat
-        interval_chain_transform = train_chain_flat_transform
 
-    flat_interval = interval(interval_chain, cache)
-    flat_interval_transform = interval(interval_chain_transform, cache)
+    if interval_chain is not None:
+        flat_interval = interval(interval_chain, cache)
+        flat_interval_transform = interval(interval_chain_transform, cache)
 
-    flat_interval.to_csv(mcmcDir / "percentile.csv")
-    flat_interval_transform.to_csv(mcmcDir / "percentile_transform.csv")
+        flat_interval.to_csv(mcmcDir / "percentile.csv")
+        flat_interval_transform.to_csv(mcmcDir / "percentile_transform.csv")
 
     h5 = cadet.H5()
     h5.filename = mcmc_h5.as_posix()
@@ -676,6 +845,9 @@ def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters, train_
         h5.root.run_chain_stat = run_chain_stat
         h5.root.run_chain_stat_transform = run_chain_stat_transform
 
+    if bounds_seq:
+        h5.root.bounds_acceptance = numpy.array(bounds_seq).reshape(-1, 1)
+
     if burn_seq:
         h5.root.burn_in_acceptance = numpy.array(burn_seq).reshape(-1, 1)
 
@@ -688,18 +860,26 @@ def writeMCMC(cache, train_chain, chain, burn_seq, chain_seq, parameters, train_
         h5.root.flat_chain = chain_flat
         h5.root.flat_chain_transform = chain_flat_transform
 
-    h5.root.train_full_chain = train_chain
-    h5.root.train_full_chain_transform = train_chain_transform
-    h5.root.train_flat_chain = train_chain_flat
-    h5.root.train_flat_chain_transform = train_chain_flat_transform
+    if train_chain is not None:
+        h5.root.train_full_chain = train_chain
+        h5.root.train_full_chain_transform = train_chain_transform
+        h5.root.train_flat_chain = train_chain_flat
+        h5.root.train_flat_chain_transform = train_chain_flat_transform
 
-    mean = numpy.mean(interval_chain_transform,0)
-    labels = [5, 10, 50, 90, 95]
-    percentile = numpy.percentile(interval_chain_transform, labels, 0)
+    if bounds_chain is not None:
+        h5.root.bounds_full_chain = bounds_chain
+        h5.root.bounds_full_chain_transform = bounds_chain_transform
+        h5.root.bounds_flat_chain = bounds_chain_flat
+        h5.root.bounds_flat_chain_transform = bounds_chain_flat_transform
 
-    h5.root.percentile['mean'] = mean
-    for idx, label in enumerate(labels):
-        h5.root.percentile['percentile_%s' % label] = percentile[idx,:]
+    if interval_chain_transform is not None:
+        mean = numpy.mean(interval_chain_transform,0)
+        labels = [5, 10, 50, 90, 95]
+        percentile = numpy.percentile(interval_chain_transform, labels, 0)
+
+        h5.root.percentile['mean'] = mean
+        for idx, label in enumerate(labels):
+            h5.root.percentile['percentile_%s' % label] = percentile[idx,:]
         
     h5.save()
 

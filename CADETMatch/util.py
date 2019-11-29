@@ -386,7 +386,7 @@ def repeatSimulation(idx):
             json.dump(settings, json_data, indent=4, sort_keys=True)
         return new_settings_file
 
-def setupMCMC(cache, lb, ub):
+def setupMCMC(cache):
     "read the original json file and make an mcmc file based on it with new boundaries"
     settings_file = Path(sys.argv[1])
     with settings_file.open() as json_data:
@@ -437,7 +437,7 @@ def setupMCMC(cache, lb, ub):
 
         new_settings_file = resultDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:
-            json.dump(settings, json_data, indent=4, sort_keys=True)
+            json.dump(settings, json_data, indent=4, sort_keys=False)
         return new_settings_file
 
 def setupAltFeature(cache, name):
@@ -1212,18 +1212,6 @@ def get_confidence(data, lb=5, ub=95):
     selected = (data >= lb) & (data <= ub)
     bools = numpy.all(selected, 1)
     return data[bools, :]
-
-def findOutlets(simulation):
-    "find all the outlets from a simulation along with their number of components"
-    outlets = []
-    for key,value in simulation.root.input.model.items():
-        try:
-            unitType = value.get('unit_type', None)
-        except AttributeError:
-            unitType = None
-        if unitType == b'OUTLET':
-            outlets.append((key, value.ncomp))
-    return outlets
 
 def test_eta(eta, xl, xu, size):
     "return delta_q log10 power for each eta to use with distribution"

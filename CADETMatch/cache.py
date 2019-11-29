@@ -73,7 +73,6 @@ class Cache:
         self.settings['resultsDirMCMC'] = Path(self.settings['resultsDir']) / "mcmc"
         self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
 
-
     def setup(self, json_path, load_plugins=True):
         "setup the cache based on the json file being used"
         if load_plugins:
@@ -174,6 +173,29 @@ class Cache:
                 sortNDHelperB(best, worst, obj, front)
 
             tools.emo.sortNDHelperB = sortNDHelperB
+
+    def resetTransform(self, json_path):
+        if json_path != self.json_path:
+            self.json_path = json_path
+
+            settings_file = Path(self.json_path)
+            with settings_file.open() as json_data:
+                settings = json.load(json_data)
+
+                self.settings['parameters'] = settings['parameters']
+
+                self.setupHeaders()
+                self.setupTarget()
+                self.setupMinMax()
+
+                self.WORST = [self.badScore] * self.numGoals
+
+                self.settings['transform'] = self.transform
+
+                self.correct = None
+                if "correct" in self.settings:
+                    self.correct = numpy.array([f(v) for f, v in zip(self.settings['transform'], self.settings['correct'])])
+
 
     def setupMetaMask(self):
         meta_mask_seq = []
@@ -444,7 +466,7 @@ class Cache:
             selectedValues = temp[featureName]['value'][temp[featureName]['selected']]
 
             if "unit_name" in feature:
-                add_units_isotherm(units_used, feature['unit_name'])
+                self.add_units_isotherm(units_used, feature['unit_name'])
 
             if featureType in self.scores:
                 temp[featureName].update(self.scores[featureType].setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, self))
