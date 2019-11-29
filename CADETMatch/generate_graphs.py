@@ -195,9 +195,9 @@ def graphMeta(cache):
     list(map_function(plotExperiments, toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirMeta']), itertools.repeat('%s_%s_meta.png')))
 
 
-def graph_simulation(simulation, graph):
-    ncomp = int(simulation.root.input.model.unit_001.ncomp)
-    isotherm = bytes(simulation.root.input.model.unit_001.adsorption_model)
+def graph_simulation_unit(simulation, unit, graph):
+    ncomp = int(simulation.root.input.model[unit].ncomp)
+    isotherm = bytes(simulation.root.input.model[unit].adsorption_model)
 
     hasSalt = isotherm in saltIsotherms
 
@@ -205,22 +205,22 @@ def graph_simulation(simulation, graph):
 
     comps = []
 
-    hasColumn = any('column' in i for i in simulation.root.output.solution.unit_001.keys())
-    hasPort = any('port' in i for i in simulation.root.output.solution.unit_001.keys())
+    hasColumn = any('column' in i for i in simulation.root.output.solution[unit].keys())
+    hasPort = any('port' in i for i in simulation.root.output.solution[unit].keys())
     #hasColumn = isinstance(simulation.root.output.solution.unit_001.solution_outlet_comp_000, Dict)
 
     if hasColumn:
         for i in range(ncomp):
-            comps.append(simulation.root.output.solution.unit_001['solution_column_outlet_comp_%03d' % i])
+            comps.append(simulation.root.output.solution[unit]['solution_column_outlet_comp_%03d' % i])
     elif hasPort:
         for i in range(ncomp):
-            comps.append(simulation.root.output.solution.unit_001['solution_outlet_port_000_comp_%03d' % i])
+            comps.append(simulation.root.output.solution[unit]['solution_outlet_port_000_comp_%03d' % i])
     else:
         for i in range(ncomp):
-            comps.append(simulation.root.output.solution.unit_001['solution_outlet_comp_%03d' % i])
+            comps.append(simulation.root.output.solution[unit]['solution_outlet_comp_%03d' % i])
 
     if hasSalt:
-        graph.set_title("Output")
+        graph.set_title("Output %s" % unit)
         graph.plot(solution_times, comps[0], 'b-', label="Salt")
         graph.set_xlabel('time (s)')
         
@@ -240,7 +240,7 @@ def graph_simulation(simulation, graph):
         lines2, labels2 = axis2.get_legend_handles_labels()
         axis2.legend(lines + lines2, labels + labels2, loc=0)
     else:
-        graph.set_title("Output")
+        graph.set_title("Output %s" % unit)
         
         #colors = ['r', 'g', 'c', 'm', 'y', 'k']
         for idx, comp in enumerate(comps):
@@ -267,7 +267,9 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
             #this item has already been plotted, this means that plots are occurring faster than generations are so kill this version
             sys.exit()
 
-        numPlotsSeq = [1]
+        units_used = cache.target[experimentName]['units_used']
+
+        numPlotsSeq = [len(units_used)]
         #Shape and ShapeDecay have a chromatogram + derivative
         for feature in experiment['features']:
             if feature['type'] in ('Shape', 'ShapeDecay'):
@@ -282,7 +284,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
         exp_time = target[experimentName]['time']
         exp_value = target[experimentName]['value']
 
-        fig = figure.Figure(figsize=[10, numPlots*10])
+        fig = figure.Figure(figsize=[15, numPlots*15])
         canvas = FigureCanvas(fig)
 
         simulation = Cadet()
@@ -293,7 +295,8 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
         results = {}
         results['simulation'] = simulation
 
-        graph_simulation(simulation, fig.add_subplot(numPlots, 1, 1))
+        for idx, unit in enumerate(units_used):
+            graph_simulation_unit(simulation, unit, fig.add_subplot(numPlots, idx+1, 1))
 
         graphIdx = 2
         for idx, feature in enumerate(experiment['features']):
