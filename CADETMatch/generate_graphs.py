@@ -284,7 +284,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
         exp_time = target[experimentName]['time']
         exp_value = target[experimentName]['value']
 
-        fig = figure.Figure(figsize=[15, numPlots*15])
+        fig = figure.Figure(figsize=[15, 15*numPlots])
         canvas = FigureCanvas(fig)
 
         simulation = Cadet()
@@ -374,7 +374,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                     graph.plot(time, values, ':', color=get_color(idx, len(graph_sim), cm_plot), label='Experiment Comp: %s Mult:%.2f' % (key, mult))
                 graphIdx += 1
             graph.legend()
-        fig.set_size_inches((12,12))
+        fig.set_size_inches((6,6*numPlots))
         fig.savefig(str(dst))
 
 def graphSpace(fullGeneration, cache):
