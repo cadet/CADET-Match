@@ -3,6 +3,7 @@ import numpy.linalg
 import scipy
 import scipy.signal
 import CADETMatch.util as util
+import warnings
 
 import scoop
 
@@ -57,11 +58,29 @@ def find_smoothing_factors(times, values, name, cache):
     knots.append(len(spline.get_knots()))
     all_s.append(min)
 
-    while knots[-1] < (knots[0]*10):
+    last = 10
+
+    progress = True
+    
+    while knots[-1] < (knots[0]*10) and progress:
         s = all_s[-1]/1.5
-        spline = scipy.interpolate.UnivariateSpline(times, values_filter, s=s, k=5, ext=3)
-        knots.append(len(spline.get_knots()))
-        all_s.append(s)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error')
+
+            try:
+                spline = scipy.interpolate.UnivariateSpline(times, values_filter, s=s, k=5, ext=3)
+                knots.append(len(spline.get_knots()))
+                all_s.append(s)
+            except Warning:
+                scoop.logger.info("caught a warning for %s %s", name, s)
+                pass
+
+        if len(knots) < (last+1):
+            progress = True
+        else:
+            lower = numpy.array(knots[-last:-1])
+            upper = numpy.array(knots[-last+1:])
+            progress = numpy.any(lower < upper)
     
     knots = numpy.array(knots)
     all_s = numpy.array(all_s)
@@ -94,7 +113,10 @@ def record_smoothing(s, s_knots, crit_fs, knots, all_s, name=None, cache=None):
             data.root[name].crit_fs = float(crit_fs)
         data.save()
 
-    scoop.logger.info("smoothing_factor %s  %.3e  critical frequency %.3e  knots %d", name, s, crit_fs, s_knots)
+    if crit_fs is None:
+        scoop.logger.info("smoothing_factor %s  %.3e  critical frequency disable", name, s)
+    else:
+        scoop.logger.info("smoothing_factor %s  %.3e  critical frequency %.3e  knots %d", name, s, crit_fs, s_knots)
 
 def create_spline(times, values, crit_fs, s):
     factor = 1.0/max(values)
