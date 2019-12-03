@@ -199,7 +199,8 @@ def graph_simulation_unit(simulation, unit, graph):
     ncomp = int(simulation.root.input.model[unit].ncomp)
     isotherm = bytes(simulation.root.input.model[unit].adsorption_model)
 
-    hasSalt = isotherm in saltIsotherms
+    #This does not work correctly since we could be reading an outlet or tubing that does not have an isotherm
+    #hasSalt = isotherm in saltIsotherms
 
     solution_times = simulation.root.output.solution.solution_times
 
@@ -207,7 +208,6 @@ def graph_simulation_unit(simulation, unit, graph):
 
     hasColumn = any('column' in i for i in simulation.root.output.solution[unit].keys())
     hasPort = any('port' in i for i in simulation.root.output.solution[unit].keys())
-    #hasColumn = isinstance(simulation.root.output.solution.unit_001.solution_outlet_comp_000, Dict)
 
     if hasColumn:
         for i in range(ncomp):
@@ -219,6 +219,11 @@ def graph_simulation_unit(simulation, unit, graph):
         for i in range(ncomp):
             comps.append(simulation.root.output.solution[unit]['solution_outlet_comp_%03d' % i])
 
+    #for now lets assume that if your first component is much higher concentration than the other components then the first component is salt
+    max_comps = [max(comp) for comp in comps]
+
+    hasSalt = any([max_comps[0] > (comp*10) for comp in max_comps[1:]])
+
     if hasSalt:
         graph.set_title("Output %s" % unit)
         graph.plot(solution_times, comps[0], 'b-', label="Salt")
@@ -228,7 +233,6 @@ def graph_simulation_unit(simulation, unit, graph):
         graph.set_ylabel('mM Salt', color='b')
         graph.tick_params('y', colors='b')
 
-        #colors = ['r', 'g', 'c', 'm', 'y', 'k']
         axis2 = graph.twinx()
         for idx, comp in enumerate(comps[1:]):
             axis2.plot(solution_times, comp, '-', color=get_color(idx, len(comps) - 1, cm_plot), label="P%s" % idx)
@@ -345,8 +349,6 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                 graph_exp = results['graph_exp']
                 graph_sim = results['graph_sim']
 
-                #colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
-
                 findMax = 0
                 for idx, (key, value) in enumerate(graph_sim.items()):
                     (time, values) = zip(*value)
@@ -374,7 +376,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                     graph.plot(time, values, ':', color=get_color(idx, len(graph_sim), cm_plot), label='Experiment Comp: %s Mult:%.2f' % (key, mult))
                 graphIdx += 1
             graph.legend()
-        fig.set_size_inches((6,6*numPlots))
+        fig.set_size_inches((12,6*numPlots))
         fig.savefig(str(dst))
 
 def graphSpace(fullGeneration, cache):
@@ -455,7 +457,7 @@ def plot_3d(arg):
     ax.set_ylabel('log(%s)' % header2)
     ax.set_zlabel(scoreName)
     filename = "%s_%s_%s.png" % (header1, header2, scoreName)
-    filename = filename.replace(':', '_')
+    filename = filename.replace(':', '_').replace('/', '_')
     fig.savefig(str(directory / filename))
     
 def plot_2d(arg):
