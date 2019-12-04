@@ -276,7 +276,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
         numPlotsSeq = [len(units_used)]
         #Shape and ShapeDecay have a chromatogram + derivative
         for feature in experiment['features']:
-            if feature['type'] in ('Shape', 'ShapeDecay'):
+            if feature['type'] in ('Shape', 'ShapeDecay', 'ShapeFront', 'ShapeBack'):
                 numPlotsSeq.append(2)
             elif feature['type'] in ('AbsoluteTime', 'AbsoluteHeight'):
                 pass
@@ -320,7 +320,8 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
                                'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
                                'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
                                'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle', 'DextranTest', 'DextranQuad',
-                               'Dextran3', 'DextranShape', 'ShapeDecaySimple', 'ShapeSimple', 'DextranSSE'):
+                               'Dextran3', 'DextranShape', 'ShapeDecaySimple', 'ShapeSimple', 'DextranSSE',
+                               'ShapeFront', 'ShapeBack'):
                 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 graph.plot(sim_time, sim_value, 'r--', label='Simulation')
@@ -329,7 +330,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
             
             if featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_hybrid2', 'derivative_similarity_cross', 'derivative_similarity_cross_alt',
                                  'derivative_similarity_hybrid2_spline', 'similarityHybridDecay2_spline',
-                                 'Shape', 'ShapeDecay'):
+                                 'Shape', 'ShapeDecay', 'ShapeFront', 'ShapeBack'):
                 #try:
                 exp_spline = smoothing.smooth_data_derivative(exp_time, exp_value, feat['critical_frequency'], feat['smoothing_factor'])
                 sim_spline = smoothing.smooth_data_derivative(sim_time, sim_value, feat['critical_frequency'], feat['smoothing_factor'])

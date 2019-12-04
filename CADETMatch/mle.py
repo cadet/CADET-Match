@@ -246,7 +246,7 @@ def plot_mle(simulations, cache, labels):
         numPlotsSeq = [1]
         #Shape and ShapeDecay have a chromatogram + derivative
         for feature in experiment['features']:
-            if feature['type'] in ('Shape', 'ShapeDecay'):
+            if feature['type'] in ('Shape', 'ShapeDecay', 'ShapeFront', 'ShapeBack'):
                 numPlotsSeq.append(2)
             elif feature['type'] in ('AbsoluteTime', 'AbsoluteHeight'):
                 pass
@@ -277,7 +277,8 @@ def plot_mle(simulations, cache, labels):
             if featureType in ('similarity', 'similarityDecay', 'similarityHybrid', 'similarityHybrid2', 'similarityHybrid2_spline', 'similarityHybridDecay', 
                                'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
                                'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
-                               'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle', 'DextranTest', 'ShapeDecaySimple'):
+                               'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle', 'DextranTest', 'ShapeDecaySimple',
+                               'ShapeFront', 'ShapeBack'):
                 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
 
@@ -298,7 +299,8 @@ def plot_mle(simulations, cache, labels):
                                'similarityHybridDecay2', 'curve', 'breakthrough', 'dextran', 'dextranHybrid', 'dextranHybrid2', 'dextranHybrid2_spline',
                                'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
                                'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle', 'DextranTest', 'DextranQuad',
-                               'Dextran3', 'DextranShape'):
+                               'Dextran3', 'DextranShape',
+                               'ShapeFront', 'ShapeBack'):
 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 for idx, (sim, label) in enumerate(zip(simulations[experimentName],labels)):
