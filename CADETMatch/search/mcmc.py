@@ -421,6 +421,8 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
     train_chain_stat = checkpoint.get('train_chain_stat', None)
     run_chain_stat = checkpoint.get('run_chain_stat', None)
 
+    iat = checkpoint.get('integrated_autocorrelation_time', [])
+
     checkInterval = 25
 
     parameters = len(cache.MIN_VALUE)
@@ -463,10 +465,6 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
         checkpoint['train_chain_stat'] = train_chain_stat
         checkpoint['run_chain_stat'] = run_chain_stat
 
-        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
-        mle_process(last=False)
-        util.graph_corner_process(cache, last=False)
-
         if generation % checkInterval == 0:
             try:
                 tau = autocorr.integrated_time(numpy.swapaxes(run_chain, 0, 1), tol=cache.MCMCTauMult)
@@ -480,8 +478,20 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
                 scoop.logger.info(str(err))
                 tau = err.tau
             scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", generation, accept, tau)
+
+            temp_iat = [generation]
+            temp_iat.extend(tau)
+            iat.append(temp_iat)
+            checkpoint['integrated_autocorrelation_time'] = iat
+
             tau = numpy.array(tau)
             tau_percent = generation / (tau * cache.MCMCTauMult)
+
+        scoop.logger.info("iat %s", iat)
+
+        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent, iat)
+        mle_process(last=False)
+        util.graph_corner_process(cache, last=False)
 
     checkpoint['p_chain'] = p
     checkpoint['ln_prob_chain'] = ln_prob
@@ -491,9 +501,9 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
     checkpoint['chain_seq'] = chain_seq
     checkpoint['state'] = 'complete'
 
-    write_interval(-1, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
+    write_interval(-1, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent, iat)
 
-def write_interval(interval, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent=None):
+def write_interval(interval, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent=None, iat=None):
     "write the checkpoint and mcmc data at most every n seconds"
     if 'last_time' not in write_interval.__dict__:
         write_interval.last_time = time.time()
@@ -502,7 +512,7 @@ def write_interval(interval, cache, checkpoint, checkpointFile, bounds_chain, tr
         with checkpointFile.open('wb') as cp_file:
             pickle.dump(checkpoint, cp_file)
 
-        writeMCMC(cache, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent)
+        writeMCMC(cache, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent, iat)
         
         write_interval.last_time = time.time()
 
@@ -801,7 +811,7 @@ def process_chain(chain, cache, idx):
 
     return chain, flat_chain, chain_transform, flat_chain_transform
 
-def writeMCMC(cache, bounds_chain, train_chain, chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent):
+def writeMCMC(cache, bounds_chain, train_chain, chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent, iat=None):
     "write out the mcmc data so it can be plotted"
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
     mcmc_h5 = mcmcDir / "mcmc.h5"
@@ -853,6 +863,9 @@ def writeMCMC(cache, bounds_chain, train_chain, chain, bounds_seq, burn_seq, cha
 
     if chain_seq:
         h5.root.mcmc_acceptance = numpy.array(chain_seq).reshape(-1, 1)
+
+    if iat is not None:
+        h5.root.integrated_autocorrelation_time = numpy.array(iat)
 
     if chain is not None:
         h5.root.full_chain = chain
