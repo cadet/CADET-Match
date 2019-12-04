@@ -209,6 +209,23 @@ def graphCorner(cache):
             fig.set_size_inches((12,12))
             fig.savefig(str(out_dir / "burn_in_acceptance.png"))
 
+        if 'integrated_autocorrelation_time' in data.root:
+            iat = data.root.integrated_autocorrelation_time
+
+            scoop.logger.info('plot integrated autocorrelation time')
+            fig = figure.Figure(figsize=[10, 10])
+            canvas = FigureCanvas(fig)
+            graph = fig.add_subplot(1, 1, 1)
+
+            for i in range(1, iat.shape[1]):
+                graph.plot(iat[:,0], iat[:,i], label=i)
+            graph.set_title("Integrated Autocorrelation Time")
+            graph.set_xlabel('Step')
+            graph.set_ylabel('IAT')
+            graph.legend()
+            fig.set_size_inches((12,12))
+            fig.savefig(str(out_dir / "integrated_autocorrelation_time.png"))
+
         if 'mcmc_acceptance' in data.root:
             scoop.logger.info('plot mcmc acceptance')
             fig = figure.Figure(figsize=[10, 10])
