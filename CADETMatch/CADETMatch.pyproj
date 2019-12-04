@@ -97,6 +97,12 @@
     <Compile Include="plugins.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="scores\shapeBack.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\shapeFront.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="search\gradient.py">
       <SubType>Code</SubType>
     </Compile>
