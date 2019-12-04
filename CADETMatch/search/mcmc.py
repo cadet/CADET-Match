@@ -487,8 +487,6 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
             tau = numpy.array(tau)
             tau_percent = generation / (tau * cache.MCMCTauMult)
 
-        scoop.logger.info("iat %s", iat)
-
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, bounds_chain, train_chain, run_chain, bounds_seq, burn_seq, chain_seq, parameters, train_chain_stat, run_chain_stat, tau_percent, iat)
         mle_process(last=False)
         util.graph_corner_process(cache, last=False)
