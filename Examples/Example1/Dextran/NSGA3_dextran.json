@@ -16,13 +16,13 @@
   "population": 50,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "stallGenerations": 50,
+  "stallGenerations": 20,
   "progressCorrect": 2,
-  "normalizeOutput":0,
+  "normalizeOutput":1,
   "continueMCMC":0,
   "graphMetaTime": 600,
   "finalGradRefinement": 1,
-  "fullTrainingData": 1,
+  "fullTrainingData": 0,
   "parameters": [
     {
       "transform": "norm_log",

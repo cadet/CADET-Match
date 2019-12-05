@@ -9,6 +9,85 @@ import scoop
 
 from cadet import H5
 
+def refine_butter(times, values, x, y, fs, start):
+    x = numpy.array(x)
+    y = numpy.array(y)
+
+    p3 = numpy.array([x, y]).T
+    p1 = p3[0,:]
+    p2 = p3[-1,:]
+    
+    def goal(crit_fs):
+        crit_fs = 10.0**crit_fs[0]
+        try:
+            b, a = scipy.signal.butter(3, crit_fs, btype='lowpass', analog=False, fs=fs)
+        except ValueError:
+            return 1e6
+        low_passed = scipy.signal.filtfilt(b, a, values)
+        
+        sse = numpy.sum( (low_passed - values)**2 )
+        
+        pT = numpy.array([crit_fs, numpy.log(sse)]).T
+
+        d = numpy.cross(p2-p1,p1-pT)/numpy.linalg.norm(p2-p1)
+        
+        return d
+    
+    start = numpy.log10(start)
+    lb = numpy.log10(x[-1])
+    ub = numpy.log10(x[0])
+    diff = min(start - lb, ub-start)
+    
+    lb = start - 0.2 * diff
+    ub = start + 0.2 * diff
+    
+    result_evo = scipy.optimize.differential_evolution(goal, ((lb, ub),) )
+    
+    crit_fs = 10**result_evo.x[0]
+    
+    return crit_fs
+
+def refine_smooth(times, values, x, y, start):
+    x = numpy.array(x)
+    y = numpy.array(y)
+
+    p3 = numpy.array([x, y]).T
+    p1 = p3[0,:]
+    p2 = p3[-1,:]
+    
+    def goal(s):
+        s = 10**s[0]
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error')
+
+            try:
+                spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=3, ext=3)
+            except Warning:
+                print("caught a warning for %s %s", name, s)
+                return 1e6
+        
+        pT = numpy.array([s, len(spline.get_knots())]).T
+
+        d = numpy.cross(p2-p1,p1-pT)/numpy.linalg.norm(p2-p1)
+        
+        return d
+    
+    start = numpy.log10(start)
+    lb = numpy.log10(x[-1])
+    ub = numpy.log10(x[0])
+    diff = min(start - lb, ub-start)
+    
+    lb = start - 0.2 * diff
+    ub = start + 0.2 * diff
+    
+    result_evo = scipy.optimize.differential_evolution(goal, ((lb, ub),) )
+    
+    s = 10**result_evo.x[0]
+    
+    spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=5, ext=3)
+    
+    return s, len(spline.get_knots())
+
 def find_butter(times, values):
     filters = []
     sse = []
@@ -26,6 +105,9 @@ def find_butter(times, values):
         sse.append(  numpy.sum( (low_passed - values)**2 ) )
         
     L_x, L_y = util.find_Left_L(filters, numpy.log(sse))
+
+    if L_x is not None:
+        L_x = refine_butter(times, values, filters, numpy.log(sse), fs, L_x)
   
     return L_x
 
@@ -86,6 +168,8 @@ def find_smoothing_factors(times, values, name, cache):
     all_s = numpy.array(all_s)
     
     s, s_knots = util.find_Left_L(all_s,knots)
+
+    s, s_knots = refine_smooth(times, values_filter, all_s, knots, s)
 
     record_smoothing(s, s_knots, crit_fs, knots, all_s, name, cache)
     
