@@ -37,12 +37,8 @@ def fitness(individual, json_path, run_experiment=None):
         else:
             return cache.cache.WORST, [], None
 
-    try:
-        power = float(cache.cache.settings['kde']['power'])
-    except KeyError:
-        power = 1
-
-    scores = [i**power for i in scores]
+    if numpy.any(numpy.isnan(scores)):
+        scoop.logger.info("NaN found for %s %s", individual, scores)
 
     #human scores
     humanScores = numpy.concatenate([util.calcMetaScores(scores, cache.cache), [error,]])

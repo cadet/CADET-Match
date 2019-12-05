@@ -6,6 +6,7 @@ import scipy.signal
 import numpy.linalg
 import CADETMatch.calc_coeff as calc_coeff
 import scoop
+import sys
 
 def roll(x, shift):
     if shift > 0:
@@ -21,7 +22,7 @@ def roll(x, shift):
 def roll_spline(times, values, shift):
     "this function does approximately what the roll function does except that is used the spline so the shift does not have to be an integer and the points are resampled"
 
-    spline = scipy.interpolate.InterpolatedUnivariateSpline(times, values, ext=1)
+    spline = scipy.interpolate.InterpolatedUnivariateSpline(times, values, ext=3)
 
     times_new = times - shift
 
@@ -74,7 +75,7 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
 
 def sse_spline(exp_time_values, sim_data_values, exp_data_values):
 
-    spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=1)
+    spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)
 
     exp_time_values = numpy.array(exp_time_values)
     exp_data_values = numpy.array(exp_data_values)
@@ -86,24 +87,20 @@ def sse_spline(exp_time_values, sim_data_values, exp_data_values):
 
         return sse
 
-    #pessimistic bounds for search, find the farthest the peak max can be moved before it rolls off the bounds
-    max_index = numpy.argmax(sim_data_values)
-    arg_max_time = exp_time_values[max_index]
-
-    min_time = exp_time_values[0] - arg_max_time
-    max_time = exp_time_values[-1] - arg_max_time
+    diff = exp_time_values[-1] - exp_time_values[0]
     
-    result_evo = scipy.optimize.differential_evolution(goal_sse, ((min_time, max_time),), polish=True)
+    result_evo = scipy.optimize.differential_evolution(goal_sse, ((-diff, diff),), polish=True)
 
-    diff_time = -result_evo.x[0]
-
-    sse = result_evo.fun
-
-    return sse, diff_time
+    if result_evo.success:
+        diff_time = -result_evo.x[0]
+        sse = -result_evo.fun
+        return sse, diff_time
+    else:
+        return sys.float_info.max, diff
 
 def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
 
-    spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=1)
+    spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)
 
     exp_time_values = numpy.array(exp_time_values)
     exp_data_values = numpy.array(exp_data_values)
@@ -114,26 +111,17 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
         pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
 
         return -pear[0]
-
-    #pessimistic bounds for search, find the farthest the peak max can be moved before it rolls off the bounds
-    max_index = numpy.argmax(sim_data_values)
-    arg_max_time = exp_time_values[max_index]
-
-    min_time = exp_time_values[0] - arg_max_time
-    max_time = exp_time_values[-1] - arg_max_time
+  
+    diff = exp_time_values[-1] - exp_time_values[0]
+   
+    result_evo = scipy.optimize.differential_evolution(goal_pearson, ((-diff, diff),), polish=True)
     
-    result_evo = scipy.optimize.differential_evolution(goal_pearson, ((min_time, max_time),), polish=True)
-
-    diff_time = -result_evo.x[0]
-
-    pear = -result_evo.fun
-
-
-    #sse test stuff
-    sim_data_values_copy = spline(exp_time_values - result_evo.x[0])
-    sse = numpy.sum((exp_data_values - sim_data_values_copy)**2)
-
-    return pear_corr(pear), diff_time
+    if result_evo.success:
+        diff_time = -result_evo.x[0]
+        pear = -result_evo.fun
+        return pear_corr(pear), diff_time
+    else:
+        return 0.0, diff
 
 def time_function_decay(CV_time, peak_time, diff_input=False):
     x_exp = numpy.array([0, 1.0*CV_time])
@@ -336,28 +324,6 @@ def slope_function(peak_slope):
         return max(0, calc_coeff.linear(diff, a, b))
 
     return wrapper
-
-#def pear_corr(cr):
-#    #handle the case where a nan is returned
-#    if numpy.isnan(cr):
-#        return 0.0
-#    if cr < 0.5:
-#        out = 1.0/3.0 * cr + 1.0/3.0
-#    else:
-#        out = cr
-#    return out
-
-#def pear_corr(cr):
-#    #handle the case where a nan is returned
-#    if numpy.isnan(cr):
-#        return 0.0
-#    if cr < 0.7:
-#        a,b = calc_coeff.linear_coeff(-1, 0, 0.7, 0.5)
-#        out = calc_coeff.linear(cr, a, b)
-#    else:
-#        a,b = calc_coeff.linear_coeff(0.7, 0.5, 1.0, 1.0)
-#        out = calc_coeff.linear(cr, a, b)
-#    return out
 
 def pear_corr(cr):
     #handle the case where a nan is returned
