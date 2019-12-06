@@ -108,6 +108,10 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     def goal_pearson(offset):
         sim_data_values_copy = spline(exp_time_values - offset)
 
+        #Pearson correlation is undefined for a constant array, skip running it and return the worst possible score
+        if (sim_data_values_copy == sim_data_values_copy[0]).all():
+            return 1.0
+
         try:
             pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
             return -pear[0]

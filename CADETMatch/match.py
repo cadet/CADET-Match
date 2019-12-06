@@ -27,9 +27,8 @@ import h5py
 #due to how scoop works and the need to break things up into multiple processes it is hard to use class based systems
 #As a result most of the code is broken up into modules but is still based on pure functions
 
-def main(path=None, map_function=None):
-    if path is None:
-        path = sys.argv[1]
+def main(map_function):
+    path = sys.argv[1]
     setup(cache, path, map_function)
     gradFD.setupTemplates(cache)
     #grad.setupTemplates(cache)
@@ -219,10 +218,6 @@ def setupDeap(cache, map_function):
     "setup the DEAP variables"
     searchMethod = cache.settings.get('searchMethod', 'NSGA3')
     cache.toolbox = base.Toolbox()
-
-    if map_function is None:
-        map_function = util.getMapFunction()
-
     cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, map_function, creator, base, tools)
 
 def continue_mcmc(cache, map_function):
@@ -236,7 +231,8 @@ def continue_mcmc(cache, map_function):
 
 if __name__ == "__main__":
     start = time.time()
-    main()
+    map_function = util.getMapFunction()
+    main(map_function=map_function)
     multiprocessing.get_logger().info('System has finished')
     multiprocessing.get_logger().info("The total runtime was %s seconds" % (time.time() - start))
     sys.exit()

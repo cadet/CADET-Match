@@ -1353,6 +1353,16 @@ def setupLog(log_directory, log_name):
     logger.setLevel(logging.INFO)
 
     logFormatter = logging.Formatter("%(asctime)s %(filename)s %(funcName)s %(lineno)d %(message)s")
+
+    if not logger.handlers:
+        stream = logging.StreamHandler(sys.stdout)
+        stream.setLevel(logging.INFO)
+        stream.setFormatter(logFormatter)
+
+        logger.addHandler(stream)
+
+        sys.stdout = loggerwriter.LoggerWriter(logger.info)
+        sys.stderr = loggerwriter.LoggerWriter(logger.warning)    
     
     # create file handler which logs even debug messages
     fh = logging.FileHandler(log_directory / log_name)
@@ -1361,15 +1371,7 @@ def setupLog(log_directory, log_name):
 
     # add the handlers to the logger
     logger.addHandler(fh)
-
-    stream = logging.StreamHandler(sys.stdout)
-    stream.setLevel(logging.INFO)
-    stream.setFormatter(logFormatter)
-
-    logger.addHandler(stream)
-
-    sys.stdout = loggerwriter.LoggerWriter(logger.info)
-    sys.stderr = loggerwriter.LoggerWriter(logger.warning)
+        
 
 def getCoreCounts():
     cpus = int(sys.argv[-1])

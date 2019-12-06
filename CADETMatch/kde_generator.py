@@ -46,10 +46,8 @@ def bandwidth_score(bw, data, store):
 def get_bandwidth(scores, cache):
     store = []
 
-    map_function = util.getMapFunction()
-
     result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-4, 1),], 
-                    args = (scores,store,), updating='deferred', workers=pool.map, disp=True,
+                    args = (scores,store,), updating='deferred', workers=cache.toolbox.map, disp=True,
                     popsize=100)
     bandwidth = 10**result.x[0]
     multiprocessing.get_logger().info("selected bandwidth %s", bandwidth)
@@ -239,9 +237,7 @@ def generate_synthetic_error(cache):
         simulations_all = {}
         outputs_all = {}
 
-        map_function = util.getMapFunction()
-
-        for scores, simulations, outputs in map_function(synthetic_error_simulation, [cache.json_path] * count_settings):
+        for scores, simulations, outputs in cache.toolbox.map(synthetic_error_simulation, [cache.json_path] * count_settings):
             if scores and simulations and outputs:
 
                 scores_all.append(scores)
