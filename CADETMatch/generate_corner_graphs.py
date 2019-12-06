@@ -30,8 +30,7 @@ from cadet import H5
 from addict import Dict
 
 #parallelization
-from scoop import futures
-import scoop
+import multiprocessing
 
 import os
 import warnings
@@ -60,20 +59,6 @@ my_cmap = ListedColormap(my_cmap)
 
 cm_plot = matplotlib.cm.gist_rainbow
 
-def setupLog(log_directory):
-    logger = scoop.logger
-    logger.propagate = False
-    logger.setLevel(logging.INFO)
-    # create file handler which logs even debug messages
-    fh = logging.FileHandler(log_directory / "graph_corner.log")
-    fh.setLevel(logging.INFO)
-
-    # add the handlers to the logger
-    logger.addHandler(fh)
-
-    sys.stdout = loggerwriter.LoggerWriter(logger.info)
-    sys.stderr = loggerwriter.LoggerWriter(logger.warning)
-
 def new_range(flat_chain):
     lb_data, mid_data, ub_data = numpy.percentile(flat_chain, [5, 50, 95], 0)
     
@@ -87,17 +72,17 @@ def new_range(flat_chain):
 def get_color(idx, max_colors, cmap):
     return cmap(1.*float(idx)/max_colors)
 
-def main():
+def main():    
+    cache.setup_dir(sys.argv[1])
+    util.setupLog(cache.settings['resultsDirLog'], "graph_corner.log")
     cache.setup(sys.argv[1])
 
-    setupLog(cache.settings['resultsDirLog'])
-
-    scoop.logger.info("graphing directory %s", os.getcwd())
+    multiprocessing.get_logger().info("graphing directory %s", os.getcwd())
 
     graphCorner(cache)
 
 def plotChain(flat_chain, flat_chain_transform, headers, out_dir, prefix):
-    scoop.logger.info("plotting chain")
+    multiprocessing.get_logger().info("plotting chain")
     if len(flat_chain) > 1e5:
         indexes = numpy.random.choice(flat_chain.shape[0], int(1e5), replace=False)
         chain = flat_chain[indexes]
@@ -123,7 +108,7 @@ def plotChain(flat_chain, flat_chain_transform, headers, out_dir, prefix):
     fig.savefig(str(out_dir / ("%s_corner_transform.png" % prefix)))
 
 def plotMCMCParam(out_dir, param, chain, header):
-    scoop.logger.info('plotting mcmc param %s', param)
+    multiprocessing.get_logger().info('plotting mcmc param %s', param)
     shape = chain.shape
     x = numpy.linspace(0, shape[1], shape[1])
 
@@ -162,7 +147,7 @@ def clean_header(header):
     return ' '.join(temp)
 
 def graphCorner(cache):
-    scoop.logger.info("plotting corner plots")
+    multiprocessing.get_logger().info("plotting corner plots")
     headers = list(cache.parameter_headers_actual)
     headers = [clean_header(header) for header in headers]
     
@@ -180,7 +165,7 @@ def graphCorner(cache):
         out_dir = cache.settings['resultsDirProgress']
 
         if 'tau_percent' in data.root:
-            scoop.logger.info('plotting tau plots')
+            multiprocessing.get_logger().info('plotting tau plots')
             fig = figure.Figure(figsize=[10, 10])
             canvas = FigureCanvas(fig)
             graph = fig.add_subplot(1, 1, 1)
@@ -194,11 +179,11 @@ def graphCorner(cache):
             fig.savefig(str(out_dir / "tau_percent.png" ))
 
         if 'flat_chain' in data.root:
-            scoop.logger.info('plot flat chain')
+            multiprocessing.get_logger().info('plot flat chain')
             plotChain(data.root.flat_chain, data.root.flat_chain_transform, headers, out_dir, 'full')
 
         if 'burn_in_acceptance' in data.root:
-            scoop.logger.info('plot burn in acceptance')
+            multiprocessing.get_logger().info('plot burn in acceptance')
             fig = figure.Figure(figsize=[10, 10])
             canvas = FigureCanvas(fig)
             graph = fig.add_subplot(1, 1, 1)
@@ -212,7 +197,7 @@ def graphCorner(cache):
         if 'integrated_autocorrelation_time' in data.root:
             iat = data.root.integrated_autocorrelation_time
 
-            scoop.logger.info('plot integrated autocorrelation time')
+            multiprocessing.get_logger().info('plot integrated autocorrelation time')
             fig = figure.Figure(figsize=[10, 10])
             canvas = FigureCanvas(fig)
             graph = fig.add_subplot(1, 1, 1)
@@ -227,7 +212,7 @@ def graphCorner(cache):
             fig.savefig(str(out_dir / "integrated_autocorrelation_time.png"))
 
         if 'mcmc_acceptance' in data.root:
-            scoop.logger.info('plot mcmc acceptance')
+            multiprocessing.get_logger().info('plot mcmc acceptance')
             fig = figure.Figure(figsize=[10, 10])
             canvas = FigureCanvas(fig)
             graph = fig.add_subplot(1, 1, 1)
@@ -264,7 +249,7 @@ def graphCorner(cache):
         acceptable = max_scores > 0.01
 
         if numpy.any(acceptable):
-            scoop.logger.info("graphing remove %s points", len(max_scores) - numpy.sum(acceptable))
+            multiprocessing.get_logger().info("graphing remove %s points", len(max_scores) - numpy.sum(acceptable))
 
             data_input = data_input[acceptable]
             data_input_transform = data_input_transform[acceptable]
@@ -284,7 +269,7 @@ def graphCorner(cache):
 
 def create_corner(dir, filename, headers, data, weights=None):
     if len(data) <= len(headers):
-        scoop.logger.info("There is not enough data to generate corner plots")
+        multiprocessing.get_logger().info("There is not enough data to generate corner plots")
         return
     if  numpy.all(numpy.min(data,0) < numpy.max(data,0)):
         if weights is None or numpy.max(weights) > numpy.min(weights):

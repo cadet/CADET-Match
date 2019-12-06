@@ -11,7 +11,7 @@ import os
 from deap import tools
 from sklearn import preprocessing
 
-import scoop
+import multiprocessing
 
 class Cache:
     def __init__(self):
@@ -206,10 +206,10 @@ class Cache:
                     settings = self.scores[feature['type']].settings
                     meta_mask = settings.meta_mask
                     count = settings.count
-                    #scoop.logger.info('%s %s %s %s', idx, feature, meta_mask, count)
+                    #multiprocessing.get_logger().info('%s %s %s %s', idx, feature, meta_mask, count)
 
                     meta_mask_seq.extend([meta_mask,] * count)
-        #scoop.logger.info("%s", meta_mask_seq)
+        #multiprocessing.get_logger().info("%s", meta_mask_seq)
         self.meta_mask = numpy.array(meta_mask_seq)
         
     def setupSettings(self):

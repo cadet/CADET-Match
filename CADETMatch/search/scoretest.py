@@ -4,7 +4,7 @@ import csv
 from pathlib import Path
 import time
 import CADETMatch.jacobian as jacobian
-import scoop
+import multiprocessing
 import array
 
 name = 'ScoreTest'
@@ -33,7 +33,7 @@ def run(cache, tools, creator):
         if cache.settings.get('condTest' , None):
             for ind in invalid_ind:
                 J = jacobian.jac(ind, cache)
-                scoop.logger.info('%s %s', ind, J)
+                multiprocessing.get_logger().info('%s %s', ind, J)
         
         avg, bestMin, bestProd = util.averageFitness(pop, cache)
         

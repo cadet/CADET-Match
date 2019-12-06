@@ -20,7 +20,7 @@ import CADETMatch.cache as cache
 
 import CADETMatch.pareto as pareto
 
-import scoop
+import multiprocessing
 import pandas
 import array
 import emcee.autocorr as autocorr
@@ -57,6 +57,8 @@ def log_previous(cadetValues, kde_previous, kde_previous_scaler):
 
 def log_likelihood(individual, json_path):
     if json_path != cache.cache.json_path:
+        cache.cache.setup_dir(json_path)
+        util.setupLog(cache.cache.settings['resultsDirLog'], "main.log")
         cache.cache.setup(json_path, False)
 
     kde_previous, kde_previous_scaler = kde_generator.getKDEPrevious(cache.cache)
@@ -95,8 +97,9 @@ def log_posterior_vectorize(population, json_path, cache, halloffame, meta_hof, 
 
 def log_posterior(x):
     theta, json_path = x
-    #scoop.logger.info(x)
     if json_path != cache.cache.json_path:
+        cache.cache.setup_dir(json_path)
+        util.setupLog(cache.cache.settings['resultsDirLog'], "main.log")
         cache.cache.setup(json_path)
 
     ll, scores, csv_record, results = log_likelihood(theta, json_path)
@@ -141,11 +144,11 @@ def rescale(lb, ub, old_lb, old_ub):
     "give a new lb and ub that will rescale so that the previous lb and ub takes up about 1/2 of the search width"
     center = (ub+lb)/2.0
     
-    new_lb = lb - (center - lb)
+    new_lb = lb - 2*(center - lb)
 
     new_lb = numpy.max([new_lb, old_lb],axis=0)
     
-    new_ub = ub + (ub - center)
+    new_ub = ub + 2*(ub - center)
 
     new_ub = numpy.min([new_ub, old_ub],axis=0)
     
@@ -158,7 +161,7 @@ def flatten(chain):
 
 def change_bounds_json(cache, lb, ub):
     "change the bounds based on lb and ub and then save it as a new json file and return the path to the new file"
-    scoop.logger.info("change_bounds_json  lb %s  ub %s", lb, ub)
+    multiprocessing.get_logger().info("change_bounds_json  lb %s  ub %s", lb, ub)
     lb_trans = util.convert_individual(lb, cache)[1]
     ub_trans = util.convert_individual(ub, cache)[1]
 
@@ -176,7 +179,7 @@ def change_bounds_json(cache, lb, ub):
         for parameter in settings['parameters']:
             transform = cache.transforms[parameter['transform']]
             count = transform.count_extended
-            scoop.logger.warn('%s %s %s', idx, count, transform)
+            multiprocessing.get_logger().warn('%s %s %s', idx, count, transform)
             lb_local = lb_trans[idx:idx+count]
             ub_local = ub_trans[idx:idx+count]
             transform.setBounds(parameter, lb_local, ub_local)
@@ -234,7 +237,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile):
 
         bounds_chain = addChain(bounds_chain, p[:, numpy.newaxis, :])
 
-        scoop.logger.info('run:  idx: %s accept: %.3f', generation, accept)
+        multiprocessing.get_logger().info('run:  idx: %s accept: %.3f', generation, accept)
         
         generation += 1
 
@@ -251,7 +254,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile):
         util.graph_corner_process(cache, last=False)
 
         if generation % checkInterval == 0:
-            converged, lb, ub = converged_bounds(bounds_chain[:,:,:new_parameters], 100, 1e-3)
+            converged, lb, ub = converged_bounds(bounds_chain[:,:,:new_parameters], 200, 1e-3)
 
             if converged:
                 finished = True
@@ -268,9 +271,9 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile):
                 sampler.log_prob_fn.args[0] = json_path
                 sampler.log_prob_fn.args[1] = cache
 
-                scoop.logger.info("new lower bounds %s   new upper bounds %s", new_lb, new_ub)
+                multiprocessing.get_logger().info("new lower bounds %s   new upper bounds %s", new_lb, new_ub)
             else:
-                scoop.logger.info("bounds have not yet converged in gen %s", generation)
+                multiprocessing.get_logger().info("bounds have not yet converged in gen %s", generation)
 
     sampler.reset()
     checkpoint['state'] = 'burn_in'
@@ -325,7 +328,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
         train_chain_stat = addChain(train_chain_stat, numpy.percentile(flatten(train_chain), [5, 50, 95], 0)[:, numpy.newaxis, :])
 
         converge_real = converge[~numpy.isnan(converge)]
-        scoop.logger.info('burn:  idx: %s accept: %.3g std: %.3g mean: %.3g converge: %.3g', generation, accept, 
+        multiprocessing.get_logger().info('burn:  idx: %s accept: %.3g std: %.3g mean: %.3g converge: %.3g', generation, accept, 
                             numpy.std(converge_real), numpy.mean(converge_real), numpy.std(converge_real)/tol)
 
         generation += 1
@@ -349,11 +352,11 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
             average_converge = numpy.mean(converge)
             if (acceptance_target - acceptance_delta) < average_converge < (acceptance_target + acceptance_delta):
-                scoop.logger.info("burn in completed at iteration %s", generation)
+                multiprocessing.get_logger().info("burn in completed at iteration %s", generation)
                 finished = True
 
             if stop_next is True:
-                scoop.logger.info("burn in completed at iteration %s based on minimum distances", generation)
+                multiprocessing.get_logger().info("burn in completed at iteration %s based on minimum distances", generation)
                 finished = True
 
             if not finished:
@@ -362,7 +365,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
                     distance_n = sampler._moves[1].n
                     distance = new_distance
 
-                    scoop.logger.info("burn in acceptance is out of tolerance and n must be adjusted while burn in continues")
+                    multiprocessing.get_logger().info("burn in acceptance is out of tolerance and n must be adjusted while burn in continues")
                     converge[:] = numpy.nan
                     prev_n = sampler._moves[1].n
                     if average_converge > (acceptance_target + 2 * acceptance_delta):
@@ -388,7 +391,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
                     sampler.reset()
                     checkpoint['p_burn'] = checkpoint['starting_population']
                     checkpoint['ln_prob_burn'] = None
-                    scoop.logger.info('previous n: %s    new n: %s', prev_n, new_n)
+                    multiprocessing.get_logger().info('previous n: %s    new n: %s', prev_n, new_n)
                 else:
                     sampler._moves[1].n = distance_n
                     sampler.reset()
@@ -450,7 +453,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
 
         run_chain_stat = addChain(run_chain_stat, numpy.percentile(flatten(run_chain), [5, 50, 95], 0)[:, numpy.newaxis, :])
 
-        scoop.logger.info('run:  idx: %s accept: %.3f', generation, accept)
+        multiprocessing.get_logger().info('run:  idx: %s accept: %.3f', generation, accept)
         
         generation += 1
 
@@ -468,16 +471,16 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile):
         if generation % checkInterval == 0:
             try:
                 tau = autocorr.integrated_time(numpy.swapaxes(run_chain, 0, 1), tol=cache.MCMCTauMult)
-                scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s with shape: %s", generation, accept, tau, run_chain.shape)
+                multiprocessing.get_logger().info("Mean acceptance fraction: %s %0.3f tau: %s with shape: %s", generation, accept, tau, run_chain.shape)
                 if numpy.any(numpy.isnan(tau)):
-                    scoop.logger.info("tau is NaN and clearly not complete %s", generation)
+                    multiprocessing.get_logger().info("tau is NaN and clearly not complete %s", generation)
                 else:
-                    scoop.logger.info("we have run long enough and can quit %s", generation)
+                    multiprocessing.get_logger().info("we have run long enough and can quit %s", generation)
                     finished = True
             except autocorr.AutocorrError as err:
-                scoop.logger.info(str(err))
+                multiprocessing.get_logger().info(str(err))
                 tau = err.tau
-            scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", generation, accept, tau)
+            multiprocessing.get_logger().info("Mean acceptance fraction: %s %0.3f tau: %s", generation, accept, tau)
 
             temp_iat = [generation]
             temp_iat.extend(tau)
@@ -541,14 +544,14 @@ def run(cache, tools, creator):
     populationSize = max(parameters*2, populationSize)
 
     if checkpoint['state'] == 'start':
-        scoop.logger.info("setting up kde")
+        multiprocessing.get_logger().info("setting up kde")
         kde, kde_scaler = kde_generator.setupKDE(cache)
         checkpoint['state'] = 'auto_bounds'
 
         with checkpointFile.open('wb') as cp_file:
             pickle.dump(checkpoint, cp_file)
     else:
-        scoop.logger.info("loading kde")
+        multiprocessing.get_logger().info("loading kde")
         kde, kde_scaler = kde_generator.getKDE(cache)
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['csv'])
@@ -584,17 +587,17 @@ def run(cache, tools, creator):
             run_chain = checkpoint.get('run_chain', None)
             if run_chain is not None:
                 temp = run_chain[:, :checkpoint['idx_chain'], 0].T
-                scoop.logger.info('complete shape %s', temp.shape)
+                multiprocessing.get_logger().info('complete shape %s', temp.shape)
  
                 try:
                     tau = autocorr.integrated_time(numpy.swapaxes(run_chain[:, :checkpoint['idx_chain'], :], 0, 1), tol=cache.MCMCTauMult)
-                    scoop.logger.info("we have previously run long enough and can quit %s", checkpoint['idx_chain'])
+                    multiprocessing.get_logger().info("we have previously run long enough and can quit %s", checkpoint['idx_chain'])
                     checkpoint['state'] = 'complete'
                 except autocorr.AutocorrError as err:
-                    scoop.logger.info(str(err))
+                    multiprocessing.get_logger().info(str(err))
                     tau = err.tau
 
-                scoop.logger.info("Mean acceptance fraction: %s %0.3f tau: %s", checkpoint['idx_chain'], checkpoint['chain_seq'][-1], tau)
+                multiprocessing.get_logger().info("Mean acceptance fraction: %s %0.3f tau: %s", checkpoint['idx_chain'], checkpoint['chain_seq'][-1], tau)
             
         if checkpoint['state'] == 'chain':
             sampler_run(cache, checkpoint, sampler, checkpointFile)
@@ -618,7 +621,7 @@ def run(cache, tools, creator):
 
 def tube_process(last=False, interval=3600):
     cwd = str(Path(__file__).parent.parent)
-    ret = subprocess.run([sys.executable, '-m', 'scoop', 'mcmc_plot_tube.py', str(cache.cache.json_path),], 
+    ret = subprocess.run([sys.executable, 'mcmc_plot_tube.py', str(cache.cache.json_path),], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
 
 def mle_process(last=False, interval=3600):
@@ -635,22 +638,22 @@ def mle_process(last=False, interval=3600):
     cwd = str(Path(__file__).parent.parent)
 
     if last:
-        ret = subprocess.run([sys.executable, '-m', 'scoop', 'mle.py', str(cache.cache.json_path),], 
+        ret = subprocess.run([sys.executable, 'mle.py', str(cache.cache.json_path),], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         mle_process.last_time = time.time()
     elif (time.time() - mle_process.last_time) > interval:
-        #mle_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'mle.py', str(cache.cache.json_path),], 
+        #mle_process.child = subprocess.Popen([sys.executable, 'mle.py', str(cache.cache.json_path),], 
         #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
-        subprocess.run([sys.executable, '-m', 'scoop', 'mle.py', str(cache.cache.json_path),], 
+        subprocess.run([sys.executable, 'mle.py', str(cache.cache.json_path),], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         mle_process.last_time = time.time()
         
 def get_population(base, size, diff=0.05):
     new_population = base
     row, col = base.shape
-    scoop.logger.info('%s', base)
+    multiprocessing.get_logger().info('%s', base)
     
-    scoop.logger.info('row %s size %s', row, size)
+    multiprocessing.get_logger().info('row %s size %s', row, size)
     if row < size:
         #create new entries
         indexes = numpy.random.choice(new_population.shape[0], size - row, replace=True)
@@ -660,10 +663,10 @@ def get_population(base, size, diff=0.05):
     if row > size:
         #randomly select entries to keep
         indexes = numpy.random.choice(new_population.shape[0], size, replace=False)
-        scoop.logger.info('indexes: %s', indexes)
+        multiprocessing.get_logger().info('indexes: %s', indexes)
         new_population = new_population[indexes,:]
     change = numpy.random.normal(1.0, 0.01, new_population.shape)
-    scoop.logger.info("Initial population condition number before %s  after %s", numpy.linalg.cond(new_population), numpy.linalg.cond(new_population*change))
+    multiprocessing.get_logger().info("Initial population condition number before %s  after %s", numpy.linalg.cond(new_population), numpy.linalg.cond(new_population*change))
     return new_population * change
 
 def resetPopulation(checkpoint, cache):
@@ -671,7 +674,7 @@ def resetPopulation(checkpoint, cache):
     parameters = len(cache.MIN_VALUE)
 
     if cache.settings.get('PreviousResults', None) is not None:
-        scoop.logger.info('running with previous best results')
+        multiprocessing.get_logger().info('running with previous best results')
         previousResultsFile = Path(cache.settings['PreviousResults'])
         results_h5 = cadet.H5()
         results_h5.filename = previousResultsFile.as_posix()
@@ -679,7 +682,7 @@ def resetPopulation(checkpoint, cache):
         previousResults = results_h5.root.meta_population_transform
 
         row,col = previousResults.shape
-        scoop.logger.info('row: %s col: %s  parameters: %s', row, col, parameters)
+        multiprocessing.get_logger().info('row: %s col: %s  parameters: %s', row, col, parameters)
         if col < parameters:
             mcmc_h5 = Path(cache.settings.get('mcmc_h5', None))
             mcmcDir = mcmc_h5.parent
@@ -688,15 +691,15 @@ def resetPopulation(checkpoint, cache):
             data = cadet.H5()
             data.filename = mle_h5.as_posix()
             data.load()
-            scoop.logger.info('%s', list(data.root.keys()))
+            multiprocessing.get_logger().info('%s', list(data.root.keys()))
             stat_MLE = data.root.stat_MLE.reshape(1, -1)
             previousResults = numpy.hstack([previousResults, numpy.repeat(stat_MLE, row, 0)])
-            scoop.logger.info('row: %s  col:%s   shape: %s', row, col, previousResults.shape)
+            multiprocessing.get_logger().info('row: %s  col:%s   shape: %s', row, col, previousResults.shape)
 
         population = get_population(previousResults, populationSize, diff=0.1)
         checkpoint['starting_population'] = [util.convert_individual_inverse(i, cache) for i in population]
-        scoop.logger.info('p_burn startup population: %s', population)
-        scoop.logger.info('p_burn startup: %s', checkpoint['starting_population'])
+        multiprocessing.get_logger().info('p_burn startup population: %s', population)
+        multiprocessing.get_logger().info('p_burn startup: %s', checkpoint['starting_population'])
     else:
         checkpoint['starting_population'] = SALib.sample.sobol_sequence.sample(populationSize, parameters)
     checkpoint['p_burn'] = checkpoint['p_bounds'] = checkpoint['starting_population']

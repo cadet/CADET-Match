@@ -26,7 +26,7 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore",category=FutureWarning)
     import h5py
 
-import scoop
+import multiprocessing
 
 import decimal as decim
 decim.getcontext().prec = 64
@@ -36,6 +36,8 @@ __logBase10of2 = float(__logBase10of2_decim)
 import SALib.sample.sobol_sequence
 import CADETMatch.loggerwriter as loggerwriter
 import CADETMatch.synthetic_error as synthetic_error
+
+import logging
 
 #smallest number close to 0, used to make sure we don't divide by zero
 smallest = numpy.finfo(1.0).tiny
@@ -237,7 +239,7 @@ def convert_individual_inverse_grad(individual, cache):
     return numpy.array([f(v) for f, v in zip(cache.settings['grad_transform'], individual)])
 
 def set_simulation(individual, simulation, settings, cache, experiment):
-    scoop.logger.debug("individual %s", individual)
+    multiprocessing.get_logger().debug("individual %s", individual)
 
     cadetValues = []
     cadetValuesKEQ = []
@@ -252,7 +254,7 @@ def set_simulation(individual, simulation, settings, cache, experiment):
         cadetValuesKEQ.extend(headerValues)
         idx += count
 
-    scoop.logger.debug("finished setting hdf5")
+    multiprocessing.get_logger().debug("finished setting hdf5")
     return cadetValues, cadetValuesKEQ
 
 def getBoundOffset(unit):
@@ -288,12 +290,12 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     try:
         simulation.run(timeout = timeout, check=True)
     except subprocess.TimeoutExpired:
-        scoop.logger.warn("Simulation Timed Out")
+        multiprocessing.get_logger().warn("Simulation Timed Out")
         os.remove(path)
         return None
 
     except subprocess.CalledProcessError as error:
-        scoop.logger.error("The simulation failed %s", individual)
+        multiprocessing.get_logger().error("The simulation failed %s", individual)
         logError(cache, cadetValuesKEQ, error)
         #os.remove(path)
         return None
@@ -304,9 +306,9 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
 
     simulationFailed = isinstance(simulation.root.output.solution.solution_times, Dict)
     if simulationFailed:
-        scoop.logger.error("%s sim must have failed %s", individual, path)
+        multiprocessing.get_logger().error("%s sim must have failed %s", individual, path)
         return None
-    scoop.logger.debug('Everything ran fine')
+    multiprocessing.get_logger().debug('Everything ran fine')
 
     if post_function:
         post_function(simulation)
@@ -845,13 +847,13 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
             line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.3g \tBest: %.3g \tMinimum Score: %.3g \tBest: %.3g \tProduct Score: %.3g \tBest: %.3g'
  
             if line_log:
-                scoop.logger.info(line_format, generation, len(population),
+                multiprocessing.get_logger().info(line_format, generation, len(population),
                       population_average, population_average_best,
                       population_min, population_min_best,
                       population_product, population_product_best)
         else:
             if line_log:
-                scoop.logger.info("Generation: %s \tPopulation: %s \t No Stats Avaialable", generation, len(population))
+                multiprocessing.get_logger().info("Generation: %s \tPopulation: %s \t No Stats Avaialable", generation, len(population))
         
         writer.writerow([generation,
                          len(population),
@@ -1165,32 +1167,32 @@ def graph_process(cache, generation, last=0):
         log_subprocess('graph_spearman.py', ret)
     
     if last:
-        ret = subprocess.run([sys.executable, '-m', 'scoop', '-n', '4', 
+        ret = subprocess.run([sys.executable, 
                               'generate_graphs.py', str(cache.json_path), str(cache.graphType)], 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
         graph_process.lastGraphTime = time.time()
     elif (time.time() - graph_process.lastGraphTime) > cache.graphGenerateTime:
-        #graph_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '1'], 
+        #graph_process.child = subprocess.Popen([sys.executable, 'generate_graphs.py', str(cache.json_path), '1'], 
         #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
-        subprocess.run([sys.executable, '-m', 'scoop',  '-n', '4',
+        subprocess.run([sys.executable, 
                         'generate_graphs.py', str(cache.json_path), str(cache.graphType)], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_process.lastGraphTime = time.time()
     else:
         if (time.time() - graph_process.lastMetaTime) > cache.graphMetaTime:
-            #graph_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', 'generate_graphs.py', str(cache.json_path), '0'], 
+            #graph_process.child = subprocess.Popen([sys.executable, 'generate_graphs.py', str(cache.json_path), '0'], 
             #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
-            subprocess.run([sys.executable, '-m', 'scoop',  '-n', '4',
+            subprocess.run([sys.executable, 
                             'generate_graphs.py', str(cache.json_path), '0'], 
                 stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
             graph_process.lastMetaTime = time.time()
 
 def log_subprocess(name, ret):
     for line in ret.stdout.splitlines():
-        scoop.logger.info('%s stdout: %s', name, line)
+        multiprocessing.get_logger().info('%s stdout: %s', name, line)
 
     for line in ret.stderr.splitlines():    
-        scoop.logger.info('%s stderr: %s', name, line)
+        multiprocessing.get_logger().info('%s stderr: %s', name, line)
 
 def finish(cache):
     graph_process(cache, "Last", last=True)
@@ -1267,7 +1269,7 @@ def setupSimulation(sim, times, smallest_peak, cache):
         sim.root.input.solver.time_integrator.abstol = cache.abstolFactor * smallest_peak
         sim.root.input.solver.time_integrator.reltol = cache.reltol
 
-    scoop.logger.info('%s abstol=%.3g  reltol=%.3g', sim.filename, 
+    multiprocessing.get_logger().info('%s abstol=%.3g  reltol=%.3g', sim.filename, 
                       sim.root.input.solver.time_integrator.abstol,
                       sim.root.input.solver.time_integrator.reltol)
 
@@ -1302,13 +1304,13 @@ def graph_corner_process(cache, last=False, interval=1200):
     cwd = str(Path(__file__).parent)
 
     if last:
-        ret = subprocess.run([sys.executable, '-m', 'scoop', '-n', '1', 'generate_corner_graphs.py', str(cache.json_path),], 
+        ret = subprocess.run([sys.executable, 'generate_corner_graphs.py', str(cache.json_path),], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_corner_process.last_time = time.time()
     elif (time.time() - graph_corner_process.last_time) > interval:
-        #graph_corner_process.child = subprocess.Popen([sys.executable, '-m', 'scoop', '-n', '1', 'generate_corner_graphs.py', str(cache.json_path),], 
+        #graph_corner_process.child = subprocess.Popen([sys.executable, 'generate_corner_graphs.py', str(cache.json_path),], 
         #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
-        subprocess.run([sys.executable, '-m', 'scoop', '-n', '1', 'generate_corner_graphs.py', str(cache.json_path),], 
+        subprocess.run([sys.executable, 'generate_corner_graphs.py', str(cache.json_path),], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_corner_process.last_time = time.time()
 
@@ -1344,3 +1346,27 @@ def biasSimulation(simulation, experiment, cache):
         synthetic_error.error_load(bias_simulation, load)
 
     return bias_simulation
+
+def setupLog(log_directory, log_name):
+    logger = multiprocessing.get_logger()
+    logger.propagate = False
+    logger.setLevel(logging.INFO)
+
+    logFormatter = logging.Formatter("%(asctime)s %(filename)s %(funcName)s %(lineno)d %(message)s")
+    
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler(log_directory / log_name)
+    fh.setLevel(logging.INFO)
+    fh.setFormatter(logFormatter)
+
+    # add the handlers to the logger
+    logger.addHandler(fh)
+
+    stream = logging.StreamHandler(sys.stdout)
+    stream.setLevel(logging.INFO)
+    stream.setFormatter(logFormatter)
+
+    logger.addHandler(stream)
+
+    sys.stdout = loggerwriter.LoggerWriter(logger.info)
+    sys.stderr = loggerwriter.LoggerWriter(logger.warning)

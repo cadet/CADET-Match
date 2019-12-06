@@ -3,7 +3,7 @@ import random
 from pathlib import Path
 import csv
 import CADETMatch.pareto as pareto
-import scoop
+import multiprocessing
 import time
 import array
 
@@ -36,7 +36,7 @@ def run(cache, tools, creator):
     with path.open('a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
 
-        scoop.logger.info("Population %s", [util.convert_individual(i, cache) for i in pop])
+        multiprocessing.get_logger().info("Population %s", [util.convert_individual(i, cache) for i in pop])
 
         gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, pop, cache, writer, csvfile, hof, meta_hof, -1, check_all=True)
 

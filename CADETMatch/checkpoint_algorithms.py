@@ -7,7 +7,7 @@ from deap import algorithms
 import time
 import csv
 import CADETMatch.pareto as pareto
-import scoop
+import multiprocessing
 
 stallRate = 1.25
 progressRate = 0.75

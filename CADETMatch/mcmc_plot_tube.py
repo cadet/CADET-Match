@@ -3,8 +3,7 @@ from sklearn import preprocessing
 from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import cross_val_score
 import scipy
-import scoop
-from scoop import futures
+import multiprocessing
 import sys
 
 import cadet
@@ -35,20 +34,6 @@ import logging
 import CADETMatch.loggerwriter as loggerwriter
 
 import CADETMatch.kde_generator as kde_generator
-
-def setupLog(log_directory):
-    logger = scoop.logger
-    logger.propagate = False
-    logger.setLevel(logging.INFO)
-    # create file handler which logs even debug messages
-    fh = logging.FileHandler(log_directory / "mcmc_plot_tube.log")
-    fh.setLevel(logging.INFO)
-
-    # add the handlers to the logger
-    logger.addHandler(fh)
-
-    sys.stdout = loggerwriter.LoggerWriter(logger.info)
-    sys.stderr = loggerwriter.LoggerWriter(logger.warning)
 
 def get_color(idx, max_colors, cmap):
     return cmap(1.*float(idx)/max_colors)
@@ -156,7 +141,9 @@ def genRandomChoice(cache, chain, kde, scaler):
     for idx in range(len(chain)):
         individuals.append(chain[idx,:])
 
-    fitnesses = futures.map(fitness, individuals)
+    pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    map_function = pool.map
+    fitnesses = pool.map(fitness, individuals)
     #fitnesses = cache.toolbox.map(cache.toolbox.evaluate, individuals)
 
     results = {}
@@ -196,7 +183,7 @@ def genRandomChoice(cache, chain, kde, scaler):
 
                 results[key] = sims
         else:
-            scoop.logger.info("Failure in random choice: fit: %s  csv_line: %s   result:%s", fit, csv_line, result)
+            multiprocessing.get_logger().info("Failure in random choice: fit: %s  csv_line: %s   result:%s", fit, csv_line, result)
 
     mcmc_selected = numpy.array(mcmc_selected)
     mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)
@@ -252,9 +239,9 @@ def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue):
     plt.close()
 
 def main():
+    cache.setup_dir(sys.argv[1])
+    util.setupLog(cache.settings['resultsDirLog'], "mcmc_plot_tube.log")
     cache.setup(sys.argv[1])
-
-    setupLog(cache.settings['resultsDirLog'])
 
     kde, kde_scaler = kde_generator.getKDE(cache)
 

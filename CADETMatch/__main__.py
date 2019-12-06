@@ -8,7 +8,7 @@ def makeParser():
     """Create the CADETMatch module arguments parser."""
     parser = argparse.ArgumentParser(
         description="Starts a parallel version of match using SCOOP.",
-        prog="{0} -m CADETMatch.scoop_match".format(sys.executable),
+        prog="{0} -m CADETMatch".format(sys.executable),
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--json', '-j',
@@ -46,9 +46,9 @@ def makeParser():
 
 
 def run_command(module, json, number_of_jobs, additional=None):
-    command = [sys.executable, '-m', 'scoop']
-    if int(number_of_jobs) > 0:
-        command.extend(['-n', str(number_of_jobs)])
+    command = [sys.executable, ]
+    #if int(number_of_jobs) > 0:
+    #    command.extend(['-n', str(number_of_jobs)])
     #else:
     #    ncpus = psutil.cpu_count(logical=False)
     #    command.extend(['-n', str(ncpus)])

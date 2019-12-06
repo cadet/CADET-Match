@@ -8,7 +8,7 @@ import csv
 import time
 
 import CADETMatch.cache as cache
-import scoop
+import multiprocessing
 from cadet import Cadet
 
 class GradientException(Exception):
@@ -39,9 +39,9 @@ def setupTemplates(cache):
         simulationGrad.root.timeout = max(10, elapsed * 10)
         simulationGrad.save()
 
-        scoop.logger.info("grad simulation took %s", elapsed)
+        multiprocessing.get_logger().info("grad simulation took %s", elapsed)
 
-        scoop.logger.info('grad %s abstol=%.3g  reltol=%.3g', simulationGrad.filename, 
+        multiprocessing.get_logger().info('grad %s abstol=%.3g  reltol=%.3g', simulationGrad.filename, 
                           simulationGrad.root.input.solver.time_integrator.abstol,
                           simulationGrad.root.input.solver.time_integrator.reltol)
 
@@ -145,9 +145,9 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
             if percent > cutoff:
                 temp_offspring.append( (percent, ind) )
             else:
-                scoop.logger.info('removed %s for insufficient overlap in gradient descent', ind)
+                multiprocessing.get_logger().info('removed %s for insufficient overlap in gradient descent', ind)
         else:
-            scoop.logger.info('removed %s for failure', ind)
+            multiprocessing.get_logger().info('removed %s for failure', ind)
 
     #sort in descending order, this has the best chance of converging so we can quick abort
     temp_offspring.sort(reverse=True)
@@ -155,17 +155,19 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
     if cache.multiStartPercent < 1.0 and temp_offspring:
         #cut to the top multiStartPercent items with a minimum of 1 item
         temp_offspring = temp_offspring[:max(int(cache.multiStartPercent*len(checkOffspring)),1)]
-        scoop.logger.info("gradient overlap cutoff %.2g", temp_offspring[-1][0])
+        multiprocessing.get_logger().info("gradient overlap cutoff %.2g", temp_offspring[-1][0])
     
     temp_offspring = [ind for (percent, ind) in temp_offspring]
 
     if checkOffspring:
-        scoop.logger.info("overlap okay offspring %s", temp_offspring)
+        multiprocessing.get_logger().info("overlap okay offspring %s", temp_offspring)
 
     return temp_offspring
     
 def gradSearch(x, json_path):
     if json_path != cache.cache.json_path:
+        cache.cache.setup_dir(json_path)
+        util.setupLog(cache.cache.settings['resultsDirLog'], "main.log")
         cache.cache.setup(json_path)
     
     try:

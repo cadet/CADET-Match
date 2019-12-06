@@ -30,8 +30,7 @@ from cadet import Cadet, H5
 from addict import Dict
 
 #parallelization
-from scoop import futures
-import scoop
+import multiprocessing
 
 import os
 import warnings
@@ -59,34 +58,21 @@ my_cmap = ListedColormap(my_cmap)
 
 cm_plot = matplotlib.cm.gist_rainbow
 
-if getattr(scoop, 'SIZE', 1) == 1:
-    map_function = map
-else:
-    map_function = futures.map
-
-def setupLog(log_directory):
-    logger = scoop.logger
-    logger.propagate = False
-    logger.setLevel(logging.INFO)
-    # create file handler which logs even debug messages
-    fh = logging.FileHandler(log_directory / "graph.log")
-    fh.setLevel(logging.INFO)
-
-    # add the handlers to the logger
-    logger.addHandler(fh)
-
-    sys.stdout = loggerwriter.LoggerWriter(logger.info)
-    sys.stderr = loggerwriter.LoggerWriter(logger.warning)
+#if getattr(scoop, 'SIZE', 1) == 1:
+#    map_function = map
+#else:
+pool = multiprocessing.Pool(multiprocessing.cpu_count())
+map_function = pool.map
 
 def get_color(idx, max_colors, cmap):
     return cmap(1.*float(idx)/max_colors)
 
 def main():
+    cache.setup_dir(sys.argv[1])
+    util.setupLog(cache.settings['resultsDirLog'], "graph.log")
     cache.setup(sys.argv[1])
-    
-    setupLog(cache.settings['resultsDirLog'])
 
-    scoop.logger.info("graphing directory %s", os.getcwd())
+    multiprocessing.get_logger().info("graphing directory %s", os.getcwd())
 
     fullGeneration = int(sys.argv[2])
 

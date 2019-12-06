@@ -3,7 +3,7 @@ from CADETMatch.cache import cache
 from pathlib import Path
 import CADETMatch.util as util
 import numpy
-import scoop
+import multiprocessing
 
 class GradientException(Exception):
     pass
@@ -14,7 +14,7 @@ def jac(individual, cache):
     u, s, v = numpy.linalg.svd(J)
     minSing = numpy.min(s)
     maxSing = numpy.max(s)
-    scoop.logger.info('%s has condition %s  min sing:  %s   max sing: %s', individual, cond, minSing, maxSing)
+    multiprocessing.get_logger().info('%s has condition %s  min sing:  %s   max sing: %s', individual, cond, minSing, maxSing)
     return J
 
 def fitness_grad(individual, cache):

@@ -3,8 +3,7 @@ from sklearn import preprocessing
 from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import cross_val_score
 import scipy
-import scoop
-from scoop import futures
+import multiprocessing
 import sys
 
 import cadet
@@ -34,20 +33,6 @@ cm_plot = matplotlib.cm.gist_rainbow
 
 import logging
 import CADETMatch.loggerwriter as loggerwriter
-
-def setupLog(log_directory):
-    logger = scoop.logger
-    logger.propagate = False
-    logger.setLevel(logging.INFO)
-    # create file handler which logs even debug messages
-    fh = logging.FileHandler(log_directory / "mle.log")
-    fh.setLevel(logging.INFO)
-
-    # add the handlers to the logger
-    logger.addHandler(fh)
-
-    sys.stdout = loggerwriter.LoggerWriter(logger.info)
-    sys.stderr = loggerwriter.LoggerWriter(logger.warning)
 
 def get_color(idx, max_colors, cmap):
     return cmap(1.*float(idx)/max_colors)
@@ -104,10 +89,10 @@ def get_mle(data):
     atol = 1e-4
     kernel = 'gaussian'
 
-    scoop.logger.info("setting up scaler and reducing data")
+    multiprocessing.get_logger().info("setting up scaler and reducing data")
     data, data_reduced, scaler = reduce_data(data, 32000)
-    scoop.logger.info("finished setting up scaler and reducing data")
-    scoop.logger.info('data_reduced shape %s', data_reduced.shape)
+    multiprocessing.get_logger().info("finished setting up scaler and reducing data")
+    multiprocessing.get_logger().info('data_reduced shape %s', data_reduced.shape)
 
     BOUND_LOW_num = numpy.min(data, 0)
     BOUND_UP_num = numpy.max(data, 0)
@@ -118,29 +103,32 @@ def get_mle(data):
     BOUND_LOW_real = [0.0] * len(BOUND_LOW_trans)
     BOUND_UP_real = [1.0] * len(BOUND_UP_trans)
 
+    pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    map_function = pool.map
+
     result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-3, 1),], 
                                                args = (data_reduced, kernel, atol), 
-                                               updating='deferred', workers=futures.map, disp=True,
+                                               updating='deferred', workers=pool.map, disp=True,
                                                popsize=50)
     bw = 10**result.x[0]
     
-    scoop.logger.info("mle bandwidth: %.2g", bw)
+    multiprocessing.get_logger().info("mle bandwidth: %.2g", bw)
 
     kde_ga = KernelDensity(kernel=kernel, bandwidth=bw, atol=atol)
 
-    scoop.logger.info('fitting kde with mle bandwidth')
+    multiprocessing.get_logger().info('fitting kde with mle bandwidth')
     kde_ga = kde_ga.fit(data_reduced)
-    scoop.logger.info('finished fitting and starting mle search')
+    multiprocessing.get_logger().info('finished fitting and starting mle search')
         
     result_kde = scipy.optimize.differential_evolution(goal_kde, bounds = list(zip(BOUND_LOW_trans, BOUND_UP_trans)), 
                                                args = (kde_ga,), 
-                                               updating='deferred', workers=futures.map, disp=True,
+                                               updating='deferred', workers=pool.map, disp=True,
                                                popsize=50)
-    scoop.logger.info('finished mle search')
+    multiprocessing.get_logger().info('finished mle search')
 
     x = list(scaler.inverse_transform(numpy.array(result_kde.x).reshape(1, -1))[0])
 
-    scoop.logger.info('mle found %s', x)
+    multiprocessing.get_logger().info('mle found %s', x)
 
     return x, kde_ga, scaler
 
@@ -166,15 +154,15 @@ def process_mle(chain, gen, cache):
         h5.load()
 
         if h5.root.generations[-1] == gen:
-            scoop.logger.info('new information is not yet available and mle will quit')
+            multiprocessing.get_logger().info('new information is not yet available and mle will quit')
             return
 
-    scoop.logger.info('process mle chain shape before %s', chain.shape)
+    multiprocessing.get_logger().info('process mle chain shape before %s', chain.shape)
     #This step cleans up bad entries
     chain = chain[~numpy.all(chain == 0, axis=1)]
-    scoop.logger.info('process mle chain shape after cleaning 0 entries %s', chain.shape)
+    multiprocessing.get_logger().info('process mle chain shape after cleaning 0 entries %s', chain.shape)
     mle_x, kde, scaler = get_mle(chain)
-    scoop.logger.info("mle_x: %s", mle_x)
+    multiprocessing.get_logger().info("mle_x: %s", mle_x)
 
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
     joblib.dump(scaler, mcmcDir / 'kde_prior_scaler.joblib')
@@ -182,17 +170,17 @@ def process_mle(chain, gen, cache):
 
     mle_ind = util.convert_individual(mle_x, cache)[0]
     
-    scoop.logger.info("mle_ind: %s", mle_ind)
+    multiprocessing.get_logger().info("mle_ind: %s", mle_ind)
 
     temp = [mle_x,]
 
-    scoop.logger.info('chain shape: %s', chain.shape)
+    multiprocessing.get_logger().info('chain shape: %s', chain.shape)
 
     #run simulations for 5% 50% 95% and MLE vs experimental data
     percentile_splits = [5, 10, 50, 90, 95]
     percentile = numpy.percentile(chain, percentile_splits, 0)
 
-    scoop.logger.info("percentile: %s %s", percentile.shape, percentile)
+    multiprocessing.get_logger().info("percentile: %s %s", percentile.shape, percentile)
 
     for row in percentile:
         temp.append(list(row))
@@ -200,9 +188,12 @@ def process_mle(chain, gen, cache):
     cadetValues = [util.convert_individual(i, cache)[0] for i in temp]
     cadetValues = numpy.array(cadetValues)
 
-    scoop.logger.info('cadetValues: %s %s', cadetValues.shape, cadetValues)
+    multiprocessing.get_logger().info('cadetValues: %s %s', cadetValues.shape, cadetValues)
 
-    fitnesses = list(futures.map(fitness, temp))
+    pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    map_function = pool.map
+
+    fitnesses = list(pool.map(fitness, temp))
 
     simulations = {}
     for scores, csv_record, results in fitnesses:
@@ -212,7 +203,7 @@ def process_mle(chain, gen, cache):
 
             simulations[name] = sims
                        
-    scoop.logger.info('type %s  value %s', type(cadetValues), cadetValues)
+    multiprocessing.get_logger().info('type %s  value %s', type(cadetValues), cadetValues)
 
     pd = pandas.DataFrame(cadetValues, columns = cache.parameter_headers_actual)
     labels = ['MLE', '5', '10', '50', '90', '95']
@@ -377,9 +368,9 @@ def graph_simulations(simulations, simulation_labels, graph):
             graph.legend(lines, labels, loc=0)
 
 def main():
+    cache.setup_dir(sys.argv[1])
+    util.setupLog(cache.settings['resultsDirLog'], "mle.log")
     cache.setup(sys.argv[1])
-
-    setupLog(cache.settings['resultsDirLog'])
 
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
     mcmc_h5 = mcmcDir / "mcmc.h5"

@@ -12,7 +12,7 @@ import CADETMatch.score as score
 from cadet import Cadet, H5
 from pathlib import Path
 import numpy
-import scoop
+import multiprocessing
 from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import cross_val_score
 from sklearn import preprocessing
@@ -30,7 +30,6 @@ import scipy.optimize
 import CADETMatch.util as util
 import CADETMatch.cache as cache
 
-from scoop import futures
 import CADETMatch.synthetic_error as synthetic_error
 
 import joblib
@@ -47,11 +46,14 @@ def bandwidth_score(bw, data, store):
 def get_bandwidth(scores, cache):
     store = []
 
+    pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    map_function = pool.map
+
     result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-4, 1),], 
-                    args = (scores,store,), updating='deferred', workers=futures.map, disp=True,
+                    args = (scores,store,), updating='deferred', workers=pool.map, disp=True,
                     popsize=100)
     bandwidth = 10**result.x[0]
-    scoop.logger.info("selected bandwidth %s", bandwidth)
+    multiprocessing.get_logger().info("selected bandwidth %s", bandwidth)
 
     store = numpy.array(store)
     return bandwidth, store
@@ -147,6 +149,8 @@ def generate_data(cache):
 
 def synthetic_error_simulation(json_path):
     if json_path != cache.cache.json_path:
+        cache.cache.setup_dir(json_path)
+        util.setupLog(cache.cache.settings['resultsDirLog'], "main.log")
         cache.cache.setup(json_path)
 
     scores = []
@@ -236,7 +240,10 @@ def generate_synthetic_error(cache):
         simulations_all = {}
         outputs_all = {}
 
-        for scores, simulations, outputs in futures.map(synthetic_error_simulation, [cache.json_path] * count_settings):
+        pool = multiprocessing.Pool(multiprocessing.cpu_count())
+        map_function = pool.map
+
+        for scores, simulations, outputs in pool.map(synthetic_error_simulation, [cache.json_path] * count_settings):
             if scores and simulations and outputs:
 
                 scores_all.append(scores)

@@ -19,6 +19,8 @@ ERROR = {'scores': None,
 
 def fitness(individual, json_path, run_experiment=None):
     if json_path != cache.cache.json_path:
+        cache.cache.setup_dir(json_path)
+        util.setupLog(cache.cache.settings['resultsDirLog'], "main.log")
         cache.cache.setup(json_path)
 
     if run_experiment is None:
@@ -38,7 +40,7 @@ def fitness(individual, json_path, run_experiment=None):
             return cache.cache.WORST, [], None
 
     if numpy.any(numpy.isnan(scores)):
-        scoop.logger.info("NaN found for %s %s", individual, scores)
+        multiprocessing.get_logger().info("NaN found for %s %s", individual, scores)
 
     #human scores
     humanScores = numpy.concatenate([util.calcMetaScores(scores, cache.cache), [error,]])

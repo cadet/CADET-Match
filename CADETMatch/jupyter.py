@@ -15,7 +15,7 @@ class Match:
 
     def start_sim(self):
         #ncpus = psutil.cpu_count(logical=False)
-        command = [sys.executable, '-m', 'scoop', #'-n', str(ncpus),
+        command = [sys.executable, #'-n', str(ncpus),
                    CADETMatch.match.__file__, str(self.json_path), str(1)]
         pipe = subprocess.PIPE
 

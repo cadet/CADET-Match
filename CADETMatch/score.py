@@ -5,7 +5,7 @@ import scipy.interpolate
 import scipy.signal
 import numpy.linalg
 import CADETMatch.calc_coeff as calc_coeff
-import scoop
+import multiprocessing
 import sys
 
 def roll(x, shift):
@@ -59,7 +59,7 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
         score = corr[index]
     except IndexError:
         score = 0.0
-        scoop.logger.warn("Index error in pearson score at index %s out of %s entries", index, len(corr))
+        multiprocessing.get_logger().warn("Index error in pearson score at index %s out of %s entries", index, len(corr))
 
     endTime = exp_time_values[-1]
 
@@ -271,7 +271,7 @@ def value_function(peak_height, tolerance=1e-8, bottom_score = 0.0):
     a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
     
     if numpy.abs(peak_height) < tolerance:
-        scoop.logger.warn("peak height less than tolerance %s %s", tolerance, peak_height)
+        multiprocessing.get_logger().warn("peak height less than tolerance %s %s", tolerance, peak_height)
         def wrapper(x):
             if numpy.abs(x) < tolerance:
                 return 1.0
@@ -296,7 +296,7 @@ def value_function_exp(peak_height, tolerance=1e-8, bottom_score = 0.05):
     #a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
     
     if numpy.abs(peak_height) < tolerance:
-        scoop.logger.warn("peak height less than tolerance %s %s", tolerance, peak_height)
+        multiprocessing.get_logger().warn("peak height less than tolerance %s %s", tolerance, peak_height)
         def wrapper(x):
             if numpy.abs(x) < tolerance:
                 return 1.0

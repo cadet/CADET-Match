@@ -2,7 +2,7 @@ import CADETMatch.util as util
 import CADETMatch.score as score
 import numpy
 import pandas
-import scoop
+import multiprocessing
 from addict import Dict
 
 name = "fractionationCombine"
@@ -87,7 +87,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     smallestTime = min(data['Stop'] - data['Start'])
     abstolFraction = abstol * smallestTime
 
-    scoop.logger.debug('abstolFraction %s', abstolFraction)
+    multiprocessing.get_logger().debug('abstolFraction %s', abstolFraction)
 
     funcs = []
 

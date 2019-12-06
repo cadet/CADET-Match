@@ -16,7 +16,7 @@ import os
 import subprocess
 import csv
 import time
-import scoop
+import multiprocessing
 import CADETMatch.cache as cache
 
 class ConditionException(Exception):
@@ -129,12 +129,14 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
 
 def gradSearch(x, json_path):
     if json_path != cache.cache.json_path:
+        cache.cache.setup_dir(json_path)
+        util.setupLog(cache.cache.settings['resultsDirLog'], "main.log")
         cache.cache.setup(json_path)
 
     jac_cache = []
 
     try:
-        scoop.logger.info("gradSearch least_squares")
+        multiprocessing.get_logger().info("gradSearch least_squares")
 
         x = util.convert_individual_grad(x, cache.cache)
 
@@ -144,16 +146,16 @@ def gradSearch(x, json_path):
                                                kwargs={'jac_cache':jac_cache}, verbose=0)
 
 
-        scoop.logger.info("start: %s  stop: %s distance: %s  sse: %s", x, result.x, numpy.linalg.norm(x - result.x), numpy.sum(result.fun**2))
-        #scoop.logger.info("result %s", result)
+        multiprocessing.get_logger().info("start: %s  stop: %s distance: %s  sse: %s", x, result.x, numpy.linalg.norm(x - result.x), numpy.sum(result.fun**2))
+        #multiprocessing.get_logger().info("result %s", result)
         result.x = util.convert_individual_inverse_grad(result.x, cache.cache)
         return result
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
-        scoop.logger.error("Gradient Failure", exc_info=True)
+        multiprocessing.get_logger().error("Gradient Failure", exc_info=True)
         return None
     except ConditionException:
-        scoop.logger.error("Condition Failure", exc_info=True)
+        multiprocessing.get_logger().error("Condition Failure", exc_info=True)
         return None
 
 def fitness_sens_grad(individual, jac_cache, finished=0):
@@ -193,7 +195,7 @@ def fitness_sens(individual, jac_cache, finished=1):
 
     cond = numpy.linalg.cond(jac_cache[0])
 
-    #scoop.logger.info('condition number %s = %s', individual, cond)
+    #multiprocessing.get_logger().info('condition number %s = %s', individual, cond)
 
     #need to minimize
     diff = numpy.array(diff)
@@ -234,7 +236,7 @@ def jacobian(x, jac_cache):
     #try:
     #    return jac_cache[tuple(x)]
     #except KeyError:
-    #    scoop.logger.info('keyerror %s %s', repr(x), [repr(key) for key in jac_cache.keys()])
+    #    multiprocessing.get_logger().info('keyerror %s %s', repr(x), [repr(key) for key in jac_cache.keys()])
 
 def saveExperimentsSens(save_name_base, settings, target, results):
     return util.saveExperiments(save_name_base, settings, target, results, settings['resultsDirGrad'], '%s_%s_GRAD.h5')
@@ -294,10 +296,10 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
             if percent > cutoff:
                 temp_offspring.append(ind)
             else:
-                scoop.logger.info('removed %s for insufficient overlap in gradient descent', ind)
+                multiprocessing.get_logger().info('removed %s for insufficient overlap in gradient descent', ind)
         else:
-            scoop.logger.info('removed %s for failure', ind)
+            multiprocessing.get_logger().info('removed %s for failure', ind)
 
     if checkOffspring:
-        scoop.logger.info("overlap okay offspring %s", temp_offspring)
+        multiprocessing.get_logger().info("overlap okay offspring %s", temp_offspring)
     return temp_offspring

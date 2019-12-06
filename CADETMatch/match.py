@@ -16,8 +16,7 @@ from deap import tools
 from deap import base
 
 #parallelization
-from scoop import futures
-import scoop
+import multiprocessing
 
 import logging
 
@@ -29,8 +28,6 @@ import subprocess
 #due to how scoop works and the need to break things up into multiple processes it is hard to use class based systems
 #As a result most of the code is broken up into modules but is still based on pure functions
 
-#setup scoop logging for all processes
-
 def main(path=None, map_function=None):
     if path is None:
         path = sys.argv[1]
@@ -39,8 +36,8 @@ def main(path=None, map_function=None):
     #grad.setupTemplates(cache)
     hof = evo.run(cache)
 
-    scoop.logger.info("altFeatures %s", cache.altFeatures)
-    scoop.logger.info("altFeatureNames %s", cache.altFeatureNames)
+    multiprocessing.get_logger().info("altFeatures %s", cache.altFeatures)
+    multiprocessing.get_logger().info("altFeatureNames %s", cache.altFeatureNames)
 
     if cache.altFeatures:
         for name in cache.altFeatureNames:
@@ -55,7 +52,7 @@ def main(path=None, map_function=None):
 
         for i in range(repeat):
             json_path = util.repeatSimulation(i)
-            scoop.logger.info(json_path)
+            multiprocessing.get_logger().info(json_path)
 
             setup(cache, json_path)
 
@@ -81,7 +78,7 @@ def main(path=None, map_function=None):
                 #copy csv files to a new directory with noise added
                 #put a new json file in the directory that points to the new csv files
                 json_path = util.copyCSVWithNoise(i, center, noise)
-                scoop.logger.info(json_path)
+                multiprocessing.get_logger().info(json_path)
 
                 setup(cache, json_path)
 
@@ -95,17 +92,18 @@ def main(path=None, map_function=None):
 
                 numpy_temp = numpy.array(temp)
                 cov = numpy.cov(numpy_temp.transpose())
-                scoop.logger.info("in progress cov %s data %s det %s", cov, numpy_temp, numpy.linalg.det(cov))
+                multiprocessing.get_logger().info("in progress cov %s data %s det %s", cov, numpy_temp, numpy.linalg.det(cov))
 
             numpy_temp = numpy.array(temp)
             cov = numpy.cov(numpy_temp.transpose())
-            scoop.logger.info("final cov %s data %s det %s", cov, numpy_temp, numpy.linalg.det(cov))
+            multiprocessing.get_logger().info("final cov %s data %s det %s", cov, numpy_temp, numpy.linalg.det(cov))
 
 def setup(cache, json_path, map_function):
     "run seutp for the current json_file"
-    cache.setup_dir(json_path)
+    cache.setup_dir(json_path)    
     
     createDirectories(cache, json_path)
+    util.setupLog(cache.settings['resultsDirLog'], "main.log")
     
     cache.setup(json_path)
     
@@ -113,22 +111,7 @@ def setup(cache, json_path, map_function):
     createProgressCSV(cache)
     createErrorCSV(cache)
     setupTemplates(cache)
-    setupDeap(cache, map_function)
-    setupLog(cache.settings['resultsDirLog'])
-
-def setupLog(log_directory):
-    logger = scoop.logger
-    logger.propagate = False
-    logger.setLevel(logging.INFO)
-    # create file handler which logs even debug messages
-    fh = logging.FileHandler(log_directory / "main.log")
-    fh.setLevel(logging.INFO)
-
-    # add the handlers to the logger
-    logger.addHandler(fh)
-
-    sys.stdout = loggerwriter.LoggerWriter(logger.info)
-    sys.stderr = loggerwriter.LoggerWriter(logger.warning)
+    setupDeap(cache, map_function)    
 
 def createDirectories(cache, json_path):
     cache.settings['resultsDirBase'].mkdir(parents=True, exist_ok=True)
@@ -208,7 +191,7 @@ def setupTemplates(cache):
                            experiment.get('timeout', 1800), cache)
         elapsed = time.time() - start
 
-        scoop.logger.info("simulation took %s", elapsed)
+        multiprocessing.get_logger().info("simulation took %s", elapsed)
         
         #timeout needs to be stored in the template so all processes have it without calculating it
         template.root.timeout = max(10, elapsed * 10)
@@ -219,7 +202,7 @@ def setupTemplates(cache):
             template.filename = template_base_path.as_posix()
             template.save()
             
-            scoop.logger.info("create bias template for experiment %s", name)
+            multiprocessing.get_logger().info("create bias template for experiment %s", name)
             template_bias = util.biasSimulation(template, experiment, cache)
             template_bias_path = Path(cache.settings['resultsDirMisc'], "template_%s_bias.h5" % name)
             template_bias.filename = template_bias_path.as_posix()
@@ -239,17 +222,18 @@ def setupDeap(cache, map_function):
     cache.toolbox = base.Toolbox()
 
     if map_function is None:
-        if getattr(scoop, 'SIZE', 1) == 1:
-            map_function = map
-        else:
-            map_function = futures.map
+        #if getattr(scoop, 'SIZE', 1) == 1:
+        #    map_function = map
+        #else:
+        pool = multiprocessing.Pool(multiprocessing.cpu_count())
+        map_function = pool.map
 
     cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, map_function, creator, base, tools)
 
 def continue_mcmc(cache, map_function):
     if cache.continueMCMC:
         json_path = util.setupMCMC(cache)
-        scoop.logger.info(json_path)
+        multiprocessing.get_logger().info(json_path)
 
         setup(cache, json_path, map_function)
 
@@ -258,6 +242,6 @@ def continue_mcmc(cache, map_function):
 if __name__ == "__main__":
     start = time.time()
     main()
-    scoop.logger.info('System has finished')
-    scoop.logger.info("The total runtime was %s seconds" % (time.time() - start))
+    multiprocessing.get_logger().info('System has finished')
+    multiprocessing.get_logger().info("The total runtime was %s seconds" % (time.time() - start))
     sys.exit()
