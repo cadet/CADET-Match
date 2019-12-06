@@ -108,9 +108,13 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     def goal_pearson(offset):
         sim_data_values_copy = spline(exp_time_values - offset)
 
-        pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
-
-        return -pear[0]
+        try:
+            pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
+            return -pear[0]
+        except ValueError:
+            #signals are not correlated if this raises a ValueError (happens with NaN after the slide)
+            #This minimizes so the sign is switched
+            return 1.0        
   
     diff = exp_time_values[-1] - exp_time_values[0]
    
