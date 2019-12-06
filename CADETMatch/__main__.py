@@ -57,6 +57,8 @@ def run_command(module, json, number_of_jobs, additional=None):
     if additional is not None:
         command.extend(additional)
 
+    command.append(str(number_of_jobs))
+
     rc = subprocess.run(command, bufsize=1)
     
     return rc.returncode

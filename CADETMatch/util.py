@@ -1162,28 +1162,28 @@ def graph_process(cache, generation, last=0):
     cwd = str(Path(__file__).parent)
 
     if cache.graphSpearman:  #This is mostly just for debugging now and is not run async
-        ret = subprocess.run([sys.executable, 'graph_spearman.py', str(cache.json_path), str(generation)], 
+        ret = subprocess.run([sys.executable, 'graph_spearman.py', str(cache.json_path), str(generation), str(getCoreCounts())], 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
         log_subprocess('graph_spearman.py', ret)
     
     if last:
         ret = subprocess.run([sys.executable, 
-                              'generate_graphs.py', str(cache.json_path), str(cache.graphType)], 
+                              'generate_graphs.py', str(cache.json_path), str(cache.graphType), str(getCoreCounts())], 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
         graph_process.lastGraphTime = time.time()
     elif (time.time() - graph_process.lastGraphTime) > cache.graphGenerateTime:
-        #graph_process.child = subprocess.Popen([sys.executable, 'generate_graphs.py', str(cache.json_path), '1'], 
+        #graph_process.child = subprocess.Popen([sys.executable, 'generate_graphs.py', str(cache.json_path), '1', str(getCoreCounts())], 
         #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         subprocess.run([sys.executable, 
-                        'generate_graphs.py', str(cache.json_path), str(cache.graphType)], 
+                        'generate_graphs.py', str(cache.json_path), str(cache.graphType), str(getCoreCounts())], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_process.lastGraphTime = time.time()
     else:
         if (time.time() - graph_process.lastMetaTime) > cache.graphMetaTime:
-            #graph_process.child = subprocess.Popen([sys.executable, 'generate_graphs.py', str(cache.json_path), '0'], 
+            #graph_process.child = subprocess.Popen([sys.executable, 'generate_graphs.py', str(cache.json_path), '0', str(getCoreCounts())], 
             #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
             subprocess.run([sys.executable, 
-                            'generate_graphs.py', str(cache.json_path), '0'], 
+                            'generate_graphs.py', str(cache.json_path), '0', str(getCoreCounts())], 
                 stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
             graph_process.lastMetaTime = time.time()
 
@@ -1199,7 +1199,7 @@ def finish(cache):
 
     if cache.graphSpearman:
         cwd = str(Path(__file__).parent)
-        ret = subprocess.run([sys.executable, 'video_spearman.py', str(cache.json_path)], 
+        ret = subprocess.run([sys.executable, 'video_spearman.py', str(cache.json_path), str(getCoreCounts())], 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,  cwd=cwd)
         log_subprocess('video_spearman.py', ret)
 
@@ -1304,13 +1304,13 @@ def graph_corner_process(cache, last=False, interval=1200):
     cwd = str(Path(__file__).parent)
 
     if last:
-        ret = subprocess.run([sys.executable, 'generate_corner_graphs.py', str(cache.json_path),], 
+        ret = subprocess.run([sys.executable, 'generate_corner_graphs.py', str(cache.json_path), str(getCoreCounts())], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_corner_process.last_time = time.time()
     elif (time.time() - graph_corner_process.last_time) > interval:
-        #graph_corner_process.child = subprocess.Popen([sys.executable, 'generate_corner_graphs.py', str(cache.json_path),], 
+        #graph_corner_process.child = subprocess.Popen([sys.executable, 'generate_corner_graphs.py', str(cache.json_path), str(getCoreCounts())], 
         #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
-        subprocess.run([sys.executable, 'generate_corner_graphs.py', str(cache.json_path),], 
+        subprocess.run([sys.executable, 'generate_corner_graphs.py', str(cache.json_path), str(getCoreCounts())], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_corner_process.last_time = time.time()
 
@@ -1370,3 +1370,18 @@ def setupLog(log_directory, log_name):
 
     sys.stdout = loggerwriter.LoggerWriter(logger.info)
     sys.stderr = loggerwriter.LoggerWriter(logger.warning)
+
+def getCoreCounts():
+    cpus = int(sys.argv[-1])
+    if cpus:
+        return cpus
+    else:
+        return multiprocessing.cpu_count()
+
+def getMapFunction():
+    cores = getCoreCounts()
+    if cores == 1:
+        return map
+    else:
+        pool = multiprocessing.Pool(cores)
+        return pool.map

@@ -103,12 +103,11 @@ def get_mle(data):
     BOUND_LOW_real = [0.0] * len(BOUND_LOW_trans)
     BOUND_UP_real = [1.0] * len(BOUND_UP_trans)
 
-    pool = multiprocessing.Pool(multiprocessing.cpu_count())
-    map_function = pool.map
+    map_function = util.getMapFunction()
 
     result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-3, 1),], 
                                                args = (data_reduced, kernel, atol), 
-                                               updating='deferred', workers=pool.map, disp=True,
+                                               updating='deferred', workers=map_function, disp=True,
                                                popsize=50)
     bw = 10**result.x[0]
     
@@ -122,7 +121,7 @@ def get_mle(data):
         
     result_kde = scipy.optimize.differential_evolution(goal_kde, bounds = list(zip(BOUND_LOW_trans, BOUND_UP_trans)), 
                                                args = (kde_ga,), 
-                                               updating='deferred', workers=pool.map, disp=True,
+                                               updating='deferred', workers=map_function, disp=True,
                                                popsize=50)
     multiprocessing.get_logger().info('finished mle search')
 
@@ -190,10 +189,9 @@ def process_mle(chain, gen, cache):
 
     multiprocessing.get_logger().info('cadetValues: %s %s', cadetValues.shape, cadetValues)
 
-    pool = multiprocessing.Pool(multiprocessing.cpu_count())
-    map_function = pool.map
+    map_function = util.getMapFunction()
 
-    fitnesses = list(pool.map(fitness, temp))
+    fitnesses = list(map_function(fitness, temp))
 
     simulations = {}
     for scores, csv_record, results in fitnesses:

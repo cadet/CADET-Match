@@ -23,7 +23,6 @@ import logging
 from CADETMatch.cache import cache
 import CADETMatch.loggerwriter as loggerwriter
 import h5py
-import subprocess
 
 #due to how scoop works and the need to break things up into multiple processes it is hard to use class based systems
 #As a result most of the code is broken up into modules but is still based on pure functions
@@ -222,11 +221,7 @@ def setupDeap(cache, map_function):
     cache.toolbox = base.Toolbox()
 
     if map_function is None:
-        #if getattr(scoop, 'SIZE', 1) == 1:
-        #    map_function = map
-        #else:
-        pool = multiprocessing.Pool(multiprocessing.cpu_count())
-        map_function = pool.map
+        map_function = util.getMapFunction()
 
     cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, map_function, creator, base, tools)
 

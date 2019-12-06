@@ -141,10 +141,8 @@ def genRandomChoice(cache, chain, kde, scaler):
     for idx in range(len(chain)):
         individuals.append(chain[idx,:])
 
-    pool = multiprocessing.Pool(multiprocessing.cpu_count())
-    map_function = pool.map
-    fitnesses = pool.map(fitness, individuals)
-    #fitnesses = cache.toolbox.map(cache.toolbox.evaluate, individuals)
+    map_function = util.getMapFunction()
+    fitnesses = map_function(fitness, individuals)
 
     results = {}
     times = {}

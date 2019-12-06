@@ -58,16 +58,10 @@ my_cmap = ListedColormap(my_cmap)
 
 cm_plot = matplotlib.cm.gist_rainbow
 
-#if getattr(scoop, 'SIZE', 1) == 1:
-#    map_function = map
-#else:
-pool = multiprocessing.Pool(multiprocessing.cpu_count())
-map_function = pool.map
-
 def get_color(idx, max_colors, cmap):
     return cmap(1.*float(idx)/max_colors)
 
-def main():
+def main(map_function):
     cache.setup_dir(sys.argv[1])
     util.setupLog(cache.settings['resultsDirLog'], "graph.log")
     cache.setup(sys.argv[1])
@@ -78,14 +72,14 @@ def main():
 
     #full generation 1 = 2D, 2 = 2D + 3D
 
-    graphMeta(cache)
-    graphProgress(cache)
+    graphMeta(cache, map_function)
+    graphProgress(cache, map_function)
 
     if fullGeneration:
-        graphSpace(fullGeneration, cache)
-        graphExperiments(cache)    
+        graphSpace(fullGeneration, cache, map_function)
+        graphExperiments(cache, map_function)    
 
-def graphDistance(cache):
+def graphDistance(cache, map_function):
 
     resultDir = Path(cache.settings['resultsDir'])
     result_h5 = resultDir / "result.h5"
@@ -150,7 +144,7 @@ def plot_2d_scatter(args):
     filename = "%s_%s_confidence.png" % (parameter_idx, score_idx)
     fig.savefig(str(output_directory / filename))
 
-def graphExperiments(cache):
+def graphExperiments(cache, map_function):
     directory = Path(cache.settings['resultsDirEvo'])
 
     #find all items in directory
@@ -163,9 +157,11 @@ def graphExperiments(cache):
 
     toGenerate = existsH5 - existsPNG
 
-    list(map_function(plotExperiments, toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirEvo']), itertools.repeat('%s_%s_EVO.png')))
+    args = zip(toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirEvo']), itertools.repeat('%s_%s_EVO.png'))
 
-def graphMeta(cache):
+    list(map_function(plotExperiments, args))
+
+def graphMeta(cache, map_function):
     directory = Path(cache.settings['resultsDirMeta'])
 
     #find all items in directory
@@ -178,8 +174,9 @@ def graphMeta(cache):
 
     toGenerate = existsH5 - existsPNG
 
-    list(map_function(plotExperiments, toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirMeta']), itertools.repeat('%s_%s_meta.png')))
+    args = zip(toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirMeta']), itertools.repeat('%s_%s_meta.png'))
 
+    list(map_function(plotExperiments, args))
 
 def graph_simulation_unit(simulation, unit, graph):
     ncomp = int(simulation.root.input.model[unit].ncomp)
@@ -242,7 +239,8 @@ def graph_simulation_unit(simulation, unit, graph):
         lines, labels = graph.get_legend_handles_labels()
         graph.legend(lines, labels, loc=0)
 
-def plotExperiments(save_name_base, json_path, directory, file_pattern):
+def plotExperiments(args):
+    save_name_base, json_path, directory, file_pattern = args
     if json_path != cache.json_path:
         cache.setup(json_path)
 
@@ -366,7 +364,7 @@ def plotExperiments(save_name_base, json_path, directory, file_pattern):
         fig.set_size_inches((12,6*numPlots))
         fig.savefig(str(dst))
 
-def graphSpace(fullGeneration, cache):
+def graphSpace(fullGeneration, cache, map_function):
     progress_path = Path(cache.settings['resultsDirBase']) / "result.h5"
 
     output_2d = cache.settings['resultsDirSpace'] / "2d"
@@ -403,7 +401,7 @@ def graphSpace(fullGeneration, cache):
 
     #2d plots
     if fullGeneration >= 1:
-        graphDistance(cache)
+        graphDistance(cache, map_function)
 
         seq = []
         for (x,), y in itertools.product(comp_one, output_indexes):
@@ -483,7 +481,7 @@ def plot_2d_single(directory_path, header_x, scoreName, data, scores):
     filename = filename.replace(':', '_').replace('/', '_')
     fig.savefig(str(directory / filename))
 
-def graphProgress(cache):
+def graphProgress(cache, map_function):
     results = Path(cache.settings['resultsDirBase'])
     progress = results / "progress.csv"
     
@@ -560,4 +558,5 @@ def get_times_values(simulation, target, selected = None):
     return times[selected], values[selected] * target['factor']
 
 if __name__ == "__main__":
-    main()
+    map_function = util.getMapFunction()
+    main(map_function)

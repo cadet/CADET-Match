@@ -46,8 +46,7 @@ def bandwidth_score(bw, data, store):
 def get_bandwidth(scores, cache):
     store = []
 
-    pool = multiprocessing.Pool(multiprocessing.cpu_count())
-    map_function = pool.map
+    map_function = util.getMapFunction()
 
     result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-4, 1),], 
                     args = (scores,store,), updating='deferred', workers=pool.map, disp=True,
@@ -97,7 +96,7 @@ def setupKDE(cache):
     h5_data.save()
 
     cwd = str(Path(__file__).parent)
-    ret = subprocess.run([sys.executable, 'graph_kde.py', str(cache.json_path),], 
+    ret = subprocess.run([sys.executable, 'graph_kde.py', str(cache.json_path), str(util.getCoreCounts())], 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
     util.log_subprocess('graph_kde.py', ret)
 
@@ -240,10 +239,9 @@ def generate_synthetic_error(cache):
         simulations_all = {}
         outputs_all = {}
 
-        pool = multiprocessing.Pool(multiprocessing.cpu_count())
-        map_function = pool.map
+        map_function = util.getMapFunction()
 
-        for scores, simulations, outputs in pool.map(synthetic_error_simulation, [cache.json_path] * count_settings):
+        for scores, simulations, outputs in map_function(synthetic_error_simulation, [cache.json_path] * count_settings):
             if scores and simulations and outputs:
 
                 scores_all.append(scores)

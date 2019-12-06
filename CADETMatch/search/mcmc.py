@@ -621,7 +621,7 @@ def run(cache, tools, creator):
 
 def tube_process(last=False, interval=3600):
     cwd = str(Path(__file__).parent.parent)
-    ret = subprocess.run([sys.executable, 'mcmc_plot_tube.py', str(cache.cache.json_path),], 
+    ret = subprocess.run([sys.executable, 'mcmc_plot_tube.py', str(cache.cache.json_path), str(util.getCoreCounts())], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
 
 def mle_process(last=False, interval=3600):
@@ -638,13 +638,13 @@ def mle_process(last=False, interval=3600):
     cwd = str(Path(__file__).parent.parent)
 
     if last:
-        ret = subprocess.run([sys.executable, 'mle.py', str(cache.cache.json_path),], 
+        ret = subprocess.run([sys.executable, 'mle.py', str(cache.cache.json_path), str(util.getCoreCounts())], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         mle_process.last_time = time.time()
     elif (time.time() - mle_process.last_time) > interval:
-        #mle_process.child = subprocess.Popen([sys.executable, 'mle.py', str(cache.cache.json_path),], 
+        #mle_process.child = subprocess.Popen([sys.executable, 'mle.py', str(cache.cache.json_path), str(util.getCoreCounts())], 
         #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
-        subprocess.run([sys.executable, 'mle.py', str(cache.cache.json_path),], 
+        subprocess.run([sys.executable, 'mle.py', str(cache.cache.json_path), str(util.getCoreCounts())], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         mle_process.last_time = time.time()
         
