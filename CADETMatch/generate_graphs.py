@@ -145,6 +145,7 @@ def plot_2d_scatter(args):
     fig.savefig(str(output_directory / filename))
 
 def graphExperiments(cache, map_function):
+    multiprocessing.get_logger().info("starting simulation graphs")
     directory = Path(cache.settings['resultsDirEvo'])
 
     #find all items in directory
@@ -160,8 +161,10 @@ def graphExperiments(cache, map_function):
     args = zip(toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirEvo']), itertools.repeat('%s_%s_EVO.png'))
 
     list(map_function(plotExperiments, args))
+    multiprocessing.get_logger().info("ending simulation graphs")
 
 def graphMeta(cache, map_function):
+    multiprocessing.get_logger().info("starting meta graphs")
     directory = Path(cache.settings['resultsDirMeta'])
 
     #find all items in directory
@@ -177,6 +180,7 @@ def graphMeta(cache, map_function):
     args = zip(toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings['resultsDirMeta']), itertools.repeat('%s_%s_meta.png'))
 
     list(map_function(plotExperiments, args))
+    multiprocessing.get_logger().info("ending meta graphs")
 
 def graph_simulation_unit(simulation, unit, graph):
     ncomp = int(simulation.root.input.model[unit].ncomp)
@@ -315,7 +319,6 @@ def plotExperiments(args):
             if featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_hybrid2', 'derivative_similarity_cross', 'derivative_similarity_cross_alt',
                                  'derivative_similarity_hybrid2_spline', 'similarityHybridDecay2_spline',
                                  'Shape', 'ShapeDecay', 'ShapeFront', 'ShapeBack'):
-                #try:
                 exp_spline = smoothing.smooth_data_derivative(exp_time, exp_value, feat['critical_frequency'], feat['smoothing_factor'])
                 sim_spline = smoothing.smooth_data_derivative(sim_time, sim_value, feat['critical_frequency'], feat['smoothing_factor'])
                 
@@ -323,8 +326,6 @@ def plotExperiments(args):
                 graph.plot(sim_time, sim_spline, 'r--', label='Simulation')
                 graph.plot(exp_time, exp_spline, 'g:', label='Experiment')
                 graphIdx += 1
-                #except:
-                #    pass
             
             if featureType in ('fractionation', 'fractionationCombine', 'fractionationMeanVariance', 
                                'fractionationMoment', 'fractionationSlide', 'fractionationSSE'):
@@ -335,29 +336,36 @@ def plotExperiments(args):
                 graph_sim = results['graph_sim']
 
                 findMax = 0
+                max_comp = {}
                 for idx, (key, value) in enumerate(graph_sim.items()):
                     (time, values) = zip(*value)
-                    findMax = max(findMax, max(values))
+                    max_value = max(values)
+                    findMax = max(findMax, max_value)
+                    max_comp[key] = max_value
 
                 for idx, (key, value) in enumerate(graph_exp.items()):
                     (time, values) = zip(*value)
-                    findMax = max(findMax, max(values))
+                    max_value = max(values)
+                    findMax = max(findMax, max_value)
+                    max_comp[key] = max(max_comp[key], max_value)
 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 factors = []
                 for idx, (key, value) in enumerate(graph_sim.items()):
                     (time, values) = zip(*value)
+                    values = numpy.array(values)
                     mult = 1.0
-                    if max(values) < .2 * findMax:
-                        mult = findMax/(2*max(values))
-                        values = [i* mult for i in values]
+                    if max(values) < (.2 * findMax):
+                        mult = findMax/(2 * max_comp[key])
+                        values = values * mult
                     factors.append(mult)
                     graph.plot(time, values, '--', color=get_color(idx, len(graph_sim), cm_plot), label='Simulation Comp: %s Mult:%.2f' % (key, mult))
 
                 for idx, (key, value) in enumerate(graph_exp.items()):
                     (time, values) = zip(*value)
+                    values = numpy.array(values)
                     mult = factors[idx]
-                    values = [i* mult for i in values]
+                    values = values * mult
                     graph.plot(time, values, ':', color=get_color(idx, len(graph_sim), cm_plot), label='Experiment Comp: %s Mult:%.2f' % (key, mult))
                 graphIdx += 1
             graph.legend()
@@ -365,6 +373,7 @@ def plotExperiments(args):
         fig.savefig(str(dst))
 
 def graphSpace(fullGeneration, cache, map_function):
+    multiprocessing.get_logger().info("starting space graphs")
     progress_path = Path(cache.settings['resultsDirBase']) / "result.h5"
 
     output_2d = cache.settings['resultsDirSpace'] / "2d"
@@ -401,6 +410,7 @@ def graphSpace(fullGeneration, cache, map_function):
 
     #2d plots
     if fullGeneration >= 1:
+        multiprocessing.get_logger().info("starting 2d space graphs")
         graphDistance(cache, map_function)
 
         seq = []
@@ -410,9 +420,11 @@ def graphSpace(fullGeneration, cache, map_function):
         for (x,), y in itertools.product(comp_one, meta_indexes):
             seq.append( [output_2d.as_posix(), input_headers[x], meta_headers[y], input[:,x], output_meta[:,y]] )
         list(map_function(plot_2d, seq))
+        multiprocessing.get_logger().info("ending 2d space graphs")
 
     #3d plots
     if fullGeneration >= 2:
+        multiprocessing.get_logger().info("starting 3d space graphs")
         seq = []
         for (x, y), z in itertools.product(comp_two, output_indexes):
             seq.append( [output_3d.as_posix(), input_headers[x], input_headers[y], output_headers[z], input[:,x], input[:,y], output[:,z]] )
@@ -420,6 +432,8 @@ def graphSpace(fullGeneration, cache, map_function):
         for (x, y), z in itertools.product(comp_two, meta_indexes):
             seq.append( [output_3d.as_posix(), input_headers[x], input_headers[y], meta_headers[z], input[:,x], input[:,y], output_meta[:,z]] )
         list(map_function(plot_3d, seq))
+        multiprocessing.get_logger().info("ending 3d space graphs")
+    multiprocessing.get_logger().info("ending space graphs")
 
 def plot_3d(arg):
     "This leaks memory and is run in a separate short-lived process, do not integrate into the matching main process"
@@ -482,6 +496,7 @@ def plot_2d_single(directory_path, header_x, scoreName, data, scores):
     fig.savefig(str(directory / filename))
 
 def graphProgress(cache, map_function):
+    multiprocessing.get_logger().info("starting progress graphs")
     results = Path(cache.settings['resultsDirBase'])
     progress = results / "progress.csv"
     
@@ -500,6 +515,7 @@ def graphProgress(cache, map_function):
             temp.append( (df[[x,y]], output) )
 
     list(map_function(singleGraphProgress, temp))
+    multiprocessing.get_logger().info("ending progress graphs")
 
 def singleGraphProgress(arg):
     df, output = arg
@@ -560,3 +576,4 @@ def get_times_values(simulation, target, selected = None):
 if __name__ == "__main__":
     map_function = util.getMapFunction()
     main(map_function)
+    sys.exit()
