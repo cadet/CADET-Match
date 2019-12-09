@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     
 setuptools.setup(
     name="CADETMatch",
-    version="0.5.0",
+    version="0.5.2",
     author="William Heymann",
     author_email="w.heymann@fz-juelich.de",
     description="CADETMatch is a parameter estimation and error modeling library for CADET",
@@ -20,7 +20,6 @@ setuptools.setup(
           'SAlib',
           'corner>=2.0.1',
           'deap>=1.3.0',
-          'scoop>=0.7',
           'psutil>=5.6.3',
           'openpyxl>=3.0.0',
           'numpy>=1.16.2',

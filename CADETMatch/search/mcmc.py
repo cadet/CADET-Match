@@ -127,10 +127,10 @@ def converged_bounds(chain, length, error_level):
         temp_chain = chain[:,:i,:]
         temp_chain_shape = temp_chain.shape
         temp_chain_flat = temp_chain.reshape(temp_chain_shape[0] * temp_chain_shape[1], temp_chain_shape[2])
-        lb_1, ub_99 = numpy.percentile(temp_chain_flat, [1, 99], 0)
+        lb_5, ub_95 = numpy.percentile(temp_chain_flat, [5, 95], 0)
         
-        lb.append(lb_1)
-        ub.append(ub_99)
+        lb.append(lb_5)
+        ub.append(ub_95)
        
     lb = numpy.array(lb)
     ub = numpy.array(ub)
@@ -571,7 +571,7 @@ def run(cache, tools, creator):
                                                 writer, csvfile], 
                                         moves=[(de_snooker.DESnookerMove(), 0.1), 
                                                (de.DEMove(), 0.9 * 0.9),
-                                               (emcee.moves.DEMove(gamma0=1.0), 0.9 * 0.1),],
+                                               (de.DEMove(gamma0=1.0), 0.9 * 0.1),],
                                         vectorize=True)
 
         if 'sampler_n' not in checkpoint:
