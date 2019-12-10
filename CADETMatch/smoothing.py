@@ -94,7 +94,7 @@ def find_butter(times, values):
     
     fs = 1.0/(times[1] - times[0])
 
-    for i in numpy.logspace(-1, -4, 50):
+    for i in numpy.logspace(2, -4, 50):
         try:
             b, a = scipy.signal.butter(3, i, btype='lowpass', analog=False, fs=fs)
         except ValueError:

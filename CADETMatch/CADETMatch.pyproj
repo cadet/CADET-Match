@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Downloads\dataset\bypass\MCMC_sepdisp.json" 6</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Downloads\dataset\bypass\MCMC_jointdisp.json" 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>
