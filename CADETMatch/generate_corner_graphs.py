@@ -211,6 +211,19 @@ def graphCorner(cache):
             fig.set_size_inches((12,12))
             fig.savefig(str(out_dir / "integrated_autocorrelation_time.png"))
 
+            fig = figure.Figure(figsize=[10, 10])
+            canvas = FigureCanvas(fig)
+            graph = fig.add_subplot(1, 1, 1)
+            tau = cache.MCMCTauMult
+            for i in range(1, iat.shape[1]):
+                graph.plot(iat[:,0], (iat[:,0]/tau)/iat[:,i], label=i)
+            graph.set_title("Integrated Autocorrelation Time Progress")
+            graph.set_xlabel('Step')
+            graph.set_ylabel('Progress')
+            graph.legend()
+            fig.set_size_inches((12,12))
+            fig.savefig(str(out_dir / "integrated_autocorrelation_time_progress.png"))
+
         if 'mcmc_acceptance' in data.root:
             multiprocessing.get_logger().info('plot mcmc acceptance')
             fig = figure.Figure(figsize=[10, 10])

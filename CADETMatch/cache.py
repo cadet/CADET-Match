@@ -129,14 +129,14 @@ class Cache:
         self.graphGenerateTime = int(self.settings.get('graphGenerateTime', 3600))
         self.graphMetaTime = int(self.settings.get('graphMetaTime', 1200))
 
-        self.metaResultsOnly = self.settings.get('metaResultsOnly', 0)
+        self.metaResultsOnly = self.settings.get('metaResultsOnly', 1)
         self.stallGenerations = int(self.settings.get('stallGenerations', 10))
         self.stallCorrect = int(self.settings.get('stallCorrect', 5))
         self.progressCorrect = int(self.settings.get('progressCorrect', 5))
 
         self.fullTrainingData = int(self.settings.get('fullTrainingData', 0))
 
-        self.sobolGeneration = bool(self.settings.get('soboloGeneration', False)) or bool(self.settings.get('sobolGeneration', False))
+        self.sobolGeneration = bool(self.settings.get('soboloGeneration', True)) or bool(self.settings.get('sobolGeneration', True))
         self.graphSpearman = bool(self.settings.get('graphSpearman', False))
         self.scoreMCMC = self.settings.get('scoreMCMC', "sse")
 

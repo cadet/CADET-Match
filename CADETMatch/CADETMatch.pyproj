@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\Parameter Estimation\Experimental\AMS-003\10CV\NSGA3_grad_smooth_3\NSGA3_grad.json" 2 0</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Downloads\dataset\bypass\MCMC_sepdisp.json" 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>

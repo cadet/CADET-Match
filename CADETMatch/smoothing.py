@@ -120,8 +120,49 @@ def smoothing_filter_butter(times, values, crit_fs):
     low_passed = scipy.signal.filtfilt(b, a, values)
     return low_passed
 
+def load_data(name, cache):
+    crit_fs = None
+    s = None
+    s_knots = 0
+
+    #quick abort
+    if name is None or cache is None:
+        return s, crit_fs
+
+    factor_file = cache.settings['resultsDirMisc'] / "find_smoothing_factor.h5"
+
+    data = H5()
+    data.filename = factor_file.as_posix()
+
+    if factor_file.exists():
+        data.load()
+
+    if name in data.root:
+        s = float(data.root[name].s)
+
+        crit_fs = data.root[name].crit_fs
+        if crit_fs == -1.0:
+            crit_fs = None
+
+        s_knots = int(data.root[name].s_knots)
+    else:
+        return s, crit_fs
+
+    if crit_fs is None:
+        multiprocessing.get_logger().info("loaded smoothing_factor %s  %.3e  critical frequency disable", name, s)
+    else:
+        multiprocessing.get_logger().info("loaded smoothing_factor %s  %.3e  critical frequency %.3e  knots %d", name, s, crit_fs, s_knots)
+
+    return s, crit_fs
+
+
 def find_smoothing_factors(times, values, name, cache):
     min = 1e-2
+
+    s, crit_fs = load_data(name, cache)
+
+    if s is not None:
+        return s, crit_fs
 
     #normalize the data
     values = values * 1.0/max(values)
