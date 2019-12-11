@@ -216,7 +216,9 @@ def graphCorner(cache):
             graph = fig.add_subplot(1, 1, 1)
             tau = cache.MCMCTauMult
             for i in range(1, iat.shape[1]):
-                graph.plot(iat[:,0], (iat[:,0]/tau)/iat[:,i], label=i)
+                progress = (iat[:,0]/tau)/iat[:,i]
+                progress[progress > 1] = 1
+                graph.plot(iat[:,0], progress, label=i)
             graph.set_title("Integrated Autocorrelation Time Progress")
             graph.set_xlabel('Step')
             graph.set_ylabel('Progress')
