@@ -11,6 +11,8 @@ import random
 import array
 import multiprocessing
 
+from addict import Dict
+
 def sobolGenerator(icls, dimension, lb, ub, n):
     ub = numpy.array(ub)
     lb = numpy.array(lb)
@@ -24,17 +26,22 @@ def sobolGenerator(icls, dimension, lb, ub, n):
     else:
         return []
 
-def nsga2_min(func, lb, ub, ngen=8000, mu=200, cxpb=0.8, args=None, stop=40):
-    FitnessMin = create("FitnessMin", base.Fitness, weights=(-1.0,))
+def ga_min(func, lb, ub, ngen=500, mu=200, args=None, stop=40):
+    FitnessMin = create("FitnessMin", base.Fitness, weights=[-1.0,])
     Individual = create("Individual", list, fitness=FitnessMin)
 
     toolbox = base.Toolbox()
 
-    toolbox.register("evaluate", func, *args)
+    if args is not None:
+        toolbox.register("evaluate", func, *args)
+    else:
+        toolbox.register("evaluate", func)
     toolbox.register("population", sobolGenerator, Individual, len(lb), lb, ub)
-    toolbox.register("mate", tools.cxSimulatedBinaryBounded, low=lb, up=ub, eta=2.0)
-    toolbox.register("mutate", tools.mutPolynomialBounded, low=lb, up=ub, eta=1.0, indpb=1.0/len(lb))
-    toolbox.register("select", tools.selNSGA2)
+    toolbox.register("mate", tools.cxSimulatedBinaryBounded, low=lb, up=ub, eta=30.0)
+    toolbox.register("mutate", tools.mutPolynomialBounded, low=lb, up=ub, eta=20.0, indpb=1.0/len(lb))
+
+    ref_points = tools.uniform_reference_points(1, 16)
+    toolbox.register("select", tools.selSPEA2)
 
     toolbox.register('map', map)
 
@@ -44,59 +51,51 @@ def nsga2_min(func, lb, ub, ngen=8000, mu=200, cxpb=0.8, args=None, stop=40):
     best_score = 1e308
     last_progress = 0
 
+    result = Dict()
+
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in pop if not ind.fitness.valid]
     fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
-        ind.fitness.values = fit
-        if fit[0] < best_score:
-            best_score = fit[0]
+        ind.fitness.values = [fit,]
+        if fit < best_score:
+            best_score = fit
             best = ind
-
-    # This is just to assign the crowding distance to the individuals
-    # no actual selection is done
-    pop = toolbox.select(pop, len(pop))
 
     # Begin the generational process
     for gen in range(1, ngen):
-        # Vary the population
-        offspring = tools.selTournamentDCD(pop, len(pop))
-        offspring = [toolbox.clone(ind) for ind in offspring]
-        
-        for ind1, ind2 in zip(offspring[::2], offspring[1::2]):
-            if random.random() <= cxpb:
-                toolbox.mate(ind1, ind2)
-            
-            toolbox.mutate(ind1)
-            toolbox.mutate(ind2)
-            del ind1.fitness.values, ind2.fitness.values
-        
+        multiprocessing.get_logger().info("%s %s %s", gen, mu, last_progress)
+        offspring = algorithms.varAnd(pop, toolbox, 1.0, 1.0)
+   
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
         fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
 
         for ind, fit in zip(invalid_ind, fitnesses):
-            ind.fitness.values = fit
+            ind.fitness.values = [fit,]
 
-            if fit[0] < best_score:
-                best_score = fit[0]
+            if fit < best_score:
+                best_score = fit
                 best = ind
                 last_progress = gen
 
 
         if gen - last_progress > stop:
-            multiprocessing.get_logger().info("stopped at gen %s", gen)
             break
 
         # Select the next generation population
         pop = toolbox.select(pop + offspring, mu)
+    
+    result.x = best
+    result.fun = best_score
+    result.population = pop
 
-        multiprocessing.get_logger().info('best_score\t %s \tbest\t %s', best_score, best)
-        
-    result = {}
-    result['x'] = best
-    result['fun'] = best_score
-    result['pop'] = pop
+    if gen < (ngen-1):
+        result.success = True
+    else:
+        result.success = True
+
+    result.gen = gen
 
     return result
 

@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Downloads\dataset\bypass\MCMC_jointdisp.json" 6</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Downloads\dataset\bypass\Acetone\MCMC.json" 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>
@@ -86,10 +86,10 @@
     <Compile Include="modEnsemble.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="nsga2_simple.py">
+    <Compile Include="ga_simple.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="nsga3_selection.py">
+    <Compile Include="search\retired\nsga3_selection.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="pareto.py">

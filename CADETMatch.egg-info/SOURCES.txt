@@ -10,6 +10,7 @@ CADETMatch/de.py
 CADETMatch/de_snooker.py
 CADETMatch/evo.py
 CADETMatch/fitness.py
+CADETMatch/ga_simple.py
 CADETMatch/generate_corner_graphs.py
 CADETMatch/generate_graphs.py
 CADETMatch/grad.py
@@ -24,8 +25,6 @@ CADETMatch/match.py
 CADETMatch/mcmc_plot_tube.py
 CADETMatch/mle.py
 CADETMatch/modEnsemble.py
-CADETMatch/nsga2_simple.py
-CADETMatch/nsga3_selection.py
 CADETMatch/pareto.py
 CADETMatch/plugins.py
 CADETMatch/score.py

@@ -8,10 +8,15 @@ import warnings
 import multiprocessing
 
 from cadet import H5
+import CADETMatch.ga_simple as ga_simple
+
+butter_order = 3
 
 def refine_butter(times, values, x, y, fs, start):
     x = numpy.array(x)
     y = numpy.array(y)
+
+    y_min = y - min(y)
 
     p3 = numpy.array([x, y]).T
     p1 = p3[0,:]
@@ -20,10 +25,10 @@ def refine_butter(times, values, x, y, fs, start):
     def goal(crit_fs):
         crit_fs = 10.0**crit_fs[0]
         try:
-            b, a = scipy.signal.butter(3, crit_fs, btype='lowpass', analog=False, fs=fs)
+            sos = scipy.signal.butter(butter_order, crit_fs, btype='lowpass', analog=False, fs=fs, output="sos")
         except ValueError:
             return 1e6
-        low_passed = scipy.signal.filtfilt(b, a, values)
+        low_passed = scipy.signal.sosfiltfilt(sos, values)
         
         sse = numpy.sum( (low_passed - values)**2 )
         
@@ -40,8 +45,8 @@ def refine_butter(times, values, x, y, fs, start):
     
     lb = start - 0.2 * diff
     ub = start + 0.2 * diff
-    
-    result_evo = scipy.optimize.differential_evolution(goal, ((lb, ub),) )
+
+    result_evo = scipy.optimize.differential_evolution(goal, ((lb, ub),), polish=False)
     
     crit_fs = 10**result_evo.x[0]
     
@@ -51,7 +56,9 @@ def refine_smooth(times, values, x, y, start):
     x = numpy.array(x)
     y = numpy.array(y)
 
-    p3 = numpy.array([x, y]).T
+    y_min = y - min(y)
+
+    p3 = numpy.array([x, y_min]).T
     p1 = p3[0,:]
     p2 = p3[-1,:]
     
@@ -61,7 +68,7 @@ def refine_smooth(times, values, x, y, start):
             warnings.filterwarnings('error')
 
             try:
-                spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=3, ext=3)
+                spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=5, ext=3)
             except Warning:
                 multiprocessing.get_logger().info("caught a warning for %s %s", name, s)
                 return 1e6
@@ -79,12 +86,12 @@ def refine_smooth(times, values, x, y, start):
     
     lb = start - 0.2 * diff
     ub = start + 0.2 * diff
-    
-    result_evo = scipy.optimize.differential_evolution(goal, ((lb, ub),) )
+
+    result_evo = scipy.optimize.differential_evolution(goal, ((lb, ub),), polish=False)
     
     s = 10**result_evo.x[0]
     
-    spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=3, ext=3)
+    spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=5, ext=3)
     
     return s, len(spline.get_knots())
 
@@ -96,10 +103,10 @@ def find_butter(times, values):
 
     for i in numpy.logspace(2, -4, 50):
         try:
-            b, a = scipy.signal.butter(3, i, btype='lowpass', analog=False, fs=fs)
+            sos = scipy.signal.butter(butter_order, i, btype='lowpass', analog=False, fs=fs, output="sos")
         except ValueError:
             continue
-        low_passed = scipy.signal.filtfilt(b, a, values)
+        low_passed = scipy.signal.sosfiltfilt(sos, values)
 
         filters.append(i)
         sse.append(  numpy.sum( (low_passed - values)**2 ) )
@@ -116,8 +123,8 @@ def smoothing_filter_butter(times, values, crit_fs):
         return values
     fs = 1.0/(times[1] - times[0])
 
-    b, a = scipy.signal.butter(3, crit_fs, btype='lowpass', analog=False, fs=fs)
-    low_passed = scipy.signal.filtfilt(b, a, values)
+    sos = scipy.signal.butter(butter_order, crit_fs, btype='lowpass', analog=False, fs=fs, output="sos")
+    low_passed = scipy.signal.sosfiltfilt(sos, values)
     return low_passed
 
 def load_data(name, cache):
@@ -174,40 +181,30 @@ def find_smoothing_factors(times, values, name, cache):
     
     values_filter = smoothing_filter_butter(times, values, crit_fs)    
 
-    spline = scipy.interpolate.UnivariateSpline(times, values_filter, s=min, k=3, ext=3)
+    spline = scipy.interpolate.UnivariateSpline(times, values_filter, s=min, k=5, ext=3)
     knots = []
     all_s = []
 
     knots.append(len(spline.get_knots()))
     all_s.append(min)
 
-    last = 10
-
-    progress = True
-    
     #This limits to 1e-14 max smoothness which is way beyond anything normal
-    for i in range(1,40):  
-        s = min/(2.0**i)
+    for i in range(1,200):  
+        s = min/(1.1**i)
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
 
             try:
-                spline = scipy.interpolate.UnivariateSpline(times, values_filter, s=s, k=3, ext=3)
+                spline = scipy.interpolate.UnivariateSpline(times, values_filter, s=s, k=5, ext=3)
                 knots.append(len(spline.get_knots()))
                 all_s.append(s)
+
+                if len(spline.get_knots()) > 600:
+                    break
+
             except Warning:
                 multiprocessing.get_logger().info("caught a warning for %s %s", name, s)
-                pass
-
-        if len(knots) < (last+1):
-            progress = True
-        else:
-            lower = numpy.array(knots[-last:-1])
-            upper = numpy.array(knots[-last+1:])
-            progress = numpy.any(lower < upper)
-
-        if not progress:
-            break
+                break
     
     knots = numpy.array(knots)
     all_s = numpy.array(all_s)
@@ -252,7 +249,7 @@ def create_spline(times, values, crit_fs, s):
     values = values * factor
     values_filter = smoothing_filter_butter(times, values, crit_fs)
 
-    return scipy.interpolate.UnivariateSpline(times, values_filter, s=s, k=3, ext=3), factor
+    return scipy.interpolate.UnivariateSpline(times, values_filter, s=s, k=5, ext=3), factor
 
 def smooth_data(times, values, crit_fs, s):
     spline, factor = create_spline(times, values, crit_fs, s)
@@ -262,4 +259,15 @@ def smooth_data(times, values, crit_fs, s):
 def smooth_data_derivative(times, values, crit_fs, s):
     spline, factor = create_spline(times, values, crit_fs, s)
     
-    return spline.derivative()(times) / factor
+    #run a quick butter pass to remove high frequency noise in the derivative (needed for some experimental data)
+    return butter(times, spline.derivative()(times) / factor)
+
+def butter(times, values):
+    factor = 1.0/max(values)
+    values = values * factor
+
+    crit_fs = find_butter(times, values)
+    
+    values_filter = smoothing_filter_butter(times, values, crit_fs) / factor
+    
+    return values_filter
