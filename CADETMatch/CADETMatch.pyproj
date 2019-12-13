@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>0067cb6f-0de6-4dd6-8086-20ea899a691d</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>match.py</StartupFile>
+    <StartupFile>generate_graphs.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>..</WorkingDirectory>
@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Downloads\dataset\bypass\Acetone\MCMC.json" 6</CommandLineArguments>
+    <CommandLineArguments>"F:\temp\fit_chromatogram_4exp_chrom\NSGA3_createGraphs_manually.json" 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>

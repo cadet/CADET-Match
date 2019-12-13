@@ -256,11 +256,14 @@ def smooth_data(times, values, crit_fs, s):
     
     return spline(times) / factor
 
-def smooth_data_derivative(times, values, crit_fs, s):
+def smooth_data_derivative(times, values, crit_fs, s, smooth=True):
     spline, factor = create_spline(times, values, crit_fs, s)
     
     #run a quick butter pass to remove high frequency noise in the derivative (needed for some experimental data)
-    return butter(times, spline.derivative()(times) / factor)
+    values_filter = spline.derivative()(times) / factor
+    if smooth:
+        values_filter = butter(times, values_filter)
+    return values_filter
 
 def butter(times, values):
     factor = 1.0/max(values)
