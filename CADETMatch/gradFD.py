@@ -64,7 +64,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
         elif i.x is not None:
             ind = cache.toolbox.individual_guess(i.x)
 
-            fit, csv_line, results = cache.toolbox.evaluate(ind, run_experiment=runExperimentSens)
+            fit, csv_line, results, individual = cache.toolbox.evaluate(ind, run_experiment=runExperimentSens)
 
             ind.fitness.values = fit
 
@@ -116,11 +116,14 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
     """if there is no overlap between the simulation and the data there is no gradient to follow and these entries need to be skipped
     This function also sorts from highest to lowest overlap and keeps the top multiStartPercent"""
     checkOffspring = list(checkOffspring)
-    temp = list(cache.toolbox.map(cache.toolbox.evaluate, map(list, checkOffspring)))
+    temp = cache.toolbox.map(cache.toolbox.evaluate, map(list, checkOffspring))
 
     temp_offspring = []
 
-    for ind, (fit, csv_line, results) in zip(map(list, checkOffspring), temp):
+    lookup = util.create_lookup(checkOffspring)
+
+    for fit, csv_line, results, individual in temp:
+        ind = pop_lookup(lookup, individual)
         temp_area_total = 0.0
         temp_area_overlap = 0.0
         if results is not None:

@@ -1022,8 +1022,12 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
         #just in case if the SSE score is used this will make sure that it has to be greater
         best_min = -1e308
 
-    for ind, result in zip(population, fitnesses):
-        fit, csv_line, results = result
+    lookup = create_lookup(population)
+
+    for result in fitnesses:
+        fit, csv_line, results, individual = result
+
+        ind = pop_lookup(lookup, individual)
         
         save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
         
@@ -1388,4 +1392,21 @@ def getMapFunction():
         return map
     else:
         pool = multiprocessing.Pool(cores)
-        return pool.map
+        return pool.imap_unordered
+
+def create_lookup(seq):
+    temp = {}
+    for i in seq:
+        key = tuple(i)
+        if key not in temp:
+            temp[key] = [i,]
+        else:
+            temp[key].append(i)
+    return temp
+
+def pop_lookup(lookup, key):
+    temp = lookup[tuple(key)]
+    data = temp.pop(0)
+    if not temp:
+        del lookup[tuple(key)]
+    return data

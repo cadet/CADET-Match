@@ -57,7 +57,7 @@ def fitness(individual, json_path, run_experiment=None):
     csv_record.extend(scores)
     csv_record.extend(humanScores)
       
-    return scores, csv_record, results
+    return scores, csv_record, results, tuple(individual)
 
 def saveExperiments(save_name_base, settings, target, results):
     return util.saveExperiments(save_name_base, settings, target, results, settings['resultsDirEvo'], '%s_%s_EVO.h5')

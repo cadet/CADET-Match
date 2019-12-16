@@ -68,10 +68,10 @@ def log_likelihood(individual, json_path):
         log_likelihood.kde = kde
         log_likelihood.scaler = kde_scaler
 
-    scores, csv_record, results = evo.fitness(individual, json_path)
+    scores, csv_record, results, individual = evo.fitness(individual, json_path)
 
     if results is None:
-        return -numpy.inf, scores, csv_record, results
+        return -numpy.inf, scores, csv_record, results, individual
 
     if results is not None and kde_previous is not None:
         logPrevious = log_previous(individual, kde_previous, kde_previous_scaler)
@@ -86,12 +86,10 @@ def log_likelihood(individual, json_path):
 
     score = score_kde + log2 + logPrevious #*2 is from mirroring and we need to double the probability to get back to the normalized distribution
 
-    return score, scores, csv_record, results 
+    return score, scores, csv_record, results, individual 
 
 def log_posterior_vectorize(population, json_path, cache, halloffame, meta_hof, grad_hof, result_data, writer, csvfile):
-    results = list(
-            cache.toolbox.map(log_posterior, ( (population[i], json_path) for i in range(len(population))))
-        )
+    results = cache.toolbox.map(log_posterior, ( (population[i], json_path) for i in range(len(population))))
     results = process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csvfile)
     return results
 
@@ -102,11 +100,11 @@ def log_posterior(x):
         util.setupLog(cache.cache.settings['resultsDirLog'], "main.log")
         cache.cache.setup(json_path)
 
-    ll, scores, csv_record, results = log_likelihood(theta, json_path)
+    ll, scores, csv_record, results, individual = log_likelihood(theta, json_path)
     if results is None:
-        return -numpy.inf, None, None, None, None
+        return -numpy.inf, None, None, None, None, individual
     else:
-        return ll, theta, scores, csv_record, results
+        return ll, theta, scores, csv_record, results, individual
 
 def addChain(*args):
     temp = [arg for arg in args if arg is not None]
@@ -786,10 +784,10 @@ def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer,
 
     population = []
     fitnesses = []
-    for sse, theta, fit, csv_line, result in results:
+    for sse, theta, fit, csv_line, result, individual in results:
         if result is not None:
             parameters = theta
-            fitnesses.append( (fit, csv_line, result) )
+            fitnesses.append( (fit, csv_line, result, tuple(individual)) )
 
             ind = cache.toolbox.individual_guess(parameters)
             population.append(ind)

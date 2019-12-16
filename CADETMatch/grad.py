@@ -80,7 +80,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
             pass
         elif i.success:
             ind = cache.toolbox.individual_guess(i.x)
-            fit, csv_line, results = cache.toolbox.evaluate(ind)
+            fit, csv_line, results, individual = cache.toolbox.evaluate(ind)
 
             ind.fitness.values = fit
 
@@ -279,7 +279,10 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
 
     temp_offspring = []
 
-    for ind, (fit, csv_line, results) in zip(map(list, checkOffspring), temp):
+    lookup = util.create_lookup(checkOffspring)
+
+    for fit, csv_line, results, individual in temp:
+        ind = pop_lookup(lookup, individual)
         temp_area_total = 0.0
         temp_area_overlap = 0.0
         if results is not None:
