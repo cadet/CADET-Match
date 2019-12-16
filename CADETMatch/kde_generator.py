@@ -66,7 +66,7 @@ def mirror(data):
     return full_data
 
 def setupKDE(cache):
-    scores, simulations = generate_synthetic_error(cache)
+    scores = generate_synthetic_error(cache)
 
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
 
@@ -127,7 +127,7 @@ def getKDEPrevious(cache):
     return None, None
 
 def generate_data(cache):
-    scores, simulations = generate_synthetic_error(cache)
+    scores = generate_synthetic_error(cache)
 
     mcmcDir = Path(cache.settings['resultsDirMCMC'])
     save_scores = mcmcDir / 'scores_used.npy'
@@ -233,7 +233,7 @@ def generate_synthetic_error(cache):
         count_settings = int(cache.settings['kde_synthetic'][0]['count'])
         
         scores_all = []
-        simulations_all = {}
+        times = {}
         outputs_all = {}
 
         for scores, simulations, outputs in cache.toolbox.map(synthetic_error_simulation, [cache.json_path] * count_settings):
@@ -245,14 +245,12 @@ def generate_synthetic_error(cache):
                     temp = outputs_all.get(key, [])
                     temp.append(value)
                     outputs_all[key] = temp
+
+                for key,sim in simulations.items():
+                    if key not in times:
+                        times[key] = sim.root.output.solution.solution_times
                                         
         scores = numpy.array(scores_all)
-
-        times = {}
-        for simulation_name, simulation_values in simulations_all.items():
-            times[simulation_name] = simulation_values.root.input.solver.user_solution_times
-            #Only the first item is needed
-            break
 
         dir_base = cache.settings.get('resultsDirBase')
         file = dir_base / 'kde_data.h5'
@@ -264,8 +262,8 @@ def generate_synthetic_error(cache):
                 hf.create_dataset(output_name, data=numpy.array(output))
 
             for time_name, time in times.items():
-                hf.create_dataset(time_name, data=times)
+                hf.create_dataset('%s_time' % time_name, data=time)
                                
-        return scores, simulations_all
+        return scores
 
     return None, None

@@ -44,7 +44,7 @@ import shutil
 log2 = numpy.log(2)
 
 acceptance_target = 0.234
-acceptance_delta = 0.07
+acceptance_delta = 0.1
 
 def log_previous(cadetValues, kde_previous, kde_previous_scaler):
     #find the right values to use
@@ -138,6 +138,13 @@ def converged_bounds(chain, length, error_level):
     if numpy.all(numpy.std(lb, axis=0) < error_level) and numpy.all(numpy.std(ub, axis=0) < error_level):
         return True, numpy.mean(lb, axis=0), numpy.mean(ub, axis=0)
     else:
+        multiprocessing.get_logger().info("bounds have not yet converged lb min: %s max: %s std: %s  ub min %s max: %s std: %s", 
+                                          numpy.array2string(numpy.min(lb, axis=0), precision=3, separator=','),  
+                                          numpy.array2string(numpy.max(lb, axis=0), precision=3, separator=','), 
+                                          numpy.array2string(numpy.std(lb, axis=0), precision=4, separator=','),
+                                          numpy.array2string(numpy.min(ub, axis=0), precision=3, separator=','),  
+                                          numpy.array2string(numpy.max(ub, axis=0), precision=3, separator=','), 
+                                          numpy.array2string(numpy.std(ub, axis=0), precision=4, separator=','), )
         return False, None, None
 
 def rescale(lb, ub, old_lb, old_ub):
@@ -368,19 +375,19 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile):
                     multiprocessing.get_logger().info("burn in acceptance is out of tolerance and n must be adjusted while burn in continues")
                     converge[:] = numpy.nan
                     prev_n = sampler._moves[1].n
-                    if average_converge > (acceptance_target + 2 * acceptance_delta):
+                    if average_converge > (acceptance_target + 3 * acceptance_delta):
                         #n must be increased to decrease the acceptance rate (step size)
                         power += 4
-                    elif average_converge > (acceptance_target + 1.5 * acceptance_delta):
+                    elif average_converge > (acceptance_target + 2 * acceptance_delta):
                         #n must be increased to decrease the acceptance rate (step size)
                         power += 2
                     elif average_converge > (acceptance_target + 1 * acceptance_delta):
                         #n must be increased to decrease the acceptance rate (step size)
                         power += 1                    
-                    elif average_converge < (acceptance_target - 2 * acceptance_delta):
+                    elif average_converge < (acceptance_target - 3 * acceptance_delta):
                         #n must be decreased to increase the acceptance rate (step size)
                         power -= 4
-                    elif average_converge < (acceptance_target - 1.5 * acceptance_delta):
+                    elif average_converge < (acceptance_target - 2 * acceptance_delta):
                         #n must be decreased to increase the acceptance rate (step size)
                         power -= 2
                     elif average_converge < (acceptance_target - 1 * acceptance_delta):
