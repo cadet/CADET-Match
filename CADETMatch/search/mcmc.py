@@ -784,14 +784,18 @@ def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer,
 
     population = []
     fitnesses = []
-    for sse, theta, fit, csv_line, result, individual in results:
+
+    log_likelihoods = []
+
+    for ll, theta, fit, csv_line, result, individual in results:
+        log_likelihoods.append(float(ll))
         if result is not None:
             parameters = theta
             fitnesses.append( (fit, csv_line, result, tuple(individual)) )
 
             ind = cache.toolbox.individual_guess(parameters)
             population.append(ind)
-            result_data['mcmc_score'].append(sse)
+            result_data['mcmc_score'].append(ll)
 
     stalled, stallWarn, progressWarn = util.process_population(cache.toolbox, cache, population, 
                                                           fitnesses, writer, csv_file, 
@@ -806,7 +810,7 @@ def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer,
 
     process.gen += 1
     process.generation_start = time.time()
-    return [float(i[0]) for i in results]
+    return log_likelihoods
 
 def process_chain(chain, cache, idx):
     chain_shape = chain.shape
