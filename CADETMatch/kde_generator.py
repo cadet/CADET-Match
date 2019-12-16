@@ -220,7 +220,9 @@ def synthetic_error_simulation(json_path):
             simulations[name] = result['simulation']
 
             for unit in units:
-                outputs['%s_unit_%03d' % (name, int(unit))] = result['simulation'].root.output.solution['unit_%03d' % int(unit)].solution_outlet_comp_000
+                unit_name = 'unit_%03d' % unit
+                for comp in range(result['simulation'].root.input.model[unit_name].ncomp):
+                    outputs['%s_unit_%03d_comp_%03d' % (name, int(unit), comp)] = result['simulation'].root.output.solution['unit_%03d' % int(unit)]['solution_outlet_comp_%03d' % comp]
         else:
             experiment_failed = True
 
@@ -255,14 +257,18 @@ def generate_synthetic_error(cache):
         dir_base = cache.settings.get('resultsDirBase')
         file = dir_base / 'kde_data.h5'
 
-        with h5py.File(file, 'w') as hf:
-            hf.create_dataset('scores', data=scores)
+        kde_data = H5()
+        kde_data.filename = file.as_posix()
 
-            for output_name, output in outputs_all.items():
-                hf.create_dataset(output_name, data=numpy.array(output))
+        kde_data.root.scores = scores
 
-            for time_name, time in times.items():
-                hf.create_dataset('%s_time' % time_name, data=time)
+        for output_name, output in outputs_all.items():
+            kde_data.root[output_name] = numpy.array(output)
+
+        for time_name, time in times.items():
+            kde_data.root['%s_time' % time_name] = time
+
+        kde_data.save()
                                
         return scores
 
