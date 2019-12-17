@@ -102,39 +102,27 @@ def sse_spline(exp_time_values, sim_data_values, exp_data_values):
         return sys.float_info.max, diff
 
 def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
-
-    spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)
-
-    exp_time_values = numpy.array(exp_time_values)
-    exp_data_values = numpy.array(exp_data_values)
-
-    def goal_pearson(offset):
-        sim_data_values_copy = spline(exp_time_values - offset)
-
-        #Pearson correlation is undefined for a constant array, skip running it and return the worst possible score
-        if (sim_data_values_copy == sim_data_values_copy[0]).all():
-            return 1.0
-
-        try:
-            pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
-            return -pear[0]
-        except ValueError:
-            #signals are not correlated if this raises a ValueError (happens with NaN after the slide)
-            #This minimizes so the sign is switched
-            return 1.0        
-  
-    diff = exp_time_values[-1] - exp_time_values[0]
-
-    sobol = SALib.sample.sobol_sequence.sample(100, 1)    
-    sobol = sobol * (2*diff) - diff
-    result_evo = scipy.optimize.differential_evolution(goal_pearson, ((-diff, diff),), polish=True, popsize=100, init=sobol)
+    #resample to a much smaller time step to get a more precise offset
+    dt = 1e-2
+    times = numpy.arange(exp_time_values[0], exp_time_values[-1], dt)
     
-    if result_evo.success:
-        diff_time = -result_evo.x[0]
-        pear = -result_evo.fun
-        return pear_corr(pear), diff_time
-    else:
-        return 0.0, diff
+    sim_resample = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)(times)
+    exp_resample = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, exp_data_values, ext=3)(times)
+    
+    
+    corr = scipy.signal.correlate(exp_resample, sim_resample)/(numpy.linalg.norm(sim_resample) * numpy.linalg.norm(exp_resample))
+
+    index = numpy.argmax(corr)
+    
+    dt = (index - len(times) + 1) * dt
+    
+    #calculate pearson correlation at the new time
+    spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)
+    sim_data_values_copy = spline(exp_time_values - dt)
+    pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)[0]
+    score = pear_corr(pear)
+
+    return score, dt
 
 def time_function_decay(CV_time, peak_time, diff_input=False):
     x_exp = numpy.array([0, 1.0*CV_time])
