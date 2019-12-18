@@ -62,8 +62,10 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     min_time = selectedTimes[min_index]
     min_value = selectedValues[min_index]
 
-    exp_data_zero = numpy.zeros(len(selectedValues))
-    exp_data_zero[min_index:max_index+1] = selectedValues[min_index:max_index+1]
+    smooth_value = smoothing.smooth_data(selectedTimes, selectedValues, crit_fs, s)
+
+    exp_data_zero = numpy.zeros(len(smooth_value))
+    exp_data_zero[min_index:max_index+1] = smooth_value[min_index:max_index+1]
 
     temp['min_time'] = feature['start']
     temp['max_time'] = feature['stop']
@@ -73,6 +75,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp['peak_max'] = max_value
     temp['smoothing_factor'] = s
     temp['critical_frequency'] = crit_fs
+    temp['smooth_value'] = smooth_value
     return temp
 
 def headers(experimentName, feature):

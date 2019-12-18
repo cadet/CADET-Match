@@ -31,7 +31,7 @@ def run(sim_data, feature):
 
     time_high, value_high = high
 
-    pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_values, exp_data_values)
+    pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_values, feature['smooth_value'])
 
     pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_data_values_spline, exp_data_values_spline)
 
@@ -61,6 +61,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp['peak_max'] = max(selectedValues)
     temp['smoothing_factor'] = s
     temp['critical_frequency'] = crit_fs
+    temp['smooth_value'] = smoothing.smooth_data(selectedTimes, selectedValues, crit_fs, s)
     return temp
 
 def headers(experimentName, feature):

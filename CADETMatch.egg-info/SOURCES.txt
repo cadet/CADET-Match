@@ -51,8 +51,10 @@ CADETMatch/scores/logsse.py
 CADETMatch/scores/shape.py
 CADETMatch/scores/shapeBack.py
 CADETMatch/scores/shapeDecay.py
+CADETMatch/scores/shapeDecayNoDer.py
 CADETMatch/scores/shapeDecaySimple.py
 CADETMatch/scores/shapeFront.py
+CADETMatch/scores/shapeNoDer.py
 CADETMatch/scores/shapeOnly.py
 CADETMatch/scores/shapeSimple.py
 CADETMatch/scores/similarity.py

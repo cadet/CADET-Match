@@ -37,7 +37,7 @@ def fitness(individual, json_path, run_experiment=None):
             scores.extend(results[experiment['name']]['scores'])
             error += results[experiment['name']]['error']
         else:
-            return cache.cache.WORST, [], None
+            return cache.cache.WORST, [], None, individual
 
     if numpy.any(numpy.isnan(scores)):
         multiprocessing.get_logger().info("NaN found for %s %s", individual, scores)

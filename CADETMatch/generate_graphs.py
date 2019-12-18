@@ -288,9 +288,9 @@ def plotExperiments(args):
         results['simulation'] = simulation
 
         for idx, unit in enumerate(units_used):
-            graph_simulation_unit(simulation, unit, fig.add_subplot(numPlots, idx+1, 1))
+            graph_simulation_unit(simulation, unit, fig.add_subplot(numPlots, 1, idx+1))
 
-        graphIdx = 2
+        graphIdx = idx + 2
         for idx, feature in enumerate(experiment['features']):
             featureName = feature['name']
             featureType = feature['type']
@@ -309,7 +309,7 @@ def plotExperiments(args):
                                'similarityCross', 'similarityCrossDecay', 'breakthroughCross', 'SSE', 'LogSSE', 'breakthroughHybrid', 'breakthroughHybrid2',
                                'Shape', 'ShapeDecay', 'Dextran', 'DextranAngle', 'DextranTest', 'DextranQuad',
                                'Dextran3', 'DextranShape', 'ShapeDecaySimple', 'ShapeSimple', 'DextranSSE',
-                               'ShapeFront', 'ShapeBack'):
+                               'ShapeFront', 'ShapeBack', 'ShapeNoDer', 'ShapeDecayNoDer'):
                 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 graph.plot(sim_time, sim_value, 'r--', label='Simulation')

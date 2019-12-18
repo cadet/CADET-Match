@@ -74,15 +74,7 @@
 			"features": [
 				{
 					"name": "PulseFront",
-					"type": "ShapeFront",
-                    "start":250,
-                    "stop":450
-				},
-                {
-					"name": "PulseBack",
-					"type": "ShapeBack",
-                    "start":750,
-                    "stop":900
+					"type": "ShapeDecayNoDer"
 				}
 			]
 		}
