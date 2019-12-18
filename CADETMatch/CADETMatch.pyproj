@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Downloads\dataset\bypass\Acetone\mcmc_results_better\mcmc_refine\MCMC_better.json" 6</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Downloads\dataset\bypass\Acetone\MCMC_better.json" 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>

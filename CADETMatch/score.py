@@ -74,43 +74,15 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
     
     return pear_corr(pear[0]), diff_time
 
-def sse_spline(exp_time_values, sim_data_values, exp_data_values):
-
-    spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)
-
-    exp_time_values = numpy.array(exp_time_values)
-    exp_data_values = numpy.array(exp_data_values)
-
-    def goal_sse(offset):
-        sim_data_values_copy = spline(exp_time_values - offset)
-
-        sse = numpy.sum((exp_data_values - sim_data_values_copy)**2)
-
-        return sse
-
-    diff = exp_time_values[-1] - exp_time_values[0]
-
-    sobol = SALib.sample.sobol_sequence.sample(100, 1)    
-    sobol = sobol * (2*diff) - diff
-    result_evo = scipy.optimize.differential_evolution(goal_pearson, ((-diff, diff),), polish=True, popsize=100, init=sobol)
-
-    if result_evo.success:
-        diff_time = -result_evo.x[0]
-        sse = -result_evo.fun
-        return sse, diff_time
-    else:
-        return sys.float_info.max, diff
-
 def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     #resample to a much smaller time step to get a more precise offset
     dt = 1e-2
     times = numpy.arange(exp_time_values[0], exp_time_values[-1], dt)
     
     sim_resample = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)(times)
-    exp_resample = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, exp_data_values, ext=3)(times)
+    exp_resample = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, exp_data_values, ext=3)(times)    
     
-    
-    corr = scipy.signal.correlate(exp_resample, sim_resample)/(numpy.linalg.norm(sim_resample) * numpy.linalg.norm(exp_resample))
+    corr = scipy.signal.correlate(exp_resample, sim_resample)  #/(numpy.linalg.norm(sim_resample) * numpy.linalg.norm(exp_resample))
 
     index = numpy.argmax(corr)
     

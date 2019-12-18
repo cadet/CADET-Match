@@ -5,6 +5,12 @@ import random
 import CADETMatch.pareto as pareto
 import array
 
+import scipy.special
+from deap import tools
+import numpy
+
+import multiprocessing
+
 name = "NSGA3"
 
 def run(cache, tools, creator):
@@ -36,7 +42,7 @@ def run(cache, tools, creator):
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
-    ref_points = tools.uniform_reference_points(cache.numGoals, 4)
+    ref_points = generate_reference_points(cache.numGoals)
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
     creator.create("Individual", array.array, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None)
 
@@ -60,10 +66,35 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
     cache.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
     cache.toolbox.register("force_mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
 
-    cache.toolbox.register("select", tools.selNSGA3, ref_points=ref_points)
+    cache.toolbox.register("select", tools.selNSGA3WithMemory(ref_points))
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
     cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
     cache.toolbox.register('grad_search', grad_search)
 
     cache.toolbox.register('map', map_function)
 
+
+def num_ref_points(n,k):
+    return scipy.special.comb(n+k-1,k, exact=True)
+
+def find_max_p(ndim, max_size, max_p):
+    for p in range(max_p, 0, -1):
+        if num_ref_points(ndim, p) <= max_size:
+            break
+    return p
+
+def find_ref_point_setup(ndim, max_size, inner):
+    p = [find_max_p(ndim, max_size, 32),]
+    if p[0] < inner:
+        p.append(p[0]-1)
+    return p
+
+def generate_reference_points(ndim, max_size=10000, inner=4):
+    P = find_ref_point_setup(ndim, max_size, inner)
+    SCALES = [1.0, 0.5]
+    ref_points = [tools.uniform_reference_points(ndim, p, s) for p, s in zip(P, SCALES)]
+    ref_points = numpy.concatenate(ref_points, axis=0)
+    _, uniques = numpy.unique(ref_points, axis=0, return_index=True)
+    ref_points = ref_points[uniques]
+    multiprocessing.get_logger().info("Reference points chosen P = %s  with shape %s", P, ref_points.shape)
+    return ref_points

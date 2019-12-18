@@ -69,7 +69,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
     else:
         checkOffspring = (ind for ind in offspring if util.product_score(ind.fitness.values) > gradCheck)
     checkOffspring = filterOverlapArea(cache, checkOffspring)
-    newOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad, checkOffspring)
+    newOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad, map(tuple, checkOffspring))
         
     temp = []
     csv_lines = []
@@ -282,7 +282,7 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
     lookup = util.create_lookup(checkOffspring)
 
     for fit, csv_line, results, individual in temp:
-        ind = pop_lookup(lookup, individual)
+        ind = util.pop_lookup(lookup, individual)
         temp_area_total = 0.0
         temp_area_overlap = 0.0
         if results is not None:
