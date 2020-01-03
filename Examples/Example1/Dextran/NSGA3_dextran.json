@@ -13,10 +13,10 @@
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
   "generations": 1000,
-  "population": 10,
+  "population": 100,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "stallGenerations": 20,
+  "stallGenerations": 30,
   "progressCorrect": 2,
   "normalizeOutput":1,
   "continueMCMC":0,
@@ -41,21 +41,6 @@
       "max": 0.9
     }
   ],
-  "kde_synthetic":[
-      {
-        "file_path":"dextran_pulse.h5",
-        "experimental_csv":"dextran_pulse.csv",
-        "name":"main",
-        "units":[2],
-        "delay":[0.0, 2.0],
-        "flow":[1.0, 0.06],
-        "load":[1.0, 0.03],
-        "error_slope":[1.0, 0.001],
-        "error_base":100.0,
-        "base":100.0,
-        "count":4000
-      }
-  ],
   "experiments": [
     {
       "CSV": "dextran_pulse.csv",
@@ -63,15 +48,6 @@
       "HDF5": "dextran_pulse.h5",
       "name": "main",
       "timeout": 30.0,
-      "gradsetup":[
-        {
-        "unit":1,
-        "comps":[0],
-        "csv":"dextran_pulse.csv",
-        "start":0,
-        "stop":500
-        }
-      ],
       "features": [
         {
             "name": "Pulse",

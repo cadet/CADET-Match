@@ -40,16 +40,27 @@ def bandwidth_score(bw, data, store):
     bandwidth = 10**bw[0]
     kde_bw = KernelDensity(kernel='gaussian', bandwidth=bandwidth, atol=bw_tol)
     scores = cross_val_score(kde_bw, data, cv=3)
-    store.append( [bandwidth, -max(scores)] )
-    return -max(scores)
+    mean = -numpy.mean(scores)
+    store.append( [bandwidth, mean] )
+    return mean
 
 def get_bandwidth(scores, cache):
     store = []
+    
+    bw_sample = numpy.linspace(-5, 2, 20)
+    
+    bw_score = [bandwidth_score([bw,], scores, store) for bw in bw_sample]
+    
+    idx = numpy.argmin(bw_score)
+    
+    idx_min = max(0, idx-2)
+    idx_max = min(len(bw_sample) -1, idx+2)
+    
+    bw_start = bw_sample[idx]
 
-    result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-4, 1),], 
-                    args = (scores,store,), updating='deferred', workers=cache.toolbox.map, disp=True,
-                    popsize=100)
-    bandwidth = 10**result.x[0]
+    result = scipy.optimize.minimize(bandwidth_score, 10**bw_start, bounds = [(bw_sample[idx_min], bw_sample[idx_max]),], 
+                    args = (scores,store,), method='powell')
+    bandwidth = 10**result.x
     multiprocessing.get_logger().info("selected bandwidth %s", bandwidth)
 
     store = numpy.array(store)
@@ -156,7 +167,6 @@ def synthetic_error_simulation(json_path):
     experiment_failed = False
 
     for experiment in cache.cache.settings['kde_synthetic']:
-        file_path = experiment['file_path']
         delay_settings = experiment['delay']
         flow_settings = experiment['flow']
         load_settings = experiment['load']
@@ -166,14 +176,17 @@ def synthetic_error_simulation(json_path):
         units = experiment['units']
         name = experiment['name']
 
-        dir_base = Path(cache.cache.settings.get('baseDir'))
-        file = dir_base / file_path
-
         data = numpy.loadtxt(experimental_csv, delimiter=',')
         times = data[:,0]
 
+        resultsDir = cache.cache.settings['resultsDir']
+        if 'resultsDirOriginal' in cache.cache.settings:
+            resultsDir = Path(cache.cache.settings['resultsDirOriginal'])
+
+        template_path = resultsDir / "misc" / ("template_%s_base.h5" % name)
+
         temp = Cadet()
-        temp.filename = file.as_posix()
+        temp.filename = template_path.as_posix()
         temp.load()
 
         util.setupSimulation(temp, times, cache.cache.target[name]['smallest_peak'], cache.cache)
@@ -194,6 +207,8 @@ def synthetic_error_simulation(json_path):
         error_delay = Cadet(temp.root)
 
         delays = numpy.random.uniform(delay_settings[0], delay_settings[1], nsec)
+
+        #print("delays", delay_settings, delays, nsec)
     
         synthetic_error.pump_delay(error_delay, delays)
 

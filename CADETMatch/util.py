@@ -38,6 +38,7 @@ import CADETMatch.loggerwriter as loggerwriter
 import CADETMatch.synthetic_error as synthetic_error
 
 import logging
+import os
 
 #smallest number close to 0, used to make sure we don't divide by zero
 smallest = numpy.finfo(1.0).tiny
@@ -1410,3 +1411,27 @@ def pop_lookup(lookup, key):
     if not temp:
         del lookup[tuple(key)]
     return data
+
+def process_fraction_csv(csv_file):
+    data = pandas.read_csv(csv_file)
+    rows, cols = data.shape
+
+    data_headers = data.columns.values.tolist()   
+
+    start_times = numpy.array(data.iloc[:, 0])
+    stop_times = numpy.array(data.iloc[:, 1])
+    components = [int(i) for i in data_headers[2:]]
+    fractions = data.iloc[:, 2:]
+
+    return start_times, stop_times, components, fractions
+
+def fractionate_sim(start_times, stop_times, components, simulation, unit):
+    times =  simulation.root.output.solution.solution_times
+
+    fracs = {}
+    for component in components:
+        sim_value = simulation.root.output.solution[unit]["solution_outlet_comp_%03d" % component]
+
+        fracs[component] = fractionate(start_times, stop_times, times, sim_value)
+
+    return fracs

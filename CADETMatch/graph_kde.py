@@ -65,7 +65,7 @@ def main():
         time = times[key.split('_unit', 1)[0]]
         plt.figure(figsize=[10,10])
         row, col = value.shape
-        alpha = 1.0/row
+        alpha = max(1.0/row, 0.01)
         plt.plot(time, value.T, 'g', alpha=alpha)
         plt.xlabel('time')
         plt.ylabel('concentration')

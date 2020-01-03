@@ -6,6 +6,7 @@ import numpy.linalg
 from addict import Dict
 import sys
 import CADETMatch.smoothing as smoothing
+import multiprocessing
 
 name = "DextranSSE"
 settings = Dict()
@@ -52,16 +53,21 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     s, crit_fs = smoothing.find_smoothing_factors(selectedTimes, selectedValues, name, cache)
     values = smoothing.smooth_data_derivative(selectedTimes, selectedValues, crit_fs, s)
     
+    smooth_value = smoothing.smooth_data(selectedTimes, selectedValues, crit_fs, s)
+    
     max_index = numpy.argmax(values)
     max_time = selectedTimes[max_index]
-    max_value = selectedValues[max_index]
+    max_value = smooth_value[max_index]
 
-    min_index = numpy.argmax(selectedValues >= 1e-3*max_value)
+    min_index = numpy.argmax(smooth_value >= 1e-3*max_value)
     min_time = selectedTimes[min_index]
-    min_value = selectedValues[min_index]
+    min_value = smooth_value[min_index]    
 
-    exp_data_zero = numpy.zeros(len(selectedValues))
-    exp_data_zero[min_index:max_index+1] = selectedValues[min_index:max_index+1]
+    exp_data_zero = numpy.zeros(len(smooth_value))
+    exp_data_zero[min_index:max_index+1] = smooth_value[min_index:max_index+1]
+
+    multiprocessing.get_logger().info("Dextran %s  start: %s   stop: %s  max value: %s", name, 
+                                      min_time, max_time, max_value)
 
     temp['min_time'] = feature['start']
     temp['max_time'] = feature['stop']
@@ -71,6 +77,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp['peak_max'] = max_value
     temp['smoothing_factor'] = s
     temp['critical_frequency'] = crit_fs
+    temp['smooth_value'] = smooth_value
     return temp
 
 def headers(experimentName, feature):
