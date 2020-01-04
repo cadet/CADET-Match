@@ -63,11 +63,12 @@ def get_bandwidth(scores, cache):
     return bandwidth, store
 
 def mirror(data):
-    data_min = numpy.max(data,0) - data
+    data_max = numpy.max(data,0)
+    data_min = data_max - data    
     data_mask = numpy.ma.masked_equal(data_min, 0.0, copy=False)
     min_value = data_mask.min(axis=0)
     
-    data_mirror = 1 + 1 - numpy.copy(data) + min_value
+    data_mirror = data_max + data_max - numpy.copy(data) + min_value
     full_data = numpy.vstack([data_mirror, data])
     
     return full_data

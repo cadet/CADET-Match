@@ -90,7 +90,7 @@ def log_likelihood(individual, json_path):
 
 def log_posterior_vectorize(population, json_path, cache, halloffame, meta_hof, grad_hof, result_data, writer, csvfile):
     results = cache.toolbox.map(log_posterior, ( (population[i], json_path) for i in range(len(population))))
-    results = process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csvfile)
+    results = process(population, cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csvfile)
     return results
 
 def log_posterior(x):
@@ -772,7 +772,7 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register('map', map_function)
 
-def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csv_file):
+def process(population_order, cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csv_file):
     if 'gen' not in process.__dict__:
         process.gen = 0
 
@@ -782,20 +782,27 @@ def process(cache, halloffame, meta_hof, grad_hof, result_data, results, writer,
     if 'generation_start' not in process.__dict__:
         process.generation_start = time.time()
 
-    population = []
-    fitnesses = []
+    population_lookup = {}
+    fitnesses_lookup = {}
 
-    log_likelihoods = []
+    log_likelihoods_lookup = {}
 
     for ll, theta, fit, csv_line, result, individual in results:
-        log_likelihoods.append(float(ll))
+        log_likelihoods_lookup[tuple(individual)] = float(ll)
         if result is not None:
             parameters = theta
-            fitnesses.append( (fit, csv_line, result, tuple(individual)) )
+            fitnesses_lookup[tuple(individual)] = (fit, csv_line, result, tuple(individual))
 
             ind = cache.toolbox.individual_guess(parameters)
-            population.append(ind)
-            result_data['mcmc_score'].append(ll)
+            population_lookup[tuple(individual)] = ind
+            
+            #result_data['mcmc_score'].append(ll)
+
+    #everything above is async (unordered) and needs to be reordered based on the population_order
+    population = [population_lookup[tuple(row)] for row in population_order]
+    fitnesses = [fitnesses_lookup[tuple(row)] for row in population_order]
+    log_likelihoods = [log_likelihoods_lookup[tuple(row)] for row in population_order]
+
 
     stalled, stallWarn, progressWarn = util.process_population(cache.toolbox, cache, population, 
                                                           fitnesses, writer, csv_file, 
