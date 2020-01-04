@@ -36,7 +36,7 @@
                 1e-8
             ],
             "base": 100.0,
-            "count": 10000
+            "count": 1000
 		}
 	],
   "parameters": [

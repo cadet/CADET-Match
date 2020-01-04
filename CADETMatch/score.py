@@ -74,9 +74,27 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
     
     return pear_corr(pear[0]), diff_time
 
+def refine_time(dt, exp_time_values, sim_data_values, exp_data_values):
+    "refine the time using powells method (gradient free) system is not smooth enough for gradient to work well"
+    spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)
+
+    exp_time_values = numpy.array(exp_time_values)
+    exp_data_values = numpy.array(exp_data_values)
+    
+    def goal_sse(offset):
+        sim_data_values_copy = spline(exp_time_values - offset)
+
+        sse = numpy.sum((exp_data_values - sim_data_values_copy)**2)
+
+        return sse
+    
+    result = scipy.optimize.minimize(goal_sse, dt, method='powell')
+    
+    return result.x
+
 def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     #resample to a much smaller time step to get a more precise offset
-    dt = 1e-2
+    dt = 1e-1
     times = numpy.arange(exp_time_values[0], exp_time_values[-1], dt)
     
     sim_resample = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)(times)
@@ -86,7 +104,10 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
 
     index = numpy.argmax(corr)
     
-    dt = (index - len(times) + 1) * dt
+    dt_pre = (index - len(times) + 1) * dt
+
+    #refine the time offset using a deterministic method (powells)
+    dt = refine_time(dt_pre, exp_time_values, sim_data_values, exp_data_values)
     
     #calculate pearson correlation at the new time
     spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)

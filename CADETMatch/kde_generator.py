@@ -53,13 +53,9 @@ def get_bandwidth(scores, cache):
     
     idx = numpy.argmin(bw_score)
     
-    idx_min = max(0, idx-2)
-    idx_max = min(len(bw_sample) -1, idx+2)
-    
     bw_start = bw_sample[idx]
 
-    result = scipy.optimize.minimize(bandwidth_score, 10**bw_start, bounds = [(bw_sample[idx_min], bw_sample[idx_max]),], 
-                    args = (scores,store,), method='powell')
+    result = scipy.optimize.minimize(bandwidth_score, 10**bw_start, args = (scores,store,), method='powell')
     bandwidth = 10**result.x
     multiprocessing.get_logger().info("selected bandwidth %s", bandwidth)
 
@@ -170,7 +166,6 @@ def synthetic_error_simulation(json_path):
         delay_settings = experiment['delay']
         flow_settings = experiment['flow']
         load_settings = experiment['load']
-        count_settings = experiment['count']
         experimental_csv = experiment['experimental_csv']
         uv_noise = experiment['uv_noise']
         units = experiment['units']
@@ -179,11 +174,14 @@ def synthetic_error_simulation(json_path):
         data = numpy.loadtxt(experimental_csv, delimiter=',')
         times = data[:,0]
 
-        resultsDir = cache.cache.settings['resultsDir']
-        if 'resultsDirOriginal' in cache.cache.settings:
-            resultsDir = Path(cache.cache.settings['resultsDirOriginal'])
+        if 'file_path' in experiment:
+            template_path = Path(experiment['file_path'])
+        else:
+            resultsDir = cache.cache.settings['resultsDir']
+            if 'resultsDirOriginal' in cache.cache.settings:
+                resultsDir = Path(cache.cache.settings['resultsDirOriginal'])
 
-        template_path = resultsDir / "misc" / ("template_%s_base.h5" % name)
+            template_path = resultsDir / "misc" / ("template_%s_base.h5" % name)
 
         temp = Cadet()
         temp.filename = template_path.as_posix()
@@ -207,8 +205,6 @@ def synthetic_error_simulation(json_path):
         error_delay = Cadet(temp.root)
 
         delays = numpy.random.uniform(delay_settings[0], delay_settings[1], nsec)
-
-        #print("delays", delay_settings, delays, nsec)
     
         synthetic_error.pump_delay(error_delay, delays)
 
@@ -219,7 +215,6 @@ def synthetic_error_simulation(json_path):
         load = numpy.random.normal(load_settings[0], load_settings[1], error_delay.root.input.solver.sections.nsec)
     
         synthetic_error.error_load(error_delay, load)
-
 
         exp_info = None
         for exp in cache.cache.settings['experiments']:
