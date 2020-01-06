@@ -7,7 +7,7 @@
     "checkpointFile": "check",
     "searchMethod": "NSGA3",
     "population": 12,
-    "finalGradRefinement": 0,
+    "finalGradRefinement": 1,
     "stallGenerations": 10,
     "continueMCMC": 1,
     "normalizeOutput": 1,
