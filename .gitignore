@@ -315,3 +315,7 @@ __pycache__/
 /Examples/MCMC/Dextran/nsga3_mcmc_6_emcee6
 /CADETMatch.pyperf
 *.pyperf
+/Examples/MCMC/Dextran/nsga3_mcmc_6_emcee6_decay
+/Examples/MCMC/Dextran/nsga3_mcmc_6_emcee6_fast
+/Examples/MCMC/Dextran/dextran_pulse_fast.csv
+/Examples/MCMC/Dextran/dextran_pulse_high.h5

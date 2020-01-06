@@ -162,6 +162,11 @@ def synthetic_error_simulation(json_path):
     outputs = {}
     simulations = {}
     experiment_failed = False
+    
+    delays_store = []
+    flows_store = []
+    load_store = []
+    uv_store = {}
 
     for experiment in cache.cache.settings['kde_synthetic']:
         delay_settings = experiment['delay']
@@ -192,6 +197,13 @@ def synthetic_error_simulation(json_path):
 
         nsec = temp.root.input.solver.sections.nsec
 
+        for unit in units:
+            unit_name = 'unit_%03d' % unit
+            for comp in range(temp.root.input.model[unit_name].ncomp):
+                comp_name = 'solution_outlet_comp_%03d' % comp
+                error_uv = numpy.random.normal(uv_noise[0], uv_noise[1], len(temp.root.input.solver.user_solution_times))
+                uv_store['%s_%s_%s' % (name, unit, comp)] = error_uv
+
         def post_function(simulation):
             #baseline drift need to redo this
             #error_slope = numpy.random.normal(error_slope_settings[0], error_slope_settings[1], 1)[0]
@@ -200,20 +212,23 @@ def synthetic_error_simulation(json_path):
                 unit_name = 'unit_%03d' % unit
                 for comp in range(simulation.root.input.model[unit_name].ncomp):
                     comp_name = 'solution_outlet_comp_%03d' % comp
-                    error_uv = numpy.random.normal(uv_noise[0], uv_noise[1], len(simulation.root.output.solution[unit_name][comp_name]))
+                    error_uv = uv_store['%s_%s_%s' % (name, unit, comp)]
                     simulation.root.output.solution[unit_name][comp_name] = simulation.root.output.solution[unit_name][comp_name] + error_uv
     
         error_delay = Cadet(temp.root)
 
         delays = numpy.random.uniform(delay_settings[0], delay_settings[1], nsec)
+        delays_store.extend(delays)
     
         synthetic_error.pump_delay(error_delay, delays)
 
         flow = numpy.random.normal(flow_settings[0], flow_settings[1], error_delay.root.input.solver.sections.nsec)
+        flows_store.extend(flow)
     
         synthetic_error.error_flow(error_delay, flow)
     
         load = numpy.random.normal(load_settings[0], load_settings[1], error_delay.root.input.solver.sections.nsec)
+        load_store.extend(load)
     
         synthetic_error.error_load(error_delay, load)
 
@@ -238,8 +253,15 @@ def synthetic_error_simulation(json_path):
             experiment_failed = True
 
     if experiment_failed:
-        return None, None, None
-    return scores, simulations, outputs
+        return None, None, None, None
+
+    errors = {}
+    errors['delays'] = delays_store
+    errors['flows'] = flows_store
+    errors['load'] = load_store
+    errors['uv_store'] = uv_store
+
+    return scores, simulations, outputs, errors
 
 def generate_synthetic_error(cache):
     if 'kde_synthetic' in cache.settings:
@@ -248,9 +270,23 @@ def generate_synthetic_error(cache):
         scores_all = []
         times = {}
         outputs_all = {}
+        
+        delays_all = []
+        flows_all = []
+        load_all = []
+        uv_store_all = {}
 
-        for scores, simulations, outputs in cache.toolbox.map(synthetic_error_simulation, [cache.json_path] * count_settings):
+        for scores, simulations, outputs, errors in cache.toolbox.map(synthetic_error_simulation, [cache.json_path] * count_settings):
             if scores and simulations and outputs:
+
+                delays_all.append(errors['delays'])
+                flows_all.append(errors['flows'])
+                load_all.append(errors['load'])
+
+                for key,value in errors['uv_store'].items():
+                    uv = uv_store_all.get(key, [])
+                    uv.append(value)
+                    uv_store_all[key] = uv 
 
                 scores_all.append(scores)
 
@@ -279,8 +315,20 @@ def generate_synthetic_error(cache):
         for time_name, time in times.items():
             kde_data.root['%s_time' % time_name] = time
 
+        kde_data.root.errors.flows = convert_to_array(flows_all)
+        kde_data.root.errors.delays = convert_to_array(delays_all)
+        kde_data.root.errors.load = convert_to_array(load_all)
+
+        for key,value in uv_store_all.items():
+            kde_data.root.errors[key] = numpy.array(value)
+
         kde_data.save()
                                
         return scores
 
     return None, None
+
+def convert_to_array(seq):
+    "this converts a sequence of arrays to a single numpy array and pads uneven rows with 0"
+    max_len = numpy.max([len(a) for a in seq])
+    return numpy.asarray([numpy.pad(a, (0, max_len - len(a)), 'constant', constant_values=0) for a in seq])

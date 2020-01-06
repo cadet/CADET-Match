@@ -2,6 +2,7 @@ import CADETMatch.util as util
 import CADETMatch.calc_coeff as calc_coeff
 import numpy
 from addict import Dict
+import scipy
 
 name = "AbsoluteTime"
 settings = Dict()
@@ -19,11 +20,13 @@ def run(sim_data, feature):
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     
     ys = [0.0, 1.0]
-    xs = [0.0, sim_time_values[numpy.argmax(exp_data_values)]]
+    xs = [0.0, feature['exp_time']]
 
     a, b = calc_coeff.linear_coeff(xs[0], ys[0], xs[1], ys[1])
+
+    sim_time = find_time(sim_time_values, sim_data_values)
     
-    value = calc_coeff.linear(sim_time_values[numpy.argmax(sim_data_values)], a, b)
+    value = calc_coeff.linear(sim_time, a, b)
 
     temp = [value,]
 
@@ -31,11 +34,31 @@ def run(sim_data, feature):
             sim_time_values, sim_data_values, exp_data_values, [1.0 - i for i in temp])
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
-    return {}
+    exp_time = find_time(selectedTimes, selectedValues)
+
+    temp = {}
+    temp['exp_time'] = exp_time
+    return temp
 
 def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
     temp = ["%s_Time" % name]
     return temp
+
+def find_time(times, values):
+    spline = scipy.interpolate.InterpolatedUnivariateSpline(times, values, ext=3)
+    
+    max_value = max(values)
+    search_value = 0.9 * max_value
+    
+    def goal(time):
+        return abs(spline(time) - search_value)
+    
+    time_index = numpy.argmax(values >= search_value)
+    time_search = times[time_index]
+    
+    result = scipy.optimize.minimize(goal, time_search, method='powell')
+    
+    return float(result.x)
 
 

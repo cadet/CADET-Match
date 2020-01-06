@@ -323,4 +323,11 @@ def pear_corr(cr):
     #handle the case where a nan is returned
     if numpy.isnan(cr):
         return 0.0
-    return (1+cr)/2
+    if cr < 0.0:
+        return 0.0
+    else:
+        return cr
+
+    #so far in looking cr has never been negative and the scores mostly just sit in the 0.8 to 0.99999 range
+    #I am not even sure if cr could be negative with chromatography (indicating inverse relationship between simulation and experiment)
+    #return (1.0+cr)/2.0

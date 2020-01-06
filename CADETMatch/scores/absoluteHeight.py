@@ -18,11 +18,11 @@ def run(sim_data, feature):
     sim_time_values, sim_data_values = util.get_times_values(sim_data['simulation'], feature)
     
     ys = [0.0, 1.0]
-    xs = [0.0, max(exp_data_values)]
+    xs = [0.0, max(exp_data_values)*0.9]
 
     a, b = calc_coeff.linear_coeff(xs[0], ys[0], xs[1], ys[1])
     
-    value = calc_coeff.linear(max(sim_data_values), a, b)
+    value = calc_coeff.linear(max(sim_data_values)*0.9, a, b)
 
     temp = [value,]
 
