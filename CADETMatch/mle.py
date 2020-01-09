@@ -34,6 +34,8 @@ cm_plot = matplotlib.cm.gist_rainbow
 import logging
 import CADETMatch.loggerwriter as loggerwriter
 
+import itertools
+
 def get_color(idx, max_colors, cmap):
     return cmap(1.*float(idx)/max_colors)
 
@@ -51,13 +53,21 @@ plt.rc('legend', fontsize=size)    # legend fontsize
 plt.rc('figure', titlesize=size)  # fontsize of the figure title
 plt.rc('figure', autolayout=True)
 
-def reduce_data(data, size):
+atol = 1e-3
+rtol = 1e-3
+
+def reduce_data(data, size, bw_size):
+    #size reduces data for normal usage, bw_size reduces the size just for bandwidth estimation
     lb, ub = numpy.percentile(data, [5, 95], 0)
     selected = (data >= lb) & (data <= ub)
 
     selected = numpy.all(selected,1)
 
     data = data[selected,:]
+
+    scaler = preprocessing.StandardScaler().fit(data)
+
+    data = scaler.transform(data)
 
     shape = data.shape
 
@@ -67,18 +77,23 @@ def reduce_data(data, size):
     else:
         data_reduced = data
 
-    scaler = preprocessing.StandardScaler().fit(data)
-    data = scaler.transform(data)
+    if bw_size < data.shape[0]:
+        indexes = numpy.random.choice(data.shape[0], bw_size, replace=False)
+        bw_data_reduced = data[indexes]
+    else:
+        bw_data_reduced = data
 
-    data_reduced = scaler.transform(data_reduced)
+    return data, data_reduced, bw_data_reduced, scaler
 
-    return data, data_reduced, scaler
+def bandwidth_score_map(x):
+    return bandwidth_score([x[0],], x[1])
 
-def bandwidth_score(bw, data, kernel, atol):
+def bandwidth_score(bw, data):
     bandwidth = 10**bw[0]
-    kde_bw = KernelDensity(kernel=kernel, bandwidth=bandwidth, atol=atol)
+    kde_bw = KernelDensity(kernel='gaussian', bandwidth=bandwidth, atol=atol, rtol=rtol)
     scores = cross_val_score(kde_bw, data, cv=3)
-    return -max(scores)
+    mean = -numpy.mean(scores)
+    return mean
 
 def goal_kde(x, kde):
     test_value = numpy.array(x).reshape(1, -1)
@@ -86,11 +101,8 @@ def goal_kde(x, kde):
     return -score[0]
 
 def get_mle(data):
-    atol = 1e-4
-    kernel = 'gaussian'
-
     multiprocessing.get_logger().info("setting up scaler and reducing data")
-    data, data_reduced, scaler = reduce_data(data, 32000)
+    data, data_reduced, data_reduced_bw, scaler = reduce_data(data, 32000, 1000)
     multiprocessing.get_logger().info("finished setting up scaler and reducing data")
     multiprocessing.get_logger().info('data_reduced shape %s', data_reduced.shape)
 
@@ -100,20 +112,21 @@ def get_mle(data):
     BOUND_LOW_trans = list(BOUND_LOW_num)
     BOUND_UP_trans = list(BOUND_UP_num)    
 
-    BOUND_LOW_real = [0.0] * len(BOUND_LOW_trans)
-    BOUND_UP_real = [1.0] * len(BOUND_UP_trans)
-
     map_function = util.getMapFunction()
 
-    result = scipy.optimize.differential_evolution(bandwidth_score, bounds = [(-3, 1),], 
-                                               args = (data_reduced, kernel, atol), 
-                                               updating='deferred', workers=map_function, disp=True,
-                                               popsize=50)
-    bw = 10**result.x[0]
+    bw_sample = numpy.linspace(-3, 0, 20)    
+    
+    args = zip(bw_sample, itertools.repeat(data_reduced_bw),)
+    bw_score = list(map_function(bandwidth_score_map, args))
+
+    idx = numpy.argmin(bw_score)    
+    bw_start = bw_sample[idx]
+    result = scipy.optimize.minimize(bandwidth_score, bw_start, args = (data_reduced_bw,), method='powell')
+    bw = 10**result.x
     
     multiprocessing.get_logger().info("mle bandwidth: %.2g", bw)
 
-    kde_ga = KernelDensity(kernel=kernel, bandwidth=bw, atol=atol)
+    kde_ga = KernelDensity(kernel='gaussian', bandwidth=bw, atol=atol, rtol=rtol)
 
     multiprocessing.get_logger().info('fitting kde with mle bandwidth')
     kde_ga = kde_ga.fit(data_reduced)
@@ -121,8 +134,11 @@ def get_mle(data):
         
     result_kde = scipy.optimize.differential_evolution(goal_kde, bounds = list(zip(BOUND_LOW_trans, BOUND_UP_trans)), 
                                                args = (kde_ga,), 
-                                               updating='deferred', workers=map_function, disp=True,
-                                               popsize=50)
+                                               updating='deferred', disp=True,
+                                               popsize=100)
+
+    #result_kde_powell = scipy.optimize.minimize(goal_kde, result_kde.x, args = (kde_ga,), method='powell')
+
     multiprocessing.get_logger().info('finished mle search')
 
     x = list(scaler.inverse_transform(numpy.array(result_kde.x).reshape(1, -1))[0])
@@ -152,7 +168,7 @@ def process_mle(chain, gen, cache):
     if mle_h5.exists():
         h5.load()
 
-        if h5.root.generations[-1] == gen:
+        if 0: #h5.root.generations[-1] == gen:
             multiprocessing.get_logger().info('new information is not yet available and mle will quit')
             return
 
@@ -194,7 +210,7 @@ def process_mle(chain, gen, cache):
     fitnesses = list(map_function(fitness, temp))
 
     simulations = {}
-    for scores, csv_record, results in fitnesses:
+    for scores, csv_record, results, individual in fitnesses:
         for name, value in results.items():
             sims = simulations.get(name, [])
             sims.append(value['simulation'])
@@ -232,7 +248,9 @@ def plot_mle(simulations, cache, labels):
         file_name = '%s_stats.png' % experimentName
         dst = mcmc_dir / file_name
 
-        numPlotsSeq = [1]
+        units_used = cache.target[experimentName]['units_used']
+
+        numPlotsSeq = [len(units_used)]
         #Shape and ShapeDecay have a chromatogram + derivative
         for feature in experiment['features']:
             if feature['type'] in ('Shape', 'ShapeDecay', 'ShapeFront', 'ShapeBack'):
@@ -247,10 +265,11 @@ def plot_mle(simulations, cache, labels):
         exp_time = target[experimentName]['time']
         exp_value = target[experimentName]['valueFactor']
 
-        fig = figure.Figure(figsize=[10, numPlots*10])
+        fig = figure.Figure(figsize=[15, 15*numPlots])
         canvas = FigureCanvas(fig)
 
-        graph_simulations(simulations[experimentName], labels, fig.add_subplot(numPlots, 1, 1))
+        for idx, unit in enumerate(units_used):
+            graph_simulations(simulations[experimentName], labels, unit, fig.add_subplot(numPlots, 1, idx+1))
 
         graphIdx = 2
         for idx, feature in enumerate(experiment['features']):
@@ -312,7 +331,7 @@ def plot_mle(simulations, cache, labels):
 
         fig.savefig(str(dst)) 
 
-def graph_simulations(simulations, simulation_labels, graph):
+def graph_simulations(simulations, simulation_labels, unit, graph):
     linestyles = ['-', '--', '-.', ':']
     for idx_sim, (simulation, label_sim) in enumerate(zip(simulations, simulation_labels)):
 
@@ -325,14 +344,18 @@ def graph_simulations(simulations, simulation_labels, graph):
 
         solution_times = simulation.root.output.solution.solution_times
 
-        hasColumn = isinstance(simulation.root.output.solution.unit_001.solution_outlet_comp_000, Dict)
+        hasColumn = any('column' in i for i in simulation.root.output.solution[unit].keys())
+        hasPort = any('port' in i for i in simulation.root.output.solution[unit].keys())
 
         if hasColumn:
             for i in range(ncomp):
-                comps.append(simulation.root.output.solution.unit_001['solution_column_outlet_comp_%03d' % i])
+                comps.append(simulation.root.output.solution[unit]['solution_column_outlet_comp_%03d' % i])
+        elif hasPort:
+            for i in range(ncomp):
+                comps.append(simulation.root.output.solution[unit]['solution_outlet_port_000_comp_%03d' % i])
         else:
             for i in range(ncomp):
-                comps.append(simulation.root.output.solution.unit_001['solution_outlet_comp_%03d' % i])
+                comps.append(simulation.root.output.solution[unit]['solution_outlet_comp_%03d' % i])
 
         if hasSalt:
             graph.set_title("Output")

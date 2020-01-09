@@ -151,7 +151,7 @@ def genRandomChoice(cache, chain, kde, scaler):
     mcmc_selected_transformed = []
     mcmc_selected_score = []
 
-    for (fit, csv_line, result) in fitnesses:        
+    for (fit, csv_line, result, individual) in fitnesses:        
         if result is not None:
             mcmc_selected_score.append(tuple(fit))
             for value in result.values():

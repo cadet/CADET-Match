@@ -36,9 +36,12 @@ import joblib
 import subprocess
 import sys
 
+atol = 1e-3
+rtol = 1e-3
+
 def bandwidth_score(bw, data, store):
     bandwidth = 10**bw[0]
-    kde_bw = KernelDensity(kernel='gaussian', bandwidth=bandwidth, atol=bw_tol)
+    kde_bw = KernelDensity(kernel='gaussian', bandwidth=bandwidth, atol=atol, rtol=rtol)
     scores = cross_val_score(kde_bw, data, cv=3)
     mean = -numpy.mean(scores)
     store.append( [bandwidth, mean] )
@@ -47,7 +50,7 @@ def bandwidth_score(bw, data, store):
 def get_bandwidth(scores, cache):
     store = []
     
-    bw_sample = numpy.linspace(-5, 2, 20)
+    bw_sample = numpy.linspace(-3, 0, 20)
     
     bw_score = [bandwidth_score([bw,], scores, store) for bw in bw_sample]
     
@@ -55,7 +58,7 @@ def get_bandwidth(scores, cache):
     
     bw_start = bw_sample[idx]
 
-    result = scipy.optimize.minimize(bandwidth_score, 10**bw_start, args = (scores,store,), method='powell')
+    result = scipy.optimize.minimize(bandwidth_score, bw_start, args = (scores,store,), method='powell')
     bandwidth = 10**result.x
     multiprocessing.get_logger().info("selected bandwidth %s", bandwidth)
 
@@ -64,11 +67,18 @@ def get_bandwidth(scores, cache):
 
 def mirror(data):
     data_max = numpy.max(data,0)
+    
+    mirror_index = data_max <= 1.0
+    keep_index = data_max > 1.0
+    
     data_min = data_max - data    
     data_mask = numpy.ma.masked_equal(data_min, 0.0, copy=False)
     min_value = data_mask.min(axis=0)
     
-    data_mirror = data_max + data_max - numpy.copy(data) + min_value
+    data_mirror = numpy.zeros(data.shape)
+    
+    data_mirror[:,mirror_index] = data_max[mirror_index] + data_max[mirror_index] - numpy.copy(data[:,mirror_index]) + min_value[mirror_index]
+    data_mirror[:,keep_index] = data[:,keep_index]
     full_data = numpy.vstack([data_mirror, data])
     
     return full_data

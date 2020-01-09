@@ -849,10 +849,10 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
             line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.3g \tBest: %.3g \tMinimum Score: %.3g \tBest: %.3g \tProduct Score: %.3g \tBest: %.3g'
 
-            alt_line_format = 'Generation: %s \tPopulation: %s \t1 - Average Score: %.3e \tBest: %.3e \t1 - Minimum Score: %.3e \tBest: %.3e \t1 - Product Score: %.3e \tBest: %.3e'
+            alt_line_format = 'Generation: %s \tPopulation: %s \t1 - Average Score: %.1e \tBest: %.1e \t1 - Minimum Score: %.1e \tBest: %.1e \t1 - Product Score: %.1e \tBest: %.1e'
  
             if line_log:
-                if any(meta_max > 0.995):
+                if any(meta_max > 0.999):
                     multiprocessing.get_logger().info(alt_line_format, generation, len(population),
                       1-population_average, 1-population_average_best,
                       1-population_min, 1-population_min_best,
