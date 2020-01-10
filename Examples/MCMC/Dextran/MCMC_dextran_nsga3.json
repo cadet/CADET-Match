@@ -6,9 +6,9 @@
   "CSV": "dextran_MCMC.csv",
     "checkpointFile": "check",
     "searchMethod": "NSGA3",
-    "population": 36,
+    "population": 6,
     "finalGradRefinement": 1,
-    "stallGenerations": 50,
+    "stallGenerations": 15,
     "continueMCMC": 1,
     "normalizeOutput": 1,
   "kde_synthetic": [
