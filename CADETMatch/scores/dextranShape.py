@@ -22,14 +22,13 @@ def run(sim_data, feature):
     exp_time_zero = feature['exp_time_zero']
     exp_data_zero = feature['exp_data_zero']
     
-    sim_data_zero = cut_front(sim_time_values, sim_data_values, exp_time_zero, 
+    sim_spline, sim_data_zero_sse = cut_front(sim_time_values, sim_data_values, 
                                              feature['min_value_front'], feature['max_value_front'],
-                                             feature['smoothing_factor'], feature['critical_frequency'])
-        
-    pearson, diff_time = score.pearson_spline(exp_time_zero, exp_data_zero, sim_data_zero)
+                                             feature['critical_frequency'], feature['smoothing_factor'])
+
+    pearson, diff_time = score.pearson_spline_fun(exp_time_zero, exp_data_zero, sim_spline)
 
     exp_data_zero_sse = feature['exp_data_zero_sse']
-    sim_data_zero_sse = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_zero, sim_data_zero, ext=1)(sim_time_values)
 
     temp = [pearson,
             feature['offsetTimeFunction'](numpy.abs(diff_time)),
@@ -44,12 +43,10 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
     #change the stop point to be where the max positive slope is along the searched interval
     name = '%s_%s' % (sim.root.experiment_name,   feature['name'])
-    exp_time_zero, exp_data_zero, min_time, min_value, max_time, max_value, s, crit_fs = cut_front_find(selectedTimes, selectedValues, name, cache)
+    exp_time_zero, exp_data_zero, exp_data_zero_sse, min_time, min_value, max_time, max_value, s, crit_fs = cut_front_find(selectedTimes, selectedValues, name, cache)
 
     multiprocessing.get_logger().info("Dextran %s  start: %s   stop: %s  max value: %s", name, 
                                       min_time, max_time, max_value)
-
-    exp_data_zero_sse = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_zero, exp_data_zero, ext=1)(selectedTimes)
 
     temp['min_time'] = feature['start']
     temp['max_time'] = feature['stop']
@@ -95,11 +92,11 @@ def cut_front_find(times, values, name, cache):
     max_time = float(result.x)
     max_value = spline(float(result.x))
 
-    min_index = numpy.argmax(smooth_value >= 1e-2*max_value)
+    min_index = numpy.argmax(smooth_value >= 1e-3*max_value)
     min_time = times[min_index]
     
     def goal(time):
-        return abs(spline(time)-1e-2*max_value)
+        return abs(spline(time)-1e-3*max_value)
     
     result = scipy.optimize.minimize(goal, min_time, method='powell')
     
@@ -111,23 +108,26 @@ def cut_front_find(times, values, name, cache):
     
     new_times = numpy.linspace(times[0], times[-1], needed_points)
     new_values = spline(new_times)
-    
-    max_index = numpy.argmax(new_values >= max_value)
-    min_index = numpy.argmax(new_values >= min_value)
 
-    data_zero = numpy.zeros(needed_points)
+    data_zero = cut_zero(new_times, new_values, min_value, max_value)
     
-    data_zero[min_index:max_index+1] = new_values[min_index:max_index+1]
-    
-    return new_times, data_zero, min_time, min_value, max_time, max_value, s, crit_fs
+    return (new_times, data_zero, cut_zero(times, smooth_value, min_value, max_value), 
+        min_time, min_value, max_time, max_value, s, crit_fs)
 
-def cut_front(times, values, new_times, min_value, max_value, s, crit_fs):
+def cut_front(times, values, min_value, max_value, crit_fs, s):
+    max_index = numpy.argmax(values >= max_value)
+    
+    if max_index == 0:
+        #no point high enough was found so use the highest point
+        s, crit_fs = smoothing.find_smoothing_factors(times, values, None, None)
+        max_index = numpy.argmax(values)
+    
+    max_time = times[max_index]
+    max_value = values[max_index]
+
     smooth_value = smoothing.smooth_data(times, values, crit_fs, s)
 
     spline = scipy.interpolate.InterpolatedUnivariateSpline(times, smooth_value, ext=1)
-    
-    max_index = numpy.argmax(values >= max_value)
-    max_time = times[max_index]
     
     def goal(time):
         return abs(spline(time)-max_value)
@@ -136,11 +136,15 @@ def cut_front(times, values, new_times, min_value, max_value, s, crit_fs):
     
     max_time = float(result.x)
     max_value = spline(float(result.x))
+    max_index = max(numpy.argmax(values >= max_value), max_index)
 
-    min_index = numpy.argmax(values >= min_value)
+    min_index = numpy.argmax(values[:max_index] >= min_value)
     min_time = times[min_index]
     
     def goal(time):
+        if time > max_time:
+            #don't search to the right of the max_time for a lower value
+            return 1e10
         return abs(spline(time)-min_value)
     
     result = scipy.optimize.minimize(goal, min_time, method='powell')
@@ -148,13 +152,43 @@ def cut_front(times, values, new_times, min_value, max_value, s, crit_fs):
     min_time = float(result.x)
     min_value = spline(float(result.x))
 
-    new_values = spline(new_times)
+    needed_points = int( (max_time - min_time) * 10)
+    new_times_spline = numpy.linspace(min_time, max_time, needed_points)
+    new_values_spline = spline(new_times_spline)
     
-    max_index = numpy.argmax(new_values >= max_value)
-    min_index = numpy.argmax(new_values >= min_value)
+    spline = scipy.interpolate.InterpolatedUnivariateSpline(new_times_spline, new_values_spline, ext=1)
+    
+    return spline, cut_zero(times, smooth_value, min_value, max_value)
 
-    data_zero = numpy.zeros(len(new_times))    
-    data_zero[min_index:max_index+1] = new_values[min_index:max_index+1]
+def cut_zero(times, values, min_value, max_value):
+    "cut the raw times and values as close to min_value and max_value as possible and set the rest to zero without smoothing"
+    data_zero = numpy.zeros(len(times))
+    
+    offset = numpy.array([-1, 0, 1])
+    
+    #find the starting point for the min_index and max_index, the real value could be off by 1 in either direction
+    peak_max_index = numpy.argmax(values)
+    
+    max_index = numpy.argmax(values[:peak_max_index] >= max_value)
+
+    if not max_index:
+        #if max_index is zero the whole array is below the value we are searching for so just returnt the whole array
+        return values
+
+    min_index = numpy.argmax(values[:max_index] >= min_value)
+        
+    check_max_index = max_index + offset
+    check_max_value = values[check_max_index]
+    check_max_diff = numpy.abs(check_max_value - max_value)    
+    
+    check_min_index = min_index + offset
+    check_min_value = values[check_min_index]
+    check_min_diff = numpy.abs(check_min_value - min_value)
+    
+    min_index = min_index + offset[numpy.argmin(check_min_diff)]
+    max_index = max_index + offset[numpy.argmin(check_max_diff)]
+    
+    data_zero[min_index:max_index+1] = values[min_index:max_index+1]
     
     return data_zero
 

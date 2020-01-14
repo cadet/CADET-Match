@@ -472,9 +472,9 @@ def plot_2d_single(directory_path, header_x, scoreName, data, scores):
     if numpy.all(scores <= 0):
         scores = numpy.abs(scores)
 
-    score_scale = numpy.max(scores)/numpy.min(scores)
+    #score_scale = numpy.max(scores)/numpy.min(scores)
 
-    if  score_scale > 1e2:
+    if  scoreName.startswith('1-'):
         scores = numpy.log(scores)
         scoreName = 'log(%s)' % scoreName
 

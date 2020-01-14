@@ -147,8 +147,9 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
             percent = temp_area_overlap / temp_area_total
             if percent > cutoff:
                 temp_offspring.append( (percent, ind) )
+                multiprocessing.get_logger().info('kept %s with overlap (%s) in gradient descent', ind, percent)
             else:
-                multiprocessing.get_logger().info('removed %s for insufficient overlap in gradient descent', ind)
+                multiprocessing.get_logger().info('removed %s for insufficient overlap (%s) in gradient descent', ind, percent)
         else:
             multiprocessing.get_logger().info('removed %s for failure', ind)
 

@@ -319,3 +319,5 @@ __pycache__/
 /Examples/MCMC/Dextran/nsga3_mcmc_6_emcee6_fast
 /Examples/MCMC/Dextran/dextran_pulse_fast.csv
 /Examples/MCMC/Dextran/dextran_pulse_high.h5
+/Examples/Example1/Dextran/fit_nsga3_deap_new
+/Examples/Example1/Dextran/fit_nsga3_deap_sse

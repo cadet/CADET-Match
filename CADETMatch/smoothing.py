@@ -52,7 +52,10 @@ def refine_butter(times, values, x, y, fs, start):
     
     return crit_fs
 
-def refine_smooth(times, values, x, y, start):
+def refine_smooth(times, values, x, y, start, name):
+    if name is None:
+        name = 'unknown'
+
     x = numpy.array(x)
     y = numpy.array(y)
 
@@ -211,7 +214,8 @@ def find_smoothing_factors(times, values, name, cache):
     
     s, s_knots = util.find_Left_L(all_s,knots)
 
-    s, s_knots = refine_smooth(times, values_filter, all_s, knots, s)
+    if s is not None:
+        s, s_knots = refine_smooth(times, values_filter, all_s, knots, s, name)
 
     record_smoothing(s, s_knots, crit_fs, knots, all_s, name, cache)
     
