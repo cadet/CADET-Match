@@ -371,3 +371,66 @@ def pear_corr(cr):
     #so far in looking cr has never been negative and the scores mostly just sit in the 0.8 to 0.99999 range
     #I am not even sure if cr could be negative with chromatography (indicating inverse relationship between simulation and experiment)
     #return (1.0+cr)/2.0
+
+def cut_zero(times, values, min_value, max_value):
+    "cut the raw times and values as close to min_value and max_value as possible and set the rest to zero without smoothing"
+    data_zero = numpy.zeros(len(times))
+    
+    offset = numpy.array([-1, 0, 1])
+    
+    #find the starting point for the min_index and max_index, the real value could be off by 1 in either direction
+    peak_max_index = numpy.argmax(values)
+    
+    max_index = numpy.argmax(values[:peak_max_index] >= max_value)
+
+    if not max_index:
+        #if max_index is zero the whole array is below the value we are searching for so just returnt the whole array
+        return values, None, None, None, None
+
+    min_index = numpy.argmax(values[:max_index] >= min_value)
+        
+    check_max_index = max_index + offset
+    check_max_value = values[check_max_index]
+    check_max_diff = numpy.abs(check_max_value - max_value)    
+    
+    check_min_index = min_index + offset
+    check_min_value = values[check_min_index]
+    check_min_diff = numpy.abs(check_min_value - min_value)
+    
+    min_index = min_index + offset[numpy.argmin(check_min_diff)]
+    max_index = max_index + offset[numpy.argmin(check_max_diff)]
+
+    min_time = times[min_index]
+    min_value = values[min_index]
+
+    max_time = times[max_index]
+    max_value = values[max_index]
+    
+    data_zero[min_index:max_index+1] = values[min_index:max_index+1]
+    
+    return data_zero, min_time, min_value, max_time, max_value
+
+def find_cuts(times, values, spline, spline_der):
+    max_index = numpy.argmax(values)
+    max_time = times[max_index]
+    
+    def goal(time):
+        return -spline_der(time)
+    
+    result = scipy.optimize.minimize(goal, max_time, method='powell')
+    
+    max_time = float(result.x)
+    max_value = float(spline(max_time))
+
+    min_index = numpy.argmax(values >= 1e-3*max_value)
+    min_time = times[min_index]
+    
+    def goal(time):
+        return abs(spline(time)-1e-3*max_value)
+    
+    result = scipy.optimize.minimize(goal, min_time, method='powell')
+    
+    min_time = float(result.x)
+    min_value = float(spline(min_time))
+
+    return min_time, min_value, max_time, max_value

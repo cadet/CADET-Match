@@ -1,12 +1,12 @@
 {
   "CADETPath": "C:/Users/kosh_000/CADET/cadet/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
-  "resultsDir": "nsga3_mcmc_6_emcee6/",
+  "resultsDir": "nsga3_mcmc_6_emcee12_new/",
   "tempDir": "L:/",
   "CSV": "dextran_MCMC.csv",
     "checkpointFile": "check",
     "searchMethod": "NSGA3",
-    "population": 6,
+    "population": 12,
     "finalGradRefinement": 1,
     "stallGenerations": 15,
     "continueMCMC": 1,
@@ -37,7 +37,7 @@
             ],
             "base": 100.0,
             "uv_noise": [0.0, 1e-8],
-            "count": 1000
+            "count": 4000
 		}
 	],
   "parameters": [

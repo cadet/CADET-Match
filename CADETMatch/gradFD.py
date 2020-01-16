@@ -178,9 +178,9 @@ def gradSearch(x, json_path):
         x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
         val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', 
                                            bounds=(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE), 
-                                           gtol=None, ftol=None, xtol=1e-8, x_scale="jac",
-                                           max_nfev=50, loss="soft_l1")
-        
+                                           gtol=None, ftol=None, xtol=1e-10, x_scale="jac",
+                                           max_nfev=50, loss="linear")
+
         return val
     except GradientException:
         #If the gradient fails return None as the point so the optimizer can adapt
