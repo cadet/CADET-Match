@@ -9,12 +9,15 @@ import CADETMatch.smoothing as smoothing
 #Used to match the front side of a peak (good for breakthrough curves, the drops the derivative lower score)
 
 name = "ShapeFront"
-settings = Dict()
-settings.adaptive = True
-settings.badScore = 0
-settings.meta_mask = True
-settings.count = 5
-settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
+
+def get_settings(feature):
+    settings = Dict()
+    settings.adaptive = True
+    settings.badScore = 0
+    settings.meta_mask = True
+    settings.count = 5
+    settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
+    return settings
 
 def run(sim_data, feature):
     "similarity, value, start stop"

@@ -6,12 +6,14 @@ import scipy.optimize
 from addict import Dict
 
 name = "fractionationSlide"
-settings = Dict()
-settings.adaptive = True
-settings.badScore = 0
-settings.meta_mask = True
-settings.count = None
 
+def get_settings(feature):
+    settings = Dict()
+    settings.adaptive = True
+    settings.badScore = 0
+    settings.meta_mask = True
+    settings.count = None
+    return settings
 
 def goal(offset, frac_exp, sim_data_time, sim_data_value, start, stop):
     sim_data_value = score.roll_spline(sim_data_time, sim_data_value, offset)

@@ -8,12 +8,15 @@ import CADETMatch.smoothing as smoothing
 import multiprocessing
 
 name = "DextranShape"
-settings = Dict()
-settings.adaptive = True
-settings.badScore = 0
-settings.meta_mask = True
-settings.count = 2
-settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
+
+def get_settings(feature):
+    settings = Dict()
+    settings.adaptive = True
+    settings.badScore = 0
+    settings.meta_mask = True
+    settings.count = 2
+    settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
+    return settings
 
 def run(sim_data, feature):
     "special score designed for dextran. This looks at only the front side of the peak up to the maximum slope and pins a value at the elbow in addition to the top"

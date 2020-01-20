@@ -1294,6 +1294,7 @@ def setupSimulation(sim, times, smallest_peak, cache):
     units_used = cache.target[experiment_name]['units_used']
     for unit in sim.root.input.model.keys():
         sim.root.input['return'][unit].write_solution_particle = 0
+        sim.root.input['return'][unit].write_solution_solid = 0
         sim.root.input['return'][unit].write_solution_column_inlet = 0
         sim.root.input['return'][unit].write_solution_inlet = 0
         sim.root.input['return'][unit].split_components_data = 0

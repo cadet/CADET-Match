@@ -203,7 +203,7 @@ class Cache:
         for idx, experiment in enumerate(self.settings['experiments']):
             for feature in experiment['features']:
                 if feature['type'] in self.scores:
-                    settings = self.scores[feature['type']].settings
+                    settings = self.scores[feature['type']].get_settings(feature)
                     meta_mask = settings.meta_mask
                     count = settings.count
                     #multiprocessing.get_logger().info('%s %s %s %s', idx, feature, meta_mask, count)
@@ -268,9 +268,11 @@ class Cache:
                 if feature['type'] in self.scores:
                     temp = self.scores[feature['type']].headers(experimentName, feature)
 
-                    if self.scores[feature['type']].settings.meta_mask:
+                    settings = self.scores[feature['type']].get_settings(feature)
+
+                    if settings.meta_mask:
                         self.numGoals += len(temp)
-                    badScore.append(self.scores[feature['type']].settings.badScore)
+                    badScore.append(settings.badScore)
 
                     self.score_headers.extend(temp)
                     experiment['headers'].extend(temp)
@@ -470,7 +472,8 @@ class Cache:
 
             if featureType in self.scores:
                 temp[featureName].update(self.scores[featureType].setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, self))
-                self.adaptive = self.scores[featureType].settings.adaptive
+                settings = self.scores[featureType].get_settings(feature)
+                self.adaptive = settings.adaptive
                 if 'peak_max' in temp[featureName]:
                     peak_maxes.append(temp[featureName]['peak_max']/temp[featureName]['factor'])
          
