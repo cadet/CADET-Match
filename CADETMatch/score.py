@@ -70,9 +70,15 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
 
     sim_data_values_copy = roll(sim_data_values, shift=int(numpy.ceil(roll_index)))
 
-    pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)
+    try:
+        pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)[0]
+    except ValueError:
+        multiprocessing.get_logger().warn("Pearson correlation failed to do NaN or InF in array  exp_array: [%s]   sim_array: [%s]", 
+                                          list(exp_data_values), list(sim_data_values_copy))
+        pear = 0
+    score = pear_corr(pear)
     
-    return pear_corr(pear[0]), diff_time
+    return score, diff_time
 
 def refine_time(dt, exp_time_values, sim_data_values, exp_data_values):
     "refine the time using powells method (gradient free) system is not smooth enough for gradient to work well"
@@ -112,7 +118,12 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     #calculate pearson correlation at the new time
     spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)
     sim_data_values_copy = spline(exp_time_values - dt)
-    pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)[0]
+    try:
+        pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)[0]
+    except ValueError:
+        multiprocessing.get_logger().warn("Pearson correlation failed to do NaN or InF in array  exp_array: [%s]   sim_array: [%s]", 
+                                          list(exp_data_values), list(sim_data_values_copy))
+        pear = 0
     score = pear_corr(pear)
 
     return score, dt
@@ -136,9 +147,13 @@ def pearson_spline_fun(exp_time_values, exp_data_values, sim_spline):
     
     #calculate pearson correlation at the new time
     sim_data_values_copy = sim_spline(exp_time_values - dt)
-    pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)[0]
+    try:
+        pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)[0]
+    except ValueError:
+        multiprocessing.get_logger().warn("Pearson correlation failed to do NaN or InF in array  exp_array: [%s]   sim_array: [%s]", 
+                                          list(exp_data_values), list(sim_data_values_copy))
+        pear = 0
     score = pear_corr(pear)
-
     return score, dt
 
 def refine_time_fun(dt, exp_time_values, exp_data_values, spline):
