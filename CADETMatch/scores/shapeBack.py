@@ -15,7 +15,13 @@ def get_settings(feature):
     settings.adaptive = True
     settings.badScore = 0
     settings.meta_mask = True
-    settings.count = 5
+
+    derivative = feature.get('derivative', 1)
+
+    if derivative:
+        settings.count = 5
+    else:
+        settings.count = 3
     return settings
 
 def run(sim_data, feature):
@@ -35,16 +41,20 @@ def run(sim_data, feature):
 
     pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_values, feature['smooth_value'])
 
-    pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_data_values_spline, exp_data_values_spline)
+    derivative = feature.get('derivative', 1)
 
-    [highs_der, lows_der] = util.find_peak(exp_time_values, sim_data_values_spline)
+    if derivative:
+        pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_data_values_spline, exp_data_values_spline)
+        [highs_der, lows_der] = util.find_peak(exp_time_values, sim_data_values_spline)
 
     
     temp = [pearson, 
             feature['value_function'](value_high), 
-            feature['time_function'](numpy.abs(diff_time)),
-            pearson_der,
-            feature['value_function_low'](lows_der[1]),]
+            feature['time_function'](numpy.abs(diff_time))]
+    if derivative:
+        temp.extend([pearson_der,
+            feature['value_function_low'](lows_der[1]),])
+
     return (temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values), 
             sim_time_values, sim_data_values, exp_data_values, [1.0 - i for i in temp])
 
@@ -57,7 +67,14 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
 
     temp = {}
     temp['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
-    temp['time_function'] = score.time_function_cv(CV_time, selectedTimes, temp['peak'][0])
+    
+    decay = feature.get('decay', 0)
+
+    if decay:
+        temp['time_function'] = score.time_function_cv(CV_time, selectedTimes, temp['peak'][0])
+    else:
+        temp['time_function'] = score.time_function_decay_cv(CV_time, selectedTimes, temp['peak'][0])
+        
     temp['value_function'] = score.value_function(temp['peak'][1], abstol)
     temp['value_function_low'] = score.value_function(low[1], numpy.abs(low[1])/1000)
     temp['peak_max'] = max(selectedValues)
@@ -68,9 +85,13 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
 
 def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature['name'])
-    temp = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name,
-            "%s_Derivative_Similarity" % name,
-            "%s_Der_Low_Value" % name]
+    derivative = feature.get('derivative', 1)
+    temp = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time" % name]
+    
+    if derivative:
+        temp.extend(["%s_Derivative_Similarity" % name,
+            "%s_Der_Low_Value" % name])
+
     return temp
 
 

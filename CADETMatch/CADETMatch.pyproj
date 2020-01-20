@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\temp\weirdEffects\NSGA3_binding_DBC.json" 1</CommandLineArguments>
+    <CommandLineArguments>"F:\temp\weirdEffects\NSGA3_binding_DBC.json" 12</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>

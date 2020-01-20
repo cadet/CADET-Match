@@ -425,7 +425,7 @@ class Cache:
             featureName = feature['name']
             featureType = feature['type']
             
-            temp[featureName] = {}
+            temp[featureName] = feature
 
             #switch to lower case
             if 'CSV' in feature:

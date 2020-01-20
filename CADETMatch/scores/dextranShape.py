@@ -61,7 +61,14 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp['exp_time_zero'] = exp_time_zero
     temp['exp_data_zero'] = exp_data_zero
     temp['exp_data_zero_sse'] = exp_data_zero_sse
-    temp['offsetTimeFunction'] = score.time_function_decay_cv(CV_time, selectedTimes, max_time)
+
+    decay = feature.get('decay', 1)
+
+    if decay:
+        temp['offsetTimeFunction'] = score.time_function_cv(CV_time, selectedTimes, max_time)
+    else:
+        temp['offsetTimeFunction'] = score.time_function_decay_cv(CV_time, selectedTimes, max_time)
+
     temp['peak_max'] = max_value
     temp['smoothing_factor'] = s
     temp['critical_frequency'] = crit_fs
