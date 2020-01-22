@@ -334,8 +334,6 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     temp['exp_value'] = []
 
     for feature in experiment['features']:
-        start = float(feature['start'])
-        stop = float(feature['stop'])
         featureType = feature['type']
         featureName = feature['name']
 

@@ -187,6 +187,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             with checkpointFile.open('wb')as cp_file:
                 pickle.dump(cp, cp_file)
 
+        gen = start_gen  #this covers the case where the start_gen is higher than our stop gen so the loop never runs
         # Begin the generational process
         for gen in range(start_gen, ngen+1):
             generation_start = time.time()

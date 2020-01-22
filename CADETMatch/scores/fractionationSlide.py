@@ -4,6 +4,7 @@ import numpy
 import pandas
 import scipy.optimize
 from addict import Dict
+import multiprocessing
 
 name = "fractionationSlide"
 
@@ -12,11 +13,17 @@ def get_settings(feature):
     settings.adaptive = True
     settings.badScore = 0
     settings.meta_mask = True
-    settings.count = None
+
+    data = pandas.read_csv(feature['fraction_csv'])
+    headers = data.columns.values.tolist()
+    comps = len(headers[2:])
+
+    settings.count = 3 * comps
+
     return settings
 
-def goal(offset, frac_exp, sim_data_time, sim_data_value, start, stop):
-    sim_data_value = score.roll_spline(sim_data_time, sim_data_value, offset)
+def goal(offset, frac_exp, sim_data_time, spline, start, stop):
+    sim_data_value = spline(sim_data_time - offset)
     frac_sim = util.fractionate(start, stop, sim_data_time, sim_data_value)
     return numpy.sum((frac_exp-frac_sim)**2)
 
@@ -64,18 +71,31 @@ def run(sim_data, feature):
         exp_values = numpy.array(data[str(component)])
         sim_value = simulation.root.output.solution[feature['unit']]["solution_outlet_comp_%03d" % component]
 
-        bounds = find_bounds(times, sim_value)
-        result = scipy.optimize.differential_evolution(goal, bounds = [bounds,], 
-                                                       args = (exp_values, times, sim_value, start, stop))
+        spline = scipy.interpolate.InterpolatedUnivariateSpline(times, sim_value, ext=1)
 
-        time_offset = abs(result.x[0])
-        sim_data_value = score.roll_spline(times, sim_value, result.x[0])
+        #get a starting point estimate
+        offsets = numpy.linspace(-times[-1], times[-1], 50)
+        errors = [goal(offset, exp_values, times, spline, start, stop) for offset in offsets]
+        offset_start = offsets[numpy.argmin(errors)]
+
+        result_powell = scipy.optimize.minimize(goal, offset_start, args = (exp_values, times, spline, start, stop), method='powell')
+
+        time_offset = result_powell.x
+        sim_data_value = spline(times - time_offset)
 
         fracOffset = util.fractionate(start, stop, times, sim_data_value)
 
-        value_score = value_func(max(fracOffset))
-        pear = score.pear_corr(scipy.stats.pearsonr(exp_values, fracOffset)[0])
-        time_score = timeFunc(time_offset)
+        #if the simulation scale and exp scale are too different the estimation of similarity, offset etc is not accurate discard if value max/min > 1e3
+        max_exp = max(exp_values)
+        max_sim = max(fracOffset)
+        if max(max_exp, max_sim)/min(max_exp, max_sim) > 1e3:
+            value_score = 0
+            pear = 0            
+            time_score = 0
+        else:
+            value_score = value_func(max(fracOffset))
+            pear = score.pear_corr(scipy.stats.pearsonr(exp_values, fracOffset)[0])
+            time_score = timeFunc(abs(time_offset))
 
         exp_values_sse.extend(exp_values)
         sim_values_sse.extend(fracOffset)
@@ -92,18 +112,6 @@ def run(sim_data, feature):
 
     return (scores, util.sse(numpy.array(sim_values_sse), numpy.array(exp_values_sse)), len(sim_values_sse), 
         time_center, numpy.array(sim_values_sse), numpy.array(exp_values_sse), [1.0 - i for i in scores])
-
-def find_bounds(times, values):
-    "find the maximum amount left and right the system can be rolled based on 10% of peak max"
-    peak_max = max(values)
-    cutoff = 0.1 * peak_max
-
-    data = (values > cutoff).nonzero()
-
-    min_index = data[0][0]
-    max_index = data[0][-1]
-
-    return [-min_index, len(values) - max_index - 1]
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
@@ -123,8 +131,6 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     for idx, component in enumerate(headers[2:], 2):
         value = numpy.array(data.iloc[:, idx])
         funcs.append((int(component), score.value_function(max(value), abstolFraction)))
-
-    settings.count = 3 * len(funcs)
 
     temp['data'] = data
     temp['start'] = start
