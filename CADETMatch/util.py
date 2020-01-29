@@ -993,6 +993,7 @@ def update_result_data(cache, ind, fit, result_data, results, meta_scores):
                 result_data['times'] = {}
 
             for experimentName, experiment in results.items():
+                units_used = cache.target[experimentName]['units_used']
                 sim = experiment['simulation']
                 times = sim.root.output.solution.solution_times
 
@@ -1001,18 +1002,18 @@ def update_result_data(cache, ind, fit, result_data, results, meta_scores):
                 if timeName not in result_data['times']:
                     result_data['times'][timeName] = times
 
-                for unitName, unit in sim.root.output.solution.items():
-                    if unitName.startswith('unit_') and sim.root.input.model[unitName].unit_type == b'OUTLET':
-                        for solutionName, solution in unit.items():
-                            if solutionName.startswith('solution_outlet_comp'):
-                                comp = solutionName.replace('solution_outlet_comp_', '')
+                for unitName in units_used:
+                    unit = sim.root.output.solution[unitName]
+                    for solutionName, solution in unit.items():
+                        if solutionName.startswith('solution_outlet_comp'):
+                            comp = solutionName.replace('solution_outlet_comp_', '')
 
-                                name = '%s_%s_%s' % (experimentName, unitName, comp)
+                            name = '%s_%s_%s' % (experimentName, unitName, comp)
 
-                                if name not in result_data['results']:
-                                    result_data['results'][name] = []
+                            if name not in result_data['results']:
+                                result_data['results'][name] = []
 
-                                result_data['results'][name].append(tuple(solution))
+                            result_data['results'][name].append(tuple(solution))
 
 def calcFitness(scores, cache):
     return tuple(numpy.array(scores)[cache.meta_mask])

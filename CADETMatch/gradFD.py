@@ -69,7 +69,11 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
             ind.fitness.values = fit
 
             csv_line[0] = 'GRAD'
-            csv_line[1] = numpy.linalg.cond(i.jac)
+
+            try:
+                csv_line[1] = numpy.linalg.cond(i.jac)
+            except AttributeError:
+                csv_line[1] = ''
 
             save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
 
@@ -173,18 +177,36 @@ def gradSearch(x, json_path):
         cache.cache.setup_dir(json_path)
         util.setupLog(cache.cache.settings['resultsDirLog'], "main.log")
         cache.cache.setup(json_path)
-    
-    try:
-        x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
-        val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', 
-                                           bounds=(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE), 
-                                           gtol=None, ftol=None, xtol=1e-10, x_scale="jac",
-                                           max_nfev=50, loss="linear")
+    localRefine = cache.cache.settings.get('localRefine', 'gradient')
 
-        return val
-    except GradientException:
-        #If the gradient fails return None as the point so the optimizer can adapt
-        return None
+    if localRefine == 'gradient':
+        try:
+            x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
+            val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', 
+                                               bounds=(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE), 
+                                               gtol=None, ftol=None, xtol=1e-10, x_scale="jac",
+                                               max_nfev=50, loss="linear")
+
+            return val
+        except GradientException:
+            #If the gradient fails return None as the point so the optimizer can adapt
+            return None
+
+    if localRefine == 'powell':
+        def goal(x):
+            if numpy.any(x < cache.cache.MIN_VALUE) or numpy.any(x > cache.cache.MAX_VALUE):
+                return 1e300
+
+            diff = fitness_sens_grad(x)
+            return numpy.sum(diff**2.0)
+
+        try:
+            x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
+            val = scipy.optimize.minimize(goal, x, method='powell')
+            return val
+        except GradientException:
+            #If the gradient fails return None as the point so the optimizer can adapt
+            return None
 
 def fitness_sens_grad(individual, finished=0):
     return fitness_sens(individual, finished)

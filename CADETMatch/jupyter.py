@@ -11,6 +11,7 @@ class Match:
     def __init__(self, json_path):
         self.json_path = json_path
         self.cache = Cache()
+        self.cache.setup_dir(json_path)
         self.cache.setup(json_path)
 
     def start_sim(self):
