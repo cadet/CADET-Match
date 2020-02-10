@@ -64,6 +64,7 @@ def run(sim_data, feature):
    
     graph_sim = {}
     graph_exp = {}
+    graph_sim_offset = {}
 
     searchIndexStart, searchIndexStop = searchRange(times, start, stop, CV_time)
 
@@ -106,9 +107,11 @@ def run(sim_data, feature):
 
         graph_sim[component] = list(zip(time_center, fracOffset))
         graph_exp[component] = list(zip(time_center, exp_values))
+        graph_sim_offset[component] = time_offset
 
     sim_data['graph_exp'] = graph_exp
     sim_data['graph_sim'] = graph_sim
+    sim_data['graph_sim_offset'] = graph_sim_offset
 
     return (scores, util.sse(numpy.array(sim_values_sse), numpy.array(exp_values_sse)), len(sim_values_sse), 
         time_center, numpy.array(sim_values_sse), numpy.array(exp_values_sse), [1.0 - i for i in scores])

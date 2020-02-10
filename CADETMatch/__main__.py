@@ -23,7 +23,11 @@ def makeParser():
                         action='store_true')
 
     parser.add_argument('--generate_graphs',
-                        help="Generate general graphs",
+                        help="Generate general graphs excluding 3D",
+                        action='store_true')
+
+    parser.add_argument('--generate_graphs_all',
+                        help="Generate general graphs including 3D",
                         action='store_true')
 
     parser.add_argument('--generate_spearman',
@@ -73,6 +77,8 @@ if __name__ == "__main__":
     if args.generate_corner:
         sys.exit(run_command('CADETMatch.generate_corner_graphs', args.json, args.n))
     if args.generate_graphs:
+        sys.exit(run_command('CADETMatch.generate_graphs', args.json, args.n, ['1']))
+    if args.generate_graphs_all:
         sys.exit(run_command('CADETMatch.generate_graphs', args.json, args.n, ['2']))
     if args.generate_spearman:
         sys.exit(run_command('CADETMatch.graph_spearman', args.json, args.n, ['end']))

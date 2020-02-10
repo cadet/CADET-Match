@@ -12,6 +12,7 @@ class Match:
         self.json_path = json_path
         self.cache = Cache()
         self.cache.setup_dir(json_path)
+        CADETMatch.match.createDirectories(self.cache, json_path)
         self.cache.setup(json_path)
 
     def start_sim(self):

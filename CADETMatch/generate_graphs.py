@@ -276,7 +276,7 @@ def plotExperiments(args):
         exp_time = target[experimentName]['time']
         exp_value = target[experimentName]['value']
 
-        fig = figure.Figure(figsize=[15, 15*numPlots])
+        fig = figure.Figure(figsize=[24, 12*numPlots])
         canvas = FigureCanvas(fig)
 
         simulation = Cadet()
@@ -334,6 +334,7 @@ def plotExperiments(args):
 
                 graph_exp = results['graph_exp']
                 graph_sim = results['graph_sim']
+                graph_sim_offset = results.get('graph_sim_offset', {})
 
                 findMax = 0
                 max_comp = {}
@@ -359,7 +360,19 @@ def plotExperiments(args):
                         mult = findMax/(2 * max_comp[key])
                         values = values * mult
                     factors.append(mult)
-                    graph.plot(time, values, '--', color=get_color(idx, len(graph_sim), cm_plot), label='Simulation Comp: %s Mult:%.2f' % (key, mult))
+
+                    time_offset = graph_sim_offset.get(key, None)
+                    if time_offset is not None:
+                        if time_offset >0:
+                            time_str = "time early (s): %.3g" % abs(time_offset)
+                        else:
+                            time_str = "time late (s): %.3g" % abs(time_offset)
+                    else:
+                        time_str = ""
+
+                    label = 'Simulation Comp: %s Mult:%.2f %s' % (key, mult, time_str)
+
+                    graph.plot(time, values, '--', color=get_color(idx, len(graph_sim), cm_plot), label=label)
 
                 for idx, (key, value) in enumerate(graph_exp.items()):
                     (time, values) = zip(*value)
@@ -369,7 +382,7 @@ def plotExperiments(args):
                     graph.plot(time, values, ':', color=get_color(idx, len(graph_sim), cm_plot), label='Experiment Comp: %s Mult:%.2f' % (key, mult))
                 graphIdx += 1
             graph.legend()
-        fig.set_size_inches((12,6*numPlots))
+        fig.set_size_inches((24,12*numPlots))
         fig.savefig(str(dst))
 
 def graphSpace(fullGeneration, cache, map_function):
@@ -442,8 +455,8 @@ def plot_3d(arg):
 
     scoreName = header3
     if scoreName == 'SSE':
-        scores = -numpy.log(scores)
-        scoreName = '-log(%s)' % scoreName
+        scores = -numpy.log10(scores)
+        scoreName = '-log10(%s)' % scoreName
     
     x = data1
     y = data2
@@ -451,9 +464,9 @@ def plot_3d(arg):
     fig = figure.Figure()
     canvas = FigureCanvas(fig)
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(numpy.log(x), numpy.log(y), scores, c=scores, cmap=my_cmap)
-    ax.set_xlabel('log(%s)' % header1)
-    ax.set_ylabel('log(%s)' % header2)
+    ax.scatter(numpy.log10(x), numpy.log10(y), scores, c=scores, cmap=my_cmap)
+    ax.set_xlabel('log10(%s)' % header1)
+    ax.set_ylabel('log10(%s)' % header2)
     ax.set_zlabel(scoreName)
     filename = "%s_%s_%s.png" % (header1, header2, scoreName)
     filename = filename.replace(':', '_').replace('/', '_')
@@ -475,8 +488,8 @@ def plot_2d_single(directory_path, header_x, scoreName, data, scores):
     #score_scale = numpy.max(scores)/numpy.min(scores)
 
     if  scoreName.startswith('1-'):
-        scores = numpy.log(scores)
-        scoreName = 'log(%s)' % scoreName
+        scores = numpy.log10(scores)
+        scoreName = 'log10(%s)' % scoreName
 
     fig = figure.Figure(figsize=[10,10])
     canvas = FigureCanvas(fig)
@@ -484,8 +497,8 @@ def plot_2d_single(directory_path, header_x, scoreName, data, scores):
 
     format = '%s'
     if numpy.max(data)/numpy.min(data) > 100.0:
-        data = numpy.log(data)
-        format = 'log(%s)'
+        data = numpy.log10(data)
+        format = 'log10(%s)'
 
     graph.scatter(data, scores, c=scores, cmap=my_cmap)
     graph.set_xlabel(format % header_x)
@@ -545,14 +558,14 @@ def singleGraphProgress(arg):
 
     graph = fig.add_subplot(1, 1, 1)
 
-    graph.plot(df[i],numpy.log(1-df[j]))
+    graph.plot(df[i],numpy.log10(1-df[j]))
     a = max(df[j])
     #graph.set_ylim((0,1.1*max(df[j])))
-    graph.set_title('%s vs log(1-%s)' % (i,j))
+    graph.set_title('%s vs log10(1-%s)' % (i,j))
     graph.set_xlabel(i)
-    graph.set_ylabel('log(1-%s)' % j)
+    graph.set_ylabel('log10(1-%s)' % j)
 
-    filename = "%s vs log(1-%s).png" % (i,j)
+    filename = "%s vs log10(1-%s).png" % (i,j)
     file_path = output / filename
     fig.savefig(str(file_path))
 
