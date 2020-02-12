@@ -145,19 +145,67 @@ def converged_bounds(chain, length, error_level):
                                           numpy.array2string(numpy.std(ub, axis=0), precision=4, separator=','), )
         return False, None, None
 
-def rescale(lb, ub, old_lb, old_ub):
+def rescale(cache, lb, ub, old_lb, old_ub):
     "give a new lb and ub that will rescale so that the previous lb and ub takes up about 1/2 of the search width"
-    center = (ub+lb)/2.0
+    new_size = len(lb)
+    old_lb_slice = old_lb[:new_size]
+    old_ub_slice = old_ub[:new_size]
+
+    center = (ub + lb)/2.0
+    old_center = (old_ub + old_lb)/2.0
     
     new_lb = lb - 2*(center - lb)
 
-    new_lb = numpy.max([new_lb, old_lb],axis=0)
+    new_lb = numpy.max([new_lb, old_lb_slice],axis=0)
     
     new_ub = ub + 2*(ub - center)
 
-    new_ub = numpy.min([new_ub, old_ub],axis=0)
+    new_ub = numpy.min([new_ub, old_ub_slice],axis=0)
+
+    lb_trans = numpy.ones([3,len(old_lb)]) * old_lb
+    ub_trans = numpy.ones([3,len(old_ub)]) * old_ub
+    center_trans = numpy.ones([3,len(old_ub)]) * old_center
+
+    lb_trans[1,:new_size] = lb
+    lb_trans[2,:new_size] = new_lb
+
+    ub_trans[1,:new_size] = ub
+    ub_trans[2,:new_size] = new_ub
+
+    center_trans[1,:new_size] = center
+    center_trans[2,:new_size] = center
+
+    lb_trans_conv = util.convert_population(lb_trans, cache)
+    center_trans_conv = util.convert_population(center_trans, cache)
+    ub_trans_conv = util.convert_population(ub_trans, cache)
+
+    multiprocessing.get_logger().info("""rescaling bounds (simulator space)  \nold_lb: %s \nold_center: %s \nold_ub: %s
+    \nlb5: %s \ncenter: %s \nub5: %s
+    \nnew_lb: %s \nnew_center: %s \nnew_ub: %s
+    \nbounds (search space)
+    \nold_lb: %s \nold_center: %s \nold_ub: %s
+    \nlb5: %s \ncenter: %s \nub5: %s
+    \nnew_lb: %s \nnew_center: %s \nnew_ub: %s""", 
+        numpy.array2string(lb_trans_conv[0], precision=3, separator=','),
+        numpy.array2string(center_trans_conv[0], precision=3, separator=','),
+        numpy.array2string(ub_trans_conv[0], precision=3, separator=','),
+        numpy.array2string(lb_trans_conv[1], precision=3, separator=','),
+        numpy.array2string(center_trans_conv[1], precision=3, separator=','),
+        numpy.array2string(ub_trans_conv[1], precision=3, separator=','),
+        numpy.array2string(lb_trans_conv[2], precision=3, separator=','),
+        numpy.array2string(center_trans_conv[2], precision=3, separator=','),
+        numpy.array2string(ub_trans_conv[2], precision=3, separator=','),
+        numpy.array2string(lb_trans[0], precision=3, separator=','),
+        numpy.array2string(center_trans[0], precision=3, separator=','),
+        numpy.array2string(ub_trans[0], precision=3, separator=','),
+        numpy.array2string(lb_trans[1], precision=3, separator=','),
+        numpy.array2string(center_trans[1], precision=3, separator=','),
+        numpy.array2string(ub_trans[1], precision=3, separator=','),
+        numpy.array2string(lb_trans[2], precision=3, separator=','),
+        numpy.array2string(center_trans[2], precision=3, separator=','),
+        numpy.array2string(ub_trans[2], precision=3, separator=','))
     
-    return new_lb, center, new_ub
+    return lb_trans[2], center_trans[2], ub_trans[2]
 
 def flatten(chain):
     chain_shape = chain.shape
@@ -264,19 +312,12 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile):
             if converged:
                 finished = True
 
-                new_lb, center, new_ub = rescale(lb, ub, numpy.array(cache.MIN_VALUE[:new_parameters]), numpy.array(cache.MAX_VALUE[:new_parameters]))
+                new_min_value, center, new_max_value = rescale(cache, lb, ub, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE))
 
-                new_min_value = list(cache.MIN_VALUE)
-                new_max_value = list(cache.MAX_VALUE)
-
-                new_min_value[:new_parameters] = new_lb
-                new_max_value[:new_parameters] = new_ub
                 json_path = change_bounds_json(cache, new_min_value, new_max_value)                
                 cache.resetTransform(json_path)                
                 sampler.log_prob_fn.args[0] = json_path
                 sampler.log_prob_fn.args[1] = cache
-
-                multiprocessing.get_logger().info("new lower bounds %s   new upper bounds %s", new_lb, new_ub)
             else:
                 multiprocessing.get_logger().info("bounds have not yet converged in gen %s", generation)
 

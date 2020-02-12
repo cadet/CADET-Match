@@ -151,7 +151,7 @@ class Cache:
         self.tempDir = self.settings.get('tempDir', None)
         self.graphType = self.settings.get('graphType', 1)
 
-        self.checkpointInterval = self.settings.get('checkpointInterval', 600)
+        self.checkpointInterval = self.settings.get('checkpointInterval', 30)
         self.setupMetaMask()
 
         self.debugWrite = bool(self.settings.get('debugWrite', False))

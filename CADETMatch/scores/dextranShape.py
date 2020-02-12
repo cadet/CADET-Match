@@ -113,38 +113,58 @@ def cut_front_find(times, values, name, cache):
 
 def cut_front(times, values, min_value, max_value, crit_fs, s):
     max_index = numpy.argmax(values >= max_value)
-    
+
     if max_index == 0:
         #no point high enough was found so use the highest point
         s, crit_fs = smoothing.find_smoothing_factors(times, values, None, None)
         max_index = numpy.argmax(values)
         max_value = values[max_index]
+
+        if min_value >= max_value:
+            min_value = 1e-3 * max_value
     
     max_time = times[max_index]
 
     smooth_value = smoothing.smooth_data(times, values, crit_fs, s)
 
     spline = scipy.interpolate.InterpolatedUnivariateSpline(times, smooth_value, ext=1)
+
+    error = abs(spline(max_time) - values[max_index])/max(values)
+
+    if error > 1e-2:
+        #result is truly garbage, this means the shape is so distorted compared to the real system that even the spline is not accurate
+        #this almost always happens when the peak is so sharp it only spans a few time points
+        #it also means the rest of the optimization is not needed
+        return spline, numpy.zeros(len(times))
     
     def goal(time):
         return (spline(time)-max_value)**2
     
-    result = scipy.optimize.minimize(goal, max_time, method='powell', tol=1e-10)
-    
-    max_time = float(result.x)
-    max_index = max(numpy.argmax(values >= max_value), max_index)
+    result = scipy.optimize.minimize(goal, max_time, method='powell', tol=1e-5)
 
-    min_index = numpy.argmax(values[:max_index] >= min_value)
+    max_time = float(result.x)
+
+    min_index = numpy.argmin(values[:max_index] <= min_value)
     min_time = times[min_index]
+
+    if min_time >= max_time:
+        #this happens when the peak is so sharp the front only spans 2 indexes
+        while min_time >= max_time:
+            if min_index > 0:
+                min_index -= 1
+                min_time = times[min_index]
     
     def goal(time):
         if time > max_time:
             #don't search to the right of the max_time for a lower value
             return 1e10
-        return (spline(time)-min_value)**2
+        if time < times[0]:
+            #don't search before the start time
+            return 1e10
+        return (spline(time) - min_value)**2
     
-    result = scipy.optimize.minimize(goal, min_time, method='powell', tol=1e-10)
-    
+    result = scipy.optimize.minimize(goal, min_time, method='powell', tol=1e-5)
+
     min_time = float(result.x)
 
     needed_points = int( (max_time - min_time) * 10)

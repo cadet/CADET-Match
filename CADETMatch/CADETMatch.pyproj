@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\temp\TestDatasets\NSGA3_binding_PTD_mass_space.json" 1</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\MCMC\Dextran\nsga3_mcmc_6_emcee12_new\mcmc_refine\MCMC_dextran_nsga3.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>
