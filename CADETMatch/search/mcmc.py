@@ -511,7 +511,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
 def process_sampler_run_write(cache, mcmc_store):
     chain = mcmc_store.root.full_chain
-    chain_seq = mcmc_store.root.chain_seq
+    chain_seq = mcmc_store.root.mcmc_acceptance
     run_chain_stat = mcmc_store.root.run_chain_stat
 
     chain, chain_flat, chain_transform, chain_flat_transform = process_chain(chain, cache, len(chain_seq)-1)
@@ -579,7 +579,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         checkpoint['run_chain_stat'] = run_chain_stat
 
         mcmc_store.root.full_chain = run_chain
-        mcmc_store.root.chain_seq = numpy.array(chain_seq).reshape(-1, 1)
+        mcmc_store.root.mcmc_acceptance = numpy.array(chain_seq).reshape(-1, 1)
         mcmc_store.root.run_chain_stat = run_chain_stat
 
         if generation % checkInterval == 0:
