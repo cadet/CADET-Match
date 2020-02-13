@@ -508,18 +508,31 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     checkpoint['sampler_a'] = sampler._moves[1].n
 
     write_interval(-1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_burn_write)
-            
+
+def process_sampler_run_write(cache, mcmc_store):
+    chain = mcmc_store.root.full_chain
+    chain_seq = mcmc_store.root.chain_seq
+    run_chain_stat = mcmc_store.root.run_chain_stat
+
+    chain, chain_flat, chain_transform, chain_flat_transform = process_chain(chain, cache, len(chain_seq)-1)
+
+    mcmc_store.root.full_chain_transform = chain_transform
+    mcmc_store.root.flat_chain = chain_flat
+    mcmc_store.root.flat_chain_transform = chain_flat_transform
+        
+    run_chain_stat, _, run_chain_stat_transform, _ = process_chain(run_chain_stat, cache, len(chain_seq)-1)
+
+    mcmc_store.root.run_chain_stat_transform = run_chain_stat_transform
+
+    interval_chain = chain_flat
+    interval_chain_transform = chain_flat_transform
+    process_interval(cache, mcmc_store, interval_chain, interval_chain_transform)            
 
 def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
-    burn_seq = checkpoint.get('burn_seq', [])
     chain_seq = checkpoint.get('chain_seq', [])
-    bounds_seq = checkpoint.get('bounds_seq', [])
         
-    train_chain = checkpoint.get('train_chain', None)
     run_chain = checkpoint.get('run_chain', None)
-    bounds_chain = checkpoint.get('bounds_chain', None)
 
-    train_chain_stat = checkpoint.get('train_chain_stat', None)
     run_chain_stat = checkpoint.get('run_chain_stat', None)
 
     iat = checkpoint.get('integrated_autocorrelation_time', [])
@@ -563,8 +576,11 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         checkpoint['chain_seq'] = chain_seq
         checkpoint['sampler_iterations'] = sampler.iterations
         checkpoint['sampler_naccepted'] = sampler.naccepted
-        checkpoint['train_chain_stat'] = train_chain_stat
         checkpoint['run_chain_stat'] = run_chain_stat
+
+        mcmc_store.root.full_chain = run_chain
+        mcmc_store.root.chain_seq = numpy.array(chain_seq).reshape(-1, 1)
+        mcmc_store.root.run_chain_stat = run_chain_stat
 
         if generation % checkInterval == 0:
             try:
@@ -585,10 +601,14 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
             iat.append(temp_iat)
             checkpoint['integrated_autocorrelation_time'] = iat
 
+            mcmc_store.root.integrated_autocorrelation_time = numpy.array(iat)
+
             tau = numpy.array(tau)
             tau_percent = generation / (tau * cache.MCMCTauMult)
 
-        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, mcmc_store)
+            mcmc_store.root.tau_percent = tau_percent.reshape(-1, 1)
+
+        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_run_write)
         mle_process(last=False)
         util.graph_corner_process(cache, last=False)
 
@@ -600,7 +620,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     checkpoint['chain_seq'] = chain_seq
     checkpoint['state'] = 'complete'
 
-    write_interval(-1, cache, checkpoint, checkpointFile, mcmc_store)
+    write_interval(-1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_run_write)
 
 def write_interval(interval, cache, checkpoint, checkpointFile, mcmc_store, process_mcmc_store):
     "write the checkpoint and mcmc data at most every n seconds"
@@ -627,14 +647,7 @@ def run(cache, tools, creator):
     mcmc_store.filename = mcmc_h5.as_posix()
 
     if mcmc_h5.exists():
-        mcmc_store.load()
-    
-
-    burn_seq = checkpoint.get('burn_seq', [])
-    chain_seq = checkpoint.get('chain_seq', [])
-        
-    train_chain = checkpoint.get('train_chain', None)
-    run_chain = checkpoint.get('run_chain', None)
+        mcmc_store.load()    
 
     parameters = len(cache.MIN_VALUE)
     
