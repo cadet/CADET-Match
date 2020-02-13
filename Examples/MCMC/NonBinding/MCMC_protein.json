@@ -2,43 +2,45 @@
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/NonBinding",
   "resultsDir": "fit_delay/",
-  "tempDir": "M:/",
+  "tempDir": "L:/",
   "CSV": "nonbinding_MCMC.csv",
-  "checkpointFile": "check",
-  "searchMethod": "MCMC",
-  "population": 25,
-  "roundParameters": 6,
-  "roundScores": 6,
-  "metaResultsOnly": 1,
-  "sobolGeneration":1,
-  "graphSpearman": 0,
-  "normalizeOutput":1,
-  "population": 12,
-  "metaResultsOnly": 1,
-  "sobolGeneration":1,
-  "scoreMCMC":"score",
-  "graphSpearman": 0,
-  "normalizeOutput":1,
-  "kde": 
-  {
-      "power": 1,
-      "variations": 100,
-      "pump_delay_mean": 2,
-      "pump_delay_std": 10,
-      "base_noise_std": 1e-7,
-      "signal_noise_std": 1e-2      
-  },
-  "kde_synthetic":
-  {
-    "file_path":"protein_pulse.h5",
-    "delay":[5.0, 20.0],
-    "flow":[1.0, 0.003],
-    "load":[1.0, 0.003],
-    "error_slope":[1.0, 0.001],
-    "error_base":100.0,
-    "base":1000.0,
-    "count":2000
-  },
+    "checkpointFile": "check",
+    "searchMethod": "NSGA3",
+    "population": 12,
+    "finalGradRefinement": 1,
+    "stallGenerations": 15,
+    "continueMCMC": 1,
+    "normalizeOutput": 1,
+  "mcmc_h5":"C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran/nsga3_mcmc_6_emcee12_new/mcmc_refine/mcmc/mcmc.h5",
+  "kde_synthetic": [
+		{
+			"file_path": "protein_pulse.h5",
+			"experimental_csv": "protein_pulse.csv",
+			"name": "main",
+			"units": [
+                2
+            ],
+            "delay": [
+                0.0,
+                2.0
+            ],
+            "flow": [
+                1.0,
+                0.007
+            ],
+            "load": [
+                1.0,
+                0.007
+            ],
+            "uv_noise": [
+                0.0,
+                1e-8
+            ],
+            "base": 100.0,
+            "uv_noise": [0.0, 1e-8],
+            "count": 4000
+		}
+	],
 	"parameters": [
 		{
 			"transform": "norm_log",
@@ -65,6 +67,24 @@
 			"max": 0.01
 		}
 	],
+    "parameters_mcmc": [
+        {
+            "transform": "norm_log",
+            "component": -1,
+            "bound": -1,
+            "location": "/input/model/unit_001/COL_DISPERSION",
+            "min": 2.82E-07,
+            "max": 3.18E-07
+        },
+        {
+            "transform": "norm",
+            "component": -1,
+            "bound": -1,
+            "location": "/input/model/unit_001/COL_POROSITY",
+            "min": 0.394093657,
+            "max": 0.406710988
+        }
+	],
 	"experiments": [
 		{
 			"CSV": "protein_pulse.csv",
@@ -72,18 +92,14 @@
 			"HDF5": "protein_pulse.h5",
 			"name": "main",
 			"timeout": 4.01073694229126,
+            "set_values":[
+                ["/input/model/unit_001/COL_DISPERSION", -1, 3.02E-07],
+                ["/input/model/unit_001/COL_POROSITY", -1, 0.399681496]
+              ],
 			"features": [
 				{
                     "name": "Pulse",
                     "type": "ShapeDecay"
-                },
-                {
-                    "name": "Time",
-                    "type": "AbsoluteTime"
-                },
-                {
-                    "name": "Value",
-                    "type": "AbsoluteHeight"
                 }
 			]
 		}

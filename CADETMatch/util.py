@@ -413,8 +413,8 @@ def setupMCMC(cache):
         if baseDir is not None:
             settings['baseDir'] = baseDir.as_posix()
 
-        if 'mcmc_h5' in settings and 'parameters_mcmc' in settings:
-            settings['parameters'].extend(settings['parameters_mcmc'])
+        if 'mcmc_h5' in settings:
+            update_json_mcmc(settings)
 
         settings['searchMethod'] = 'MCMC'
         settings['graphSpearman'] = 0
@@ -442,6 +442,27 @@ def setupMCMC(cache):
         with new_settings_file.open(mode="w") as json_data:
             json.dump(settings, json_data, indent=4, sort_keys=False)
         return new_settings_file
+
+def update_json_mcmc(settings):
+    data = H5()
+    data.filename = settings['mcmc_h5']
+    data.load(paths='/bounds_change/json')
+    json_data = json.loads(data.root.bounds_change.json)
+
+    if 'parameters_mcmc' in settings:
+        new_parameters = settings['parameters_mcmc']
+
+        for a,b in zip(json_data, new_parameters):
+            if a['transform'] == b['transform'] and a['location'].split('/')[-1] == b['location'].split('/')[-1]:
+                b['min'] = a['min']
+                b['max'] = a['max']
+            else:
+                multiprocessing.get_logger().info("parameters_mcmc does not have the same transform and variables in the same order as the prior, MCMC cannot continue until this is fixed")
+                sys.exit()
+
+        settings['parameters'].extend(new_parameters)
+    else:
+        settings['parameters'].extend(json_data)
 
 def setupAltFeature(cache, name):
     "read the original json file and make an mcmc file based on it with new boundaries"
