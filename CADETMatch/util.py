@@ -452,10 +452,10 @@ def update_json_mcmc(settings):
     if 'parameters_mcmc' in settings:
         new_parameters = settings['parameters_mcmc']
 
-        for a,b in zip(json_data, new_parameters):
+        for a,b in zip(new_parameters, json_data):
             if a['transform'] == b['transform'] and a['location'].split('/')[-1] == b['location'].split('/')[-1]:
-                b['min'] = a['min']
-                b['max'] = a['max']
+                a['min'] = b['min']
+                a['max'] = b['max']
             else:
                 multiprocessing.get_logger().info("parameters_mcmc does not have the same transform and variables in the same order as the prior, MCMC cannot continue until this is fixed")
                 sys.exit()

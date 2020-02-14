@@ -8,7 +8,7 @@ import time
 import numpy
 import shutil
 import csv
-from cadet import Cadet
+from cadet import Cadet, H5
 from pathlib import Path
 
 from deap import creator
@@ -164,6 +164,34 @@ def setTemplateValues(simulation, set_values):
         else:
             simulation[path] = value
 
+def setTemplateValuesAuto(simulation, set_values_auto, cache):
+    if 'mcmc_h5' not in cache.settings:
+        multiprocessing.get_logger().error("set_values_auto can't be used without mcmc_h5 as a prior")
+    
+    mcmc_h5 = Path(cache.settings['mcmc_h5'])
+    mle_h5 = mcmc_h5.parent / "mle.h5"
+
+
+    data = H5()
+    data.filename = mle_h5.as_posix()
+    data.load()
+    stat_MLE = data.root.stat_MLE
+
+    used = set()
+
+    for path, index, mle_index in set_values_auto:
+        value = stat_MLE[mle_index]
+        if mle_index not in used:
+            used.add(mle_index)
+        if index >= 0:
+            simulation[path][index] = value
+        else:
+            simulation[path] = value
+
+    if len(used) != len(stat_MLE):
+        multiprocessing.get_logger().warn("not all values from the prior where used, proceed with caution")
+    
+
 def setupTemplates(cache):
     "setup all the experimental templates"
     for experiment in cache.settings['experiments']:
@@ -181,6 +209,9 @@ def setupTemplates(cache):
 
         if 'set_values' in experiment:
             setTemplateValues(template, experiment['set_values'])
+
+        if 'set_values_auto' in experiment:
+            setTemplateValuesAuto(template, experiment['set_values_auto'], cache)
 
         util.setupSimulation(template, cache.target[name]['time'], cache.target[name]['smallest_peak'], cache)
 

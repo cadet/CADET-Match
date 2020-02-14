@@ -92,9 +92,9 @@
 			"HDF5": "protein_pulse.h5",
 			"name": "main",
 			"timeout": 4.01073694229126,
-            "set_values":[
-                ["/input/model/unit_001/COL_DISPERSION", -1, 3.02E-07],
-                ["/input/model/unit_001/COL_POROSITY", -1, 0.399681496]
+            "set_values_auto":[
+                ["/input/model/unit_001/COL_DISPERSION", -1, 0],
+                ["/input/model/unit_001/COL_POROSITY", -1, 1]
               ],
 			"features": [
 				{
