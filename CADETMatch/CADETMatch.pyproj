@@ -119,6 +119,9 @@
     <Compile Include="stretch.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="version.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="__main__.py">
       <SubType>Code</SubType>
     </Compile>

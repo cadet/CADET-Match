@@ -33,6 +33,7 @@ CADETMatch/smoothing.py
 CADETMatch/stretch.py
 CADETMatch/synthetic_error.py
 CADETMatch/util.py
+CADETMatch/version.py
 CADETMatch/video_spearman.py
 CADETMatch.egg-info/PKG-INFO
 CADETMatch.egg-info/SOURCES.txt

@@ -1,14 +1,16 @@
 import setuptools
 
+from CADETMatch import version
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
     
 setuptools.setup(
-    name="CADETMatch",
-    version="0.5.24",
-    author="William Heymann",
-    author_email="w.heymann@fz-juelich.de",
-    description="CADETMatch is a parameter estimation and error modeling library for CADET",
+    name=version.__title__,
+    version=version.__version__,
+    author=version.__author__,
+    author_email=version.__email__,
+    description=version.__summary__,
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/modsim/CADET-Match",
