@@ -1419,9 +1419,15 @@ def getCoreCounts():
 def getMapFunction():
     cores = getCoreCounts()
     if cores == 1:
+
+        multiprocessing.get_logger().info('CADETMatch startup: running single threaded', cores)
+
         return map
     else:
         pool = multiprocessing.Pool(cores)
+
+        multiprocessing.get_logger().info('CADETMatch startup: created a parallel pool of %s workers', cores)
+
         return pool.imap_unordered
 
 def create_lookup(seq):

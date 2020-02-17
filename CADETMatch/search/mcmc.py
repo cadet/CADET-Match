@@ -735,7 +735,7 @@ def run(cache, tools, creator):
             pickle.dump(checkpoint, cp_file)
 
     if checkpoint['state'] == 'plot_finish':
-        mle_process(mcmc_store, last=True)
+        mle_process(last=True)
         util.graph_corner_process(cache, last=True)
     return numpy.mean(chain, 0)
 
