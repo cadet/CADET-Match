@@ -127,11 +127,16 @@ def error_flow(simulation, flow):
 
 def get_loading_sections(simulation):
     nsec = simulation.root.input.solver.sections.nsec
+
+    units = []
+    for key,value in simulation.root.input.model.items():
+        if key.startswith('unit_') and value.unit_type == b'INLET':
+            units.append(value)
+
     for i in range(nsec):
         temp = []
-        for key,value in simulation.root.input.model.items():
-            if key.startswith('unit_') and value.unit_type == b'INLET':
-                temp.append(value['sec_%03d' % i])
+        for unit in units:
+            temp.append(unit['sec_%03d' % i])
         
         if temp:
             if any([numpy.any(i.const_coeff) for i in temp]):

@@ -4,6 +4,7 @@ import CADETMatch.evo as evo
 #import grad
 import CADETMatch.gradFD as gradFD
 import CADETMatch.util as util
+import CADETMatch.version as version
 import time
 import numpy
 import shutil
@@ -102,6 +103,8 @@ def setup(cache, json_path, map_function):
     
     createDirectories(cache, json_path)
     util.setupLog(cache.settings['resultsDirLog'], "main.log")
+
+    multiprocessing.get_logger().info('CADETMatch starting up version: %s', version.__version__)
     
     cache.setup(json_path)
     
