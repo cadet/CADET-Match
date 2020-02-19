@@ -48,11 +48,10 @@ def run(sim_data, feature):
     
     temp = [pearson, 
             feature['value_function'](value_high), 
-            feature['time_function'](numpy.abs(diff_time)),
-            pearson_der]
+            feature['time_function'](numpy.abs(diff_time))]
     
     if derivative:
-        temp.extend([feature['value_function_high'](highs_der[1]),             
+        temp.extend([pearson_der, feature['value_function_high'](highs_der[1]),             
             feature['value_function_low'](lows_der[1]),])
 
     return (temp, util.sse(sim_data_values, exp_data_values), len(sim_data_values), 
