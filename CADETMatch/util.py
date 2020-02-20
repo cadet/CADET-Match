@@ -1342,11 +1342,14 @@ def graph_corner_process(cache, last=False, interval=1200):
     if last:
         ret = subprocess.run([sys.executable, 'generate_corner_graphs.py', str(cache.json_path), str(getCoreCounts())], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
+
+        ret = subprocess.run([sys.executable, 'generate_autocorr_graphs.py', str(cache.json_path), str(getCoreCounts())], 
+            stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_corner_process.last_time = time.time()
     elif (time.time() - graph_corner_process.last_time) > interval:
-        #graph_corner_process.child = subprocess.Popen([sys.executable, 'generate_corner_graphs.py', str(cache.json_path), str(getCoreCounts())], 
-        #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         subprocess.run([sys.executable, 'generate_corner_graphs.py', str(cache.json_path), str(getCoreCounts())], 
+            stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
+        subprocess.run([sys.executable, 'generate_autocorr_graphs.py', str(cache.json_path), str(getCoreCounts())], 
             stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         graph_corner_process.last_time = time.time()
 

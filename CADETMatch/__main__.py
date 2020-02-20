@@ -30,6 +30,10 @@ def makeParser():
                         help="Generate general graphs including 3D",
                         action='store_true')
 
+    parser.add_argument('--generate_graphs_autocorr',
+                        help="Generate autocorrelation graphs",
+                        action='store_true')
+
     parser.add_argument('--generate_spearman',
                         help="Generate spearman graphs",
                         action='store_true')
@@ -76,6 +80,8 @@ if __name__ == "__main__":
         sys.exit(run_command('CADETMatch.match', args.json, args.n))
     if args.generate_corner:
         sys.exit(run_command('CADETMatch.generate_corner_graphs', args.json, args.n))
+    if args.generate_graphs_autocorr:
+        sys.exit(run_command('CADETMatch.generate_graphs_autocorr', args.json, args.n))
     if args.generate_graphs:
         sys.exit(run_command('CADETMatch.generate_graphs', args.json, args.n, ['1']))
     if args.generate_graphs_all:
