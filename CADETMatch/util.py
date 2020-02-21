@@ -1053,7 +1053,16 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
     lookup = create_lookup(population)
 
-    for result in fitnesses:
+    last_time = time.time()
+    elapsed = cache.progress_elapsed_time
+
+    for idx, result in enumerate(fitnesses):
+
+        if (time.time() - last_time) > elapsed:
+            percent = idx / len(population)
+            multiprocessing.get_logger().info("Generation %s approximately %.1f %% complete with %s/%s done", generation, percent*100, idx, len(population))
+            last_time = time.time()
+
         fit, csv_line, results, individual = result
 
         ind = pop_lookup(lookup, individual)

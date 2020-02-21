@@ -24,6 +24,7 @@
   "graphMetaTime": 600,
   "finalGradRefinement": 1,
   "fullTrainingData": 1,
+  "progress_elapsed_time": 2,
   "parameters": [
     {
       "transform": "norm_log",

@@ -133,6 +133,7 @@ class Cache:
         self.stallGenerations = int(self.settings.get('stallGenerations', 10))
         self.stallCorrect = int(self.settings.get('stallCorrect', 5))
         self.progressCorrect = int(self.settings.get('progressCorrect', 5))
+        self.progress_elapsed_time = int(self.settings.get('progress_elapsed_time', 300))
 
         self.fullTrainingData = int(self.settings.get('fullTrainingData', 0))
 
