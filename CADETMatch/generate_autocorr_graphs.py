@@ -80,7 +80,7 @@ def main(map_function):
 
         graph_dir = cache.settings['resultsDirSpace'] / "mcmc"
 
-        input_headers = cache.parameter_headers
+        input_headers = cache.parameter_headers_actual
 
         for chain in ("full_chain", "train_full_chain", "bounds_full_chain"):
             if chain in mcmc_store.root:

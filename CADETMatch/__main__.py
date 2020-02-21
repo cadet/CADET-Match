@@ -81,7 +81,7 @@ if __name__ == "__main__":
     if args.generate_corner:
         sys.exit(run_command('CADETMatch.generate_corner_graphs', args.json, args.n))
     if args.generate_graphs_autocorr:
-        sys.exit(run_command('CADETMatch.generate_graphs_autocorr', args.json, args.n))
+        sys.exit(run_command('CADETMatch.generate_autocorr_graphs', args.json, args.n))
     if args.generate_graphs:
         sys.exit(run_command('CADETMatch.generate_graphs', args.json, args.n, ['1']))
     if args.generate_graphs_all:

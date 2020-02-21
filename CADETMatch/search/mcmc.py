@@ -279,7 +279,15 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
     parameters = len(cache.MIN_VALUE)
 
-    new_parameters = len(cache.settings['parameters']) - len(cache.settings.get('parameters_mcmc', []))
+    if 'mcmc_h5' in cache.settings:
+        data = cadet.H5()
+        data.filename = cache.settings['mcmc_h5']
+        data.load(paths='/bounds_change/center_trans')
+        previous_parameters = data.root.bounds_change.center_trans.shape[1]
+    else:
+        previous_parameters = 0
+
+    new_parameters = parameters - previous_parameters
 
     finished = False
 
@@ -324,6 +332,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
             converged, lb, ub = converged_bounds(bounds_chain[:,:,:new_parameters], 200, 1e-3)
 
             if converged:
+                #sys.exit()
                 finished = True
 
                 new_min_value, center, new_max_value = rescale(cache, lb, ub, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE), mcmc_store)

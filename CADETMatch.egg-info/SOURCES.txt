@@ -11,6 +11,7 @@ CADETMatch/de_snooker.py
 CADETMatch/evo.py
 CADETMatch/fitness.py
 CADETMatch/ga_simple.py
+CADETMatch/generate_autocorr_graphs.py
 CADETMatch/generate_corner_graphs.py
 CADETMatch/generate_graphs.py
 CADETMatch/grad.py
