@@ -121,6 +121,9 @@ def sobolGenerator(icls, cache, n):
         populationDimension = len(cache.MIN_VALUE)
         populationSize = n
         sobol = SALib.sample.sobol_sequence.sample(populationSize, populationDimension)
+        lb = numpy.array(cache.MIN_VALUE)
+        ub = numpy.array(cache.MAX_VALUE)
+        sobol = sobol * (ub-lb) + lb
         data = numpy.apply_along_axis(list, 1, sobol)
         data = list(map(icls, data))
         return data

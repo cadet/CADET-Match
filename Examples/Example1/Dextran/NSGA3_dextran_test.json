@@ -1,0 +1,54 @@
+{
+  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+  "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Dextran",
+    "tempDir": "L:/",
+  "resultsDir": "fit_nsga3_powell",
+  "CSV": "dextran_NSGA3.csv",
+  "checkpointFile": "check",
+  "stopAverage": 1,
+  "stopBest": 1,
+  "gradCheck": 1.0,
+  "gradVector": 0,
+  "searchMethod": "NSGA3",
+  "localRefine": "powell",
+  "mutationRate": 1.0,
+  "crossoverRate": 1.0,
+  "generations": 1000,
+  "population": 10,
+  "metaResultsOnly": 1,
+  "sobolGeneration":1,
+  "stallGenerations": 10,
+  "progressCorrect": 2,
+  "normalizeOutput":1,
+  "continueMCMC":0,
+  "graphMetaTime": 600,
+  "finalGradRefinement": 1,
+  "fullTrainingData": 1,
+  "progress_elapsed_time": 360,
+  "parameters": [
+    {
+      "transform": "volume_area",
+      "area_location": "/input/model/unit_001/CROSS_SECTION_AREA",
+      "length_location": "/input/model/unit_001/COL_LENGTH",
+      "minVolume": 1e-7,
+      "maxVolume": 1e-4,
+      "minArea":1e-5,
+      "maxArea":1e-3
+    }
+  ],
+  "experiments": [
+    {
+      "CSV": "dextran_pulse.csv",
+      "isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
+      "HDF5": "dextran_pulse.h5",
+      "name": "main",
+      "timeout": 30.0,
+      "features": [
+        {
+            "name": "Pulse",
+            "type": "DextranShape"
+        }
+      ]
+    }
+  ]
+}
