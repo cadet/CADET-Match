@@ -28,6 +28,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="abstract\transform.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="cache.py">
       <SubType>Code</SubType>
     </Compile>
@@ -431,6 +434,7 @@
     <Content Include="README.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="abstract\" />
     <Folder Include="scores\obsolete\" />
     <Folder Include="transform\" />
     <Folder Include="search\" />

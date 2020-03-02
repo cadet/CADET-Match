@@ -239,11 +239,12 @@ def change_bounds_json(cache, lb, ub, mcmc_store):
         for parameter in settings['parameters']:
             transform = cache.transforms[parameter['transform']]
             count = transform.count_extended
-            multiprocessing.get_logger().warn('%s %s %s', idx, count, transform)
-            lb_local = lb_trans[idx:idx+count]
-            ub_local = ub_trans[idx:idx+count]
-            transform.setBounds(parameter, lb_local, ub_local)
-            idx = idx + count
+            if count:
+                multiprocessing.get_logger().warn('%s %s %s', idx, count, transform)
+                lb_local = lb_trans[idx:idx+count]
+                ub_local = ub_trans[idx:idx+count]
+                transform.setBounds(parameter, lb_local, ub_local)
+                idx = idx + count
 
         with new_settings_file.open(mode="w") as json_data:
             json.dump(settings, json_data, indent=4, sort_keys=False)
