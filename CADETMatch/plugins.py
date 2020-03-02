@@ -22,5 +22,8 @@ def get_plugins(directory):
     temp = {}
     for path in get_files(plugins):
         plug = load_plugin(path)
-        temp[plug.name] = plug
+        if getattr(plug, 'plugins', None) is not None:
+            temp.update(plug.plugins)
+        else:
+            temp[plug.name] = plug
     return temp

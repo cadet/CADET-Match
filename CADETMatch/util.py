@@ -180,14 +180,14 @@ def convert_individual(individual, cache):
     cadetValuesExtended = []
 
     idx = 0
-    for parameter in cache.settings['parameters']:
-        transform = parameter['transform']
-        count = cache.transforms[transform].count
-        seq = individual[idx:idx+count]
-        values, headerValues = cache.transforms[transform].untransform(seq, cache, parameter)
-        cadetValues.extend(values)
-        cadetValuesExtended.extend(headerValues)
-        idx += count
+    for parameter in cache.parameters:
+        count = parameter.count
+        if count:
+            seq = individual[idx:idx+count]
+            values, headerValues = parameter.untransform(seq)
+            cadetValues.extend(values)
+            cadetValuesExtended.extend(headerValues)
+            idx += count
 
     return cadetValues, cadetValuesExtended
 
@@ -195,13 +195,13 @@ def convert_individual_grad(individual, cache):
     cadetValues = []
 
     idx = 0
-    for parameter in cache.settings['parameters']:
-        transform = parameter['transform']
-        count = cache.transforms[transform].count
-        seq = individual[idx:idx+count]
-        values = cache.transforms[transform].grad_untransform(seq, cache, parameter)
-        cadetValues.extend(values)
-        idx += count
+    for parameter in cache.parameters:
+        count = parameter.count
+        if count:
+            seq = individual[idx:idx+count]
+            values = parameter.grad_untransform(seq)
+            cadetValues.extend(values)
+            idx += count
 
     return cadetValues
 
@@ -209,12 +209,11 @@ def convert_population(population, cache):
     cadetValues = numpy.zeros(population.shape)
 
     idx = 0
-    for parameter in cache.settings['parameters']:
-        transform = parameter['transform']
-        count = cache.transforms[transform].count
+    for parameter in cache.parameters:
+        count = parameter.count
         if count:
             matrix = population[:,idx:idx+count]
-            values = cache.transforms[transform].untransform_matrix(matrix, cache, parameter)
+            values = parameter.untransform_matrix(matrix)
             cadetValues[:,idx:idx+count] = values
             idx += count
 
@@ -224,12 +223,11 @@ def convert_population_inputorder(population, cache):
     cadetValues = numpy.zeros(population.shape)
 
     idx = 0
-    for parameter in cache.settings['parameters']:
-        transform = parameter['transform']
-        count = cache.transforms[transform].count
+    for parameter in cache.parameters:
+        count = parameter.count
         if count:
             matrix = population[:,idx:idx+count]
-            values = cache.transforms[transform].untransform_matrix_inputorder(matrix, cache, parameter)
+            values = parameter.untransform_matrix_inputorder(matrix)
             cadetValues[:,idx:idx+count] = values
             idx += count
 
@@ -248,14 +246,14 @@ def set_simulation(individual, simulation, settings, cache, experiment):
     cadetValuesKEQ = []
 
     idx = 0
-    for parameter in settings['parameters']:
-        transform = parameter['transform']
-        count = cache.transforms[transform].count
-        seq = individual[idx:idx+count]
-        values, headerValues = cache.transforms[transform].setSimulation(simulation, parameter, seq, cache, experiment)
-        cadetValues.extend(values)
-        cadetValuesKEQ.extend(headerValues)
-        idx += count
+    for parameter in cache.parameters:
+        count = parameter.count
+        if count:
+            seq = individual[idx:idx+count]
+            values, headerValues = parameter.setSimulation(simulation, seq, experiment)
+            cadetValues.extend(values)
+            cadetValuesKEQ.extend(headerValues)
+            idx += count
 
     multiprocessing.get_logger().debug("finished setting hdf5")
     return cadetValues, cadetValuesKEQ

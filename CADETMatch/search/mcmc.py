@@ -237,7 +237,7 @@ def change_bounds_json(cache, lb, ub, mcmc_store):
 
         idx = 0
         for parameter in settings['parameters']:
-            transform = cache.transforms[parameter['transform']]
+            transform = cache.transforms[parameter['transform']](parameter, cache)
             count = transform.count_extended
             if count:
                 multiprocessing.get_logger().warn('%s %s %s', idx, count, transform)

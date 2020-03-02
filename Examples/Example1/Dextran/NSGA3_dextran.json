@@ -14,7 +14,7 @@
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
   "generations": 1000,
-  "population": 100,
+  "population": 10,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 10,
@@ -24,10 +24,10 @@
   "graphMetaTime": 600,
   "finalGradRefinement": 1,
   "fullTrainingData": 1,
-  "progress_elapsed_time": 2,
+  "progress_elapsed_time": 360,
   "parameters": [
     {
-      "transform": "norm_log",
+      "transform": "log",
       "component": -1,
       "bound": -1,
       "location": "/input/model/unit_001/COL_DISPERSION",
@@ -35,7 +35,7 @@
       "max": 1e-3
     },
     {
-      "transform": "norm",
+      "transform": "null",
       "component": -1,
       "bound": -1,
       "location": "/input/model/unit_001/COL_POROSITY",

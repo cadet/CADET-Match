@@ -112,6 +112,7 @@ class Cache:
         self.normalizeOutput = bool(self.settings.get('normalizeOutput', False))
         self.connectionNumberEntries = int(self.settings.get('connectionNumberEntries', 5))
 
+        self.parameters = [self.transforms[parameter['transform']](parameter, self) for parameter in self.settings['parameters']]
         self.setupHeaders()
         self.setupTarget()
         self.setupMinMax()
@@ -185,6 +186,7 @@ class Cache:
 
                 self.settings['parameters'] = settings['parameters']
 
+                self.parameters = [self.transforms[parameter['transform']](parameter, self) for parameter in self.settings['parameters']]
                 self.setupHeaders()
                 self.setupTarget()
                 self.setupMinMax()
@@ -246,9 +248,9 @@ class Cache:
         parameter_headers = []
         parameter_headers_actual = []
         
-        for parameter in self.settings['parameters']:
-            parameter_headers.extend(self.transforms[parameter['transform']].getHeaders(parameter))
-            parameter_headers_actual.extend(self.transforms[parameter['transform']].getHeadersActual(parameter))
+        for parameter in self.parameters:
+            parameter_headers.extend(parameter.getHeaders())
+            parameter_headers_actual.extend(parameter.getHeadersActual())
 
         self.parameter_headers = parameter_headers
         self.parameter_headers_actual = parameter_headers_actual
@@ -331,16 +333,8 @@ class Cache:
         #setup sensitivities
         parms = []
         sensitivityOk = 1
-        for parameter in self.settings['parameters']:
-            try:
-                comp = parameter['component']
-            except KeyError:
-                sensitivityOk = 0
-                break
-
-            transform = parameter['transform']
-
-            sens_parms, sensitivityOk = self.transforms[transform].setupTarget(parameter)
+        for parameter in self.parameters:
+            sens_parms, sensitivityOk = parameter.setupTarget()
             parms.extend(sens_parms)
 
         if sensitivityOk:
@@ -491,11 +485,10 @@ class Cache:
         self.transform = []
         #self.grad_transform = []
 
-        for parameter in self.settings['parameters']:
-            transform = parameter['transform']
-            minValues, maxValues = self.transforms[transform].getBounds(parameter)
+        for parameter in self.parameters:
+            minValues, maxValues = parameter.getBounds()
             #minGradValues, maxGradValues = self.transforms[transform].getGradBounds(parameter)
-            transforms = self.transforms[transform].transform(parameter)
+            transforms = parameter.transform()
             #grad_transforms = self.transforms[transform].grad_transform(parameter)
 
             if minValues:

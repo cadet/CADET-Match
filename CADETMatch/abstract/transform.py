@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 class AbstractTransform(ABC):
     def __init__(self, parameter, cache):
         self.cache = cache
-        self.paramter = parameter
+        self.parameter = parameter
         super(AbstractTransform, self).__init__()
 
     @property
@@ -73,5 +73,5 @@ class AbstractTransform(ABC):
         pass
 
     @abstractmethod
-    def setBounds(self):
+    def setBounds(self, parameter, lb, ub):
         pass

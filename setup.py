@@ -23,7 +23,7 @@ setuptools.setup(
           'corner>=2.0.1',
           'deap>=1.3.0',
           'psutil>=5.6.3',
-          'openpyxl>=3.0.0',
+          'openpyxl>=3.0.0,!=3.0.2',
           'numpy>=1.16.2',
           'scipy>=1.3.1',
           'matplotlib>=3.1.1',
