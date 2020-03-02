@@ -248,12 +248,12 @@ def set_simulation(individual, simulation, settings, cache, experiment):
     idx = 0
     for parameter in cache.parameters:
         count = parameter.count
-        if count:
-            seq = individual[idx:idx+count]
-            values, headerValues = parameter.setSimulation(simulation, seq, experiment)
-            cadetValues.extend(values)
-            cadetValuesKEQ.extend(headerValues)
-            idx += count
+        #even if count is 0 this needs to be run so that setSimulation will be run for things like calculations
+        seq = individual[idx:idx+count]
+        values, headerValues = parameter.setSimulation(simulation, seq, experiment)
+        cadetValues.extend(values)
+        cadetValuesKEQ.extend(headerValues)
+        idx += count
 
     multiprocessing.get_logger().debug("finished setting hdf5")
     return cadetValues, cadetValuesKEQ

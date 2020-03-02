@@ -328,3 +328,4 @@ __pycache__/
 /Examples/MCMC/Linear/fit
 /Examples/Example1/Dextran/fit_nsga3_powell
 /Examples/Example3/Isotherm/NSGA3_sma_test.json
+/Examples/Example1/Isotherm/fit_deap

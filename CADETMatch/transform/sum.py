@@ -1,112 +1,90 @@
 import CADETMatch.util as util
+from CADETMatch.abstract.transform import AbstractTransform
 
-name = "sum"
-count = 0
-count_extended = 0
+class SumTransform(AbstractTransform):
+    @property
+    def name(self):
+        return "sum"
 
-def getUnit(location):
-    return location.split('/')[3]
+    @property
+    def count(self):
+        return 0
 
-def transform(parameter):
-    return []
+    @property
+    def count_extended(self):
+        return 0
 
-def untransform(seq, cache, parameter):
-    return [], []
+    def transform(self):
+        return []
 
-def untransform_matrix(matrix, cache, parameter):
-    return None
+    grad_transform = transform
 
-untransform_matrix_inputorder = untransform_matrix
+    def untransform(self, seq):
+        return [], []
 
-def getValue(sim, location, bound=None, comp=None, index=None):
-    if bound is not None:
-        unit = getUnit(location)
-        boundOffset = util.getBoundOffset(sim.root.input.model[unit])
+    def grad_untransform(self, seq):
+        return self.untransform(seq)[0]
 
-        if comp == -1:
-            position = ()
-            return sim[location.lower()]
-        else:
-            position = boundOffset[comp] + bound
-            return sim[location.lower()][position]
+    def untransform_matrix(self, matrix):
+        return None
 
-    if index is not None:
-        if index == -1:
-            return sim[location.lower()]
-        else:
-            return sim[location.lower()][index]
+    untransform_matrix_inputorder = untransform_matrix
 
-def setValue(sim, value, location, bound=None, comp=None, index=None):
-    if bound is not None:
-        unit = getUnit(location)
-        boundOffset = util.getBoundOffset(sim.root.input.model[unit])
-
-        if comp == -1:
-            position = ()
-            sim[location.lower()] = value
-        else:
-            position = boundOffset[comp] + bound
-            sim[location.lower()][position] = value
-
-    if index is not None:
-        if index == -1:
-            sim[location.lower()] = value
-        else:
-            sim[location.lower()][index] = value
-        
-def setSimulation(sim, parameter, seq, cache, experiment):
-    if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
-        location1 = parameter['location1']
-        location2 = parameter['location2']
-        locationSum = parameter['locationSum']
+    def setSimulation(self, sim, seq, experiment):
+        if self.parameter.get('experiments', None) is None or experiment['name'] in self.parameter['experiments']:
+            location1 = self.parameter['location1']
+            location2 = self.parameter['location2']
+            locationSum = self.parameter['locationSum']
     
-        try:
-            comp1 = parameter['component1']
-            bound1 = parameter['bound1']
-            index1 = None
-        except KeyError:
-            index1 = parameter['index1']
-            bound1 = None
-            comp1 = None
-        value1 = getValue(sim, location1, bound=bound1, comp=comp1, index=index1)
+            try:
+                comp1 = self.parameter['component1']
+                bound1 = self.parameter['bound1']
+                index1 = None
+            except KeyError:
+                index1 = self.parameter['index1']
+                bound1 = None
+                comp1 = None
+            value1 = getValue(sim, location1, bound=bound1, comp=comp1, index=index1)
 
-        try:
-            comp2 = parameter['component2']
-            bound2 = parameter['bound2']
-            index2 = None
-        except KeyError:
-            index2 = parameter['index2']
-            bound2 = None
-            comp2 = None
+            try:
+                comp2 = self.parameter['component2']
+                bound2 = self.parameter['bound2']
+                index2 = None
+            except KeyError:
+                index2 = self.parameter['index2']
+                bound2 = None
+                comp2 = None
 
-        value2 = getValue(sim, location2, bound=bound2, comp=comp2, index=index2)
+            value2 = getValue(sim, location2, bound=bound2, comp=comp2, index=index2)
 
-        try:
-            compSum = parameter['componentSum']
-            boundSum = parameter['boundSum']
-            indexSum = None
-        except KeyError:
-            indexSum = parameter['indexSum']
-            boundSum = None
-            compSum = None
-        setValue(sim, value1+value2, locationSum, bound=boundSum, comp=compSum, index=indexSum)
+            try:
+                compSum = self.parameter['componentSum']
+                boundSum = self.parameter['boundSum']
+                indexSum = None
+            except KeyError:
+                indexSum = self.parameter['indexSum']
+                boundSum = None
+                compSum = None
+            setValue(sim, value1+value2, locationSum, bound=boundSum, comp=compSum, index=indexSum)
 
-    return [],[]
+        return [],[]
 
-def setupTarget(parameter):
-    return [], 0
+    def setupTarget(self):
+        return [], 0
 
-def getBounds(parameter):
-    return None,None
+    def getBounds(self):
+        return None,None
 
-def getHeaders(parameter):
-    return []
+    def getGradBounds(self):
+        return None, None
 
-def getHeadersActual(parameter):
-    return []
+    def getHeaders(self):
+        return []
 
-def setBounds(parameter, lb, ub):
-    return None
+    def getHeadersActual(self):
+        return self.getHeaders()
 
+    def setBounds(self, parameter, lb, ub):
+        return None
 
-
+plugins = {"sum": SumTransform}

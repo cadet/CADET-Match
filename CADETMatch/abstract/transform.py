@@ -75,3 +75,39 @@ class AbstractTransform(ABC):
     @abstractmethod
     def setBounds(self, parameter, lb, ub):
         pass
+
+    def getValue(self, sim, location, bound=None, comp=None, index=None):
+        if bound is not None:
+            unit = getUnit(location)
+            boundOffset = util.getBoundOffset(sim.root.input.model[unit])
+
+            if comp == -1:
+                position = ()
+                return sim[location.lower()]
+            else:
+                position = boundOffset[comp] + bound
+                return sim[location.lower()][position]
+
+        if index is not None:
+            if index == -1:
+                return sim[location.lower()]
+            else:
+                return sim[location.lower()][index]
+
+    def setValue(self, sim, value, location, bound=None, comp=None, index=None):
+        if bound is not None:
+            unit = getUnit(location)
+            boundOffset = util.getBoundOffset(sim.root.input.model[unit])
+
+            if comp == -1:
+                position = ()
+                sim[location.lower()] = value
+            else:
+                position = boundOffset[comp] + bound
+                sim[location.lower()][position] = value
+
+        if index is not None:
+            if index == -1:
+                sim[location.lower()] = value
+            else:
+                sim[location.lower()][index] = value
