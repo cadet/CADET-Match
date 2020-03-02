@@ -76,10 +76,12 @@ CADETMatch/transform/keq.py
 CADETMatch/transform/linear.py
 CADETMatch/transform/log.py
 CADETMatch/transform/norm.py
+CADETMatch/transform/norm_add.py
 CADETMatch/transform/norm_diameter.py
 CADETMatch/transform/norm_keq.py
 CADETMatch/transform/norm_linear.py
 CADETMatch/transform/norm_log.py
+CADETMatch/transform/norm_mult.py
 CADETMatch/transform/norm_nu_sigma.py
 CADETMatch/transform/norm_volume_area.py
 CADETMatch/transform/norm_volume_length.py

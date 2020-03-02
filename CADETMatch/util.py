@@ -871,7 +871,7 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
             alt_line_format = 'Generation: %s \tPopulation: %s \t1 - Average Score: %.1e \tBest: %.1e \t1 - Minimum Score: %.1e \tBest: %.1e \t1 - Product Score: %.1e \tBest: %.1e'
  
             if line_log:
-                if any(meta_max > 0.999):
+                if any(meta_max[:-1] > 0.999):  #don't use the last item since that has SSE
                     multiprocessing.get_logger().info(alt_line_format, generation, len(population),
                       1-population_average, 1-population_average_best,
                       1-population_min, 1-population_min_best,
