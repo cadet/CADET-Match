@@ -1,26 +1,30 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
-  "baseDir": "F:/Examples/Example2/Isotherm",
+  "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example2/Isotherm",
   "resultsDir": "fit/",
+  "tempDir": "L:/",
   "CSV": "isotherm_NSGA3.csv",
   "checkpointFile": "check",
-  "stopAverage": 0.999,
-  "stopBest": 0.999,
+  "stopAverage": 1,
+  "stopBest": 1,
   "gradCheck": 1.0,
+  "gradVector": 0,
   "searchMethod": "NSGA3",
-  "mutationRate": 0.05,
-  "crossoverRate": 0.8,
-  "generations": 100,
-  "population": 100,
-  "minPopulation": 50,
-  "maxPopulation":200,
-  "roundParameters": 3,
-  "roundScores": 3,
+  "localRefine": "powell",
+  "mutationRate": 1.0,
+  "crossoverRate": 1.0,
+  "generations": 1000,
+  "population": 10,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 10,
-   "MCMCpopulation": 25,
-  "continueMCMC": 1,
+  "progressCorrect": 2,
+  "normalizeOutput":1,
+  "continueMCMC":0,
+  "graphMetaTime": 600,
+  "finalGradRefinement": 1,
+  "fullTrainingData": 1,
+  "progress_elapsed_time": 360,
   "parameters": [
 		{
 			"transform": "norm_keq",
@@ -36,20 +40,15 @@
 			"maxKEQ": 1e3
 		},
 		{
-			"transform": "norm",
+			"transform": "nu_sigma",
 			"component": 1,
 			"bound": 0,
-			"location": "/input/model/unit_001/adsorption/SMA_NU",
-			"min": 1.0,
-			"max": 40.0
-		},
-		{
-			"transform": "norm",
-			"component": 1,
-			"bound": 0,
-			"location": "/input/model/unit_001/adsorption/SMA_SIGMA",
-			"min": 1.0,
-			"max": 100.0
+			"nu_location": "/input/model/unit_001/adsorption/SMA_NU",
+            "sigma_location": "/input/model/unit_001/adsorption/SMA_SIGMA",
+			"minNu": 1.0,
+			"maxNu": 40.0,
+            "minSigma": 1.0,
+			"maxSigma": 100.0
 		}
 	],
 	"experiments": [
@@ -62,7 +61,7 @@
 			"features": [
 				{
 					"name": "Pulse",
-					"type": "breakthroughHybrid2"
+					"type": "Shape"
 				}
 			]
 		},
@@ -75,11 +74,7 @@
 			"features": [
 				{
 					"name": "Pulse",
-					"type": "similarityHybrid2"
-				},
-				{
-					"name": "Deriv",
-					"type": "derivative_similarity_hybrid2"
+					"type": "Shape"
 				}
 			]
 		}
