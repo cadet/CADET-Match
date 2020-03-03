@@ -87,22 +87,16 @@ class VolumeAreaTransform(AbstractTransform):
         return self.getBounds()
 
     def getHeaders(self):
-        bound = -1
-        comp = -1
-    
         headers = []
-        headers.append("Area Comp:%s Bound:%s" % (comp, bound))
-        headers.append("Length Comp:%s Bound:%s" % (comp, bound))
-        headers.append("Volume Comp:%s Bound:%s" % (comp, bound))
+        headers.append("Area")
+        headers.append("Length")
+        headers.append("Volume")
         return headers
 
     def getHeadersActual(self):
-        bound = -1
-        comp = -1
-    
         headers = []
-        headers.append("Volume Comp:%s Bound:%s" % (comp, bound))
-        headers.append("Area Comp:%s Bound:%s" % (comp, bound))
+        headers.append("Volume")
+        headers.append("Area")
         return headers
 
     def setBounds(self, parameter, lb, ub):

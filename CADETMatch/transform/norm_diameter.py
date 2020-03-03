@@ -1,110 +1,138 @@
 import CADETMatch.util as util
 import math
+from CADETMatch.abstract.transform import AbstractTransform
 
-name = "norm_diameter"
-count = 1
-count_extended = 1
+class DiameterTransform(AbstractTransform):
+    @property
+    def name(self):
+        return "null"
 
-def getUnit(location):
-    return location.split('/')[3]
+    @property
+    def count(self):
+        return 1
 
-def transform(parameter):
-    minValue = parameter['min']
-    maxValue = parameter['max']
+    @property
+    def count_extended(self):
+        return self.count
 
-    def trans(i):
-        return (i - minValue)/(maxValue-minValue)
+    def transform(self):
+        def trans(i):
+            return i
 
-    return [trans,]
+        return [trans,]
 
-def untransform(seq, cache, parameter):
-    minValue = parameter['min']
-    maxValue = parameter['max']
+    grad_transform = transform
 
-    values_transform = [(maxValue - minValue) * seq[0] + minValue,]
+    def untransform(self, seq):
+        values = [math.pi * seq[0]**2/4.0,]
+        headerValues = [seq[0], values[0]]
+        return values, headerValues
 
-    values = [math.pi * values_transform[0]**2/4.0,]
-    headerValues = [values[0], values_transform[0]]
-    return values, headerValues
+    def grad_untransform(self, seq):
+        return self.untransform(seq)[0]
 
-def untransform_matrix(matrix, cache, parameter):
-    values = untransform_matrix_inputorder(matrix, cache, parameter)
-    values[:,0] = math.pi * values[:,0]**2/4.0
-    return values
+    def untransform_matrix(self, matrix):
+        values = numpy.zeros(matrix.shape)
+        values[:,0] = math.pi * matrix[:,0]**2/4.0
+        return values
 
-def untransform_matrix_inputorder(matrix, cache, parameter):
-    minValue = parameter['min']
-    maxValue = parameter['max']
+    untransform_matrix_inputorder = untransform_matrix
 
-    values = (maxValue - minValue) * matrix + minValue
-    return values
+    def setSimulation(self, sim, seq, experiment):
+        values, headerValues = self.untransform(seq)
 
-def setSimulation(sim, parameter, seq, cache, experiment):
-    values, headerValues = untransform(seq, cache, parameter)
+        if self.parameter.get('experiments', None) is None or experiment['name'] in self.parameter['experiments']:
+            location = self.parameter['location']
+            sim[location.lower()] = values[0]
+        return values, headerValues
 
-    if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
-        location = parameter['location']
-    
+    def setupTarget(self):
+        location = self.parameter['location']
+        bound = -1
+        comp = -1
+
+        name = location.rsplit('/', 1)[-1]
+        sensitivityOk = 1
+
         try:
-            comp = parameter['component']
-            bound = parameter['bound']
-            index = None
-        except KeyError:
-            index = parameter['index']
-            bound = None
+            unit = int(location.split('/')[3].replace('unit_', ''))
+        except ValueError:
+            unit = ''
+            sensitivityOk = 0
 
-        if bound is not None:
-            unit = getUnit(location)
-            boundOffset = util.getBoundOffset(sim.root.input.model[unit])
+        return [(name, unit, comp, bound),], sensitivityOk
 
-            if comp == -1:
-                position = ()
-                sim[location.lower()] = values[0]
-            else:
-                position = boundOffset[comp] + bound
-                sim[location.lower()][position] = values[0]
+    def getBounds(self):
+        minValue = self.parameter['min']
+        maxValue = self.parameter['max']
 
-        if index is not None:
-            sim[location.lower()][index] = values[0]
-    return values, headerValues
+        return [minValue,], [maxValue,]
 
-def setupTarget(parameter):
-    location = parameter['location']
-    bound = parameter['bound']
-    comp = parameter['component']
+    def getGradBounds(self):
+        return [self.parameter['min'],], [self.parameter['max'],]
 
-    name = location.rsplit('/', 1)[-1]
-    sensitivityOk = 1
+    def getHeaders(self):
+        headers = []
+        headers.append("Area")
+        headers.append("Diameter")
+        return headers
 
-    try:
-        unit = int(location.split('/')[3].replace('unit_', ''))
-    except ValueError:
-        unit = ''
-        sensitivityOk = 0
+    def getHeadersActual(self):
+        headers = []
+        headers.append("Area")
+        return headers
 
-    return [(name, unit, comp, bound),], sensitivityOk
+    def setBounds(self, parameter, lb, ub):
+        parameter['min'] = lb[0]
+        parameter['max'] = ub[0]
 
-def getBounds(parameter):
-    return [0.0,], [1.0,]
+class NormDiameterTransform(DiameterTransform):
+    @property
+    def name(self):
+        return "norm_diameter"
 
-def getHeaders(parameter):
-    bound = parameter['bound']
-    comp = parameter['component']
+    def transform(self):
+        minValue = self.parameter['min']
+        maxValue = self.parameter['max']
+
+        def trans(i):
+            return (i - minValue)/(maxValue-minValue)
+
+        return [trans,]
+
+    grad_transform = transform
+
+    def untransform(self, seq):
+        minValue = self.parameter['min']
+        maxValue = self.parameter['max']
+
+        values_transform = [(maxValue - minValue) * seq[0] + minValue,]
+
+        values = [math.pi * values_transform[0]**2/4.0,]
+        headerValues = [values[0], values_transform[0]]
+        return values, headerValues
+
+    def grad_untransform(self, seq):
+        return self.untransform(seq)[0]
+
+    def untransform_matrix(self, matrix):
+        values = self.untransform_matrix_inputorder(matrix)
+        values[:,0] = math.pi * values[:,0]**2/4.0
+        return values
+
+    def untransform_matrix_inputorder(self, matrix):
+        minValue = self.parameter['min']
+        maxValue = self.parameter['max']
+
+        values = (maxValue - minValue) * matrix + minValue
+        return values
+
+    def getBounds(self):
+        return [0.0,], [1.0,]
+
+    def getGradBounds(self):
+        return [self.parameter['min'],], [self.parameter['max'],]
+
+plugins = {"norm_diameter": NormDiameterTransform, "diameter": DiameterTransform}
     
-    headers = []
-    headers.append("Area Comp:%s Bound:%s" % (comp, bound))
-    headers.append("Diameter Comp:%s Bound:%s" % (comp, bound))
-    return headers
-
-def getHeadersActual(parameter):
-    bound = parameter['bound']
-    comp = parameter['component']
-    
-    headers = []
-    headers.append("Area Comp:%s Bound:%s" % (comp, bound))
-    return headers
-
-def setBounds(parameter, lb, ub):
-    parameter['min'] = lb[0]
-    parameter['max'] = ub[0]
 
