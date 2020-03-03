@@ -75,14 +75,20 @@ class NormAddTransform(AbstractTransform):
             valueFrom = self.getValue(sim, locationFrom, bound=boundFrom, comp=compFrom, index=indexFrom)
 
             try:
-                compTo = parameter['componentTo']
-                boundTo = parameter['boundTo']
+                compTo = self.parameter['componentTo']
+                boundTo = self.parameter['boundTo']
                 indexTo = None
             except KeyError:
-                indexTo = parameter['indexTo']
+                indexTo = self.parameter['indexTo']
                 boundTo = None
                 compTo = None
-            self.setValue(sim, valueFrom + values[0], locationTo, bound=boundTo, comp=compTo, index=indexTo)
+
+            if self.count:
+                temp = values[0]
+            else:
+                temp = self.parameter['min']
+            
+            self.setValue(sim, valueFrom + temp, locationTo, bound=boundTo, comp=compTo, index=indexTo)
 
         if self.count:
             return values, headerValues
@@ -91,9 +97,9 @@ class NormAddTransform(AbstractTransform):
 
     def setupTarget(self):
         if self.count:
-            location = parameter['locationTo']
-            bound = parameter['boundTo']
-            comp = parameter['componentTo']
+            location = self.parameter['locationTo']
+            bound = self.parameter['boundTo']
+            comp = self.parameter['componentTo']
 
             name = location.rsplit('/', 1)[-1]
             sensitivityOk = 1

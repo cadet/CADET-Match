@@ -82,7 +82,13 @@ class NormMultTransform(AbstractTransform):
                 indexTo = self.parameter['indexTo']
                 boundTo = None
                 compTo = None
-            self.setValue(sim, valueFrom * values[0], locationTo, bound=boundTo, comp=compTo, index=indexTo)
+
+            if self.count:
+                temp = values[0]
+            else:
+                temp = self.parameter['min']
+
+            self.setValue(sim, valueFrom * temp, locationTo, bound=boundTo, comp=compTo, index=indexTo)
 
         if self.count:
             return values, headerValues

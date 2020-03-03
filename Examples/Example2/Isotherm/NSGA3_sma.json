@@ -40,15 +40,23 @@
 			"maxKEQ": 1e3
 		},
 		{
-			"transform": "nu_sigma",
+			"transform": "norm",
 			"component": 1,
 			"bound": 0,
-			"nu_location": "/input/model/unit_001/adsorption/SMA_NU",
-            "sigma_location": "/input/model/unit_001/adsorption/SMA_SIGMA",
-			"minNu": 1.0,
-			"maxNu": 40.0,
-            "minSigma": 1.0,
-			"maxSigma": 100.0
+			"location": "/input/model/unit_001/adsorption/SMA_NU",
+			"min": 5.0,
+			"max": 10.0
+		},
+		{
+			"transform": "norm_mult",
+            "componentFrom": 1,
+			"boundFrom": 0,
+			"locationFrom": "/input/model/unit_001/adsorption/SMA_NU",
+			"componentTo": 1,
+			"boundTo": 0,
+			"locationTo": "/input/model/unit_001/adsorption/SMA_SIGMA",
+			"min": 6,
+			"max": 8
 		}
 	],
 	"experiments": [

@@ -334,8 +334,9 @@ class Cache:
         parms = []
         sensitivityOk = 1
         for parameter in self.parameters:
-            sens_parms, sensitivityOk = parameter.setupTarget()
-            parms.extend(sens_parms)
+            if parameter.count:
+                sens_parms, sensitivityOk = parameter.setupTarget()
+                parms.extend(sens_parms)
 
         if sensitivityOk:
             self.target['sensitivities'] = parms

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from CADETMatch import util
 
 class AbstractTransform(ABC):
     def __init__(self, parameter, cache):
@@ -78,7 +79,7 @@ class AbstractTransform(ABC):
 
     def getValue(self, sim, location, bound=None, comp=None, index=None):
         if bound is not None:
-            unit = getUnit(location)
+            unit = self.getUnit(location)
             boundOffset = util.getBoundOffset(sim.root.input.model[unit])
 
             if comp == -1:
@@ -96,7 +97,7 @@ class AbstractTransform(ABC):
 
     def setValue(self, sim, value, location, bound=None, comp=None, index=None):
         if bound is not None:
-            unit = getUnit(location)
+            unit = self.getUnit(location)
             boundOffset = util.getBoundOffset(sim.root.input.model[unit])
 
             if comp == -1:
