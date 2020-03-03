@@ -1,152 +1,152 @@
 import CADETMatch.util as util
+from CADETMatch.abstract.transform import AbstractTransform
 
-name = "norm_add"
-count = 1
-count_extended = 1
+class NormAddTransform(AbstractTransform):
+    @property
+    def name(self):
+        return "norm_add"
 
-def getUnit(location):
-    return location.split('/')[3]
-
-def transform(parameter):
-    minValue = parameter['min']
-    maxValue = parameter['max']
-
-    def trans(i):
-        return (i - minValue)/(maxValue-minValue)
-
-    return [trans,]
-
-grad_transform = transform
-
-def untransform(seq, cache, parameter):
-    minValue = parameter['min']
-    maxValue = parameter['max']
-
-    values = [(maxValue - minValue) * seq[0] + minValue,]
-    headerValues = values
-    return values, headerValues
-
-def grad_untransform(seq, cache, parameter):
-    return untransform(seq, cache,parameter)[0]
-
-def untransform_matrix(matrix, cache, parameter):
-    minValue = parameter['min']
-    maxValue = parameter['max']
-
-    values = (maxValue - minValue) * matrix + minValue
-    return values
-
-untransform_matrix_inputorder = untransform_matrix
-
-def getValue(sim, location, bound=None, comp=None, index=None):
-    if bound is not None:
-        unit = getUnit(location)
-        boundOffset = util.getBoundOffset(sim.root.input.model[unit])
-
-        if comp == -1:
-            position = ()
-            return sim[location.lower()]
+    @property
+    def count(self):
+        if self.parameter['min'] != self.parameter['max']:
+            return 1
         else:
-            position = boundOffset[comp] + bound
-            return sim[location.lower()][position]
+            return 0
 
-    if index is not None:
-        if index == -1:
-            return sim[location.lower()]
+    @property
+    def count_extended(self):
+        return self.count
+
+    def transform(self):
+        if self.count:
+            minValue = self.parameter['min']
+            maxValue = self.parameter['max']
+
+            def trans(i):
+                return (i - minValue)/(maxValue-minValue)
+
+            return [trans,]
         else:
-            return sim[location.lower()][index]
+            return []
 
-def setValue(sim, value, location, bound=None, comp=None, index=None):
-    if bound is not None:
-        unit = getUnit(location)
-        boundOffset = util.getBoundOffset(sim.root.input.model[unit])
+    grad_transform = transform
 
-        if comp == -1:
-            position = ()
-            sim[location.lower()] = value
+    def untransform(self, seq):
+        if self.count:
+            minValue = self.parameter['min']
+            maxValue = self.parameter['max']
+
+            values = [(maxValue - minValue) * seq[0] + minValue,]
+            headerValues = values
+            return values, headerValues
         else:
-            position = boundOffset[comp] + bound
-            sim[location.lower()][position] = value
+            return [],[]
 
-    if index is not None:
-        if index == -1:
-            sim[location.lower()] = value
+    def grad_untransform(self, seq):
+        return self.untransform(seq)[0]
+
+    def untransform_matrix(self, matrix):
+        if self.count:
+            minValue = self.parameter['min']
+            maxValue = self.parameter['max']
+
+            values = (maxValue - minValue) * matrix + minValue
+            return values
         else:
-            sim[location.lower()][index] = value
+            return None
 
-def setSimulation(sim, parameter, seq, cache, experiment):
-    values, headerValues = untransform(seq, cache, parameter)
+    untransform_matrix_inputorder = untransform_matrix
 
-    if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:    
-        locationFrom = parameter['locationFrom']
-        locationTo = parameter['locationTo']
+    def setSimulation(self, sim, seq, experiment):
+        values, headerValues = self.untransform(seq)
+
+        if self.parameter.get('experiments', None) is None or experiment['name'] in self.parameter['experiments']:    
+            locationFrom = self.parameter['locationFrom']
+            locationTo = self.parameter['locationTo']
     
-        try:
-            compFrom = parameter['componentFrom']
-            boundFrom = parameter['boundFrom']
-            indexFrom = None
-        except KeyError:
-            indexFrom = parameter['indexFrom']
-            boundFrom = None
-            compFrom = None
-        valueFrom = getValue(sim, locationFrom, bound=boundFrom, comp=compFrom, index=indexFrom)
+            try:
+                compFrom = self.parameter['componentFrom']
+                boundFrom = self.parameter['boundFrom']
+                indexFrom = None
+            except KeyError:
+                indexFrom = self.parameter['indexFrom']
+                boundFrom = None
+                compFrom = None
+            valueFrom = self.getValue(sim, locationFrom, bound=boundFrom, comp=compFrom, index=indexFrom)
 
-        try:
-            compTo = parameter['componentTo']
-            boundTo = parameter['boundTo']
-            indexTo = None
-        except KeyError:
-            indexTo = parameter['indexTo']
-            boundTo = None
-            compTo = None
-        setValue(sim, valueFrom + values[0], locationTo, bound=boundTo, comp=compTo, index=indexTo)
+            try:
+                compTo = parameter['componentTo']
+                boundTo = parameter['boundTo']
+                indexTo = None
+            except KeyError:
+                indexTo = parameter['indexTo']
+                boundTo = None
+                compTo = None
+            self.setValue(sim, valueFrom + values[0], locationTo, bound=boundTo, comp=compTo, index=indexTo)
 
-    return values, headerValues
+        if self.count:
+            return values, headerValues
+        else:
+            return [], []
 
-def setupTarget(parameter):
-    location = parameter['locationTo']
-    bound = parameter['boundTo']
-    comp = parameter['componentTo']
+    def setupTarget(self):
+        if self.count:
+            location = parameter['locationTo']
+            bound = parameter['boundTo']
+            comp = parameter['componentTo']
 
-    name = location.rsplit('/', 1)[-1]
-    sensitivityOk = 1
+            name = location.rsplit('/', 1)[-1]
+            sensitivityOk = 1
 
-    try:
-        unit = int(location.split('/')[3].replace('unit_', ''))
-    except ValueError:
-        unit = ''
-        sensitivityOk = 0
+            try:
+                unit = int(location.split('/')[3].replace('unit_', ''))
+            except ValueError:
+                unit = ''
+                sensitivityOk = 0
 
-    return [(name, unit, comp, bound),], sensitivityOk
+            return [(name, unit, comp, bound),], sensitivityOk
+        else:
+            return [], 0
 
-def getBounds(parameter):
-    return [0.0,], [1.0,]
+    def getBounds(self):
+        if self.count:
+            return [0.0,], [1.0,]
+        else:
+            return None, None
 
-def getGradBounds(parameter):
-    return [parameter['min'],], [parameter['max'],]
+    def getGradBounds(self):
+        if self.count:
+            return [self.parameter['min'],], [self.parameter['max'],]
+        else:
+            return None, None
 
-def getHeaders(parameter):
-    location = parameter['locationTo']
+    def getHeaders(self):
+        if self.count:
+            location = self.parameter['locationTo']
 
-    try:
-        comp = parameter['componentTo']
-    except KeyError:
-        comp = 'None'
+            try:
+                comp = self.parameter['componentTo']
+            except KeyError:
+                comp = 'None'
 
-    name = location.rsplit('/', 1)[-1]
-    bound = parameter.get('boundTo', None)
-    index = parameter.get('indexTo', None)
+            name = location.rsplit('/', 1)[-1]
+            bound = self.parameter.get('boundTo', None)
+            index = self.parameter.get('indexTo', None)
     
-    headers = []
-    if bound is not None:
-        headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
-    if index is not None:
-        headers.append("%s Comp:%s Index:%s" % (name, comp, index))
-    return headers
+            headers = []
+            if bound is not None:
+                headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
+            if index is not None:
+                headers.append("%s Comp:%s Index:%s" % (name, comp, index))
+            return headers
+        else:
+            return []
 
-def getHeadersActual(parameter):
-    return getHeaders(parameter)
+    def getHeadersActual(self):
+        return self.getHeaders()
 
-def setBounds(parameter, lb, ub):
-    parameter['min'] = lb[0]
-    parameter['max'] = ub[0]
+    def setBounds(self, parameter, lb, ub):
+        parameter['min'] = lb[0]
+        parameter['max'] = ub[0]
+
+plugins = {"norm_add": NormAddTransform}    
