@@ -104,8 +104,8 @@ class LinearTransform(AbstractTransform):
         minUpper = self.parameter['minUpper']
         maxUpper = self.parameter['maxUpper']
     
-        minValues = numpy.array([minLower, minUpper])
-        maxValues = numpy.array([maxLower, maxUpper])
+        minValues = [minLower, minUpper]
+        maxValues = [maxLower, maxUpper]
 
         return minValues, maxValues
 
