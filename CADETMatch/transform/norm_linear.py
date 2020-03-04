@@ -1,137 +1,199 @@
 import CADETMatch.util as util
 import numpy
 import CADETMatch.calc_coeff as calc_coeff
+from CADETMatch.abstract.transform import AbstractTransform
 
-name = "norm_linear"
-count = 2
-count_extended = 2
+class LinearTransform(AbstractTransform):
+    @property
+    def name(self):
+        return "linear"
 
-def getUnit(location):
-    return location.split('/')[3]
+    @property
+    def count(self):
+        return 2
 
-def transform(parameter):
-    minLower = parameter['minLower']
-    maxLower = parameter['maxLower']
-    minUpper = parameter['minUpper']
-    maxUpper = parameter['maxUpper']
+    @property
+    def count_extended(self):
+        return self.count
 
-    def trans_a(i):
-        return (i - minLower)/(maxLower-minLower)
+    def transform(self):
+        def trans_a(i):
+            return i
 
-    def trans_b(i):
-        return (i - minUpper)/(maxUpper-minUpper)
+        def trans_b(i):
+            return i
 
-    return [trans_a, trans_b]
+        return [trans_a, trans_b]
 
-def untransform(seq, cache, parameter):
-    minLower = parameter['minLower']
-    maxLower = parameter['maxLower']
-    minUpper = parameter['minUpper']
-    maxUpper = parameter['maxUpper']
-    minX = parameter['minX']
-    maxX = parameter['maxX']
+    grad_transform = transform
+
+    def untransform(self, seq):
+        values = [seq[0], seq[1]]
+        headerValues = values
+        return values, headerValues
+
+    def grad_untransform(self, seq):
+        return self.untransform(seq)[0]
+
+    def untransform_matrix(self, matrix):
+        values = numpy.array(matrix)
+        return values
+
+    untransform_matrix_inputorder = untransform_matrix
+
+    def setSimulation(self, sim, seq, experiment):
+        values, headerValues = self.untransform(seq)
+
+        if self.parameter.get('experiments', None) is None or experiment['name'] in self.parameter['experiments']:
+            location = self.parameter['location']
     
-    minValues = numpy.array([minLower, minUpper])
-    maxValues = numpy.array([maxLower, maxUpper])
+            minX = self.parameter['minX']
+            maxX = self.parameter['maxX']
 
-    values = numpy.array(seq)
+            x_name = self.parameter['x_name']
 
-    values = (maxValues - minValues) * values + minValues
-    headerValues = values
-    return values, headerValues
+            x_value = experiment[x_name]
 
-def untransform_matrix(matrix, cache, parameter):
-    minLower = parameter['minLower']
-    maxLower = parameter['maxLower']
-    minUpper = parameter['minUpper']
-    maxUpper = parameter['maxUpper']
-    
-    minValues = numpy.array([minLower, minUpper])
-    maxValues = numpy.array([maxLower, maxUpper])
+            slope, intercept = calc_coeff.linear_coeff(minX, values[0], maxX, values[1])
 
-    values = (maxValues - minValues) * values + minValues
+            value = calc_coeff.linear(x_value, slope, intercept)
 
-    return values
+            try:
+                comp = self.parameter['component']
+                bound = self.parameter['bound']
+                index = None
+            except KeyError:
+                index = self.parameter['index']
+                bound = None
 
-untransform_matrix_inputorder = untransform_matrix
+            if bound is not None:
+                unit = self.getUnit(location)
+                boundOffset = util.getBoundOffset(sim.root.input.model[unit])
 
-def setSimulation(sim, parameter, seq, cache, experiment):
-    values, headerValues = untransform(seq, cache, parameter)
+                if comp == -1:
+                    position = ()
+                    sim[location.lower()] = value
+                else:
+                    position = boundOffset[comp] + bound
+                    sim[location.lower()][position] = value
 
-    if parameter.get('experiments', None) is None or experiment['name'] in parameter['experiments']:
-        location = parameter['location']
-    
-        minX = parameter['minX']
-        maxX = parameter['maxX']
+            if index is not None:
+                sim[location.lower()][index] = value
 
-        x_name = parameter['x_name']
+        return values, headerValues
 
-        x_value = experiment[x_name]
+    def setupTarget(self):
+        location = self.parameter['location']
+        bound = self.parameter['bound']
+        comp = self.parameter['component']
 
-        slope, intercept = calc_coeff.linear_coeff(minX, values[0], maxX, values[1])
-
-        value = calc_coeff.linear(x_value, slope, intercept)
+        name = location.rsplit('/', 1)[-1]
+        sensitivityOk = 1
 
         try:
-            comp = parameter['component']
-            bound = parameter['bound']
-            index = None
-        except KeyError:
-            index = parameter['index']
-            bound = None
+            unit = int(location.split('/')[3].replace('unit_', ''))
+        except ValueError:
+            unit = ''
+            sensitivityOk = 0
 
-        if bound is not None:
-            unit = getUnit(location)
-            boundOffset = util.getBoundOffset(sim.root.input.model[unit])
+        return [(name, unit, comp, bound),], sensitivityOk
 
-            if comp == -1:
-                position = ()
-                sim[location.lower()] = value
-            else:
-                position = boundOffset[comp] + bound
-                sim[location.lower()][position] = value
-
-        if index is not None:
-            sim[location.lower()][index] = value
-
-    return values, headerValues
-
-def setupTarget(parameter):
-    location = parameter['location']
-    bound = parameter['bound']
-    comp = parameter['component']
-
-    name = location.rsplit('/', 1)[-1]
-    sensitivityOk = 1
-
-    try:
-        unit = int(location.split('/')[3].replace('unit_', ''))
-    except ValueError:
-        unit = ''
-        sensitivityOk = 0
-
-    return [(name, unit, comp, bound),], sensitivityOk
-
-def getBounds(parameter):
-    return [0.0, 0.0], [1.0, 1.0]
-
-def getHeaders(parameter):
-    bound = parameter['bound']
-    comp = parameter['component']
+    def getBounds(self):
+        minLower = self.parameter['minLower']
+        maxLower = self.parameter['maxLower']
+        minUpper = self.parameter['minUpper']
+        maxUpper = self.parameter['maxUpper']
     
-    headers = []
-    headers.append("Lower Comp:%s Bound:%s" % (comp, bound))
-    headers.append("Upper Comp:%s Bound:%s" % (comp, bound))
-    return headers
+        minValues = numpy.array([minLower, minUpper])
+        maxValues = numpy.array([maxLower, maxUpper])
 
-def getHeadersActual(parameter):
-    return getHeaders(parameter)
+        return minValues, maxValues
 
-def setBounds(parameter, lb, ub):
-    parameter['minLower'] = lb[0]
-    parameter['maxLower'] = ub[0]
-    parameter['minUpper'] = lb[2]
-    parameter['maxUpper'] = ub[2]
+    def getGradBounds(self):
+        return self.getBounds()
 
+    def getHeaders(self):
+        bound = self.parameter['bound']
+        comp = self.parameter['component']
+    
+        headers = []
+        headers.append("Lower Comp:%s Bound:%s" % (comp, bound))
+        headers.append("Upper Comp:%s Bound:%s" % (comp, bound))
+        return headers
 
+    def getHeadersActual(self):
+        return self.getHeaders()
 
+    def setBounds(self, parameter, lb, ub):
+        parameter['minLower'] = lb[0]
+        parameter['maxLower'] = ub[0]
+        parameter['minUpper'] = lb[1]
+        parameter['maxUpper'] = ub[1]
+
+class NormLinearTransform(LinearTransform):
+    @property
+    def name(self):
+        return "norm_linear"
+
+    def transform(self):
+        minLower = self.parameter['minLower']
+        maxLower = self.parameter['maxLower']
+        minUpper = self.parameter['minUpper']
+        maxUpper = self.parameter['maxUpper']
+
+        def trans_a(i):
+            return (i - minLower)/(maxLower-minLower)
+
+        def trans_b(i):
+            return (i - minUpper)/(maxUpper-minUpper)
+
+        return [trans_a, trans_b]
+
+    grad_transform = transform
+
+    def untransform(self, seq):
+        minLower = self.parameter['minLower']
+        maxLower = self.parameter['maxLower']
+        minUpper = self.parameter['minUpper']
+        maxUpper = self.parameter['maxUpper']
+        minX = self.parameter['minX']
+        maxX = self.parameter['maxX']
+    
+        minValues = numpy.array([minLower, minUpper])
+        maxValues = numpy.array([maxLower, maxUpper])
+
+        values = numpy.array(seq)
+
+        values = (maxValues - minValues) * values + minValues
+        headerValues = values
+        return values, headerValues
+
+    def grad_untransform(self, seq):
+        return self.untransform(seq)[0]
+
+    def untransform_matrix(self, matrix):
+        minLower = self.parameter['minLower']
+        maxLower = self.parameter['maxLower']
+        minUpper = self.parameter['minUpper']
+        maxUpper = self.parameter['maxUpper']
+    
+        minValues = numpy.array([minLower, minUpper])
+        maxValues = numpy.array([maxLower, maxUpper])
+
+        values = (maxValues - minValues) * values + minValues
+
+        return values
+
+    untransform_matrix_inputorder = untransform_matrix
+
+    def getBounds(self):
+        return [0.0, 0.0], [1.0, 1.0]
+
+    def getGradBounds(self):
+        minLower = self.parameter['minLower']
+        maxLower = self.parameter['maxLower']
+        minUpper = self.parameter['minUpper']
+        maxUpper = self.parameter['maxUpper']
+        return [minLower, minUpper], [maxLower, maxUpper]
+
+plugins = {"norm_linear": NormLinearTransform, "linear": LinearTransform}

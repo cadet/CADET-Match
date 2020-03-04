@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example2\Isotherm\NSGA3_sma.json" 6</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\MCMC\Dextran\MCMC_dextran_nsga3.json" 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>
@@ -29,6 +29,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="abstract\transform.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="abstract\__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="cache.py">
@@ -363,9 +366,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="synthetic_error.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="transform\linear.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="transform\norm.py">
