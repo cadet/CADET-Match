@@ -73,7 +73,6 @@ CADETMatch/search/multistart.py
 CADETMatch/search/nsga3.py
 CADETMatch/search/scoretest.py
 CADETMatch/transform/__init__.py
-CADETMatch/transform/linear.py
 CADETMatch/transform/norm.py
 CADETMatch/transform/norm_add.py
 CADETMatch/transform/norm_diameter.py

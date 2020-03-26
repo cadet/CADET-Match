@@ -138,10 +138,14 @@ def cut_front(times, values, min_value, max_value, crit_fs, s):
         return spline, numpy.zeros(len(times))
     
     def goal(time):
+        if (time < times[0]) or (time > times[-1]):
+            #values outside of the allowed time region are not allowed
+            return 1e10
         return (spline(time)-max_value)**2
     
     result = scipy.optimize.minimize(goal, max_time, method='powell', tol=1e-5)
 
+    old_max_time = max_time
     max_time = float(result.x)
 
     min_index = numpy.argmin(values[:max_index] <= min_value)
@@ -153,6 +157,8 @@ def cut_front(times, values, min_value, max_value, crit_fs, s):
             if min_index > 0:
                 min_index -= 1
                 min_time = times[min_index]
+            else:
+                break
     
     def goal(time):
         if time > max_time:
