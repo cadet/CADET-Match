@@ -474,9 +474,14 @@ def plot_3d(arg):
     
 def plot_2d(arg):
     directory_path, header_x, scoreName, data, scores = arg
+
+    multiprocessing.get_logger().info("2d graph %s %s start" % (header_x, scoreName))
+
     plot_2d_single(directory_path, header_x, scoreName, data, scores)
 
     plot_2d_single(directory_path, header_x, '1- ' + scoreName, data, 1-scores)
+
+    multiprocessing.get_logger().info("2d graph %s %s stop" % (header_x, scoreName))
     
 
 def plot_2d_single(directory_path, header_x, scoreName, data, scores):
@@ -488,7 +493,9 @@ def plot_2d_single(directory_path, header_x, scoreName, data, scores):
     #score_scale = numpy.max(scores)/numpy.min(scores)
 
     if  scoreName.startswith('1-'):
-        scores = numpy.log10(scores)
+        keep = scores > 0
+        scores = numpy.log10(scores[keep])
+        data = data[keep]
         scoreName = 'log10(%s)' % scoreName
 
     fig = figure.Figure(figsize=[10,10])
@@ -496,16 +503,28 @@ def plot_2d_single(directory_path, header_x, scoreName, data, scores):
     graph = fig.add_subplot(1, 1, 1)
 
     format = '%s'
-    if numpy.max(data)/numpy.min(data) > 100.0:
-        data = numpy.log10(data)
+    if numpy.max(data)/numpy.min(data[data>0]) > 100.0:
+        keep = data>0
+        data = numpy.log10(data[keep])
+        scores = scores[keep]
         format = 'log10(%s)'
 
-    graph.scatter(data, scores, c=scores, cmap=my_cmap)
+    data_norm = (data - numpy.min(data))/(numpy.max(data) - numpy.min(data))
+    scores_norm = (scores - numpy.min(scores))/(numpy.max(scores) - numpy.min(scores))
+    scatter_data = numpy.array([data_norm,scores_norm]).T
+    scatter_data_round = numpy.round(scatter_data, 2)
+    scatter_data_round, idx, counts = numpy.unique(scatter_data_round, axis=0, return_index=True, return_counts=True)
+
+    counts_norm =  (counts - numpy.min(counts))/(numpy.max(counts) - numpy.min(counts))*100+10
+
+    graph.scatter(data[idx], scores[idx], c=scores[idx], s=counts_norm, cmap=cmap)
+
     graph.set_xlabel(format % header_x)
     graph.set_ylabel(scoreName)
     graph.set_xlim(min(data), max(data), auto=True)
     filename = "%s_%s.png" % (header_x, scoreName)
     filename = filename.replace(':', '_').replace('/', '_')
+
     fig.savefig(str(directory / filename))
 
 def graphProgress(cache, map_function):
