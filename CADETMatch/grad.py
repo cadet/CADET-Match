@@ -1,8 +1,5 @@
 import shutil
-import warnings
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore",category=FutureWarning)
-    import h5py
+from cadet import Cadet
 import CADETMatch.util as util
 from pathlib import Path
 import CADETMatch.evo as evo
@@ -56,8 +53,6 @@ def setupTemplates(cache):
             sensitivity[paramSection].sens_reaction = [-1,]
             sensitivity[paramSection].sens_boundphase = [bound,]
             sensitivity[paramSection].sens_section = [-1,]
-            sensitivity[paramSection].sens_abstol = [1e-6,]
-            sensitivity[paramSection].sens_factor = [1.0,]
 
         simulationSens.save()
         experiment['simulationSens'] = simulationSens

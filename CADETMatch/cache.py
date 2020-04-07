@@ -99,10 +99,8 @@ class Cache:
             self.settings['resultsDirMCMC'] = Path(self.settings['resultsDir']) / "mcmc"
             self.settings['resultsDirBase'] = Path(self.settings['resultsDir'])
 
-        self.abstolFactor = self.settings.get('abstolFactor', 1e-4)
-        self.reltol = self.settings.get('reltol', 1e-4)
-        self.abstolFactorGrad = self.settings.get('abstolFactorGrad', 1e-8)
-        self.reltolGrad = self.settings.get('reltolGrad', 1e-8)
+        self.abstolFactor = self.settings.get('abstolFactor', 1e-3)
+        self.abstolFactorGrad = self.settings.get('abstolFactorGrad', 1e-12)
         self.dynamicTolerance = bool(self.settings.get('dynamicTolerance', False))
 
         self.errorBias = bool(self.settings.get('errorBias', True))

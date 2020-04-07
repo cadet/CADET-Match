@@ -1,7 +1,7 @@
 import sys
 
 import CADETMatch.evo as evo
-#import grad
+#import CADETMatch.grad as grad
 import CADETMatch.gradFD as gradFD
 import CADETMatch.util as util
 import CADETMatch.version as version
@@ -24,9 +24,6 @@ import logging
 from CADETMatch.cache import cache
 import CADETMatch.loggerwriter as loggerwriter
 import h5py
-
-#due to how scoop works and the need to break things up into multiple processes it is hard to use class based systems
-#As a result most of the code is broken up into modules but is still based on pure functions
 
 def main(map_function):
     path = sys.argv[1]

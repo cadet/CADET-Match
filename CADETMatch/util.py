@@ -301,7 +301,6 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     except subprocess.CalledProcessError as error:
         multiprocessing.get_logger().error("The simulation failed %s", individual)
         logError(cache, cadetValuesKEQ, error)
-        #os.remove(path)
         return None
 
     #read sim data
@@ -1312,7 +1311,7 @@ def setupSimulation(sim, times, smallest_peak, cache):
 
     if cache.dynamicTolerance:
         sim.root.input.solver.time_integrator.abstol = cache.abstolFactor * smallest_peak
-        sim.root.input.solver.time_integrator.reltol = cache.reltol
+        sim.root.input.solver.time_integrator.reltol = 0.0
 
     multiprocessing.get_logger().info('%s abstol=%.3g  reltol=%.3g', sim.filename, 
                       sim.root.input.solver.time_integrator.abstol,
@@ -1323,17 +1322,36 @@ def setupSimulation(sim, times, smallest_peak, cache):
         experiment_name = experiment_name.decode()
     units_used = cache.target[experiment_name]['units_used']
     for unit in sim.root.input.model.keys():
-        sim.root.input['return'][unit].write_solution_particle = 0
-        sim.root.input['return'][unit].write_solution_solid = 0
-        sim.root.input['return'][unit].write_solution_column_inlet = 0
-        sim.root.input['return'][unit].write_solution_inlet = 0
-        sim.root.input['return'][unit].split_components_data = 0
-        if "unit_" in unit and unit in units_used:            
-            sim.root.input['return'][unit].write_solution_column_outlet = 1            
-            sim.root.input['return'][unit].write_solution_outlet = 1            
-        else:
-            sim.root.input['return'][unit].write_solution_column_outlet = 0
-            sim.root.input['return'][unit].write_solution_outlet = 0
+        if "unit_" in unit:
+            sim.root.input['return'][unit].write_solution_particle = 0
+            sim.root.input['return'][unit].write_solution_solid = 0
+            sim.root.input['return'][unit].write_solution_column_inlet = 0
+            sim.root.input['return'][unit].write_solution_inlet = 0
+            sim.root.input['return'][unit].split_components_data = 0
+
+            sim.root.input['return'][unit].write_sens_bulk = 0
+            sim.root.input['return'][unit].write_sens_inlet = 0
+            sim.root.input['return'][unit].write_sens_particle = 0
+            sim.root.input['return'][unit].write_sens_solid = 0
+            sim.root.input['return'][unit].write_sens_flux = 0
+            sim.root.input['return'][unit].write_sens_volume = 0
+
+            sim.root.input['return'][unit].write_sensdot_bulk = 0
+            sim.root.input['return'][unit].write_sensdot_inlet = 0
+            sim.root.input['return'][unit].write_sensdot_outlet = 0
+            sim.root.input['return'][unit].write_sensdot_particle = 0
+            sim.root.input['return'][unit].write_sensdot_solid = 0
+            sim.root.input['return'][unit].write_sensdot_flux = 0
+            sim.root.input['return'][unit].write_sensdot_volume = 0
+        
+            if unit in units_used:            
+                sim.root.input['return'][unit].write_solution_column_outlet = 1            
+                sim.root.input['return'][unit].write_solution_outlet = 1
+                sim.root.input['return'][unit].write_sens_outlet = 1
+            else:
+                sim.root.input['return'][unit].write_solution_column_outlet = 0
+                sim.root.input['return'][unit].write_solution_outlet = 0
+                sim.root.input['return'][unit].write_sens_outlet = 0
     sim.root.input.solver.nthreads = 1
 
 def graph_corner_process(cache, last=False, interval=1200):
