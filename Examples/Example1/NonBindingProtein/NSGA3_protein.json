@@ -1,7 +1,7 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
 	"baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/NonBindingProtein",
-  "resultsDir": "fit_deap/",
+  "resultsDir": "fit_deap_2/",
     "tempDir": "L:/",
   "CSV": "nonbinding_NSGA3.csv",
   "checkpointFile": "check",
@@ -18,11 +18,13 @@
   "maxPopulation":50,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "stallGenerations": 5,
+  "stallGenerations": 50,
   "normalizeOutput":0,
   "continueMCMC":0,
   "graphMetaTime": 600,
-  "finalGradRefinement": 0,
+  "finalGradRefinement": 1,
+  "dynamicTolerance": 1,
+  "abstolFactor": 1e-2,
   "kde_synthetic":[
       {
         "file_path":"protein_pulse.h5",
@@ -67,7 +69,7 @@
 	"experiments": [
 		{
 			"CSV": "protein_pulse.csv",
-			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
+			"isotherm": "/output/solution/unit_002/SOLUTION_OUTLET_COMP_000",
 			"HDF5": "protein_pulse.h5",
 			"name": "main",
 			"timeout": 15.0,
@@ -76,6 +78,13 @@
 					"name": "PulseFront",
 					"type": "Shape",
                     "derivative": 1
+				},
+                {
+					"name": "Max",
+					"type": "Ceiling",
+                    "start": 0,
+                    "stop": 300,
+                    "max_value":1e-5
 				}
 			]
 		}

@@ -236,9 +236,6 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             if avg >= settings.get('stopAverage', 1.0) or bestMin >= settings.get('stopBest', 1.0) or stalled:
                 break
-                #util.finish(cache)
-                #util.graph_corner_process(cache, last=True)
-                #return halloffame
 
         if cache.finalGradRefinement:
             gen = gen + 1
@@ -249,8 +246,6 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 avg, bestMin, bestProd = util.averageFitness(newChildren, cache)
                 util.writeProgress(cache, gen, newChildren, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, 
                                    sim_start, generation_start, result_data)
-                util.graph_process(cache, gen)
-                util.graph_corner_process(cache, last=False)
 
         util.finish(cache)
         util.graph_corner_process(cache, last=True)

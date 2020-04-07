@@ -71,7 +71,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
         multiprocessing.get_logger().info('starting fine refine')
         fineOffspring = cache.toolbox.map(gradSearchFine, map(tuple, meta_hof))
         processOffspring(fineOffspring, temp, csv_lines, meta_csv_lines, gradient_results, grad_hof, meta_hof, generation, result_data, cache)
-        multiprocessing.get_logger().info('ending coarse refine')
+        multiprocessing.get_logger().info('ending fine refine')
     
     if temp:
         avg, bestMin, bestProd = util.averageFitness(temp, cache)
