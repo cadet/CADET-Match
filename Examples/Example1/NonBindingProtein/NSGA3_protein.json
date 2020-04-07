@@ -22,7 +22,8 @@
   "normalizeOutput":0,
   "continueMCMC":0,
   "graphMetaTime": 600,
-  "finalGradRefinement": 0,
+  "finalGradRefinement": 1,
+  "dynamicTolerance": 1,
   "kde_synthetic":[
       {
         "file_path":"protein_pulse.h5",
@@ -67,7 +68,7 @@
 	"experiments": [
 		{
 			"CSV": "protein_pulse.csv",
-			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
+			"isotherm": "/output/solution/unit_002/SOLUTION_OUTLET_COMP_000",
 			"HDF5": "protein_pulse.h5",
 			"name": "main",
 			"timeout": 15.0,
@@ -76,6 +77,13 @@
 					"name": "PulseFront",
 					"type": "Shape",
                     "derivative": 1
+				},
+                {
+					"name": "Max",
+					"type": "Ceiling",
+                    "start": 0,
+                    "stop": 300,
+                    "max_value":1e-5
 				}
 			]
 		}

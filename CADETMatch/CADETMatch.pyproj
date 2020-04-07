@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\NonBindingProtein\NSGA3_protein.json" 1</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\NonBindingProtein\NSGA3_protein.json" 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>
@@ -96,6 +96,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ga_simple.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="scores\ceiling.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\shapeDecayNoDer.py">
