@@ -12,8 +12,6 @@ import CADETMatch.cache as cache
 import multiprocessing
 from cadet import Cadet, H5
 
-import numdifftools.core
-
 class GradientException(Exception):
     pass
 

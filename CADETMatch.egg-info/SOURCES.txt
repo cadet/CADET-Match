@@ -46,6 +46,7 @@ CADETMatch/abstract/transform.py
 CADETMatch/scores/__init__.py
 CADETMatch/scores/absoluteHeight.py
 CADETMatch/scores/absoluteTime.py
+CADETMatch/scores/ceiling.py
 CADETMatch/scores/curve.py
 CADETMatch/scores/dextranSSE.py
 CADETMatch/scores/dextranShape.py

@@ -12,9 +12,9 @@
     <Name>CADETMatch</Name>
     <RootNamespace>CADETMatch</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>CondaEnv|CondaEnv|CADETMatch</InterpreterId>
+    <InterpreterId>Global|ContinuumAnalytics|Anaconda37-64</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\NonBindingProtein\NSGA3_protein.json" 6</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\NonBindingProtein\NSGA3_protein.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>
@@ -105,6 +105,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\shapeNoDer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="search\mo_cma.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\retired\nsga3_selection.py">

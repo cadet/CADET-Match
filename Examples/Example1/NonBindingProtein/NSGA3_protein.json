@@ -1,7 +1,7 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
 	"baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/NonBindingProtein",
-  "resultsDir": "fit_deap_2/",
+  "resultsDir": "fit_deap_mo_cma/",
     "tempDir": "L:/",
   "CSV": "nonbinding_NSGA3.csv",
   "checkpointFile": "check",
@@ -22,9 +22,9 @@
   "normalizeOutput":0,
   "continueMCMC":0,
   "graphMetaTime": 600,
-  "finalGradRefinement": 1,
+  "finalGradRefinement": 0,
   "dynamicTolerance": 1,
-  "abstolFactor": 1e-2,
+  "abstolFactor": 1e-4,
   "kde_synthetic":[
       {
         "file_path":"protein_pulse.h5",
