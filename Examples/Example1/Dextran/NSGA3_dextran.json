@@ -27,7 +27,7 @@
   "progress_elapsed_time": 360,
   "dynamicTolerance":1,
   "multiStartPercent":0.2,
-  "MultiObjectiveSSE": 0,
+  "MultiObjectiveSSE": 1,
   "parameters": [
     {
       "transform": "norm_log",
@@ -56,13 +56,13 @@
       "features": [
         {
             "name": "Pulse",
-            "type": "SSE",
+            "type": "ShapeFront",
             "start": 250,
             "stop":350
         },
         {
             "name": "Pulse2",
-            "type": "SSE",
+            "type": "ShapeBack",
             "start": 350,
             "stop":450
         }
