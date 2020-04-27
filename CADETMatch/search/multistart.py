@@ -51,13 +51,15 @@ def run(cache, tools, creator):
 
         return hof
 
-def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
+def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_search_fine, map_function, creator, base, tools):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
-    creator.create("Individual", array.array, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None)
+    creator.create("Individual", array.array, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None,
+                   csv_line=None)
 
     creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0, 1.0, 1.0, -1.0])
-    creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None)
+    creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None,
+                   csv_line=None)
     cache.toolbox.register("individualMeta", util.initIndividual, creator.IndividualMeta, cache)
 
     cache.toolbox.register("individual", util.generateIndividual, creator.Individual,
@@ -72,7 +74,9 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
     cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
 
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
+    cache.toolbox.register("evaluate_final", fitness_final, json_path=cache.json_path)
     cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
+    cache.toolbox.register("evaluate_grad_fine", grad_search_fine, json_path=cache.json_path)
     cache.toolbox.register('grad_search', grad_search)
 
     cache.toolbox.register('map', map_function)

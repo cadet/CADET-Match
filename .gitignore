@@ -331,3 +331,4 @@ __pycache__/
 /Examples/Example1/Isotherm/fit_deap
 /Examples/Example1/NonBindingProtein/fit_deap_2
 /Examples/Example1/NonBindingProtein/fit_deap_3
+/Examples/Example1/Dextran/fit_nsga3_nsga3

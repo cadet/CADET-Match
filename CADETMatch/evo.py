@@ -17,7 +17,13 @@ ERROR = {'scores': None,
          'cadetValues':None,
          'cadetValuesKEQ': None}
 
+def fitness_final(individual, json_path, run_experiment=None):
+    return fitness_base(runExperimentFinal, 'simulation_final', individual, json_path, run_experiment)
+
 def fitness(individual, json_path, run_experiment=None):
+    return fitness_base(runExperiment, 'simulation', individual, json_path, run_experiment)
+
+def fitness_base(runner, template_name, individual, json_path, run_experiment):
     if json_path != cache.cache.json_path:
         cache.cache.setup_dir(json_path)
         util.setupLog(cache.cache.settings['resultsDirLog'], "main.log")
@@ -31,7 +37,7 @@ def fitness(individual, json_path, run_experiment=None):
 
     results = {}
     for experiment in cache.cache.settings['experiments']:
-        result = run_experiment(individual, experiment, cache.cache.settings, cache.cache.target, cache.cache)
+        result = runner(individual, template_name, experiment, cache.cache.settings, cache.cache.target, cache.cache)
         if result is not None:
             results[experiment['name']] = result
             scores.extend(results[experiment['name']]['scores'])
@@ -65,15 +71,23 @@ def saveExperiments(save_name_base, settings, target, results):
 def plotExperiments(save_name_base, settings, target, results):
     util.plotExperiments(save_name_base, settings, target, results, settings['resultsDirEvo'], '%s_%s_EVO.png')
 
-def runExperiment(individual, experiment, settings, target, cache):
-    if 'simulation' not in experiment:
-        templatePath = Path(settings['resultsDirMisc'], "template_%s.h5" % experiment['name'])
+def runExperimentFinal(individual, template_name, experiment, settings, target, cache):
+    sim_name = "template_%s_final.h5" % experiment['name']
+    return runExperimentBase(sim_name, template_name, individual, experiment, settings, target, cache)
+
+def runExperiment(individual, template_name, experiment, settings, target, cache):
+    sim_name = "template_%s.h5" % experiment['name']
+    return runExperimentBase(sim_name, template_name, individual, experiment, settings, target, cache)
+
+def runExperimentBase(sim_name, template_name, individual, experiment, settings, target, cache):
+    if template_name not in experiment:
+        templatePath = Path(settings['resultsDirMisc'], sim_name)
         templateSim = Cadet()
         templateSim.filename = templatePath.as_posix()
         templateSim.load()
-        experiment['simulation'] = templateSim
+        experiment[template_name] = templateSim
 
-    return util.runExperiment(individual, experiment, settings, target, experiment['simulation'], experiment['simulation'].root.timeout, cache)
+    return util.runExperiment(individual, experiment, settings, target, experiment[template_name], experiment[template_name].root.timeout, cache)
 
 def run(cache):
     "run the parameter estimation"

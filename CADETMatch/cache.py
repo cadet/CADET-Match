@@ -102,6 +102,7 @@ class Cache:
         self.abstolFactor = self.settings.get('abstolFactor', 1e-3)
         self.abstolFactorGrad = self.settings.get('abstolFactorGrad', 1e-12)
         self.dynamicTolerance = bool(self.settings.get('dynamicTolerance', False))
+        self.gradFineStop = self.settings.get('gradFineStop', 1e-14)
 
         self.errorBias = bool(self.settings.get('errorBias', True))
 
@@ -121,6 +122,7 @@ class Cache:
 
         self.correct = None
         if "correct" in self.settings:
+            self.correct_transform = numpy.array(self.settings['correct'])
             self.correct = numpy.array([f(v) for f, v in zip(self.settings['transform'], self.settings['correct'])])
             
         self.error_path = Path(self.settings['resultsDirBase'], "error.csv")

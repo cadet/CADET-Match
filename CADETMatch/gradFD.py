@@ -12,8 +12,6 @@ import CADETMatch.cache as cache
 import multiprocessing
 from cadet import Cadet, H5
 
-import numdifftools.core
-
 class GradientException(Exception):
     pass
 
@@ -39,7 +37,7 @@ def setupTemplates(cache):
         elapsed = time.time() - start
 
         #timeout needs to be stored in the template so all processes have it without calculating it
-        simulationGrad.root.timeout = max(10, elapsed * 10)
+        simulationGrad.root.timeout = max(10, elapsed * 50)
         simulationGrad.save()
 
         multiprocessing.get_logger().info("grad simulation took %s", elapsed)
@@ -69,7 +67,7 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
 
     if new_results:
         multiprocessing.get_logger().info('starting fine refine')
-        fineOffspring = cache.toolbox.map(gradSearchFine, map(tuple, meta_hof))
+        fineOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad_fine, map(tuple, meta_hof))
         processOffspring(fineOffspring, temp, csv_lines, meta_csv_lines, gradient_results, grad_hof, meta_hof, generation, result_data, cache)
         multiprocessing.get_logger().info('ending fine refine')
     
@@ -118,9 +116,11 @@ def processOffspring(offspring, temp, csv_lines, meta_csv_lines, gradient_result
                 csv_line[1] = ''
 
             save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
+            ind.csv_line = [time.ctime(), save_name_base] + csv_line
 
             ind_meta = cache.toolbox.individualMeta(ind)
             ind_meta.fitness.values = csv_line[-4:]
+            ind_meta.csv_line = [time.ctime(), save_name_base] + csv_line
 
             util.update_result_data(cache, ind, fit, result_data, results, csv_line[-4:])
 
@@ -211,8 +211,12 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
 
     return temp_offspring
 
-def gradSearchFine(x):
-    return refine(x, 1e-14)
+def gradSearchFine(x, json_path):
+    if json_path != cache.cache.json_path:
+        cache.cache.setup_dir(json_path)
+        util.setupLog(cache.cache.settings['resultsDirLog'], "main.log")
+        cache.cache.setup(json_path)
+    return refine(x, cache.cache.gradFineStop)
 
 def refine(x, xtol):
     localRefine = cache.cache.settings.get('localRefine', 'gradient')
@@ -221,7 +225,7 @@ def refine(x, xtol):
             x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
             val = scipy.optimize.least_squares(fitness_sens_grad, x, jac='3-point', method='trf', 
                                                bounds=(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE), 
-                                               xtol=xtol, ftol=1e-10, gtol=1e-10,
+                                               xtol=xtol, ftol=None, gtol=None,
                                                loss="linear", diff_step=1e-4)
 
             cadetValues, cadetValuesExtended = util.convert_individual(val.x, cache.cache)

@@ -1,7 +1,7 @@
 {
-  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+  "CADETPath": "C:/Users/kosh_000/Downloads/cadet4.0.0-win10-x64/cadet/bin/cadet-cli.exe",
 	"baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/NonBindingProtein",
-  "resultsDir": "fit_deap_5_3_b/",
+  "resultsDir": "fit_deap_cadet4/",
     "tempDir": "L:/",
   "CSV": "nonbinding_NSGA3.csv",
   "checkpointFile": "check",
@@ -13,19 +13,18 @@
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
   "generations": 1000,
-  "population": 2,
-  "minPopulation": 2,
-  "maxPopulation":2,
+  "population": 50,
+  "minPopulation": 50,
+  "maxPopulation":50,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "stallGenerations": 100,
+  "stallGenerations": 50,
   "normalizeOutput":0,
   "continueMCMC":0,
   "graphMetaTime": 600,
-  "finalGradRefinement": 1,
+  "finalGradRefinement": 0,
   "dynamicTolerance": 1,
-  "abstolFactor": 1e-3,
-  "correct":[2.0e-7, 0.3, 1.0e-9],
+  "abstolFactor": 1e-4,
   "kde_synthetic":[
       {
         "file_path":"protein_pulse.h5",
@@ -74,6 +73,9 @@
 			"HDF5": "protein_pulse.h5",
 			"name": "main",
 			"timeout": 15.0,
+            "set_values": [
+            ["/input/return/SPLIT_PORTS_DATA", -1, 0]
+            ],
 			"features": [
 				{
 					"name": "PulseFront",

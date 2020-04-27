@@ -22,6 +22,7 @@ class ParetoFront(tools.ParetoFront):
         :param population: A list of individual with a fitness attribute to
                            update the hall of fame with.
         """
+        new_members = []
         for ind in population:
             is_dominated = False
             dominates_one = False
@@ -42,6 +43,8 @@ class ParetoFront(tools.ParetoFront):
                 self.remove(i)
             if not is_dominated and not has_twin:
                 self.insert(ind)
+                new_members.append(ind)
+        return new_members
 
 class DummyFront(tools.ParetoFront):
     "Modification of the pareto front in DEAP that takes cache as an argument to update to use for similar comparison"

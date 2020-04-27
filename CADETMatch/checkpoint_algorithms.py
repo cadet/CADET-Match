@@ -109,9 +109,6 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
                 generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
 
-            hof = Path(settings['resultsDirMisc'], 'hof')
-            with hof.open('wb') as data:
-                numpy.savetxt(data, numpy.array(halloffame))
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
 
@@ -228,9 +225,6 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 lambda_ = max(newLambda_, minPopulation)
 
 
-            hof = Path(settings['resultsDirMisc'], 'hof')
-            with hof.open('wb') as data:
-                numpy.savetxt(data, numpy.array(halloffame))
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
 
@@ -246,6 +240,11 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 avg, bestMin, bestProd = util.averageFitness(newChildren, cache)
                 util.writeProgress(cache, gen, newChildren, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, 
                                    sim_start, generation_start, result_data)
+
+        population = [cache.toolbox.individual_guess(i) for i in meta_hof]
+        stalled, stallWarn, progressWarn = util.eval_population_final(cache.toolbox, cache, population, writer, csvfile, halloffame, meta_hof, gen+1, result_data)
+        avg, bestMin, bestProd = util.averageFitness(population, cache)       
+        util.writeProgress(cache, gen+1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
 
         util.finish(cache)
         util.graph_corner_process(cache, last=True)

@@ -245,11 +245,31 @@ def setupTemplates(cache):
 
         experiment['simulation'] = template
 
+        template_path = Path(cache.settings['resultsDirMisc'], "template_%s_final.h5" % name)
+        template_final = Cadet(template.root.copy())
+        template_final.filename =  template_path.as_posix()
+        if cache.dynamicTolerance:
+            template_final.root.input.solver.time_integrator.abstol = cache.abstolFactorGrad
+            template_final.root.input.solver.time_integrator.reltol = 0.0
+
+        start = time.time()
+        util.runExperiment(None, experiment, cache.settings, cache.target, template_final, 
+                           experiment.get('timeout', 1800), cache)
+        elapsed = time.time() - start
+
+        multiprocessing.get_logger().info("simulation final took %s", elapsed)
+        
+        #timeout needs to be stored in the template so all processes have it without calculating it
+        template_final.root.timeout = max(10, elapsed * 10)
+
+        template_final.save()
+        experiment['simulation_final'] = template_final
+
 def setupDeap(cache, map_function):
     "setup the DEAP variables"
     searchMethod = cache.settings.get('searchMethod', 'NSGA3')
     cache.toolbox = base.Toolbox()
-    cache.search[searchMethod].setupDEAP(cache, evo.fitness, gradFD.gradSearch, gradFD.search, map_function, creator, base, tools)
+    cache.search[searchMethod].setupDEAP(cache, evo.fitness, evo.fitness_final, gradFD.gradSearch, gradFD.search, gradFD.gradSearchFine, map_function, creator, base, tools)
 
 def continue_mcmc(cache, map_function):
     if cache.continueMCMC:

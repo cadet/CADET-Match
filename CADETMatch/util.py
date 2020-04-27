@@ -703,6 +703,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                     distance = cache.correct - result_data['input']
                     hf.create_dataset("distance_correct", data=distance, maxshape=(None, len(result_data['input'][0])))
 
+                    distance_transform = cache.correct_transform - result_data['input_transform']
+                    hf.create_dataset("distance_correct_transform", data=distance_transform, maxshape=(None, len(result_data['input_transform'][0])))
+
                 hf.create_dataset("output", data=result_data['output'], maxshape=(None, len(result_data['output'][0])))
                 hf.create_dataset("output_meta", data=result_data['output_meta'], maxshape=(None, len(result_data['output_meta'][0])))
 
@@ -714,6 +717,7 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                     hf.create_dataset("input_transform_extended", data=result_data['input_transform_extended'], maxshape=(None, len(result_data['input_transform_extended'][0])))
 
                 hf.create_dataset("generation", data=gen_data, maxshape=(None, 2))
+                hf.create_dataset("total_time", data=now - sim_start)
                 
                 if cache.debugWrite:
                     hf.create_dataset("population_input", data=population_input, maxshape=(None, population_input.shape[1] ))
@@ -751,6 +755,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 hf["input"].resize((hf["input"].shape[0] + len(result_data['input'])), axis = 0)
                 hf["input"][-len(result_data['input']):] = result_data['input']
 
+                hf["total_time"][()] = now - sim_start
+                hf['generation'][()] = gen_data
+
                 if len(result_data['strategy']):
                     hf["strategy"].resize((hf["strategy"].shape[0] + len(result_data['strategy'])), axis = 0)
                     hf["strategy"][-len(result_data['strategy']):] = result_data['strategy']
@@ -767,6 +774,10 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                     distance = cache.correct - result_data['input']
                     hf["distance_correct"].resize((hf["distance_correct"].shape[0] + len(result_data['input'])), axis = 0)
                     hf["distance_correct"][-len(result_data['input']):] = distance
+
+                    distance_transform = cache.correct_transform - result_data['input_transform']
+                    hf["distance_correct_transform"].resize((hf["distance_correct_transform"].shape[0] + len(result_data['input_transform'])), axis = 0)
+                    hf["distance_correct_transform"][-len(result_data['input_transform']):] = distance_transform
 
                 if cache.debugWrite:
                     mcmc_score = result_data.get('mcmc_score', None)
@@ -1070,10 +1081,12 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
         save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
         
         ind.fitness.values = calcFitness(fit, cache)
+        ind.csv_line = [time.ctime(), save_name_base] + csv_line
 
         ind_meta = toolbox.individualMeta(ind)
 
         ind_meta.fitness.values = csv_line[-4:]
+        ind_meta.csv_line = [time.ctime(), save_name_base] + csv_line
        
         update_result_data(cache, ind, fit, result_data, results, csv_line[-4:])
 
@@ -1127,29 +1140,23 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
     return stalled, stallWarn, progressWarn
 
 def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, result_data=None):
-    fitnesses = toolbox.map(toolbox.evaluate, map(list, invalid_ind))
+    return eval_population_base(toolbox.evaluate, toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, result_data)
+
+def eval_population_final(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, result_data=None):
+    return eval_population_base(toolbox.evaluate_final, toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, result_data)
+
+def eval_population_base(evaluate, toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, result_data=None):
+    fitnesses = toolbox.map(evaluate, map(list, invalid_ind))
 
     return process_population(toolbox, cache, invalid_ind, fitnesses, writer, csvfile, halloffame, meta_hof, generation, result_data)
 
 def updateParetoFront(halloffame, offspring, cache):
-    before = set(map(tuple, halloffame.items))
-    halloffame.update([offspring,])
-    after = set(map(tuple, halloffame.items))
-
-    return tuple(offspring) in after and tuple(offspring) not in before
+    new_members = halloffame.update([offspring,])
+    return bool(new_members)
 
 def writeMetaFront(cache, meta_hof, path_meta_csv):
-    data = pandas.read_csv(path_meta_csv)
-
-    new_data = []
-
-    allowed = {hashlib.md5(str(list(individual)).encode('utf-8', 'ignore')).hexdigest() for individual in meta_hof.items}
-
-    for index, row in data.iterrows():
-        if row[1] in allowed:
-            new_data.append(row.to_dict())
-           
-    new_data = pandas.DataFrame(new_data, columns=data.columns.values)
+    new_data = [individual.csv_line for individual in meta_hof.items]           
+    new_data = pandas.DataFrame(new_data, columns=cache.headers)
 
     new_data.to_csv(path_meta_csv, quoting=csv.QUOTE_ALL, index=False)
     new_data.to_excel(cache.settings['resultsDirMeta'] / 'results.xlsx', index=False)
