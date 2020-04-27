@@ -105,6 +105,9 @@ class Cache:
         self.dynamicTolerance = bool(self.settings.get('dynamicTolerance', False))
         self.gradFineStop = self.settings.get('gradFineStop', 1e-14)
 
+        #When using only SSE based scores this changes if the scores are merged or left as multi objectives
+        self.MultiObjectiveSSE = bool(self.settings.get('MultiObjectiveSSE', False))
+
         self.errorBias = bool(self.settings.get('errorBias', True))
 
         Cadet.cadet_path = self.settings['CADETPath']
@@ -165,17 +168,6 @@ class Cache:
 
         if "MCMCpopulation" not in self.settings:
             self.settings['MCMCpopulation'] = self.settings['population']
-
-
-        if self.numGoals == 1:
-            #with one goal one of the emo functions breaks, this is a temporary fix
-
-            def sortNDHelperB(best, worst, obj, front):
-                if obj < 0:
-                    return
-                sortNDHelperB(best, worst, obj, front)
-
-            tools.emo.sortNDHelperB = sortNDHelperB
 
     def resetTransform(self, json_path):
         if json_path != self.json_path:
@@ -285,6 +277,9 @@ class Cache:
         self.allScoreNorm = numpy.all(self.badScores == 0.0)
         self.allScoreSSE = numpy.all(self.badScores == -sys.float_info.max)
         self.badScore = min(badScore)
+
+        if self.allScoreSSE and self.MultiObjectiveSSE is False:
+            self.numGoals = 1
 
         self.headers.extend(self.score_headers)                      
         

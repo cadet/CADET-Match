@@ -1060,7 +1060,11 @@ def update_result_data(cache, ind, fit, result_data, results, meta_scores):
                             result_data['results'][name].append(tuple(solution))
 
 def calcFitness(scores, cache):
-    return tuple(numpy.array(scores)[cache.meta_mask])
+    scores = numpy.array(scores)[cache.meta_mask]
+
+    if cache.allScoreSSE and cache.MultiObjectiveSSE is False:
+        scores = (numpy.sum(scores),)
+    return tuple(scores)
 
 def process_population(toolbox, cache, population, fitnesses, writer, csvfile, halloffame, meta_hof, generation, result_data=None):
     csv_lines = []

@@ -68,7 +68,11 @@ def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_sea
     cache.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
     cache.toolbox.register("force_mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
 
-    cache.toolbox.register("select", tools.selNSGA3WithMemory(ref_points))
+    if cache.numGoals == 1:
+        cache.toolbox.register("select", tools.selBest)
+    else:
+        cache.toolbox.register("select", tools.selNSGA3WithMemory(ref_points))
+
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
     cache.toolbox.register("evaluate_final", fitness_final, json_path=cache.json_path)
     cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
