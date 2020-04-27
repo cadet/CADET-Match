@@ -313,8 +313,14 @@ def fitness_base(fit, individual, finished):
     if cache.cache.gradVector:
         return numpy.array(diff)
     else:
-        #return [-1.0 * i for i in scores]
-        return numpy.array(minimize)
+        minimize = numpy.array(minimize)
+        if cache.cache.allScoreNorm:
+            return minimize
+        elif cache.cache.allScoreSSE:
+            return numpy.array(diff)
+        else:
+            multiprocessing.get_logger().info("Norm 1 and SSE based scores can't be mixed %s", cache.cache.badScores)
+            sys.exit()
 
 def saveExperimentsSens(save_name_base, settings, target, results):
     return util.saveExperiments(save_name_base, settings, target, results, settings['resultsDirGrad'], '%s_%s_GRAD.h5')

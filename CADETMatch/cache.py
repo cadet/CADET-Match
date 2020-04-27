@@ -12,6 +12,7 @@ from deap import tools
 from sklearn import preprocessing
 
 import multiprocessing
+import sys
 
 class Cache:
     def __init__(self):
@@ -280,6 +281,9 @@ class Cache:
                     self.score_headers.extend(temp)
                     experiment['headers'].extend(temp)
 
+        self.badScores = numpy.array(badScore)
+        self.allScoreNorm = numpy.all(self.badScores == 0.0)
+        self.allScoreSSE = numpy.all(self.badScores == -sys.float_info.max)
         self.badScore = min(badScore)
 
         self.headers.extend(self.score_headers)                      

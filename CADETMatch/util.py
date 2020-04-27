@@ -132,10 +132,14 @@ def sobolGenerator(icls, cache, n):
 
 def calcMetaScores(scores, cache):
     scores = numpy.array(scores)[cache.meta_mask]
-    prod_score = product_score(scores)
-    min_score = min(scores)
-    mean_score = sum(scores)/len(scores)
-    human = [prod_score, min_score, mean_score]
+    if cache.allScoreNorm:
+        prod_score = product_score(scores)
+        min_score = min(scores)
+        mean_score = sum(scores)/len(scores)
+        human = [prod_score, min_score, mean_score]
+    elif cache.allScoreSSE:
+        sse = numpy.sum(numpy.array(scores))
+        human = [sse, sse, sse]
     return human
 
 def product_score(values):
@@ -151,11 +155,19 @@ def averageFitness(offspring, cache):
     bestMin = -sys.float_info.max
     bestProd = -sys.float_info.max
 
-    for i in offspring:
-        total += sum(i.fitness.values)
-        number += len(i.fitness.values)
-        bestMin = max(bestMin, min(i.fitness.values))
-        bestProd = max(bestProd, product_score(i.fitness.values))
+    if cache.allScoreNorm:
+        for i in offspring:
+            total += sum(i.fitness.values)
+            number += len(i.fitness.values)
+            bestMin = max(bestMin, min(i.fitness.values))
+            bestProd = max(bestProd, product_score(i.fitness.values))
+    elif cache.allScoreSSE:
+        for i in offspring:
+            sse = numpy.sum(numpy.array(i.fitness.values))
+            total += sse
+            number += 1
+            bestMin = max(bestMin, sse)
+            bestProd = max(bestProd, sse)
     result = [total/number, bestMin, bestProd]
 
     return result

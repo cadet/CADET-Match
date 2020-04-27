@@ -2,19 +2,19 @@
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Dextran",
     "tempDir": "L:/",
-  "resultsDir": "fit_nsga3_nsga3",
+  "resultsDir": "fit_nsga3",
   "CSV": "dextran_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 1,
   "stopBest": 1,
   "gradCheck": 1.0,
   "gradVector": 0,
-  "searchMethod": "NSGA3",
+  "searchMethod": "Multistart",
   "localRefine": "gradient",
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
   "generations": 1000,
-  "population": 100,
+  "population": 5,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 10,
@@ -55,7 +55,15 @@
       "features": [
         {
             "name": "Pulse",
-            "type": "DextranShape"
+            "type": "SSE",
+            "start": 250,
+            "stop":350
+        },
+        {
+            "name": "Pulse2",
+            "type": "SSE",
+            "start": 350,
+            "stop":450
         }
       ]
     }
