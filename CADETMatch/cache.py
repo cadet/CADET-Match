@@ -120,7 +120,7 @@ class Cache:
         self.setupTarget()
         self.setupMinMax()
 
-        self.WORST = [self.badScore] * self.numGoals
+        self.WORST = [self.badScore] * self.numGoalsOrig
 
         self.settings['transform'] = self.transform
 
@@ -184,7 +184,7 @@ class Cache:
                 self.setupTarget()
                 self.setupMinMax()
 
-                self.WORST = [self.badScore] * self.numGoals
+                self.WORST = [self.badScore] * self.numGoalsOrig
 
                 self.settings['transform'] = self.transform
 
@@ -277,6 +277,7 @@ class Cache:
         self.allScoreNorm = numpy.all(self.badScores == 0.0)
         self.allScoreSSE = numpy.all(self.badScores == -sys.float_info.max)
         self.badScore = min(badScore)
+        self.numGoalsOrig = self.numGoals
 
         if self.allScoreSSE and self.MultiObjectiveSSE is False:
             self.numGoals = 1

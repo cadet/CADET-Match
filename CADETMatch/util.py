@@ -1059,8 +1059,8 @@ def update_result_data(cache, ind, fit, result_data, results, meta_scores):
 
                             result_data['results'][name].append(tuple(solution))
 
-def calcFitness(scores, cache):
-    scores = numpy.array(scores)[cache.meta_mask]
+def calcFitness(scores_orig, cache):
+    scores = numpy.array(scores_orig)[cache.meta_mask]
 
     if cache.allScoreSSE and cache.MultiObjectiveSSE is False:
         scores = (numpy.sum(scores),)
