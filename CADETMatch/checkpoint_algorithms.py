@@ -37,6 +37,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             halloffame = cp["halloffame"]
             meta_hof = cp['meta_halloffame']
             grad_hof = cp['grad_halloffame']
+            progress_hof = cp['progress_halloffame']
             random.setstate(cp["rndstate"])
             cache.generationsOfProgress = cp['generationsOfProgress']
             cache.lastProgressGeneration = cp['lastProgressGeneration']
@@ -58,12 +59,14 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
                 halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
             meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
             grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+            progress_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
 
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
             if invalid_ind:
-                stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1, result_data)
+                stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
+                                                                        progress_hof, -1, result_data)
 
                 avg, bestMin, bestProd = util.averageFitness(population, cache)
                 util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
@@ -72,7 +75,8 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
-                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
+                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration,
+                progress_halloffame = progress_hof)
 
             with checkpointFile.open('wb')as cp_file:
                 pickle.dump(cp, cp_file)
@@ -85,7 +89,8 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen, result_data)
+            stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
+                                                                    progress_hof, gen, result_data)
 
             gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
@@ -110,7 +115,8 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
                                    
             cp = dict(population=population, generation=gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
-                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
+                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration,
+                progress_halloffame = progress_hof)
 
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
@@ -148,6 +154,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             halloffame = cp["halloffame"]
             meta_hof = cp['meta_halloffame']
             grad_hof = cp['grad_halloffame']
+            progress_hof = cp['progress_halloffame']
             random.setstate(cp["rndstate"])
             cache.generationsOfProgress = cp['generationsOfProgress']
             cache.lastProgressGeneration = cp['lastProgressGeneration']
@@ -168,11 +175,13 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
             meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
             grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+            progress_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
             if invalid_ind:
-                stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1, result_data)
+                stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
+                                                                        progress_hof, -1, result_data)
 
                 avg, bestMin, bestProd = util.averageFitness(population, cache)
                 util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
@@ -181,7 +190,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             cp = dict(population=population, generation=start_gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
-                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
+                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration,
+                progress_halloffame = progress_hof)
 
             with checkpointFile.open('wb')as cp_file:
                 pickle.dump(cp, cp_file)
@@ -198,7 +208,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen, result_data)
+            stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
+                                                                    progress_hof, gen, result_data)
                         
             gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
@@ -214,7 +225,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             cp = dict(population=population, generation=gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
-                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
+                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration,
+                progress_halloffame = progress_hof)
 
             if stallWarn:
                 maxPopulation = cache.settings['maxPopulation'] * len(cache.MIN_VALUE)
@@ -244,7 +256,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                                    sim_start, generation_start, result_data)
 
         population = [cache.toolbox.individual_guess(i) for i in meta_hof]
-        stalled, stallWarn, progressWarn = util.eval_population_final(cache.toolbox, cache, population, writer, csvfile, halloffame, meta_hof, gen+1, result_data)
+        stalled, stallWarn, progressWarn = util.eval_population_final(cache.toolbox, cache, population, writer, csvfile, halloffame, meta_hof, 
+                                                                      progress_hof, gen+1, result_data)
         avg, bestMin, bestProd = util.averageFitness(population, cache)       
         util.writeProgress(cache, gen+1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
 
@@ -275,6 +288,7 @@ def nsga2(populationSize, ngen, cache, tools):
             halloffame = cp["halloffame"]
             meta_hof = cp['meta_halloffame']
             grad_hof = cp['grad_halloffame']
+            progress_hof = cp['progress_halloffame']
             random.setstate(cp["rndstate"])
             cache.generationsOfProgress = cp['generationsOfProgress']
             cache.lastProgressGeneration = cp['lastProgressGeneration']
@@ -301,6 +315,7 @@ def nsga2(populationSize, ngen, cache, tools):
                 halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
             meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
             grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+            progress_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
             gradCheck = cache.settings.get('gradCheck', 1.0)
 
 
@@ -309,9 +324,9 @@ def nsga2(populationSize, ngen, cache, tools):
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
         if invalid_ind:
-            stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1, result_data)
-            stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, -1, result_data)
-
+            stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
+                                                                    progress_hof, -1, result_data)
+            
             avg, bestMin, bestProd = util.averageFitness(population, cache)
             util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
             util.graph_process(cache, "First")
@@ -324,7 +339,8 @@ def nsga2(populationSize, ngen, cache, tools):
 
         cp = dict(population=population, generation=start_gen, halloffame=halloffame,
             rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
-            generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
+            generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration,
+            progress_halloffame = progress_hof)
 
         with checkpointFile.open('wb')as cp_file:
             pickle.dump(cp, cp_file)
@@ -346,7 +362,8 @@ def nsga2(populationSize, ngen, cache, tools):
         
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen, result_data)
+            stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
+                                                                    progress_hof, gen, result_data)
 
             gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
@@ -371,7 +388,8 @@ def nsga2(populationSize, ngen, cache, tools):
                 newPopulation = cache.toolbox.randomPopulation(n=diffSize)
 
                 invalid_ind = [ind for ind in newPopulation if not ind.fitness.valid]
-                util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, gen, result_data)
+                util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
+                                     progress_hof, gen, result_data)
 
                 # This is just to assign the crowding distance to the individuals
                 # no actual selection is done
@@ -394,7 +412,8 @@ def nsga2(populationSize, ngen, cache, tools):
 
             cp = dict(population=population, generation=gen, halloffame=halloffame,
                 rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
-                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration)
+                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration,
+                progress_halloffame = progress_hof)
 
             hof = Path(cache.settings['resultsDirMisc'], 'hof')
             with hof.open('wb') as data:

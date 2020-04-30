@@ -41,7 +41,8 @@ def run(cache, tools, creator):
         gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, pop, cache, writer, csvfile, hof, 
                                                            meta_hof, -1, check_all=True, filterOverlap=False)
 
-        stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, newChildren, writer, csvfile, hof, meta_hof, -1, result_data)
+        stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, newChildren, writer, csvfile, hof, meta_hof, 
+                                                                None, -1, result_data)
 
         multiprocessing.get_logger().info("gradCheck %s", gradCheck)
         multiprocessing.get_logger().info("newChildren %s", newChildren)

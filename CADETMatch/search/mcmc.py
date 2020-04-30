@@ -88,9 +88,9 @@ def log_likelihood(individual, json_path):
 
     return score, scores, csv_record, results, individual 
 
-def log_posterior_vectorize(population, json_path, cache, halloffame, meta_hof, grad_hof, result_data, writer, csvfile):
+def log_posterior_vectorize(population, json_path, cache, halloffame, meta_hof, grad_hof, progress_hof, result_data, writer, csvfile):
     results = cache.toolbox.map(log_posterior, ( (population[i], json_path) for i in range(len(population))))
-    results = process(population, cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csvfile)
+    results = process(population, cache, halloffame, meta_hof, grad_hof, progress_hof, result_data, results, writer, csvfile)
     return results
 
 def log_posterior(x):
@@ -696,10 +696,11 @@ def run(cache, tools, creator):
             halloffame = pareto.DummyFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
         meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
         grad_hof = pareto.DummyFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+        progress_hof = None
 
         sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior_vectorize, 
                                         args=[cache.json_path, cache,
-                                                halloffame, meta_hof, grad_hof, result_data,
+                                                halloffame, meta_hof, grad_hof, progress_hof, result_data,
                                                 writer, csvfile], 
                                         moves=[(de_snooker.DESnookerMove(), 0.1), 
                                                (de.DEMove(), 0.9 * 0.9),
@@ -899,7 +900,7 @@ def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_sea
 
     cache.toolbox.register('map', map_function)
 
-def process(population_order, cache, halloffame, meta_hof, grad_hof, result_data, results, writer, csv_file):
+def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_hof, result_data, results, writer, csv_file):
     if 'gen' not in process.__dict__:
         process.gen = 0
 
@@ -933,7 +934,7 @@ def process(population_order, cache, halloffame, meta_hof, grad_hof, result_data
 
     stalled, stallWarn, progressWarn = util.process_population(cache.toolbox, cache, population, 
                                                           fitnesses, writer, csv_file, 
-                                                          halloffame, meta_hof, process.gen, result_data)
+                                                          halloffame, meta_hof, progress_hof, process.gen, result_data)
     
     avg, bestMin, bestProd = util.averageFitness(population, cache)
 

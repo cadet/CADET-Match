@@ -27,6 +27,7 @@ with warnings.catch_warnings():
     import h5py
 
 import multiprocessing
+import copy
 
 import decimal as decim
 decim.getcontext().prec = 64
@@ -1052,7 +1053,7 @@ def calcFitness(scores_orig, cache):
         scores = (numpy.sum(scores),)
     return tuple(scores)
 
-def process_population(toolbox, cache, population, fitnesses, writer, csvfile, halloffame, meta_hof, generation, result_data=None):
+def process_population(toolbox, cache, population, fitnesses, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data=None):
     csv_lines = []
     meta_csv_lines = []
 
@@ -1099,13 +1100,15 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
             if onFront and not cache.metaResultsOnly:
                 processResults(save_name_base, ind, cache, results)
 
-            onFrontMeta, significant = pareto.updateParetoFront(meta_hof, ind_meta, cache)
+            onFrontMeta, significant_meta = pareto.updateParetoFront(meta_hof, ind_meta, cache)
             if onFrontMeta:
                 meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                 processResultsMeta(save_name_base, ind, cache, results)
 
-                if significant:
-                    made_progress = True
+            onFrontProgress, significant_progress = pareto.updateParetoFront(copy.deepcopy(progress_hof), ind_meta, cache)
+            if significant_progress:
+                made_progress = True
+                pareto.updateParetoFront(progress_hof, ind_meta, cache)
 
     writer.writerows(csv_lines)
 
@@ -1143,16 +1146,16 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
     return stalled, stallWarn, progressWarn
 
-def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, result_data=None):
-    return eval_population_base(toolbox.evaluate, toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, result_data)
+def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data=None):
+    return eval_population_base(toolbox.evaluate, toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data)
 
-def eval_population_final(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, result_data=None):
-    return eval_population_base(toolbox.evaluate_final, toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, result_data)
+def eval_population_final(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data=None):
+    return eval_population_base(toolbox.evaluate_final, toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data)
 
-def eval_population_base(evaluate, toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, generation, result_data=None):
+def eval_population_base(evaluate, toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data=None):
     fitnesses = toolbox.map(evaluate, map(list, invalid_ind))
 
-    return process_population(toolbox, cache, invalid_ind, fitnesses, writer, csvfile, halloffame, meta_hof, generation, result_data)
+    return process_population(toolbox, cache, invalid_ind, fitnesses, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data)
 
 def writeMetaFront(cache, meta_hof, path_meta_csv):
     new_data = [individual.csv_line for individual in meta_hof.items]           

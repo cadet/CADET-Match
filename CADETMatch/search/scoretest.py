@@ -31,7 +31,8 @@ def run(cache, tools, creator):
         grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
-        stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof, -1, result_data)
+        stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof, 
+                                                                None, -1, result_data)
         avg, bestMin, bestProd = util.averageFitness(pop, cache)
         util.writeProgress(cache, -1, pop, hof, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
 
@@ -41,7 +42,8 @@ def run(cache, tools, creator):
                 multiprocessing.get_logger().info('%s %s', ind, J)
 
         population = [cache.toolbox.individual_guess(i) for i in meta_hof]
-        stalled, stallWarn, progressWarn = util.eval_population_final(cache.toolbox, cache, population, writer, csvfile, hof, meta_hof, 0, result_data)
+        stalled, stallWarn, progressWarn = util.eval_population_final(cache.toolbox, cache, population, writer, csvfile, hof, meta_hof, 
+                                                                      None, 0, result_data)
         avg, bestMin, bestProd = util.averageFitness(population, cache)       
         util.writeProgress(cache, 0, population, hof, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
         

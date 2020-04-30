@@ -50,6 +50,7 @@ class ParetoFront(tools.ParetoFront):
             if not is_dominated and not has_twin:
                 self.insert(ind)
                 new_members.append(ind)
+                significant.append(True)
         return new_members, any(significant)
 
 class DummyFront(tools.ParetoFront):
@@ -61,7 +62,7 @@ class DummyFront(tools.ParetoFront):
             similar = eq
         super().__init__(similar)
 
-    def update(self, population):
+    def update(self, population, live_mode=True):
         "do not put anything in this front, it is just needed to maintain compatibility"
         return [], False
 
@@ -74,7 +75,7 @@ def similar(a, b):
     a[a == 0.0] = smallest
 
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-3)
+    return numpy.all(diff < 1e-2)
 
 def similar_fit_norm(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
@@ -85,7 +86,7 @@ def similar_fit_norm(a, b):
     a[a == 0.0] = smallest
 
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-3)
+    return numpy.all(diff < 1e-2)
 
 def similar_fit_sse(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
@@ -99,7 +100,7 @@ def similar_fit_sse(a, b):
     b = numpy.log(b)
 
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-3)
+    return numpy.all(diff < 1e-2)
 
 def similar_fit_meta_norm(a, b):
     a = numpy.array(a)
@@ -113,7 +114,7 @@ def similar_fit_meta_norm(a, b):
     b = b[:-1]
 
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-3)
+    return numpy.all(diff < 1e-2)
 
 def similar_fit_meta_sse(a, b):
     "SSE is negative and in the last slot and the only score needed"
@@ -129,7 +130,7 @@ def similar_fit_meta_sse(a, b):
     b = math.log(b)
 
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-3)
+    return numpy.all(diff < 1e-2)
 
 def similar_fit_meta_sse_split(a, b):
     "SSE is negative and in the last slot and the only score needed"
@@ -144,7 +145,7 @@ def similar_fit_meta_sse_split(a, b):
     b = numpy.log(b[:-1])
 
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-3)
+    return numpy.all(diff < 1e-2)
 
 def similar_fit_meta(cache):
     if cache.allScoreNorm:
