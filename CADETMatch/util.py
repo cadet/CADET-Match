@@ -871,21 +871,26 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
             if line_log:
                 multiprocessing.get_logger().info("Generation: %s \tPopulation: %s \t No Stats Avaialable", generation, len(population))
         
+        #['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
+        #'Meta Front', 'Meta Min', 'Meta Product', 'Meta Mean', 'Meta SSE',
+        #'Elapsed Time', 'Generation Time', 'Total CPU Time', 'Last Progress Generation',
+        #'Generations of Progress']
+
+        best_min = meta_max[1]
+        best_product = meta_max[0]
+        best_mean = meta_max[2]
+        best_sse = meta_max[3]
+
         writer.writerow([generation,
                          len(population),
                          len(cache.MIN_VALUE),
                          cache.numGoals,
                          cache.settings.get('searchMethod', 'NSGA3'),
-                         len(halloffame),
-                         product_score,
-                         minimum_score,
-                         average_score,
-                         meta_mean[0],
-                         meta_mean[1],
-                         meta_mean[2],
-                         meta_max[0],
-                         meta_max[1],
-                         meta_max[2],
+                         len(meta_halloffame),
+                         best_min,
+                         best_product,
+                         best_mean,
+                         best_sse,
                          now - sim_start,
                          now - generation_start,
                          cpu_time.user + cpu_time.system,

@@ -48,9 +48,7 @@ class Cache:
         self.altFeatures = False
         self.altFeatureNames = []
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
-                                 'Pareto Front', 'Product Score', 'Minimum Score', 'Average Score',
-                                 'Pareto Mean Product Score', 'Pareto Mean Minimum Score', 'Pareto Mean Average Score',
-                                 'Pareto Meta Product Score', 'Pareto Meta Min Score', 'Pareto Meta Mean Score',
+                                 'Meta Front', 'Meta Min', 'Meta Product', 'Meta Mean', 'Meta SSE',
                                  'Elapsed Time', 'Generation Time', 'Total CPU Time', 'Last Progress Generation',
                                  'Generations of Progress']
 
