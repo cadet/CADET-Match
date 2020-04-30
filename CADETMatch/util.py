@@ -41,9 +41,6 @@ import CADETMatch.pareto as pareto
 import logging
 import os
 
-#smallest number close to 0, used to make sure we don't divide by zero
-smallest = numpy.finfo(1.0).tiny
-
 def find_L(x,y):
     x = numpy.array(x)
     y = numpy.array(y)
@@ -139,8 +136,15 @@ def calcMetaScores(scores, cache):
         mean_score = sum(scores)/len(scores)
         human = [prod_score, min_score, mean_score]
     elif cache.allScoreSSE:
-        sse = numpy.sum(numpy.array(scores))
-        human = [sse, sse, sse]
+        if cache.MultiObjectiveSSE:
+            #scores = numpy.abs(scores)
+            prod_score = product_score(scores)
+            min_score = min(scores)
+            mean_score = sum(scores)/len(scores)
+            human = [prod_score, min_score, mean_score]
+        else:
+            sse = numpy.sum(numpy.array(scores))
+            human = [sse, sse, sse]
     return human
 
 def product_score(values):
@@ -840,33 +844,47 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
         meta_mean = numpy.mean(data_meta, 0)
         meta_max = numpy.max(data_meta, 0)
+        sse_best = numpy.min(data_meta[:,-1])
 
-        if len(data) and data.ndim > 1:
+        if len(data_meta) and data_meta.ndim > 1:
 
-            population_average = numpy.mean(data)
             population_average_best = meta_max[2]
 
-            population_min = numpy.mean(numpy.min(data, 1))
             population_min_best = meta_max[1]
 
-            population_product = numpy.mean(numpy.prod(data, 1)**(1.0/data.shape[1]))
             population_product_best = meta_max[0]
 
-            line_format = 'Generation: %s \tPopulation: %s \tAverage Score: %.3g \tBest: %.3g \tMinimum Score: %.3g \tBest: %.3g \tProduct Score: %.3g \tBest: %.3g'
+            line_format = 'Generation: %s \tPopulation: %s \tAverage Best: %.3g \tMinimum Best: %.3g \tProduct Best: %.3g \tSSE Best: %.3e'
 
-            alt_line_format = 'Generation: %s \tPopulation: %s \t1 - Average Score: %.1e \tBest: %.1e \t1 - Minimum Score: %.1e \tBest: %.1e \t1 - Product Score: %.1e \tBest: %.1e'
+            alt_line_format = 'Generation: %s \tPopulation: %s \t1 - Average Best: %.1e \t1 - Minimum Best: %.1e \t1 - Product Best: %.1e\tSSE Best: %.3e'
+
+            sse_line_format = 'Generation: %s \tPopulation: %s \tSSE Best: %.3e'
+
+            sse_multi_line_format = 'Generation: %s \tPopulation: %s \tAverage Best: %.3e \tMinimum Best: %.3e \tProduct Best: %.3e \tSSE Best: %.3e'
  
             if line_log:
-                if any(meta_max[:-1] > 0.999):  #don't use the last item since that has SSE
+                if cache.allScoreSSE:
+                    if cache.MultiObjectiveSSE:
+                        multiprocessing.get_logger().info(sse_multi_line_format, generation, len(population),
+                          -population_average_best,
+                          -population_min_best,
+                          -population_product_best,
+                          sse_best)
+                    else:
+                        multiprocessing.get_logger().info(sse_line_format, generation, len(population),
+                          sse_best)
+                elif any(meta_max[:-1] > 0.999):  #don't use the last item since that has SSE
                     multiprocessing.get_logger().info(alt_line_format, generation, len(population),
-                      1-population_average, 1-population_average_best,
-                      1-population_min, 1-population_min_best,
-                      1-population_product, 1-population_product_best)
+                      1-population_average_best,
+                      1-population_min_best,
+                      1-population_product_best,
+                      sse_best)
                 else:
                     multiprocessing.get_logger().info(line_format, generation, len(population),
-                      population_average, population_average_best,
-                      population_min, population_min_best,
-                      population_product, population_product_best)
+                      population_average_best,
+                      population_min_best,
+                      population_product_best,
+                      sse_best)
         else:
             if line_log:
                 multiprocessing.get_logger().info("Generation: %s \tPopulation: %s \t No Stats Avaialable", generation, len(population))
@@ -879,7 +897,7 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         best_min = meta_max[1]
         best_product = meta_max[0]
         best_mean = meta_max[2]
-        best_sse = meta_max[3]
+        best_sse = sse_best
 
         writer.writerow([generation,
                          len(population),

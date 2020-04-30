@@ -3,6 +3,8 @@ from operator import eq
 import math
 import numpy
 
+smallest = numpy.finfo(1.0).tiny
+
 class ParetoFront(tools.ParetoFront):
     "Modification of the pareto front in DEAP that takes cache as an argument to update to use for similar comparison"
 
@@ -61,7 +63,7 @@ class DummyFront(tools.ParetoFront):
 
     def update(self, population):
         "do not put anything in this front, it is just needed to maintain compatibility"
-        pass
+        return [], False
 
 def similar(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
@@ -72,13 +74,7 @@ def similar(a, b):
     a[a == 0.0] = smallest
 
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-2)
-
-def similar_fit(cache):
-    if cache.allScoreNorm:
-        return similar_fit_norm
-    elif cache.allScoreSSE:
-        return similiar_fit_sse
+    return numpy.all(diff < 1e-3)
 
 def similar_fit_norm(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
@@ -89,7 +85,7 @@ def similar_fit_norm(a, b):
     a[a == 0.0] = smallest
 
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-2)
+    return numpy.all(diff < 1e-3)
 
 def similar_fit_sse(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
@@ -103,16 +99,7 @@ def similar_fit_sse(a, b):
     b = numpy.log(b)
 
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-2)
-
-def similar_fit_meta(cache):
-    if cache.allScoreNorm:
-        return similar_fit_meta_norm
-    elif cache.allScoreSSE:
-        if cache.MultiObjectiveSSE:
-            return similiar_fit_meta_sse_split
-        else:
-            return similiar_fit_meta_sse
+    return numpy.all(diff < 1e-3)
 
 def similar_fit_meta_norm(a, b):
     a = numpy.array(a)
@@ -126,22 +113,23 @@ def similar_fit_meta_norm(a, b):
     b = b[:-1]
 
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-2)
+    return numpy.all(diff < 1e-3)
 
 def similar_fit_meta_sse(a, b):
     "SSE is negative and in the last slot and the only score needed"
-    a = -a[-1]
-    b = -b[-1]
+    a = a[-1]
+    b = b[-1]
 
     #used to catch division by zero
-    a[a == 0.0] = smallest
+    if a == 0.0:
+       a = smallest
 
     #SSE should be handled in log scale
     a = math.log(a)
     b = math.log(b)
 
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-2)
+    return numpy.all(diff < 1e-3)
 
 def similar_fit_meta_sse_split(a, b):
     "SSE is negative and in the last slot and the only score needed"
@@ -152,11 +140,26 @@ def similar_fit_meta_sse_split(a, b):
     a[a == 0.0] = smallest
 
     #SSE should be handled in log scale
-    a = math.log(a[:-1])
-    b = math.log(b[:-1])
+    a = numpy.log(a[:-1])
+    b = numpy.log(b[:-1])
 
     diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-2)
+    return numpy.all(diff < 1e-3)
+
+def similar_fit_meta(cache):
+    if cache.allScoreNorm:
+        return similar_fit_meta_norm
+    elif cache.allScoreSSE:
+        if cache.MultiObjectiveSSE:
+            return similar_fit_meta_sse_split
+        else:
+            return similar_fit_meta_sse
+
+def similar_fit(cache):
+    if cache.allScoreNorm:
+        return similar_fit_norm
+    elif cache.allScoreSSE:
+        return similar_fit_sse
 
 def updateParetoFront(halloffame, offspring, cache):
     new_members, significant  = halloffame.update([offspring,])

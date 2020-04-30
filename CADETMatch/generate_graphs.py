@@ -537,9 +537,7 @@ def graphProgress(cache, map_function):
     output = cache.settings['resultsDirProgress']
 
     x = ['Generation',]
-    y = ['Average Score', 'Minimum Score', 'Product Score',
-         'Pareto Meta Product Score', 'Pareto Meta Min Score', 
-         'Pareto Meta Mean Score',]
+    y = ['Meta Front', 'Meta Min', 'Meta Product', 'Meta Mean', 'Meta SSE']
 
     temp = []
     for x,y in itertools.product(x,y):
