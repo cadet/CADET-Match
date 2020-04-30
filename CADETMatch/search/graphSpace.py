@@ -30,7 +30,10 @@ def run(cache, tools, creator):
 
     gradCheck = cache.badScore
 
-    hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+    if cache.metaResultsOnly:
+        hof = pareto.DummyFront()
+    else:
+        hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
     meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
     grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
 

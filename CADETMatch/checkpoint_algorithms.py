@@ -52,7 +52,10 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             gradCheck = settings.get('gradCheck', 1.0)
 
-            halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+            if cache.metaResultsOnly:
+                halloffame = pareto.DummyFront()
+            else:
+                halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
             meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
             grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
 
@@ -159,7 +162,10 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             gradCheck = settings.get('gradCheck', 1.0)
 
-            halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+            if cache.metaResultsOnly:
+                halloffame = pareto.DummyFront()
+            else:
+                halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
             meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
             grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
 
@@ -289,7 +295,10 @@ def nsga2(populationSize, ngen, cache, tools):
 
             start_gen = 0    
 
-            halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+            if cache.metaResultsOnly:
+                halloffame = pareto.DummyFront()
+            else:
+                halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
             meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
             grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
             gradCheck = cache.settings.get('gradCheck', 1.0)

@@ -23,7 +23,10 @@ def run(cache, tools, creator):
             seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]
             pop.extend(seed_pop)
 
-        hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+        if cache.metaResultsOnly:
+            hof = pareto.DummyFront()
+        else:
+            hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
         meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
         grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
 

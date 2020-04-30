@@ -690,7 +690,10 @@ def run(cache, tools, creator):
 
         result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[], 'mcmc_score':[]}
-        halloffame = pareto.DummyFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+        if cache.metaResultsOnly:
+            halloffame = pareto.DummyFront()
+        else:
+            halloffame = pareto.DummyFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
         meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
         grad_hof = pareto.DummyFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
 
