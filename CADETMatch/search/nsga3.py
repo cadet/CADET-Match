@@ -42,7 +42,6 @@ def run(cache, tools, creator):
 
 def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_search_fine, map_function, creator, base, tools):
     "setup the DEAP variables"
-    ref_points = generate_reference_points(cache.numGoals)
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
     creator.create("Individual", array.array, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None,
                    csv_line=None)
@@ -69,8 +68,10 @@ def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_sea
     cache.toolbox.register("force_mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
 
     if cache.numGoals == 1:
-        cache.toolbox.register("select", tools.selBest)
+        #NSGA3 uses reference points and is not suitable for a single objective, switch to NSGA2
+        cache.toolbox.register("select", tools.selNSGA2)
     else:
+        ref_points = generate_reference_points(cache.numGoals)
         cache.toolbox.register("select", tools.selNSGA3WithMemory(ref_points))
 
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
@@ -83,7 +84,7 @@ def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_sea
 
 
 def num_ref_points(n,k):
-    return scipy.special.comb(n+k-1,k, exact=True)
+    return scipy.special.comb(n+k-1,k, exact=False)
 
 def find_max_p(ndim, max_size, max_p):
     for p in range(max_p, 0, -1):
@@ -92,7 +93,7 @@ def find_max_p(ndim, max_size, max_p):
     return p
 
 def find_ref_point_setup(ndim, max_size, inner):
-    p = [find_max_p(ndim, max_size, 32),]
+    p = [find_max_p(ndim, max_size, 128),]
     if p[0] < inner:
         p.append(p[0]-1)
     return p

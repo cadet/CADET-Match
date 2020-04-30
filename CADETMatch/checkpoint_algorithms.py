@@ -52,9 +52,9 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             gradCheck = settings.get('gradCheck', 1.0)
 
-            halloffame = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
-            meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit_meta)
-            grad_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+            halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
+            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta)
+            grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
 
 
             # Evaluate the individuals with an invalid fitness
@@ -126,10 +126,6 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
     """from DEAP function but with checkpoiting"""
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
-    #import search.spea2
-    #from line_profiler import LineProfiler
-    #profile = LineProfiler(search.spea2.selSPEA2)
-
     checkpointFile = Path(settings['resultsDirMisc'], settings.get('checkpointFile', 'check'))
 
     sim_start = generation_start = time.time()
@@ -163,9 +159,9 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             gradCheck = settings.get('gradCheck', 1.0)
 
-            halloffame = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
-            meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit_meta)
-            grad_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+            halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
+            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta)
+            grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -293,9 +289,9 @@ def nsga2(populationSize, ngen, cache, tools):
 
             start_gen = 0    
 
-            halloffame = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
-            meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit_meta)
-            grad_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit)
+            halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
+            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta)
+            grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
             gradCheck = cache.settings.get('gradCheck', 1.0)
 
 

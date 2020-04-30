@@ -690,10 +690,9 @@ def run(cache, tools, creator):
 
         result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[], 'mcmc_score':[]}
-        halloffame = pareto.DummyFront(similar=util.similar)
-        meta_hof = pareto.ParetoFront(similar=util.similar, similar_fit=util.similar_fit_meta)
-        grad_hof = pareto.DummyFront(similar=util.similar)
-                
+        halloffame = pareto.DummyFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
+        meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta)
+        grad_hof = pareto.DummyFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
 
         sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior_vectorize, 
                                         args=[cache.json_path, cache,

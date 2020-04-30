@@ -56,15 +56,7 @@
       "features": [
         {
             "name": "Pulse",
-            "type": "ShapeFront",
-            "start": 250,
-            "stop":350
-        },
-        {
-            "name": "Pulse2",
-            "type": "ShapeBack",
-            "start": 350,
-            "stop":450
+            "type": "SSE"
         }
       ]
     }

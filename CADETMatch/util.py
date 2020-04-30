@@ -36,6 +36,7 @@ __logBase10of2 = float(__logBase10of2_decim)
 import SALib.sample.sobol_sequence
 import CADETMatch.loggerwriter as loggerwriter
 import CADETMatch.synthetic_error as synthetic_error
+import CADETMatch.pareto as pareto
 
 import logging
 import os
@@ -595,44 +596,6 @@ def bestMinScore(hof):
     idxMax = numpy.argmax([min(i.fitness.values) for i in hof])
     return hof[idxMax]
 
-def similar(a, b):
-    "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
-    a = numpy.array(a)
-    b = numpy.array(b)
-    
-    #used to catch division by zero
-    a[a == 0.0] = smallest
-
-    diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-2)
-
-def similar_fit(a, b):
-    "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
-    a = numpy.array(a)
-    b = numpy.array(b)
-
-    #used to catch division by zero
-    a[a == 0.0] = smallest
-
-    diff = numpy.abs((a-b)/a)
-    return numpy.all(diff < 1e-2)
-
-def similar_fit_meta(a, b):
-    "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
-    a = numpy.array(a)
-    b = numpy.array(b)
-
-    #used to catch division by zero
-    a[a == 0.0] = smallest
-
-    #SSE is in the last slot of the scores and needs to be handled differently since it changes so rapidly compared to other scores
-    a[-1] = numpy.log(a[-1])
-    b[-1] = numpy.log(b[-1])
-
-    diff = numpy.abs((a-b)/a)
-
-    return numpy.all(diff < 1e-2)
-
 def fracStat(time_center, value):
     mean_time = numpy.sum(time_center*value)/numpy.sum(value)
     variance_time = numpy.sum( (time_center - mean_time)**2 * value )/numpy.sum(value)
@@ -1109,11 +1072,11 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)
 
-            onFront = updateParetoFront(halloffame, ind, cache)
+            onFront = pareto.updateParetoFront(halloffame, ind, cache)
             if onFront and not cache.metaResultsOnly:
                 processResults(save_name_base, ind, cache, results)
 
-            onFrontMeta = updateParetoFront(meta_hof, ind_meta, cache)
+            onFrontMeta = pareto.updateParetoFront(meta_hof, ind_meta, cache)
             if onFrontMeta:
                 meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                 processResultsMeta(save_name_base, ind, cache, results)
@@ -1125,11 +1088,11 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
     #if the min value is zero then use the old method to determine progress of adding to the pareto front
     #this should catch later stages where real progress is not being made but you have a variable that is not identifiable
-    if new_best_min > 0:
-        if new_best_min > best_min:
-            made_progress = True
-        else:
-            made_progress = False
+    #if new_best_min > 0:
+    #    if new_best_min > best_min:
+    #        made_progress = True
+    #    else:
+    #        made_progress = False
 
     #flush before returning
     csvfile.flush()
@@ -1165,10 +1128,6 @@ def eval_population_base(evaluate, toolbox, cache, invalid_ind, writer, csvfile,
     fitnesses = toolbox.map(evaluate, map(list, invalid_ind))
 
     return process_population(toolbox, cache, invalid_ind, fitnesses, writer, csvfile, halloffame, meta_hof, generation, result_data)
-
-def updateParetoFront(halloffame, offspring, cache):
-    new_members = halloffame.update([offspring,])
-    return bool(new_members)
 
 def writeMetaFront(cache, meta_hof, path_meta_csv):
     new_data = [individual.csv_line for individual in meta_hof.items]           

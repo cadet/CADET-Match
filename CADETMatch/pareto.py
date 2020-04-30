@@ -32,9 +32,9 @@ class ParetoFront(tools.ParetoFront):
                 if not dominates_one and hofer.fitness.dominates(ind.fitness):
                     is_dominated = True
                     break
-                elif ind.fitness.dominates(hofer.fitness):
+                elif ind.fitness.dominates(hofer.fitness) and not self.similar_fit(ind.fitness.values, hofer.fitness.values):
                     dominates_one = True
-                    to_remove.append(i)
+                    to_remove.append(i)                
                 elif self.similar_fit(ind.fitness.values, hofer.fitness.values) and self.similar(ind, hofer):
                     has_twin = True
                     break
@@ -58,3 +58,44 @@ class DummyFront(tools.ParetoFront):
     def update(self, population):
         "do not put anything in this front, it is just needed to maintain compatibility"
         pass
+
+def similar(a, b):
+    "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
+    a = numpy.absolute(numpy.array(a))
+    b = numpy.absolute(numpy.array(b))
+    
+    #used to catch division by zero
+    a[a == 0.0] = smallest
+
+    diff = numpy.abs((a-b)/a)
+    return numpy.all(diff < 1e-2)
+
+def similar_fit(a, b):
+    "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
+    a = numpy.absolute(numpy.array(a))
+    b = numpy.absolute(numpy.array(b))
+
+    #used to catch division by zero
+    a[a == 0.0] = smallest
+
+    diff = numpy.abs((a-b)/a)
+    return numpy.all(diff < 1e-2)
+
+def similar_fit_meta(a, b):
+    "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
+    a = numpy.absolute(numpy.array(a))
+    b = numpy.absolute(numpy.array(b))
+
+    #used to catch division by zero
+    a[a == 0.0] = smallest
+
+    #SSE is in the last slot of the scores and needs to be handled differently since it changes so rapidly compared to other scores
+    a[-1] = numpy.log(a[-1])
+    b[-1] = numpy.log(b[-1])
+
+    diff = numpy.abs((a-b)/a)
+    return numpy.all(diff < 1e-2)
+
+def updateParetoFront(halloffame, offspring, cache):
+    new_members  = halloffame.update([offspring,])
+    return bool(new_members)

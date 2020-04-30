@@ -6,6 +6,7 @@ CADETMatch/__main__.py
 CADETMatch/cache.py
 CADETMatch/calc_coeff.py
 CADETMatch/checkpoint_algorithms.py
+CADETMatch/code_test.py
 CADETMatch/de.py
 CADETMatch/de_snooker.py
 CADETMatch/evo.py

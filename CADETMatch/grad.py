@@ -15,6 +15,7 @@ import csv
 import time
 import multiprocessing
 import CADETMatch.cache as cache
+import CADETMatch.pareto as pareto
 
 class ConditionException(Exception):
     pass
@@ -90,11 +91,11 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
 
             if csv_line:
                 csv_lines.append([time.ctime(), save_name_base] + csv_line)
-                onFront = util.updateParetoFront(grad_hof, ind, cache)
+                onFront = pareto.updateParetoFront(grad_hof, ind, cache)
                 if onFront and not cache.metaResultsOnly:
                     util.processResultsGrad(save_name_base, ind, cache, results)
 
-                onFrontMeta = util.updateParetoFront(meta_hof, ind_meta, cache)
+                onFrontMeta = pareto.updateParetoFront(meta_hof, ind_meta, cache)
                 if onFrontMeta:
                     meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                     util.processResultsMeta(save_name_base, ind, cache, results)
