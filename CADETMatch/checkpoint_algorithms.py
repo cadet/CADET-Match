@@ -52,9 +52,9 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
 
             gradCheck = settings.get('gradCheck', 1.0)
 
-            halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
-            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta)
-            grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
+            halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
+            grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
 
 
             # Evaluate the individuals with an invalid fitness
@@ -159,9 +159,9 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             gradCheck = settings.get('gradCheck', 1.0)
 
-            halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
-            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta)
-            grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
+            halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
+            grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -289,9 +289,9 @@ def nsga2(populationSize, ngen, cache, tools):
 
             start_gen = 0    
 
-            halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
-            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta)
-            grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
+            halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
+            grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
             gradCheck = cache.settings.get('gradCheck', 1.0)
 
 

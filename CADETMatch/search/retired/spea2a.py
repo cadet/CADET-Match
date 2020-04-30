@@ -30,7 +30,7 @@ def run(cache, tools, creator):
 
     totalGenerations = parameters * cache.settings['generations']
 
-    hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit)
+    hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
     meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta)
 
     return checkpoint_algorithms.eaMuCommaLambda(pop, cache.toolbox, mu=MU, lambda_=LAMBDA,

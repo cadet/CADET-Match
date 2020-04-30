@@ -1,5 +1,7 @@
 from deap import tools
 from operator import eq
+import math
+import numpy
 
 class ParetoFront(tools.ParetoFront):
     "Modification of the pareto front in DEAP that takes cache as an argument to update to use for similar comparison"
@@ -72,7 +74,13 @@ def similar(a, b):
     diff = numpy.abs((a-b)/a)
     return numpy.all(diff < 1e-2)
 
-def similar_fit(a, b):
+def similar_fit(cache):
+    if cache.allScoreNorm:
+        return similar_fit_norm
+    elif cache.allScoreSSE:
+        return similiar_fit_sse
+
+def similar_fit_norm(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
     a = numpy.absolute(numpy.array(a))
     b = numpy.absolute(numpy.array(b))
@@ -83,7 +91,7 @@ def similar_fit(a, b):
     diff = numpy.abs((a-b)/a)
     return numpy.all(diff < 1e-2)
 
-def similar_fit_meta(a, b):
+def similar_fit_sse(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
     a = numpy.absolute(numpy.array(a))
     b = numpy.absolute(numpy.array(b))
@@ -91,9 +99,61 @@ def similar_fit_meta(a, b):
     #used to catch division by zero
     a[a == 0.0] = smallest
 
-    #SSE is in the last slot of the scores and needs to be handled differently since it changes so rapidly compared to other scores
-    a[-1] = numpy.log(a[-1])
-    b[-1] = numpy.log(b[-1])
+    a = numpy.log(a)
+    b = numpy.log(b)
+
+    diff = numpy.abs((a-b)/a)
+    return numpy.all(diff < 1e-2)
+
+def similar_fit_meta(cache):
+    if cache.allScoreNorm:
+        return similar_fit_meta_norm
+    elif cache.allScoreSSE:
+        if cache.MultiObjectiveSSE:
+            return similiar_fit_meta_sse_split
+        else:
+            return similiar_fit_meta_sse
+
+def similar_fit_meta_norm(a, b):
+    a = numpy.array(a)
+    b = numpy.array(b)
+
+    #used to catch division by zero
+    a[a == 0.0] = smallest
+
+    #SSE is in the last slot so we only want to use the first 3 meta scores
+    a = a[:-1]
+    b = b[:-1]
+
+    diff = numpy.abs((a-b)/a)
+    return numpy.all(diff < 1e-2)
+
+def similar_fit_meta_sse(a, b):
+    "SSE is negative and in the last slot and the only score needed"
+    a = -a[-1]
+    b = -b[-1]
+
+    #used to catch division by zero
+    a[a == 0.0] = smallest
+
+    #SSE should be handled in log scale
+    a = math.log(a)
+    b = math.log(b)
+
+    diff = numpy.abs((a-b)/a)
+    return numpy.all(diff < 1e-2)
+
+def similar_fit_meta_sse_split(a, b):
+    "SSE is negative and in the last slot and the only score needed"
+    a = numpy.abs(numpy.array(a))
+    b = numpy.abs(numpy.array(b))
+
+    #used to catch division by zero
+    a[a == 0.0] = smallest
+
+    #SSE should be handled in log scale
+    a = math.log(a[:-1])
+    b = math.log(b[:-1])
 
     diff = numpy.abs((a-b)/a)
     return numpy.all(diff < 1e-2)
