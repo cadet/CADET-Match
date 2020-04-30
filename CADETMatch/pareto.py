@@ -23,6 +23,7 @@ class ParetoFront(tools.ParetoFront):
                            update the hall of fame with.
         """
         new_members = []
+        significant = []
         for ind in population:
             is_dominated = False
             dominates_one = False
@@ -32,9 +33,10 @@ class ParetoFront(tools.ParetoFront):
                 if not dominates_one and hofer.fitness.dominates(ind.fitness):
                     is_dominated = True
                     break
-                elif ind.fitness.dominates(hofer.fitness) and not self.similar_fit(ind.fitness.values, hofer.fitness.values):
+                elif ind.fitness.dominates(hofer.fitness):
                     dominates_one = True
-                    to_remove.append(i)                
+                    to_remove.append(i)
+                    significant.append(not self.similar_fit(ind.fitness.values, hofer.fitness.values))
                 elif self.similar_fit(ind.fitness.values, hofer.fitness.values) and self.similar(ind, hofer):
                     has_twin = True
                     break
@@ -44,7 +46,7 @@ class ParetoFront(tools.ParetoFront):
             if not is_dominated and not has_twin:
                 self.insert(ind)
                 new_members.append(ind)
-        return new_members
+        return new_members, any(significant)
 
 class DummyFront(tools.ParetoFront):
     "Modification of the pareto front in DEAP that takes cache as an argument to update to use for similar comparison"
@@ -97,5 +99,5 @@ def similar_fit_meta(a, b):
     return numpy.all(diff < 1e-2)
 
 def updateParetoFront(halloffame, offspring, cache):
-    new_members  = halloffame.update([offspring,])
-    return bool(new_members)
+    new_members, significant  = halloffame.update([offspring,])
+    return bool(new_members), significant

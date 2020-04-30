@@ -1072,15 +1072,17 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)
 
-            onFront = pareto.updateParetoFront(halloffame, ind, cache)
+            onFront, significant = pareto.updateParetoFront(halloffame, ind, cache)
             if onFront and not cache.metaResultsOnly:
                 processResults(save_name_base, ind, cache, results)
 
-            onFrontMeta = pareto.updateParetoFront(meta_hof, ind_meta, cache)
+            onFrontMeta, significant = pareto.updateParetoFront(meta_hof, ind_meta, cache)
             if onFrontMeta:
                 meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                 processResultsMeta(save_name_base, ind, cache, results)
-                made_progress = True
+
+                if significant:
+                    made_progress = True
 
     writer.writerows(csv_lines)
 

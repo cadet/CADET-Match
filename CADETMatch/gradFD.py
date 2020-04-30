@@ -127,16 +127,18 @@ def processOffspring(offspring, temp, csv_lines, meta_csv_lines, gradient_result
 
             if csv_line:
                 csv_lines.append([time.ctime(), save_name_base] + csv_line)
-                onFront = pareto.updateParetoFront(grad_hof, ind, cache)
+                onFront, significant = pareto.updateParetoFront(grad_hof, ind, cache)
                 if onFront and not cache.metaResultsOnly:
                     util.processResultsGrad(save_name_base, ind, cache, results)
 
-                onFrontMeta = pareto.updateParetoFront(meta_hof, ind_meta, cache)
+                onFrontMeta, significant = pareto.updateParetoFront(meta_hof, ind_meta, cache)
                 new_meta.append(onFrontMeta)
                 if onFrontMeta:
                     meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                     util.processResultsMeta(save_name_base, ind, cache, results)
-                    cache.lastProgressGeneration = generation
+
+                    if significant:
+                        cache.lastProgressGeneration = generation
 
             temp.append(ind)
     return any(new_meta)
