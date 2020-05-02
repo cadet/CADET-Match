@@ -48,12 +48,7 @@ def run(cache, tools, creator):
         stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, pop, writer, csvfile, hof, meta_hof, 
                                                                 None, -1, result_data)
 
-        #multiprocessing.get_logger().info("gradCheck %s", gradCheck)
-        #multiprocessing.get_logger().info("newChildren %s", newChildren)
-
-        avg, bestMin, bestProd = util.averageFitness(pop, cache)
-        
-        util.writeProgress(cache, -1, pop, hof, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
+        util.writeProgress(cache, -1, pop, hof, meta_hof, grad_hof, sim_start, generation_start, result_data)
         
         util.finish(cache)
         util.graph_corner_process(cache, last=True)

@@ -73,9 +73,9 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
         multiprocessing.get_logger().info('ending fine refine')
     
     if temp:
-        avg, bestMin, bestProd = util.averageFitness(temp, cache)
-        if 0.9 * bestProd > gradCheck:
-            gradCheck = 0.9 * bestProd
+        best = meta_hof.getBestScores()
+        if 0.9 * best[0] > gradCheck:
+            gradCheck = 0.9 * best[0]
 
     writer.writerows(csv_lines)
     

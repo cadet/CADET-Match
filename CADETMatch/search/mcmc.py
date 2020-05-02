@@ -935,10 +935,8 @@ def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_ho
     stalled, stallWarn, progressWarn = util.process_population(cache.toolbox, cache, population, 
                                                           fitnesses, writer, csv_file, 
                                                           halloffame, meta_hof, progress_hof, process.gen, result_data)
-    
-    avg, bestMin, bestProd = util.averageFitness(population, cache)
 
-    util.writeProgress(cache, process.gen, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, 
+    util.writeProgress(cache, process.gen, population, halloffame, meta_hof, grad_hof, 
                        process.sim_start, process.generation_start, result_data, line_log=False)
 
     util.graph_process(cache, process.gen)

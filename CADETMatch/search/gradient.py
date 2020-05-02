@@ -47,9 +47,7 @@ def run(cache, tools, creator):
         multiprocessing.get_logger().info("gradCheck %s", gradCheck)
         multiprocessing.get_logger().info("newChildren %s", newChildren)
 
-        avg, bestMin, bestProd = util.averageFitness(newChildren, cache)
-        
-        util.writeProgress(cache, -1, newChildren, hof, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
+        util.writeProgress(cache, -1, newChildren, hof, meta_hof, grad_hof, sim_start, generation_start, result_data)
         
         util.finish(cache)
         util.graph_corner_process(cache, last=True)

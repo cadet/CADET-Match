@@ -68,8 +68,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
                 stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
                                                                         progress_hof, -1, result_data)
 
-                avg, bestMin, bestProd = util.averageFitness(population, cache)
-                util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
+                util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, sim_start, generation_start, result_data)
                 util.graph_process(cache, "First")
                 util.graph_corner_process(cache, last=False)
 
@@ -98,8 +97,7 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, setting
             # Select the next generation population
             population[:] = toolbox.select(offspring, mu)
 
-            avg, bestMin, bestProd = util.averageFitness(offspring, cache)
-            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
+            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, sim_start, generation_start, result_data)
             util.graph_process(cache, gen)
             util.graph_corner_process(cache, last=False)
 
@@ -183,8 +181,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
                                                                         progress_hof, -1, result_data)
 
-                avg, bestMin, bestProd = util.averageFitness(population, cache)
-                util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
+                util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, sim_start, generation_start, result_data)
                 util.graph_process(cache, "First")
                 util.graph_corner_process(cache, last=False)
 
@@ -214,12 +211,10 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
 
-            avg, bestMin, bestProd = util.averageFitness(offspring, cache)
-            
             # Select the next generation population
             population[:] = toolbox.select(offspring + population, mu)
 
-            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
+            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, sim_start, generation_start, result_data)
             util.graph_process(cache, gen)
             util.graph_corner_process(cache, last=False)
 
@@ -242,7 +237,9 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
 
-            if avg >= settings.get('stopAverage', 1.0) or bestMin >= settings.get('stopBest', 1.0) or stalled:
+            best = meta_hof.getBestScores()
+
+            if best[2] >= settings.get('stopAverage', 1.0) or best[1] >= settings.get('stopBest', 1.0) or stalled:
                 break
 
         if cache.finalGradRefinement:
@@ -251,15 +248,13 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, best_individuals, cache, writer, csvfile, 
                                                                grad_hof, meta_hof, gen, check_all=True, result_data=result_data)
             if newChildren:
-                avg, bestMin, bestProd = util.averageFitness(newChildren, cache)
-                util.writeProgress(cache, gen, newChildren, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, 
+                util.writeProgress(cache, gen, newChildren, halloffame, meta_hof, grad_hof,
                                    sim_start, generation_start, result_data)
 
         population = [cache.toolbox.individual_guess(i) for i in meta_hof]
         stalled, stallWarn, progressWarn = util.eval_population_final(cache.toolbox, cache, population, writer, csvfile, halloffame, meta_hof, 
                                                                       progress_hof, gen+1, result_data)
-        avg, bestMin, bestProd = util.averageFitness(population, cache)       
-        util.writeProgress(cache, gen+1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
+        util.writeProgress(cache, gen+1, population, halloffame, meta_hof, grad_hof, sim_start, generation_start, result_data)
 
         util.finish(cache)
         util.graph_corner_process(cache, last=True)
@@ -327,8 +322,7 @@ def nsga2(populationSize, ngen, cache, tools):
             stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
                                                                     progress_hof, -1, result_data)
             
-            avg, bestMin, bestProd = util.averageFitness(population, cache)
-            util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
+            util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, sim_start, generation_start, result_data)
             util.graph_process(cache, "First")
             util.graph_corner_process(cache, last=False)
         
@@ -368,9 +362,7 @@ def nsga2(populationSize, ngen, cache, tools):
             gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
 
-            avg, bestMin, bestProd = util.averageFitness(offspring, cache)
-
-            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, avg, bestMin, bestProd, sim_start, generation_start, result_data)
+            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, sim_start, generation_start, result_data)
             util.graph_process(cache, gen)
             util.graph_corner_process(cache, last=False)
 
@@ -421,7 +413,9 @@ def nsga2(populationSize, ngen, cache, tools):
             with checkpointFile.open('wb') as cp_file:
                 pickle.dump(cp, cp_file)
 
-            if avg >= cache.settings.get('stopAverage', 1.0) or bestMin >= cache.settings.get('stopBest', 1.0) or stalled:
+            best = meta_hof.getBestScores()
+
+            if best[2] >= cache.settings.get('stopAverage', 1.0) or best[1] >= cache.settings.get('stopBest', 1.0) or stalled:
                 util.finish(cache)
                 util.graph_corner_process(cache, last=True)
                 return halloffame

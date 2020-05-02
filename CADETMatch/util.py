@@ -155,29 +155,6 @@ def product_score(values):
     else:
         return -numpy.prod(numpy.abs(values))**(1.0/len(values))
 
-def averageFitness(offspring, cache):
-    total = 0.0
-    number = 0.0
-    bestMin = -sys.float_info.max
-    bestProd = -sys.float_info.max
-
-    if cache.allScoreNorm:
-        for i in offspring:
-            total += sum(i.fitness.values)
-            number += len(i.fitness.values)
-            bestMin = max(bestMin, min(i.fitness.values))
-            bestProd = max(bestProd, product_score(i.fitness.values))
-    elif cache.allScoreSSE:
-        for i in offspring:
-            sse = numpy.sum(numpy.array(i.fitness.values))
-            total += sse
-            number += 1
-            bestMin = max(bestMin, sse)
-            bestProd = max(bestProd, sse)
-    result = [total/number, bestMin, bestProd]
-
-    return result
-
 def saveExperiments(save_name_base, settings, target, results, directory, file_pattern):
     for experiment in settings['experiments']:
         experimentName = experiment['name']
@@ -626,8 +603,8 @@ def fractionate(start_seq, stop_seq, times, values):
         temp.append(numpy.trapz(local_values, local_times)/ (stop - start))
     return numpy.array(temp)
 
-def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, average_score, 
-                  minimum_score, product_score, sim_start, generation_start, result_data=None, line_log=True):
+def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, 
+                  sim_start, generation_start, result_data=None, line_log=True):
     cpu_time = psutil.Process().cpu_times()
     now = time.time()
 

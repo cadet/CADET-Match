@@ -55,6 +55,11 @@ class ParetoFront(tools.ParetoFront):
                 significant.append(True)
         return new_members, any(significant)
 
+    def getBestScores(self):
+        weights = numpy.array(self[0].fitness.weights)
+        data_meta = numpy.array([i.fitness.values for i in self])
+        return numpy.max(data_meta*weights, 0)*weights
+
 class DummyFront(tools.ParetoFront):
     "Modification of the pareto front in DEAP that takes cache as an argument to update to use for similar comparison"
 
