@@ -56,7 +56,7 @@ def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_sea
     creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None,
                    csv_line=None)
 
-    creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0, 1.0, 1.0, -1.0])
+    creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0, 1.0, 1.0, -1.0, -1.0])
     creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None, csv_line=None)
     cache.toolbox.register("individualMeta", util.initIndividual, creator.IndividualMeta, cache)
 
