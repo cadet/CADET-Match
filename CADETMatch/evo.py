@@ -9,6 +9,7 @@ from deap import tools
 from cadet import Cadet
 
 import CADETMatch.cache as cache
+import score_calc
 
 ERROR = {'scores': None,
          'path': None,
@@ -34,6 +35,8 @@ def fitness_base(runner, template_name, individual, json_path, run_experiment):
 
     scores = []
     error = 0.0
+    exp_values = []
+    sim_values = []
 
     results = {}
     for experiment in cache.cache.settings['experiments']:
@@ -42,14 +45,19 @@ def fitness_base(runner, template_name, individual, json_path, run_experiment):
             results[experiment['name']] = result
             scores.extend(results[experiment['name']]['scores'])
             error += results[experiment['name']]['error']
+
+            sim_values.extend(result['sim_value'])
+            exp_values.extend(result['exp_value'])
         else:
             return cache.cache.WORST, [], None, individual
+
+    rmse = score_calc.rmse_combine(exp_values, sim_values)
 
     if numpy.any(numpy.isnan(scores)):
         multiprocessing.get_logger().info("NaN found for %s %s", individual, scores)
 
     #human scores
-    humanScores = numpy.concatenate([util.calcMetaScores(scores, cache.cache), [error,]])
+    humanScores = numpy.concatenate([util.calcMetaScores(scores, cache.cache), [error, rmse]])
 
     for result in results.values():
         if result['cadetValuesKEQ']:

@@ -845,7 +845,8 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
         meta_mean = numpy.mean(data_meta, 0)
         meta_max = numpy.max(data_meta, 0)
-        sse_best = numpy.min(data_meta[:,-1])
+        best_sse = numpy.min(data_meta[:,3])
+        best_rmse = numpy.min(data_meta[:,4])
 
         if len(data_meta) and data_meta.ndim > 1:
 
@@ -855,13 +856,13 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
             population_product_best = meta_max[0]
 
-            line_format = 'Generation: %s \tPopulation: %s \tAverage Best: %.3g \tMinimum Best: %.3g \tProduct Best: %.3g \tSSE Best: %.3e'
+            line_format = 'Generation: %s \tPopulation: %s \tAverage Best: %.3g \tMinimum Best: %.3g \tProduct Best: %.3g \tSSE Best: %.3e \tRMSE Best: %.3e'
 
-            alt_line_format = 'Generation: %s \tPopulation: %s \t1 - Average Best: %.1e \t1 - Minimum Best: %.1e \t1 - Product Best: %.1e\tSSE Best: %.3e'
+            alt_line_format = 'Generation: %s \tPopulation: %s \t1 - Average Best: %.1e \t1 - Minimum Best: %.1e \t1 - Product Best: %.1e\tSSE Best: %.3e \tRMSE Best: %.3e'
 
-            sse_line_format = 'Generation: %s \tPopulation: %s \tSSE Best: %.3e'
+            sse_line_format = 'Generation: %s \tPopulation: %s \tSSE Best: %.3e \tRMSE Best: %.3e'
 
-            sse_multi_line_format = 'Generation: %s \tPopulation: %s \tAverage Best: %.3e \tMinimum Best: %.3e \tProduct Best: %.3e \tSSE Best: %.3e'
+            sse_multi_line_format = 'Generation: %s \tPopulation: %s \tAverage Best: %.3e \tMinimum Best: %.3e \tProduct Best: %.3e \tSSE Best: %.3e \tRMSE Best: %.3e'
  
             if line_log:
                 if cache.allScoreSSE:
@@ -870,22 +871,22 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                           -population_average_best,
                           -population_min_best,
                           -population_product_best,
-                          sse_best)
+                          best_sse, best_rmse)
                     else:
                         multiprocessing.get_logger().info(sse_line_format, generation, len(population),
-                          sse_best)
-                elif any(meta_max[:-1] > 0.999):  #don't use the last item since that has SSE
+                          best_sse, best_rmse)
+                elif any(meta_max[:3] > 0.999):  #don't use the last item since that has SSE
                     multiprocessing.get_logger().info(alt_line_format, generation, len(population),
                       1-population_average_best,
                       1-population_min_best,
                       1-population_product_best,
-                      sse_best)
+                      best_sse, best_rmse)
                 else:
                     multiprocessing.get_logger().info(line_format, generation, len(population),
                       population_average_best,
                       population_min_best,
                       population_product_best,
-                      sse_best)
+                      best_sse, best_rmse)
         else:
             if line_log:
                 multiprocessing.get_logger().info("Generation: %s \tPopulation: %s \t No Stats Avaialable", generation, len(population))
@@ -898,7 +899,6 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
         best_min = meta_max[1]
         best_product = meta_max[0]
         best_mean = meta_max[2]
-        best_sse = sse_best
 
         writer.writerow([generation,
                          len(population),
@@ -910,6 +910,7 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                          best_product,
                          best_mean,
                          best_sse,
+                         best_rmse,
                          now - sim_start,
                          now - generation_start,
                          cpu_time.user + cpu_time.system,
@@ -1088,10 +1089,10 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
         ind_meta = toolbox.individualMeta(ind)
 
-        ind_meta.fitness.values = csv_line[-4:]
+        ind_meta.fitness.values = csv_line[-len(ind_meta.fitness.weights):]
         ind_meta.csv_line = [time.ctime(), save_name_base] + csv_line
        
-        update_result_data(cache, ind, fit, result_data, results, csv_line[-4:])
+        update_result_data(cache, ind, fit, result_data, results, csv_line[len(ind_meta.fitness.weights):])
 
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)

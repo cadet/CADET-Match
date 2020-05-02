@@ -336,3 +336,4 @@ __pycache__/
 /CADETMatch/code_test.py
 /Examples/Example1/Dextran/fit_nsga3_sse
 /Examples/Example1/Dextran/fit_nsga3_sse_multi
+/Examples/Example1/Dextran/fit_nsga3_shape_single

@@ -48,7 +48,7 @@ class Cache:
         self.altFeatures = False
         self.altFeatureNames = []
         self.progress_headers = ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
-                                 'Meta Front', 'Meta Min', 'Meta Product', 'Meta Mean', 'Meta SSE',
+                                 'Meta Front', 'Meta Min', 'Meta Product', 'Meta Mean', 'Meta SSE', 'Meta RMSE',
                                  'Elapsed Time', 'Generation Time', 'Total CPU Time', 'Last Progress Generation',
                                  'Generations of Progress']
 
@@ -282,7 +282,7 @@ class Cache:
 
         self.headers.extend(self.score_headers)                      
         
-        self.meta_headers = ['Product Root Score', 'Min Score', 'Mean Score', 'SSE']
+        self.meta_headers = ['Product Root Score', 'Min Score', 'Mean Score', 'SSE', 'RMSE']
 
         self.headers.extend(self.meta_headers)
 
@@ -471,7 +471,7 @@ class Cache:
                 if 'peak_max' in temp[featureName]:
                     peak_maxes.append(temp[featureName]['peak_max']/temp[featureName]['factor'])
          
-        temp['smallest_peak'] = min(peak_maxes)   
+        temp['smallest_peak'] = min(peak_maxes) 
         temp['units_used'] = units_used
         return temp
 

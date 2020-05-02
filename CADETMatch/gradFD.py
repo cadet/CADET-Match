@@ -120,10 +120,10 @@ def processOffspring(offspring, temp, csv_lines, meta_csv_lines, gradient_result
             ind.csv_line = [time.ctime(), save_name_base] + csv_line
 
             ind_meta = cache.toolbox.individualMeta(ind)
-            ind_meta.fitness.values = csv_line[-4:]
+            ind_meta.fitness.values = csv_line[-len(ind_meta.fitness.weights):]
             ind_meta.csv_line = [time.ctime(), save_name_base] + csv_line
 
-            util.update_result_data(cache, ind, fit, result_data, results, csv_line[-4:])
+            util.update_result_data(cache, ind, fit, result_data, results, csv_line[-len(ind_meta.fitness.weights):])
 
             if csv_line:
                 csv_lines.append([time.ctime(), save_name_base] + csv_line)

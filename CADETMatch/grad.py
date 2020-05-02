@@ -85,9 +85,9 @@ def search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
             save_name_base = hashlib.md5(str(list(ind)).encode('utf-8', 'ignore')).hexdigest()
 
             ind_meta = cache.toolbox.individualMeta(ind)
-            ind_meta.fitness.values = csv_line[-4:] #util.calcMetaScores(fit, cache)
+            ind_meta.fitness.values = csv_line[-len(ind_meta.fitness.weights):] #util.calcMetaScores(fit, cache)
 
-            util.update_result_data(cache, ind, fit, result_data, results, csv_line[-4:])
+            util.update_result_data(cache, ind, fit, result_data, results, csv_line[-len(ind_meta.fitness.weights):])
 
             if csv_line:
                 csv_lines.append([time.ctime(), save_name_base] + csv_line)
