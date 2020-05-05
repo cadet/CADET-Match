@@ -8,7 +8,6 @@ import warnings
 import multiprocessing
 
 from cadet import H5
-import CADETMatch.ga_simple as ga_simple
 
 butter_order = 3
 

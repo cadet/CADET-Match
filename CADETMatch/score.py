@@ -103,7 +103,8 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     dt = 1e-1
     times = numpy.arange(exp_time_values[0], exp_time_values[-1], dt)
     
-    sim_resample = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)(times)
+    sim_spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)
+    sim_resample = sim_spline(times)
     exp_resample = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, exp_data_values, ext=3)(times)    
     
     corr = scipy.signal.correlate(exp_resample, sim_resample)  #/(numpy.linalg.norm(sim_resample) * numpy.linalg.norm(exp_resample))
@@ -113,11 +114,10 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     dt_pre = (index - len(times) + 1) * dt
 
     #refine the time offset using a deterministic method (powells)
-    dt = refine_time(dt_pre, exp_time_values, sim_data_values, exp_data_values)
+    dt = refine_time_fun(dt_pre, exp_time_values, exp_data_values, sim_spline)
     
     #calculate pearson correlation at the new time
-    spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)
-    sim_data_values_copy = spline(exp_time_values - dt)
+    sim_data_values_copy = sim_spline(exp_time_values - dt)
     try:
         pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)[0]
     except ValueError:
