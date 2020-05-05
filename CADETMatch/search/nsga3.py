@@ -37,8 +37,7 @@ def run(cache, tools, creator):
                               ngen=totalGenerations,
                               settings=cache.settings,
                               tools=tools,
-                              cache=cache,
-                              varOr=False)
+                              cache=cache)
 
 def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_search_fine, map_function, creator, base, tools):
     "setup the DEAP variables"
@@ -92,15 +91,19 @@ def find_max_p(ndim, max_size, max_p):
             break
     return p
 
-def find_ref_point_setup(ndim, max_size, inner):
-    p = [find_max_p(ndim, max_size, 128),]
-    if p[0] < inner:
-        p.append(p[0]-1)
-    return p
+def find_ref_point_setup(ndim, max_size):
+    points = [(k,num_ref_points(ndim,k)) for k in range(128, 0, -1)]
+    size = 0
+    P = []
+    for p, p_size in points:
+        if p_size <= (max_size - size):
+            P.append(p)
+            size += p_size
+    S = [1/2.0**n for n in range(len(P))]
+    return P, S
 
-def generate_reference_points(ndim, max_size=10000, inner=4):
-    P = find_ref_point_setup(ndim, max_size, inner)
-    SCALES = [1.0, 0.5]
+def generate_reference_points(ndim, max_size=100):
+    P, SCALES = find_ref_point_setup(ndim, max_size)
     ref_points = [tools.uniform_reference_points(ndim, p, s) for p, s in zip(P, SCALES)]
     ref_points = numpy.concatenate(ref_points, axis=0)
     _, uniques = numpy.unique(ref_points, axis=0, return_index=True)

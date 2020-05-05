@@ -50,8 +50,8 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
     #change the stop point to be where the max positive slope is along the searched interval
     name = '%s_%s' % (sim.root.experiment_name,   feature['name'])
-    s, crit_fs = smoothing.find_smoothing_factors(selectedTimes, selectedValues, name, cache)
-    values_der = smoothing.smooth_data_derivative(selectedTimes, selectedValues, crit_fs, s)
+    s, crit_fs, crit_fs_der = smoothing.find_smoothing_factors(selectedTimes, selectedValues, name, cache)
+    values_der = smoothing.smooth_data_derivative(selectedTimes, selectedValues, crit_fs, s, crit_fs_der)
     
     smooth_value = smoothing.smooth_data(selectedTimes, selectedValues, crit_fs, s)
 
@@ -80,6 +80,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp['peak_max'] = max_value
     temp['smoothing_factor'] = s
     temp['critical_frequency'] = crit_fs
+    temp['critical_frequency_der'] = crit_fs_der
     temp['smooth_value'] = smooth_value
     return temp
 

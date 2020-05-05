@@ -104,7 +104,7 @@ def find_butter(times, values):
     
     fs = 1.0/(times[1] - times[0])
 
-    for i in numpy.logspace(2, -4, 50):
+    for i in numpy.logspace(1, -4, 50):
         try:
             sos = scipy.signal.butter(butter_order, i, btype='lowpass', analog=False, fs=fs, output="sos")
         except ValueError:
@@ -132,12 +132,13 @@ def smoothing_filter_butter(times, values, crit_fs):
 
 def load_data(name, cache):
     crit_fs = None
+    crit_fs_der = None
     s = None
     s_knots = 0
 
     #quick abort
     if name is None or cache is None:
-        return s, crit_fs
+        return s, crit_fs, crit_fs_der
 
     factor_file = cache.settings['resultsDirMisc'] / "find_smoothing_factor.h5"
 
@@ -154,25 +155,29 @@ def load_data(name, cache):
         if crit_fs == -1.0:
             crit_fs = None
 
+        crit_fs_der = data.root[name].crit_fs_der
+        if crit_fs_der == -1.0:
+            crit_fs_der = None
+
         s_knots = int(data.root[name].s_knots)
     else:
-        return s, crit_fs
+        return s, crit_fs, crit_fs_der
 
     if crit_fs is None:
         multiprocessing.get_logger().info("loaded smoothing_factor %s  %.3e  critical frequency disable", name, s)
     else:
-        multiprocessing.get_logger().info("loaded smoothing_factor %s  %.3e  critical frequency %.3e  knots %d", name, s, crit_fs, s_knots)
+        multiprocessing.get_logger().info("loaded smoothing_factor %s  %.3e  critical frequency %.3e critical frequency der %.3e knots %d", name, s, crit_fs, crit_fs_der, s_knots)
 
-    return s, crit_fs
+    return s, crit_fs, crit_fs_der
 
 
 def find_smoothing_factors(times, values, name, cache):
     min = 1e-2
 
-    s, crit_fs = load_data(name, cache)
+    s, crit_fs, crit_fs_der = load_data(name, cache)
 
     if s is not None:
-        return s, crit_fs
+        return s, crit_fs, crit_fs_der
 
     #normalize the data
     values = values * 1.0/max(values)
@@ -217,11 +222,18 @@ def find_smoothing_factors(times, values, name, cache):
     if s is not None:
         s, s_knots = refine_smooth(times, values_filter, all_s, knots, s, name)
 
-    record_smoothing(s, s_knots, crit_fs, knots, all_s, name, cache)
-    
-    return s, crit_fs
 
-def record_smoothing(s, s_knots, crit_fs, knots, all_s, name=None, cache=None):
+    spline, factor = create_spline(times, values, crit_fs, s)
+    
+    #run a quick butter pass to remove high frequency noise in the derivative (needed for some experimental data)
+    values_filter = spline.derivative()(times) / factor
+    crit_fs_der = find_butter(times, values_filter)
+
+    record_smoothing(s, s_knots, crit_fs, crit_fs_der, knots, all_s, name, cache)
+    
+    return s, crit_fs, crit_fs_der
+
+def record_smoothing(s, s_knots, crit_fs, crit_fs_der, knots, all_s, name=None, cache=None):
     if name is None or cache is None:
         return
     factor_file = cache.settings['resultsDirMisc'] / "find_smoothing_factor.h5"
@@ -241,12 +253,16 @@ def record_smoothing(s, s_knots, crit_fs, knots, all_s, name=None, cache=None):
             data.root[name].crit_fs = -1.0
         else:
             data.root[name].crit_fs = float(crit_fs)
+        if crit_fs_der is None:
+            data.root[name].crit_fs_der = -1.0
+        else:
+            data.root[name].crit_fs_der = float(crit_fs)
         data.save()
 
     if crit_fs is None:
         multiprocessing.get_logger().info("smoothing_factor %s  %.3e  critical frequency disable", name, s)
     else:
-        multiprocessing.get_logger().info("smoothing_factor %s  %.3e  critical frequency %.3e  knots %d", name, s, crit_fs, s_knots)
+        multiprocessing.get_logger().info("smoothing_factor %s  %.3e  critical frequency %.3e  critical frequency der %.3e knots %d", name, s, crit_fs, crit_fs_der, s_knots)
 
 def create_spline(times, values, crit_fs, s):
     factor = 1.0/max(values)
@@ -260,21 +276,19 @@ def smooth_data(times, values, crit_fs, s):
     
     return spline(times) / factor
 
-def smooth_data_derivative(times, values, crit_fs, s, smooth=True):
+def smooth_data_derivative(times, values, crit_fs, s, crit_fs_der, smooth=True):
     spline, factor = create_spline(times, values, crit_fs, s)
     
     #run a quick butter pass to remove high frequency noise in the derivative (needed for some experimental data)
     values_filter = spline.derivative()(times) / factor
     if smooth:
-        values_filter = butter(times, values_filter)
+        values_filter = butter(times, values_filter, crit_fs_der)
     return values_filter
 
-def butter(times, values):
+def butter(times, values, crit_fs_der):
     factor = 1.0/max(values)
     values = values * factor
-
-    crit_fs = find_butter(times, values)
-    
-    values_filter = smoothing_filter_butter(times, values, crit_fs) / factor
+        
+    values_filter = smoothing_filter_butter(times, values, crit_fs_der) / factor
     
     return values_filter

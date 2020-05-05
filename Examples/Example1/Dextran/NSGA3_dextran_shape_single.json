@@ -6,7 +6,7 @@
   "CSV": "dextran_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 1,
-  "stopBest": 1,
+  "stopBest": 0.999,
   "gradCheck": 1.0,
   "gradVector": 0,
   "searchMethod": "NSGA3",

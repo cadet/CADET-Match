@@ -28,12 +28,13 @@ def run(sim_data, feature):
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     name = '%s_%s' % (sim.root.experiment_name,   feature['name'])
-    s, crit_fs = smoothing.find_smoothing_factors(selectedTimes, selectedValues, name, cache)
+    s, crit_fs, crit_fs_der = smoothing.find_smoothing_factors(selectedTimes, selectedValues, name, cache)
     
     temp = {}
     temp['peak_max'] = max(selectedValues)
     temp['smoothing_factor'] = s
     temp['critical_frequency'] = crit_fs
+    temp['critical_frequency_der'] = crit_fs_der
     temp['smooth_value'] = smoothing.smooth_data(selectedTimes, selectedValues, crit_fs, s)
     return temp
 

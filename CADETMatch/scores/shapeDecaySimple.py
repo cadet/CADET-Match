@@ -24,8 +24,10 @@ def run(sim_data, feature):
     exp_data_values = feature['value'][selected]
     exp_time_values = feature['time'][selected]
 
-    sim_data_values_spline = smoothing.smooth_data_derivative(exp_time_values, sim_data_values, feature['critical_frequency'], feature['smoothing_factor'])
-    exp_data_values_spline = smoothing.smooth_data_derivative(exp_time_values, exp_data_values, feature['critical_frequency'], feature['smoothing_factor'])
+    sim_data_values_spline = smoothing.smooth_data_derivative(exp_time_values, sim_data_values, feature['critical_frequency'], 
+                                                              feature['smoothing_factor'], feature['critical_frequency_der'])
+    exp_data_values_spline = smoothing.smooth_data_derivative(exp_time_values, exp_data_values, feature['critical_frequency'], 
+                                                              feature['smoothing_factor'], feature['critical_frequency_der'])
   
     [high, low] = util.find_peak(exp_time_values, sim_data_values)
 
@@ -43,7 +45,7 @@ def run(sim_data, feature):
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     name = '%s_%s' % (sim.root.experiment_name,   feature['name'])
-    s, crit_fs = smoothing.find_smoothing_factors(selectedTimes, selectedValues, name, cache)
+    s, crit_fs, crit_fs_der = smoothing.find_smoothing_factors(selectedTimes, selectedValues, name, cache)
 
     temp = {}
     temp['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
@@ -52,6 +54,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp['peak_max'] = max(selectedValues)
     temp['smoothing_factor'] = s
     temp['critical_frequency'] = crit_fs
+    temp['critical_frequency_der'] = crit_fs_der
     temp['smooth_value'] = smoothing.smooth_data(selectedTimes, selectedValues, crit_fs, s)
     return temp
 

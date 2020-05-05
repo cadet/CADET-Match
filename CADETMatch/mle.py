@@ -313,7 +313,8 @@ def plot_mle(simulations, cache, labels):
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 for idx, (sim, label) in enumerate(zip(simulations[experimentName],labels)):
                     sim_time, sim_value = util.get_times_values(sim, target[experimentName][featureName])
-                    sim_spline = smoothing.smooth_data_derivative(sim_time, sim_value, feat['critical_frequency'], feat['smoothing_factor'])
+                    sim_spline = smoothing.smooth_data_derivative(sim_time, sim_value, feat['critical_frequency'], 
+                                                                  feat['smoothing_factor'], feat['critical_frequency_der'])
                     
                     if idx == 0:
                         linewidth = 2
@@ -323,7 +324,8 @@ def plot_mle(simulations, cache, labels):
                     graph.plot(sim_time, sim_spline, '--', label=label, color=get_color(idx, len(simulations[experimentName]) + 1, cm_plot), linewidth = linewidth)
 
                 
-                exp_spline = smoothing.smooth_data_derivative(exp_time, exp_value, feat['critical_frequency'], feat['smoothing_factor'])
+                exp_spline = smoothing.smooth_data_derivative(exp_time, exp_value, feat['critical_frequency'], 
+                                                              feat['smoothing_factor'], feat['critical_frequency_der'])
                 graph.plot(exp_time, exp_spline, '-', label='Experiment', color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot), linewidth=2)
                 graphIdx += 1
                         

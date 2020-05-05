@@ -319,8 +319,10 @@ def plotExperiments(args):
             if featureType in ('derivative_similarity', 'derivative_similarity_hybrid', 'derivative_similarity_hybrid2', 'derivative_similarity_cross', 'derivative_similarity_cross_alt',
                                  'derivative_similarity_hybrid2_spline', 'similarityHybridDecay2_spline',
                                  'Shape', 'ShapeDecay', 'ShapeFront', 'ShapeBack'):
-                exp_spline = smoothing.smooth_data_derivative(exp_time, exp_value, feat['critical_frequency'], feat['smoothing_factor'])
-                sim_spline = smoothing.smooth_data_derivative(sim_time, sim_value, feat['critical_frequency'], feat['smoothing_factor'])
+                exp_spline = smoothing.smooth_data_derivative(exp_time, exp_value, feat['critical_frequency'], 
+                                                              feat['smoothing_factor'], feat['critical_frequency_der'])
+                sim_spline = smoothing.smooth_data_derivative(sim_time, sim_value, feat['critical_frequency'], 
+                                                              feat['smoothing_factor'], feat['critical_frequency_der'])
                 
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 graph.plot(sim_time, sim_spline, 'r--', label='Simulation')

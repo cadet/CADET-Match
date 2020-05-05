@@ -752,6 +752,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 hf["output"].resize((hf["output"].shape[0] + len(result_data['output'])), axis = 0)
                 hf["output"][-len(result_data['output']):] = result_data['output']
 
+                data = result_data['output_meta']
+                length = len(data)
+                length_item = len(data[0])
                 hf["output_meta"].resize((hf["output_meta"].shape[0] + len(result_data['output_meta'])), axis = 0)
                 hf["output_meta"][-len(result_data['output_meta']):] = result_data['output_meta']
 
@@ -1069,24 +1072,28 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
         ind_meta.fitness.values = csv_line[-len(ind_meta.fitness.weights):]
         ind_meta.csv_line = [time.ctime(), save_name_base] + csv_line
        
-        update_result_data(cache, ind, fit, result_data, results, csv_line[len(ind_meta.fitness.weights):])
+        update_result_data(cache, ind, fit, result_data, results, csv_line[-len(ind_meta.fitness.weights):])
 
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)
 
-            onFront, significant = pareto.updateParetoFront(halloffame, ind, cache)
-            if onFront and not cache.metaResultsOnly:
-                processResults(save_name_base, ind, cache, results)
+            if halloffame is not None:
+                onFront, significant = pareto.updateParetoFront(halloffame, ind, cache)
+                if onFront and not cache.metaResultsOnly:
+                    processResults(save_name_base, ind, cache, results)
 
             onFrontMeta, significant_meta = pareto.updateParetoFront(meta_hof, ind_meta, cache)
             if onFrontMeta:
                 meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                 processResultsMeta(save_name_base, ind, cache, results)
 
-            onFrontProgress, significant_progress = pareto.updateParetoFront(copy.deepcopy(progress_hof), ind_meta, cache)
-            if significant_progress:
-                made_progress = True
-                pareto.updateParetoFront(progress_hof, ind_meta, cache)
+            #If this is None progress can never be made and the algorithm will terminate, it should only be
+            #None if used with algorithms like multistart or scoretest which don't need progress
+            if progress_hof is not None:
+                onFrontProgress, significant_progress = pareto.updateParetoFront(copy.deepcopy(progress_hof), ind_meta, cache)
+                if significant_progress:
+                    made_progress = True
+                    pareto.updateParetoFront(progress_hof, ind_meta, cache)
 
     writer.writerows(csv_lines)
 

@@ -45,7 +45,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
     #change the stop point to be where the max positive slope is along the searched interval
     name = '%s_%s' % (sim.root.experiment_name,   feature['name'])
-    exp_time_zero, exp_data_zero, exp_data_zero_sse, min_time, min_value, max_time, max_value, s, crit_fs = cut_front_find(selectedTimes, selectedValues, name, cache)
+    exp_time_zero, exp_data_zero, exp_data_zero_sse, min_time, min_value, max_time, max_value, s, crit_fs, crit_fs_der = cut_front_find(selectedTimes, selectedValues, name, cache)
 
     multiprocessing.get_logger().info("Dextran %s  start: %s   stop: %s  max value: %s", name, 
                                       min_time, max_time, max_value)
@@ -72,6 +72,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp['peak_max'] = max_value
     temp['smoothing_factor'] = s
     temp['critical_frequency'] = crit_fs
+    temp['critical_frequency_der'] = crit_fs_der
     return temp
 
 def headers(experimentName, feature):
@@ -82,8 +83,8 @@ def headers(experimentName, feature):
     return temp
 
 def cut_front_find(times, values, name, cache):
-    s, crit_fs = smoothing.find_smoothing_factors(times, values, name, cache)
-    values_der = smoothing.smooth_data_derivative(times, values, crit_fs, s)
+    s, crit_fs, crit_fs_der = smoothing.find_smoothing_factors(times, values, name, cache)
+    values_der = smoothing.smooth_data_derivative(times, values, crit_fs, s, crit_fs_der)
 
     smooth_value = smoothing.smooth_data(times, values, crit_fs, s)
     
@@ -109,14 +110,14 @@ def cut_front_find(times, values, name, cache):
     exp_data_zero, _, _, _, _ = score.cut_zero(new_times, new_values, min_value, max_value)    
     
     return (new_times, exp_data_zero, exp_data_zero_sse, 
-        min_time, min_value, max_time, max_value, s, crit_fs)
+        min_time, min_value, max_time, max_value, s, crit_fs, crit_fs_der)
 
 def cut_front(times, values, min_value, max_value, crit_fs, s):
     max_index = numpy.argmax(values >= max_value)
 
     if max_index == 0:
         #no point high enough was found so use the highest point
-        s, crit_fs = smoothing.find_smoothing_factors(times, values, None, None)
+        s, crit_fs, crit_fs_der = smoothing.find_smoothing_factors(times, values, None, None)
         max_index = numpy.argmax(values)
         max_value = values[max_index]
 
