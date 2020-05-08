@@ -64,19 +64,6 @@ class NuSigmaTransform(AbstractTransform):
 
         return values, headerValues
 
-    def setupTarget(self):
-        nu_location = self.parameter['nu_location']
-        sigma_location = self.parameter['sigma_location']
-        bound = self.parameter['bound']
-        comp = self.parameter['component']
-
-        sensitivityOk = 1
-        nameNu = nu_location.rsplit('/', 1)[-1]
-        nameSigma = sigma_location.rsplit('/', 1)[-1]
-        unit = int(nu_location.split('/')[3].replace('unit_', ''))
-
-        return [(nameNu, unit, comp, bound), (nameSigma, unit, comp, bound)], sensitivityOk
-
     def getBounds(self):
         minNu = self.parameter['minNu']
         maxNu = self.parameter['maxNu']

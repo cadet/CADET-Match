@@ -1,7 +1,6 @@
 import sys
 
 import CADETMatch.evo as evo
-#import CADETMatch.grad as grad
 import CADETMatch.gradFD as gradFD
 import CADETMatch.util as util
 import CADETMatch.version as version

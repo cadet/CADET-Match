@@ -69,9 +69,6 @@ class SumTransform(AbstractTransform):
 
         return [],[]
 
-    def setupTarget(self):
-        return [], 0
-
     def getBounds(self):
         return None,None
 

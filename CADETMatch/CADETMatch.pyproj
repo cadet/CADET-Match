@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|cadet_devel</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\NSGA3_dextran_shape_single.json" 1</CommandLineArguments>
+    <CommandLineArguments>"F:\temp\weirdEffects\fit_nsga3_column_transport_film_diffusion\NSGA3_column_transport.json" 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>
@@ -71,9 +71,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="generate_corner_graphs.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="grad.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="gradFD.py">

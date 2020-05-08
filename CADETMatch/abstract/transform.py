@@ -54,10 +54,6 @@ class AbstractTransform(ABC):
         pass
 
     @abstractmethod
-    def setupTarget(self):
-        pass
-
-    @abstractmethod
     def getBounds(self):
         pass
 

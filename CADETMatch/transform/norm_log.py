@@ -66,22 +66,6 @@ class LogTransform(AbstractTransform):
                 sim[location.lower()][index] = values[0]
         return values, headerValues
 
-    def setupTarget(self):
-        location = self.parameter['location']
-        bound = self.parameter['bound']
-        comp = self.parameter['component']
-
-        name = location.rsplit('/', 1)[-1]
-        sensitivityOk = 1
-
-        try:
-            unit = int(location.split('/')[3].replace('unit_', ''))
-        except ValueError:
-            unit = ''
-            sensitivityOk = 0
-
-        return [(name, unit, comp, bound),], sensitivityOk
-
     def getBounds(self):
         minValue = numpy.log(self.parameter['min'])
         maxValue = numpy.log(self.parameter['max'])
@@ -106,7 +90,7 @@ class LogTransform(AbstractTransform):
         headers = []
         if bound is not None:
             headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
-        if index is not None:
+        elif index is not None:
             headers.append("%s Comp:%s Index:%s" % (name, comp, index))
         return headers
 

@@ -95,25 +95,6 @@ class NormAddTransform(AbstractTransform):
         else:
             return [], []
 
-    def setupTarget(self):
-        if self.count:
-            location = self.parameter['locationTo']
-            bound = self.parameter['boundTo']
-            comp = self.parameter['componentTo']
-
-            name = location.rsplit('/', 1)[-1]
-            sensitivityOk = 1
-
-            try:
-                unit = int(location.split('/')[3].replace('unit_', ''))
-            except ValueError:
-                unit = ''
-                sensitivityOk = 0
-
-            return [(name, unit, comp, bound),], sensitivityOk
-        else:
-            return [], 0
-
     def getBounds(self):
         if self.count:
             return [0.0,], [1.0,]

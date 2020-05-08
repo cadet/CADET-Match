@@ -61,18 +61,6 @@ class KeqTransform(AbstractTransform):
 
         return values, headerValues
 
-    def setupTarget(self):
-        location = self.parameter['location']
-        bound = self.parameter['bound']
-        comp = self.parameter['component']
-
-        sensitivityOk = 1
-        nameKA = location[0].rsplit('/', 1)[-1]
-        nameKD = location[1].rsplit('/', 1)[-1]
-        unit = int(location[0].split('/')[3].replace('unit_', ''))
-
-        return [(nameKA, unit, comp, bound), (nameKD, unit, comp, bound)], sensitivityOk
-
     def getBounds(self):
         minKA = self.parameter['minKA']
         maxKA = self.parameter['maxKA']

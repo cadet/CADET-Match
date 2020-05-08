@@ -57,19 +57,6 @@ class VolumeLengthTransform(AbstractTransform):
 
         return values, headerValues
 
-    def setupTarget(self):
-        area_location = self.parameter['area_location']
-        length_location = self.parameter['length_location']
-        bound = -1
-        comp = -1
-
-        sensitivityOk = 1
-        nameArea = area_location.rsplit('/', 1)[-1]
-        nameLength = length_location.rsplit('/', 1)[-1]
-        unit = int(area_location.split('/')[3].replace('unit_', ''))
-
-        return [(nameArea, unit, comp, bound), (nameLength, unit, comp, bound)], sensitivityOk
-
     def getBounds(self):
         minVolume = self.parameter['minVolume']
         maxVolume = self.parameter['maxVolume']

@@ -46,22 +46,6 @@ class DiameterTransform(AbstractTransform):
             sim[location.lower()] = values[0]
         return values, headerValues
 
-    def setupTarget(self):
-        location = self.parameter['location']
-        bound = -1
-        comp = -1
-
-        name = location.rsplit('/', 1)[-1]
-        sensitivityOk = 1
-
-        try:
-            unit = int(location.split('/')[3].replace('unit_', ''))
-        except ValueError:
-            unit = ''
-            sensitivityOk = 0
-
-        return [(name, unit, comp, bound),], sensitivityOk
-
     def getBounds(self):
         minValue = self.parameter['min']
         maxValue = self.parameter['max']

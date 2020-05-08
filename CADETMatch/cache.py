@@ -328,19 +328,6 @@ class Cache:
         #SSE are negative so they sort correctly with better scores being less negative
         self.target['bestHumanScores'][4] = self.badScore;  
 
-        #setup sensitivities
-        parms = []
-        sensitivityOk = 1
-        for parameter in self.parameters:
-            if parameter.count:
-                sens_parms, sensitivityOk = parameter.setupTarget()
-                parms.extend(sens_parms)
-
-        if sensitivityOk:
-            self.target['sensitivities'] = parms
-        else:
-            self.target['sensitivities'] = []
-
     def setupExperiment(self, experiment, sim=None, dataFromSim=0):
         temp = {}
 
