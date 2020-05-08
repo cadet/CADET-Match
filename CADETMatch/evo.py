@@ -9,7 +9,7 @@ from deap import tools
 from cadet import Cadet
 
 import CADETMatch.cache as cache
-import score_calc
+import CADETMatch.score_calc as score_calc
 
 ERROR = {'scores': None,
          'path': None,

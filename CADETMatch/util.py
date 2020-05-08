@@ -299,7 +299,7 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         return None
 
     #read sim data
-    simulation.load()
+    simulation.load(paths=['/meta', '/output'], update=True)
     os.remove(path)
 
     simulationFailed = isinstance(simulation.root.output.solution.solution_times, Dict)
