@@ -162,10 +162,15 @@ def load_data(name, cache):
     else:
         return s, crit_fs, crit_fs_der
 
-    if crit_fs is None:
-        multiprocessing.get_logger().info("loaded smoothing_factor %s  %.3e  critical frequency disable", name, s)
-    else:
-        multiprocessing.get_logger().info("loaded smoothing_factor %s  %.3e  critical frequency %.3e critical frequency der %.3e knots %d", name, s, crit_fs, crit_fs_der, s_knots)
+    crit_fs_message = "critical frequency disable"
+    if crit_fs is not None:
+        crit_fs_message = "critical frequency %.3e" % crit_fs
+
+    crit_fs_der_message = "critical frequency der disable"
+    if crit_fs_der is not None:
+        crit_fs_der_message = "critical frequency der %.3e" % crit_fs_der
+
+    multiprocessing.get_logger().info("smoothing_factor %s  %.3e  %s  %s knots %d", name, s, crit_fs_message, crit_fs_der_message, s_knots)
 
     return s, crit_fs, crit_fs_der
 
@@ -258,10 +263,15 @@ def record_smoothing(s, s_knots, crit_fs, crit_fs_der, knots, all_s, name=None, 
             data.root[name].crit_fs_der = float(crit_fs)
         data.save()
 
-    if crit_fs is None:
-        multiprocessing.get_logger().info("smoothing_factor %s  %.3e  critical frequency disable", name, s)
-    else:
-        multiprocessing.get_logger().info("smoothing_factor %s  %.3e  critical frequency %.3e  critical frequency der %.3e knots %d", name, s, crit_fs, crit_fs_der, s_knots)
+    crit_fs_message = "critical frequency disable"
+    if crit_fs is not None:
+        crit_fs_message = "critical frequency %.3e" % crit_fs
+
+    crit_fs_der_message = "critical frequency der disable"
+    if crit_fs_der is not None:
+        crit_fs_der_message = "critical frequency der %.3e" % crit_fs_der
+
+    multiprocessing.get_logger().info("smoothing_factor %s  %.3e  %s  %s knots %d", name, s, crit_fs_message, crit_fs_der_message, s_knots)
 
 def create_spline(times, values, crit_fs, s):
     factor = 1.0/max(values)
