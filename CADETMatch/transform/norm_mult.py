@@ -123,7 +123,7 @@ class NormMultTransform(AbstractTransform):
             headers = []
             if bound is not None:
                 headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
-            if index is not None:
+            elif index is not None:
                 headers.append("%s Comp:%s Index:%s" % (name, comp, index))
             return headers
         else:
