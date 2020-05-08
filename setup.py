@@ -32,7 +32,7 @@ setuptools.setup(
           'CADET>=0.3',
           'seaborn>=0.9',
           'sklearn',
-          'scikit-learn>=0.21',
+          'scikit-learn>=0.22',
       ],
     classifiers=[
         "Programming Language :: Python :: 3",

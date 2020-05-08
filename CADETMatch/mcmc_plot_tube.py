@@ -1,6 +1,6 @@
 import numpy
 from sklearn import preprocessing
-from sklearn.neighbors.kde import KernelDensity
+from sklearn.neighbors import KernelDensity
 from sklearn.model_selection import cross_val_score
 import scipy
 import multiprocessing

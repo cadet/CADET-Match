@@ -26,7 +26,7 @@ import array
 import emcee.autocorr as autocorr
 
 import CADETMatch.kde_generator as kde_generator
-from sklearn.neighbors.kde import KernelDensity
+from sklearn.neighbors import KernelDensity
 
 name = "MCMC"
 

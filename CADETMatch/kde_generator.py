@@ -13,7 +13,7 @@ from cadet import Cadet, H5
 from pathlib import Path
 import numpy
 import multiprocessing
-from sklearn.neighbors.kde import KernelDensity
+from sklearn.neighbors import KernelDensity
 from sklearn.model_selection import cross_val_score
 from sklearn import preprocessing
 import copy
