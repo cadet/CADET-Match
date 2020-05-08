@@ -72,9 +72,9 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     decay = feature.get('decay', 0)
 
     if decay:
-        temp['time_function'] = score.time_function_cv(CV_time, selectedTimes, temp['peak'][0])
-    else:
         temp['time_function'] = score.time_function_decay_cv(CV_time, selectedTimes, temp['peak'][0])
+    else:
+        temp['time_function'] = score.time_function_cv(CV_time, selectedTimes, temp['peak'][0])
         
     temp['value_function'] = score.value_function(temp['peak'][1], abstol)
     temp['value_function_low'] = score.value_function(low[1], numpy.abs(low[1])/1000)

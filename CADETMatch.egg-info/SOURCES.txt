@@ -15,7 +15,6 @@ CADETMatch/ga_simple.py
 CADETMatch/generate_autocorr_graphs.py
 CADETMatch/generate_corner_graphs.py
 CADETMatch/generate_graphs.py
-CADETMatch/grad.py
 CADETMatch/gradFD.py
 CADETMatch/graph_kde.py
 CADETMatch/graph_spearman.py
