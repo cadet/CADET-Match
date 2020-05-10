@@ -217,10 +217,10 @@ def time_function_cv(CV_time, times, peak_time):
     time = numpy.max(numpy.abs(numpy.array([times[-1] - peak_time, peak_time - times[0]])))
     cv_time = time /CV_time
 
-    x_lin_1 = numpy.array([0.0, 0.1])
+    x_lin_1 = numpy.array([0.0, 0.1*cv_time])
     y_lin_1 = numpy.array([1.0, 0.95])
     
-    x_lin_2 = numpy.array([0.1, cv_time])
+    x_lin_2 = numpy.array([0.1*cv_time, cv_time])
     y_lin_2 = numpy.array([0.95, 0.0])
 
     a1, b1 = calc_coeff.linear_coeff(x_lin_1[0], y_lin_1[0], x_lin_1[1], y_lin_1[1])

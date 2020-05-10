@@ -32,7 +32,8 @@ def run(cache, tools, creator):
         hof = pareto.DummyFront()
     else:
         hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-    meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
+    meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+                                          slice_object=cache.meta_slice)
     grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['csv'])

@@ -280,6 +280,17 @@ class Cache:
         if self.allScoreSSE and self.MultiObjectiveSSE is False:
             self.numGoals = 1
 
+        if self.allScoreNorm:
+            #use the first 4 indexes to also keep the SSE
+            self.meta_slice = slice(0, 4, 1)
+        elif self.allScoreSSE:
+            if self.MultiObjectiveSSE:
+                #use the first 3 indexes
+                self.meta_slice = slice(0,3,1)
+            else:
+                #only used index = 3 
+                self.meta_slice = slice(3,4,1)
+
         self.headers.extend(self.score_headers)                      
         
         self.meta_headers = ['Product Root Score', 'Min Score', 'Mean Score', 'SSE', 'RMSE']

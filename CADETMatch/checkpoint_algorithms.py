@@ -12,122 +12,6 @@ import multiprocessing
 stallRate = 1.25
 progressRate = 0.75
 
-def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
-                    stats=None, verbose=__debug__, tools=None, cache=None):
-    """from DEAP function but with checkpoiting"""
-
-    assert lambda_ >= mu, "lambda must be greater or equal to mu."
-
-    checkpointFile = Path(settings['resultsDirMisc'], settings.get('checkpointFile', 'check'))
-
-    sim_start = generation_start = time.time()
-
-    path = Path(cache.settings['resultsDirBase'], cache.settings['csv'])
-    result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
-                   'mean':[], 'confidence':[]}
-    with path.open('a', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_ALL)
-
-        if checkpointFile.exists():
-            with checkpointFile.open('rb') as cp_file:
-                cp = pickle.load(cp_file)
-            population = cp["population"]
-            start_gen = cp["generation"]    
-    
-            halloffame = cp["halloffame"]
-            meta_hof = cp['meta_halloffame']
-            grad_hof = cp['grad_halloffame']
-            progress_hof = cp['progress_halloffame']
-            random.setstate(cp["rndstate"])
-            cache.generationsOfProgress = cp['generationsOfProgress']
-            cache.lastProgressGeneration = cp['lastProgressGeneration']
-
-            if cp['gradCheck'] > cache.settings.get('gradCheck', 1.0):
-                gradCheck = cp['gradCheck']
-            else:
-                gradCheck = cache.settings.get('gradCheck', 1.0)
-
-        else:
-            # Start a new evolution
-            start_gen = 0    
-
-            gradCheck = settings.get('gradCheck', 1.0)
-
-            if cache.metaResultsOnly:
-                halloffame = pareto.DummyFront()
-            else:
-                halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
-            grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-            progress_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
-
-
-            # Evaluate the individuals with an invalid fitness
-            invalid_ind = [ind for ind in population if not ind.fitness.valid]
-            if invalid_ind:
-                stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
-                                                                        progress_hof, -1, result_data)
-
-                util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, sim_start, generation_start, result_data)
-                util.graph_process(cache, "First")
-                util.graph_corner_process(cache, last=False)
-
-            cp = dict(population=population, generation=start_gen, halloffame=halloffame,
-                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
-                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration,
-                progress_halloffame = progress_hof)
-
-            with checkpointFile.open('wb')as cp_file:
-                pickle.dump(cp, cp_file)
-
-        # Begin the generational process
-        for gen in range(start_gen, ngen+1):
-            generation_start = time.time()
-            # Vary the population
-            offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
-
-            # Evaluate the individuals with an invalid fitness
-            invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
-                                                                    progress_hof, gen, result_data)
-
-            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
-            offspring.extend(newChildren)
-
-            # Select the next generation population
-            population[:] = toolbox.select(offspring, mu)
-
-            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, sim_start, generation_start, result_data)
-            util.graph_process(cache, gen)
-            util.graph_corner_process(cache, last=False)
-
-            if stallWarn:
-                maxPopulation = cache.settings['maxPopulation'] * len(cache.MIN_VALUE)
-                newLambda_ = int(lambda_ * stallRate)
-                lambda_ = min(newLambda_, maxPopulation)
-
-            if progressWarn:
-                minPopulation = cache.settings['minPopulation'] * len(cache.MIN_VALUE)
-                newLambda_ = int(lambda_ * progressRate)
-                lambda_ = max(newLambda_, minPopulation)
-                                   
-            cp = dict(population=population, generation=gen, halloffame=halloffame,
-                rndstate=random.getstate(), gradCheck=gradCheck, meta_halloffame=meta_hof, grad_halloffame=grad_hof,
-                generationsOfProgress=cache.generationsOfProgress, lastProgressGeneration=cache.lastProgressGeneration,
-                progress_halloffame = progress_hof)
-
-            with checkpointFile.open('wb') as cp_file:
-                pickle.dump(cp, cp_file)
-
-            if avg >= settings.get('stopAverage', 1.0) or bestMin >= settings.get('stopBest', 1.0) or stalled:
-                util.finish(cache)
-                util.graph_corner_process(cache, last=True)
-                return halloffame
-        util.finish(cache)
-        util.graph_corner_process(cache, last=True)
-        return halloffame
-
-
 def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings,
                    stats=None, verbose=__debug__, tools=None, cache=None):
     """from DEAP function but with checkpoiting"""
@@ -171,9 +55,11 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 halloffame = pareto.DummyFront()
             else:
                 halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
+            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+                                          slice_object=cache.meta_slice)
             grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-            progress_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
+            progress_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+                                          slice_object=cache.meta_slice)
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -305,9 +191,11 @@ def nsga2(populationSize, ngen, cache, tools):
                 halloffame = pareto.DummyFront()
             else:
                 halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
+            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+                                          slice_object=cache.meta_slice)
             grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-            progress_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
+            progress_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+                                          slice_object=cache.meta_slice)
             gradCheck = cache.settings.get('gradCheck', 1.0)
 
 

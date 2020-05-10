@@ -10,13 +10,14 @@ diff_step = 2.5e-2
 class ParetoFront(tools.ParetoFront):
     "Modification of the pareto front in DEAP that takes cache as an argument to update to use for similar comparison"
 
-    def __init__(self, similar=None, similar_fit = None):
+    def __init__(self, similar=None, similar_fit = None, slice_object = None):
         if similar is None:
             similar = eq
         if similar_fit is not None:
             self.similar_fit = similar_fit
         else:
             self.similar_fit = eq
+        self.slice_object = slice_object
         super().__init__(similar)
 
     def update(self, population):
@@ -30,16 +31,20 @@ class ParetoFront(tools.ParetoFront):
         """
         new_members = []
         significant = []
+        slice_object = self.slice_object
+        if slice_object is None:
+            slice_object = slice(None)
+
         for ind in population:
             is_dominated = False
             dominates_one = False
             has_twin = False
             to_remove = []
             for i, hofer in enumerate(self):    # hofer = hall of famer
-                if not dominates_one and hofer.fitness.dominates(ind.fitness):
+                if not dominates_one and hofer.fitness.dominates(ind.fitness, obj=slice_object):
                     is_dominated = True
                     break
-                elif ind.fitness.dominates(hofer.fitness):
+                elif ind.fitness.dominates(hofer.fitness, obj=slice_object):
                     dominates_one = True
                     to_remove.append(i)
                     significant.append(not self.similar_fit(ind.fitness.values, hofer.fitness.values))
