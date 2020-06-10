@@ -107,7 +107,7 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     sim_resample = sim_spline(times)
     exp_resample = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, exp_data_values, ext=3)(times)    
     
-    corr = scipy.signal.correlate(exp_resample, sim_resample)  #/(numpy.linalg.norm(sim_resample) * numpy.linalg.norm(exp_resample))
+    corr = scipy.signal.correlate(exp_resample, sim_resample)
 
     index = numpy.argmax(corr)
     
@@ -136,7 +136,7 @@ def pearson_spline_fun(exp_time_values, exp_data_values, sim_spline):
     sim_resample = sim_spline(times)
     exp_resample = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, exp_data_values, ext=3)(times)    
     
-    corr = scipy.signal.correlate(exp_resample, sim_resample)  #/(numpy.linalg.norm(sim_resample) * numpy.linalg.norm(exp_resample))
+    corr = scipy.signal.correlate(exp_resample, sim_resample)
 
     index = numpy.argmax(corr)
     

@@ -99,11 +99,11 @@
       "features": [
         {
           "name": "Large",
-          "type": "similarityHybrid2"
+          "type": "Shape"
         },
         {
           "name": "Derivative",
-          "type": "derivative_similarity_hybrid2"
+          "type": "Shape"
         }
       ],
       "HDF5": "MSSMA.h5",
