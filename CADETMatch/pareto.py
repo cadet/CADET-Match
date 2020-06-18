@@ -2,6 +2,7 @@ from deap import tools
 from operator import eq
 import math
 import numpy
+import multiprocessing
 
 smallest = numpy.finfo(1.0).tiny
 
@@ -20,7 +21,7 @@ class ParetoFront(tools.ParetoFront):
         self.slice_object = slice_object
         super().__init__(similar)
 
-    def update(self, population):
+    def update(self, population, numGoals):
         """Update the Pareto front hall of fame with the *population* by adding 
         the individuals from the population that are not dominated by the hall
         of fame. If any individual in the hall of fame is dominated it is
@@ -32,6 +33,7 @@ class ParetoFront(tools.ParetoFront):
         new_members = []
         significant = []
         slice_object = self.slice_object
+        pareto_length = len(self)
         if slice_object is None:
             slice_object = slice(None)
 
@@ -51,13 +53,21 @@ class ParetoFront(tools.ParetoFront):
                 elif self.similar_fit(ind.fitness.values, hofer.fitness.values) and self.similar(ind, hofer):
                     has_twin = True
                     break
-            
+                            
             for i in reversed(to_remove):       # Remove the dominated hofer
                 self.remove(i)
             if not is_dominated and not has_twin:
+                #if the pareto front is empty or a new item is added to the pareto front that is progress
+                #however if there is only a single objective and it does not significantly dominate then
+                #don't count that as significant progress
+                if pareto_length == 0:
+                    significant.append(True)
+                elif numGoals > 1:
+                    if len(significant) == 0 or (len(significant) and any(significant)):
+                        significant.append(True)
+
                 self.insert(ind)
                 new_members.append(ind)
-                significant.append(True)
         return new_members, any(significant)
 
     def getBestScores(self):
@@ -97,6 +107,9 @@ def similar_fit_norm(a, b):
     #used to catch division by zero
     a[a == 0.0] = smallest
 
+    a = numpy.log(1-a)
+    b = numpy.log(1-b)
+
     diff = numpy.abs((a-b)/a)
     return numpy.all(diff < diff_step)
 
@@ -122,8 +135,8 @@ def similar_fit_meta_norm(a, b):
     a[a == 0.0] = smallest
 
     #SSE is in the last slot so we only want to use the first 3 meta scores
-    a = a[:3]
-    b = b[:3]
+    a = numpy.log(1-a[:3])
+    b = numpy.log(1-b[:3])
 
     diff = numpy.abs((a-b)/a)
     return numpy.all(diff < diff_step)
@@ -175,5 +188,5 @@ def similar_fit(cache):
         return similar_fit_sse
 
 def updateParetoFront(halloffame, offspring, cache):
-    new_members, significant  = halloffame.update([offspring,])
+    new_members, significant  = halloffame.update([offspring,], cache.numGoals)
     return bool(new_members), significant

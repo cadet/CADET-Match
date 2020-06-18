@@ -35,6 +35,7 @@ def run(cache, tools, creator):
     meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
                                           slice_object=cache.meta_slice)
     grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+    progress_hof = pareto.DummyFront()
 
     path = Path(cache.settings['resultsDirBase'], cache.settings['csv'])
     with path.open('a', newline='') as csvfile:
@@ -47,7 +48,7 @@ def run(cache, tools, creator):
         stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, newChildren, writer, csvfile, hof, meta_hof, 
                                                                 None, -1, result_data)
 
-        util.writeProgress(cache, -1, newChildren, hof, meta_hof, grad_hof, sim_start, generation_start, result_data)
+        util.writeProgress(cache, -1, newChildren, hof, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
         
         util.finish(cache)
         util.graph_corner_process(cache, last=True)

@@ -2,7 +2,7 @@
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Dextran",
     "tempDir": "L:/",
-  "resultsDir": "fit_nsga3_shape_single",
+  "resultsDir": "fit_nsga3_shape_single_7",
   "CSV": "dextran_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 1,

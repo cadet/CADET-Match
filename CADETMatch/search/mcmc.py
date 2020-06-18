@@ -690,13 +690,10 @@ def run(cache, tools, creator):
 
         result_data = {'input':[], 'output':[], 'output_meta':[], 'results':{}, 'times':{}, 'input_transform':[], 'input_transform_extended':[], 'strategy':[], 
                    'mean':[], 'confidence':[], 'mcmc_score':[]}
-        if cache.metaResultsOnly:
-            halloffame = pareto.DummyFront()
-        else:
-            halloffame = pareto.DummyFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+        halloffame = pareto.DummyFront()
         meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
                                           slice_object=cache.meta_slice)
-        grad_hof = pareto.DummyFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+        grad_hof = pareto.DummyFront()
         progress_hof = None
 
         sampler = emcee.EnsembleSampler(populationSize, parameters, log_posterior_vectorize, 
@@ -937,7 +934,7 @@ def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_ho
                                                           fitnesses, writer, csv_file, 
                                                           halloffame, meta_hof, progress_hof, process.gen, result_data)
 
-    util.writeProgress(cache, process.gen, population, halloffame, meta_hof, grad_hof, 
+    util.writeProgress(cache, process.gen, population, halloffame, meta_hof, grad_hof, progress_hof,
                        process.sim_start, process.generation_start, result_data, line_log=False)
 
     util.graph_process(cache, process.gen)

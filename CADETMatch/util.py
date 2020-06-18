@@ -603,7 +603,7 @@ def fractionate(start_seq, stop_seq, times, values):
         temp.append(numpy.trapz(local_values, local_times)/ (stop - start))
     return numpy.array(temp)
 
-def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, 
+def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, progress_halloffame,
                   sim_start, generation_start, result_data=None, line_log=True):
     cpu_time = psutil.Process().cpu_times()
     now = time.time()
@@ -847,22 +847,26 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
             if line_log:
                 if cache.allScoreSSE:
                     if cache.MultiObjectiveSSE:
-                        multiprocessing.get_logger().info(sse_multi_line_format, generation, len(population),
+                        multiprocessing.get_logger().info(sse_multi_line_format, generation, 
+                          len(population),
                           -population_average_best,
                           -population_min_best,
                           -population_product_best,
                           best_sse, best_rmse)
                     else:
-                        multiprocessing.get_logger().info(sse_line_format, generation, len(population),
+                        multiprocessing.get_logger().info(sse_line_format, generation, 
+                          len(population),
                           best_sse, best_rmse)
                 elif any(meta_max[:3] > 0.999):  #don't use the last item since that has SSE
-                    multiprocessing.get_logger().info(alt_line_format, generation, len(population),
+                    multiprocessing.get_logger().info(alt_line_format, generation, 
+                          len(population),
                       1-population_average_best,
                       1-population_min_best,
                       1-population_product_best,
                       best_sse, best_rmse)
                 else:
-                    multiprocessing.get_logger().info(line_format, generation, len(population),
+                    multiprocessing.get_logger().info(line_format, generation, 
+                          len(population),
                       population_average_best,
                       population_min_best,
                       population_product_best,
