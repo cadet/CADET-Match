@@ -70,24 +70,25 @@ def run(sim_data, feature):
 
     for component, value_func in funcs:
         exp_values = numpy.array(data[str(component)])
+        selected = numpy.isfinite(exp_values)
         sim_value = simulation.root.output.solution[feature['unit']]["solution_outlet_comp_%03d" % component]
 
         spline = scipy.interpolate.InterpolatedUnivariateSpline(times, sim_value, ext=1)
 
         #get a starting point estimate
         offsets = numpy.linspace(-times[-1], times[-1], 50)
-        errors = [goal(offset, exp_values, times, spline, start, stop) for offset in offsets]
+        errors = [goal(offset, exp_values[selected], times, spline, start[selected], stop[selected]) for offset in offsets]
         offset_start = offsets[numpy.argmin(errors)]
 
-        result_powell = scipy.optimize.minimize(goal, offset_start, args = (exp_values, times, spline, start, stop), method='powell')
+        result_powell = scipy.optimize.minimize(goal, offset_start, args = (exp_values[selected], times, spline, start[selected], stop[selected]), method='powell')
 
         time_offset = result_powell.x
         sim_data_value = spline(times - time_offset)
 
-        fracOffset = util.fractionate(start, stop, times, sim_data_value)
+        fracOffset = util.fractionate(start[selected], stop[selected], times, sim_data_value)
 
         #if the simulation scale and exp scale are too different the estimation of similarity, offset etc is not accurate discard if value max/min > 1e3
-        max_exp = max(exp_values)
+        max_exp = max(exp_values[selected])
         max_sim = max(fracOffset)
         if max(max_exp, max_sim)/min(max_exp, max_sim) > 1e3:
             value_score = 0
@@ -95,18 +96,18 @@ def run(sim_data, feature):
             time_score = 0
         else:
             value_score = value_func(max(fracOffset))
-            pear = score.pear_corr(scipy.stats.pearsonr(exp_values, fracOffset)[0])
+            pear = score.pear_corr(scipy.stats.pearsonr(exp_values[selected], fracOffset)[0])
             time_score = timeFunc(abs(time_offset))
 
-        exp_values_sse.extend(exp_values)
+        exp_values_sse.extend(exp_values[selected])
         sim_values_sse.extend(fracOffset)
 
         scores.append(pear)
         scores.append(time_score)
         scores.append(value_score)
 
-        graph_sim[component] = list(zip(time_center, fracOffset))
-        graph_exp[component] = list(zip(time_center, exp_values))
+        graph_sim[component] = list(zip(time_center[selected], fracOffset))
+        graph_exp[component] = list(zip(time_center[selected], exp_values[selected]))
         graph_sim_offset[component] = time_offset
 
     sim_data['graph_exp'] = graph_exp

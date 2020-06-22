@@ -39,15 +39,16 @@ def run(sim_data, feature):
 
     for component  in comps:
         exp_values = numpy.array(data[str(component)])
+        selected = numpy.isfinite(exp_values)
         sim_value = simulation.root.output.solution[feature['unit']]["solution_outlet_comp_%03d" % component]
 
-        fractions = util.fractionate(start, stop, times, sim_value)
+        fractions = util.fractionate(start[selected], stop[selected], times, sim_value)
 
-        exp_values_sse.extend(exp_values)
+        exp_values_sse.extend(exp_values[selected])
         sim_values_sse.extend(fractions)
 
-        graph_sim[component] = list(zip(time_center, fractions))
-        graph_exp[component] = list(zip(time_center, exp_values))
+        graph_sim[component] = list(zip(time_center[selected], fractions))
+        graph_exp[component] = list(zip(time_center[selected], exp_values[selected]))
 
     #sort lists
     for key, value in graph_sim.items():
@@ -73,7 +74,10 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp['stop'] = numpy.array(data.iloc[:, 1])
     temp['unit'] = feature['unit_name']
 
-    smallestTime = min(data['Stop'] - data['Start'])
+    start = numpy.array(data.iloc[:, 0])
+    stop = numpy.array(data.iloc[:, 1])
+
+    smallestTime = min(start - stop)
     abstolFraction = abstol * smallestTime
 
     headers = data.columns.values.tolist()

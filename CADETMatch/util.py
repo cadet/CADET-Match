@@ -752,9 +752,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                 hf["output"].resize((hf["output"].shape[0] + len(result_data['output'])), axis = 0)
                 hf["output"][-len(result_data['output']):] = result_data['output']
 
-                data = result_data['output_meta']
-                length = len(data)
-                length_item = len(data[0])
+                #data = numpy.array(result_data['output_meta'])
+                #length = len(data)
+                #length_item = len(data[0])
                 hf["output_meta"].resize((hf["output_meta"].shape[0] + len(result_data['output_meta'])), axis = 0)
                 hf["output_meta"][-len(result_data['output_meta']):] = result_data['output_meta']
 

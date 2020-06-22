@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|cadet_devel</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Dextran\NSGA3_dextran_sse.json" 6</CommandLineArguments>
+    <CommandLineArguments>"F:\temp\weirdEffects\fit_nsga3_fractionsChroms_gradients_20200428\NSGA3_binding_fractions3_SSE.json" 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>
