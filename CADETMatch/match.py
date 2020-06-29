@@ -100,7 +100,7 @@ def setup(cache, json_path, map_function):
     createDirectories(cache, json_path)
     util.setupLog(cache.settings['resultsDirLog'], "main.log")
 
-    multiprocessing.get_logger().info('CADETMatch starting up version: %s', version.__version__)
+    print_version()
     
     cache.setup(json_path)
     
@@ -109,6 +109,23 @@ def setup(cache, json_path, map_function):
     createErrorCSV(cache)
     setupTemplates(cache)
     setupDeap(cache, map_function)    
+
+def print_version():
+    multiprocessing.get_logger().info('CADETMatch starting up version: %s', version.__version__)
+
+    import importlib_metadata
+
+    modules = [('joblib', '0.15.1'), ('addict', '2.2.1'),
+               ('corner', '2.0.1'), ('emcee', '3.0.2'),
+               ('SALib', '0.0+nnone'), ('deap', '1.3.1'),
+               ('psutil', '5.7.0'), ('numpy', '1.18.5'),
+               ('openpyxl', '3.0.3'), ('scipy', '1.5.0'),
+               ('matplotlib', '3.2.1'), ('pandas', '1.0.5'),
+               ('h5py', '2.10.0'), ('cadet', '0.4'),
+               ('seaborn', '0.10.1'), ('scikit-learn', '0.23.1')]
+
+    for module,version_tested in modules:
+        multiprocessing.get_logger().info('%s version: %s tested with %s', module, importlib_metadata.version(module), version_tested)
 
 def createDirectories(cache, json_path):
     cache.settings['resultsDirBase'].mkdir(parents=True, exist_ok=True)
