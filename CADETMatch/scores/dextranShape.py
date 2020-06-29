@@ -147,7 +147,7 @@ def cut_front(times, values, min_value, max_value, crit_fs, s):
     result = scipy.optimize.minimize(goal, max_time, method='powell', tol=1e-5)
 
     old_max_time = max_time
-    max_time = float(result.x)
+    max_time = float(result.x[0])
 
     min_index = numpy.argmin(values[:max_index] <= min_value)
     min_time = times[min_index]
@@ -172,7 +172,7 @@ def cut_front(times, values, min_value, max_value, crit_fs, s):
     
     result = scipy.optimize.minimize(goal, min_time, method='powell', tol=1e-5)
 
-    min_time = float(result.x)
+    min_time = float(result.x[0])
 
     needed_points = int( (max_time - min_time) * 10)
     new_times_spline = numpy.linspace(min_time, max_time, needed_points)

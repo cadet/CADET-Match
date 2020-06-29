@@ -59,7 +59,7 @@ def get_bandwidth(scores, cache):
     bw_start = bw_sample[idx]
 
     result = scipy.optimize.minimize(bandwidth_score, bw_start, args = (scores,store,), method='powell')
-    bandwidth = 10**result.x
+    bandwidth = 10**result.x[0]
     multiprocessing.get_logger().info("selected bandwidth %s", bandwidth)
 
     store = numpy.array(store)

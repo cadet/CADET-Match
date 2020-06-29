@@ -122,7 +122,7 @@ def get_mle(data):
     idx = numpy.argmin(bw_score)    
     bw_start = bw_sample[idx]
     result = scipy.optimize.minimize(bandwidth_score, bw_start, args = (data_reduced_bw,), method='powell')
-    bw = 10**result.x
+    bw = 10**result.x[0]
     
     multiprocessing.get_logger().info("mle bandwidth: %.2g", bw)
 

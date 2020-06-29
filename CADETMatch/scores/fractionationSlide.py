@@ -82,7 +82,7 @@ def run(sim_data, feature):
 
         result_powell = scipy.optimize.minimize(goal, offset_start, args = (exp_values[selected], times, spline, start[selected], stop[selected]), method='powell')
 
-        time_offset = result_powell.x
+        time_offset = result_powell.x[0]
         sim_data_value = spline(times - time_offset)
 
         fracOffset = util.fractionate(start[selected], stop[selected], times, sim_data_value)

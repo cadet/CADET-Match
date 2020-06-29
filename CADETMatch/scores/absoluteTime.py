@@ -62,6 +62,6 @@ def find_time(times, values):
     
     result = scipy.optimize.minimize(goal, time_search, method='powell')
     
-    return float(result.x)
+    return float(result.x[0])
 
 

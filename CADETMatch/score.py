@@ -96,7 +96,7 @@ def refine_time(dt, exp_time_values, sim_data_values, exp_data_values):
     
     result = scipy.optimize.minimize(goal_sse, dt, method='powell')
     
-    return result.x
+    return result.x[0]
 
 def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     #resample to a much smaller time step to get a more precise offset
@@ -170,7 +170,7 @@ def refine_time_fun(dt, exp_time_values, exp_data_values, spline):
     
     result = scipy.optimize.minimize(goal_sse, dt, method='powell')
     
-    return result.x
+    return result.x[0]
 
 def time_function_decay(CV_time, peak_time, diff_input=False):
     x_exp = numpy.array([0, 1.0*CV_time])
@@ -434,7 +434,7 @@ def find_cuts(times, values, spline, spline_der):
     
     result = scipy.optimize.minimize(goal, max_time, method='powell')
     
-    max_time = float(result.x)
+    max_time = float(result.x[0])
     max_value = float(spline(max_time))
 
     min_index = numpy.argmax(values >= 1e-3*max_value)
@@ -445,7 +445,7 @@ def find_cuts(times, values, spline, spline_der):
     
     result = scipy.optimize.minimize(goal, min_time, method='powell')
     
-    min_time = float(result.x)
+    min_time = float(result.x[0])
     min_value = float(spline(min_time))
 
     return min_time, min_value, max_time, max_value
