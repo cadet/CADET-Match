@@ -259,12 +259,12 @@ def set_simulation(individual, simulation, settings, cache, experiment):
 def getBoundOffset(unit):
     if unit.unit_type == b'CSTR':
         NBOUND = unit.nbound
-
-        if not NBOUND:
-            "For a CSTR with NBOUND not set the default is all 0"
-            NBOUND = [0.0] * unit.ncomp
     else:
         NBOUND = unit.discretization.nbound
+
+    if not NBOUND:
+        "If NBOUND is empty it is all zero"
+        NBOUND = [0.0] * unit.ncomp
 
     boundOffset = numpy.cumsum(numpy.concatenate([[0,], NBOUND]))
     return boundOffset

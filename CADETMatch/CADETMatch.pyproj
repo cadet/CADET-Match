@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|cadet_devel</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"F:\temp\weirdEffects\NSGA3_binding_fractions.json" 1</CommandLineArguments>
+    <CommandLineArguments>"F:\temp\weirdEffects\fit_nsga3_sample_testCADET4\NSGA3_bypassSample.json" 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>
