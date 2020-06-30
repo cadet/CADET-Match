@@ -110,7 +110,7 @@
     <Compile Include="scores\shapeNoDer.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\nsga3_selection.py">
+    <Compile Include="obsolete\search\nsga3_selection.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="pareto.py">
@@ -155,46 +155,46 @@
     <Compile Include="scores\absoluteTime.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\breakthrough.py">
+    <Compile Include="obsolete\scores\breakthrough.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\breakthroughCross.py">
+    <Compile Include="obsolete\scores\breakthroughCross.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\breakthroughHybrid.py">
+    <Compile Include="obsolete\scores\breakthroughHybrid.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\breakthroughHybrid2.py">
+    <Compile Include="obsolete\scores\breakthroughHybrid2.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\curve.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\derivative_similarity.py">
+    <Compile Include="obsolete\scores\derivative_similarity.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\derivative_similarity_cross.py">
+    <Compile Include="obsolete\scores\derivative_similarity_cross.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\derivative_similarity_hybrid.py">
+    <Compile Include="obsolete\scores\derivative_similarity_hybrid.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\derivative_similarity_hybrid2.py">
+    <Compile Include="obsolete\scores\derivative_similarity_hybrid2.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\derivative_similarity_hybrid2_spline.py">
+    <Compile Include="obsolete\scores\derivative_similarity_hybrid2_spline.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\dextran.py">
+    <Compile Include="obsolete\scores\dextran.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\dextran3.py">
+    <Compile Include="obsolete\scores\dextran3.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\dextranAngle.py">
+    <Compile Include="obsolete\scores\dextranAngle.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\dextranQuad.py">
+    <Compile Include="obsolete\scores\dextranQuad.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\dextranShape.py">
@@ -203,34 +203,34 @@
     <Compile Include="scores\dextranSSE.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\dextranTest.py">
+    <Compile Include="obsolete\scores\dextranTest.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\dextran_original.py">
+    <Compile Include="obsolete\scores\dextran_original.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\dextranHybrid.py">
+    <Compile Include="obsolete\scores\dextranHybrid.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\dextranHybrid2.py">
+    <Compile Include="obsolete\scores\dextranHybrid2.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\dextranHybrid2_spline.py">
+    <Compile Include="obsolete\scores\dextranHybrid2_spline.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\dextran_spline.py">
+    <Compile Include="obsolete\scores\dextran_spline.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\fractionation.py">
+    <Compile Include="obsolete\scores\fractionation.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\fractionationCombine.py">
+    <Compile Include="obsolete\scores\fractionationCombine.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\fractionationMeanVariance.py">
+    <Compile Include="obsolete\scores\fractionationMeanVariance.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\fractionationMoment.py">
+    <Compile Include="obsolete\scores\fractionationMoment.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\fractionationSlide.py">
@@ -260,31 +260,31 @@
     <Compile Include="scores\similarity.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\similarityCross.py">
+    <Compile Include="obsolete\scores\similarityCross.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\similarityCrossDecay.py">
+    <Compile Include="obsolete\scores\similarityCrossDecay.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\similarityDecay.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\similarityHybrid.py">
+    <Compile Include="obsolete\scores\similarityHybrid.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\similarityHybrid2.py">
+    <Compile Include="obsolete\scores\similarityHybrid2.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\similarityHybrid2_spline.py">
+    <Compile Include="obsolete\scores\similarityHybrid2_spline.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\similarityHybridDecay.py">
+    <Compile Include="obsolete\scores\similarityHybridDecay.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\similarityHybridDecay2.py">
+    <Compile Include="obsolete\scores\similarityHybridDecay2.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="scores\obsolete\similarityHybridDecay2Spline.py">
+    <Compile Include="obsolete\scores\similarityHybridDecay2Spline.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="scores\sse.py">
@@ -305,64 +305,64 @@
     <Compile Include="search\multistart.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\nsga2_improved.py">
+    <Compile Include="obsolete\search\nsga2_improved.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\nsga3.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\nsga3_improved.py">
+    <Compile Include="obsolete\search\nsga3_improved.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\nsga3_strategy.py">
+    <Compile Include="obsolete\search\nsga3_strategy.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\nsga2_mut.py">
+    <Compile Include="obsolete\search\nsga2_mut.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\nsga2_mut_adapt.py">
+    <Compile Include="obsolete\search\nsga2_mut_adapt.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\nsga2_mut_norm.py">
+    <Compile Include="obsolete\search\nsga2_mut_norm.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\multiswarm.py">
+    <Compile Include="obsolete\search\multiswarm.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\nsga2.py">
+    <Compile Include="obsolete\search\nsga2.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\nsga3_old.py">
+    <Compile Include="obsolete\search\nsga3_old.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\scoretest.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\spea2.py">
+    <Compile Include="obsolete\search\spea2.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\spea2a.py">
+    <Compile Include="obsolete\search\spea2a.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\spea2_mut_norm_fit3.py">
+    <Compile Include="obsolete\search\spea2_mut_norm_fit3.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\spea2_mut.py">
+    <Compile Include="obsolete\search\spea2_mut.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\spea2_mut_adapt.py">
+    <Compile Include="obsolete\search\spea2_mut_adapt.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\spea2_mut_norm.py">
+    <Compile Include="obsolete\search\spea2_mut_norm.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\spea2_mut_norm_fit2.py">
+    <Compile Include="obsolete\search\spea2_mut_norm_fit2.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\theta_nsga3.py">
+    <Compile Include="obsolete\search\theta_nsga3.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="search\retired\spea2_improved.py">
+    <Compile Include="obsolete\search\spea2_improved.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="search\__init__.py">
@@ -420,11 +420,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="abstract\" />
-    <Folder Include="scores\obsolete\" />
+    <Folder Include="obsolete\" />
+    <Folder Include="obsolete\scores\" />
     <Folder Include="transform\" />
     <Folder Include="search\" />
     <Folder Include="scores\" />
-    <Folder Include="search\retired\" />
+    <Folder Include="obsolete\search\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="CondaEnv|CondaEnv|cadet_devel" />
