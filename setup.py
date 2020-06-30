@@ -21,7 +21,7 @@ setuptools.setup(
           'emcee>=3.0.2',
           'SAlib',
           'corner>=2.0.1',
-          'deap>=1.3.0',
+          'deap>=1.3.1',
           'psutil>=5.7.0',
           'openpyxl>=3.0.3',
           'numpy>=1.18.5',
