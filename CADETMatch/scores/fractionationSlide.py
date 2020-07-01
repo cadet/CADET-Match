@@ -139,7 +139,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp['data'] = data
     temp['start'] = start
     temp['stop'] = stop
-    temp['timeFunc'] = score.time_function(CV_time, 0, diff_input = True)
+    temp['timeFunc'] = score.time_function_decay(feature['time'][-1])
     temp['components'] = [int(i) for i in headers[2:]]
     temp['samplesPerComponent'] = rows
     temp['CV_time'] = CV_time

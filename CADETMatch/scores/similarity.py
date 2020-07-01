@@ -39,7 +39,8 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
 
     temp = {}
     temp['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
-    temp['time_function'] = score.time_function_cv(CV_time, selectedTimes, temp['peak'][0])
+    temp['time_function'] = score.time_function(feature['time'][-1], 0.1*CV_time)
+
     temp['value_function'] = score.value_function(temp['peak'][1], abstol)
     temp['peak_max'] = max(selectedValues)
     temp['smoothing_factor'] = s

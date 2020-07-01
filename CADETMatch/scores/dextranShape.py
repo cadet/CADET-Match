@@ -65,9 +65,9 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     decay = feature.get('decay', 1)
 
     if decay:
-        temp['offsetTimeFunction'] = score.time_function_decay_cv(CV_time, selectedTimes, max_time)
+        temp['offsetTimeFunction'] = score.time_function_decay(feature['time'][-1])
     else:
-        temp['offsetTimeFunction'] = score.time_function_cv(CV_time, selectedTimes, max_time)
+        temp['offsetTimeFunction'] = score.time_function(feature['time'][-1], 0.1*CV_time)
 
     temp['peak_max'] = max_value
     temp['smoothing_factor'] = s
