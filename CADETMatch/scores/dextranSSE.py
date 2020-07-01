@@ -51,9 +51,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     #change the stop point to be where the max positive slope is along the searched interval
     name = '%s_%s' % (sim.root.experiment_name,   feature['name'])
     s, crit_fs, crit_fs_der = smoothing.find_smoothing_factors(selectedTimes, selectedValues, name, cache)
-    values_der = smoothing.smooth_data_derivative(selectedTimes, selectedValues, crit_fs, s, crit_fs_der)
-    
-    smooth_value = smoothing.smooth_data(selectedTimes, selectedValues, crit_fs, s)
+    smooth_value, values_der = smoothing.full_smooth(selectedTimes, selectedValues, crit_fs, s, crit_fs_der)
 
     spline_der = scipy.interpolate.InterpolatedUnivariateSpline(selectedTimes, values_der, ext=1)
     spline = scipy.interpolate.InterpolatedUnivariateSpline(selectedTimes, smooth_value, ext=1)

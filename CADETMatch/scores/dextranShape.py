@@ -84,9 +84,7 @@ def headers(experimentName, feature):
 
 def cut_front_find(times, values, name, cache):
     s, crit_fs, crit_fs_der = smoothing.find_smoothing_factors(times, values, name, cache)
-    values_der = smoothing.smooth_data_derivative(times, values, crit_fs, s, crit_fs_der)
-
-    smooth_value = smoothing.smooth_data(times, values, crit_fs, s)
+    smooth_value, values_der = smoothing.full_smooth(selectedTimes, selectedValues, crit_fs, s, crit_fs_der)
     
     spline_der = scipy.interpolate.InterpolatedUnivariateSpline(times, values_der, ext=1)
     spline = scipy.interpolate.InterpolatedUnivariateSpline(times, smooth_value, ext=1)
