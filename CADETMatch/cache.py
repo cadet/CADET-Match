@@ -282,7 +282,7 @@ class Cache:
 
         if self.allScoreNorm:
             #use the first 4 indexes to also keep the SSE
-            self.meta_slice = slice(0, 4, 1)
+            self.meta_slice = slice(0, 3, 1)
         elif self.allScoreSSE:
             if self.MultiObjectiveSSE:
                 #use the first 3 indexes

@@ -6,7 +6,7 @@ import multiprocessing
 
 smallest = numpy.finfo(1.0).tiny
 
-diff_step = 2.5e-2
+diff_step = 1e-1
 
 class ParetoFront(tools.ParetoFront):
     "Modification of the pareto front in DEAP that takes cache as an argument to update to use for similar comparison"
@@ -68,6 +68,7 @@ class ParetoFront(tools.ParetoFront):
 
                 self.insert(ind)
                 new_members.append(ind)
+
         return new_members, any(significant)
 
     def getBestScores(self):

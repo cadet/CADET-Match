@@ -228,7 +228,7 @@ def time_function_cv(CV_time, times, peak_time):
     
     def wrapper(x):
         diff_cv = x/CV_time
-        if diff_cv <= 0.1:
+        if diff_cv <= 0.1*cv_time:
             value = max(0.0, calc_coeff.linear(diff_cv, a1, b1))
         else:
             value = max(0.0, calc_coeff.linear(diff_cv, a2, b2))
