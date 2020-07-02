@@ -317,24 +317,36 @@ def smooth_data(times, values, crit_fs, s):
     return spline(times) / factor
 
 def smooth_data_derivative(times, values, crit_fs, s, crit_fs_der, smooth=True):
-    spline, factor = create_spline(times, values, crit_fs, s)
-    
-    #run a quick butter pass to remove high frequency noise in the derivative (needed for some experimental data)
-    values_filter = spline.derivative()(times) / factor
+    times_resample, values_resample = resample(times, values)
+    spline, factor = create_spline(times_resample, values_resample, crit_fs, s)
+
     if smooth:
-        values_filter = butter(times, values_filter, crit_fs_der)
-    return values_filter
+        values_filter_der = spline.derivative()(times_resample) / factor
+        factor_der = numpy.max(values_filter_der)
+        values_filter_der = butter(times_resample, values_filter_der/factor_der, crit_fs_der)*factor_der
+        spline_der = scipy.interpolate.InterpolatedUnivariateSpline(times_resample, values_filter_der, k=5, ext=3)
+        values_filter_der = spline_der(times)
+    else:
+        values_filter_der = spline.derivative()(times) / factor
+    return values_filter_der
 
 def full_smooth(times, values, crit_fs, s, crit_fs_der, smooth=True):
     #return smooth data derivative of data
-    spline, factor = create_spline(times, values, crit_fs, s)
+    times_resample, values_resample = resample(times, values)
+    spline, factor = create_spline(times_resample, values_resample, crit_fs, s)
 
     values_filter = spline(times) / factor
     
     #run a quick butter pass to remove high frequency noise in the derivative (needed for some experimental data)
-    values_filter_der = spline.derivative()(times) / factor
+    
     if smooth:
-        values_filter_der = butter(times, values_filter_der, crit_fs_der)
+        values_filter_der = spline.derivative()(times_resample) / factor
+        factor_der = numpy.max(values_filter_der)
+        values_filter_der = butter(times_resample, values_filter_der/factor_der, crit_fs_der)*factor_der
+        spline_der = scipy.interpolate.InterpolatedUnivariateSpline(times_resample, values_filter_der, k=5, ext=3)
+        values_filter_der = spline_der(times)
+    else:
+        values_filter_der = spline.derivative()(times) / factor
     return values_filter, values_filter_der
 
 def butter(times, values, crit_fs_der):
