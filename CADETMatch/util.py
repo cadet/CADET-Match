@@ -42,37 +42,6 @@ import CADETMatch.pareto as pareto
 import logging
 import os
 
-def find_L(x,y):
-    x = numpy.array(x)
-    y = numpy.array(y)
-
-    y_min = y - min(y)
-
-    p3 = numpy.array([x, y_min]).T
-    p3 = p3/numpy.max(p3, 0)
-    p1 = p3[0,:]
-    p2 = p3[-1,:]
-        
-    d = numpy.cross(p2-p1,p1-p3)/numpy.linalg.norm(p2-p1)
-    d_abs = numpy.abs(d)
-    
-    max_idx = numpy.argmax(d_abs)
-    
-    max_d = d[max_idx]
-    l_x = x[max_idx]
-    l_y = y[max_idx]
-    
-    return l_x, l_y, max_d
-
-def find_Left_L(x,y):
-    "L_x and L_y set to none if distance is negative (to the right of the connecting line)"
-    "This is designed to cover a case found in experimental data"
-    l_x, l_y, max_d = find_L(x,y)
-
-    if max_d >= 0:
-        return None, None
-    return l_x, l_y
-
 def get_times_values(simulation, target, selected = None):
 
     try:

@@ -11,16 +11,29 @@ from cadet import H5
 
 butter_order = 3
 
-def refine_butter(times, values, x, y, fs, start):
+def get_p(x,y):
     x = numpy.array(x)
     y = numpy.array(y)
 
-    y_min = y - min(y)
+    sort_idx = numpy.argsort(x)
 
-    p3 = numpy.array([x, y]).T
+    x = x[sort_idx]
+    y = y[sort_idx]
+    
+    y_min = y - min(y)
+    x_min = x - min(x)
+
+    p3 = numpy.array([x_min, y_min]).T
+    factor = numpy.max(p3, 0)
+    p3 = p3/factor
     p1 = p3[0,:]
     p2 = p3[-1,:]
-    
+
+    return x,min(x),y,min(y),p1,p2,p3,factor
+
+def refine_butter(times, values, x, y, fs, start):
+    x,x_min,y,y_min,p1,p2,p3,factor = get_p(x,y)
+        
     def goal(crit_fs):
         crit_fs = 10.0**crit_fs[0]
         try:
@@ -31,19 +44,23 @@ def refine_butter(times, values, x, y, fs, start):
         
         sse = numpy.sum( (low_passed - values)**2 )
         
-        pT = numpy.array([crit_fs, numpy.log(sse)]).T
+        pT = numpy.array([crit_fs-x_min, numpy.log(sse)-y_min]).T/factor
 
         d = numpy.cross(p2-p1,p1-pT)/numpy.linalg.norm(p2-p1)
         
-        return d
+        return -d
     
     start = numpy.log10(start)
     lb = numpy.log10(x[-1])
     ub = numpy.log10(x[0])
     diff = min(start - lb, ub-start)
+
+    ub_max = fs/2.0
+    ub_max = numpy.log(ub_max)
     
     lb = start - 0.2 * diff
     ub = start + 0.2 * diff
+    ub = min(ub, ub_max)
 
     result_evo = scipy.optimize.differential_evolution(goal, ((lb, ub),), polish=False)
     
@@ -52,18 +69,10 @@ def refine_butter(times, values, x, y, fs, start):
     return crit_fs
 
 def refine_smooth(times, values, x, y, start, name):
+    x,x_min,y,y_min,p1,p2,p3,factor = get_p(x,y)
     if name is None:
         name = 'unknown'
 
-    x = numpy.array(x)
-    y = numpy.array(y)
-
-    y_min = y - min(y)
-
-    p3 = numpy.array([x, y_min]).T
-    p1 = p3[0,:]
-    p2 = p3[-1,:]
-    
     def goal(s):
         s = 10**s[0]
         with warnings.catch_warnings():
@@ -75,11 +84,10 @@ def refine_smooth(times, values, x, y, start, name):
                 multiprocessing.get_logger().info("caught a warning for %s %s", name, s)
                 return 1e6
         
-        pT = numpy.array([s, len(spline.get_knots())]).T
-
+        pT = numpy.array([s-x_min, len(spline.get_knots())-y_min]).T/factor
         d = numpy.cross(p2-p1,p1-pT)/numpy.linalg.norm(p2-p1)
         
-        return d
+        return -d
     
     start = numpy.log10(start)
     lb = numpy.log10(x[-1])
@@ -97,23 +105,44 @@ def refine_smooth(times, values, x, y, start, name):
     
     return s, len(spline.get_knots())
 
+def find_L(x,y):
+    #find the largest value greater than 0, otherwise return none to just turn off butter filter
+    x,x_min,y,y_min,p1,p2,p3,factor = get_p(x,y)
+        
+    d = numpy.cross(p2-p1,p1-p3)/numpy.linalg.norm(p2-p1)
+    
+    max_idx = numpy.argmax(d)    
+    max_d = d[max_idx]
+    l_x = x[max_idx]
+    l_y = y[max_idx]
+
+    print("max_d", max_d)
+    
+    if max_d <= 0:
+        return None, None
+    
+    return l_x, l_y
+
 def find_butter(times, values):
     filters = []
     sse = []
     
     fs = 1.0/(times[1] - times[0])
 
-    for i in numpy.logspace(1, -4, 50):
+    ub = fs/2.0
+    ub_l = numpy.log10(ub)
+
+    for i in numpy.logspace(-6, ub_l, 50):
         try:
             sos = scipy.signal.butter(butter_order, i, btype='lowpass', analog=False, fs=fs, output="sos")
+            low_passed = scipy.signal.sosfiltfilt(sos, values)
+
+            filters.append(i)
+            sse.append( numpy.sum( (low_passed - values)**2 ) )
         except ValueError:
             continue
-        low_passed = scipy.signal.sosfiltfilt(sos, values)
-
-        filters.append(i)
-        sse.append(  numpy.sum( (low_passed - values)**2 ) )
         
-    L_x, L_y = util.find_Left_L(filters, numpy.log(sse))
+    L_x, L_y = find_L(filters, numpy.log(sse))
 
     if L_x is not None:
         L_x = refine_butter(times, values, filters, numpy.log(sse), fs, L_x)
@@ -176,6 +205,7 @@ def load_data(name, cache):
 
 
 def find_smoothing_factors(times, values, name, cache):
+    times, values = resample(times, values)
     min = 1e-2
 
     s, crit_fs, crit_fs_der = load_data(name, cache)
@@ -221,7 +251,7 @@ def find_smoothing_factors(times, values, name, cache):
     knots = numpy.array(knots)
     all_s = numpy.array(all_s)
     
-    s, s_knots = util.find_Left_L(all_s,knots)
+    s, s_knots = find_L(all_s,knots)
 
     if s is not None:
         s, s_knots = refine_smooth(times, values_filter, all_s, knots, s, name)
@@ -274,6 +304,7 @@ def record_smoothing(s, s_knots, crit_fs, crit_fs_der, knots, all_s, name=None, 
     multiprocessing.get_logger().info("smoothing_factor %s  %.3e  %s  %s knots %d", name, s, crit_fs_message, crit_fs_der_message, s_knots)
 
 def create_spline(times, values, crit_fs, s):
+    times, values = resample(times, values)
     factor = 1.0/max(values)
     values = values * factor
     values_filter = smoothing_filter_butter(times, values, crit_fs)
@@ -313,3 +344,25 @@ def butter(times, values, crit_fs_der):
     values_filter = smoothing_filter_butter(times, values, crit_fs_der) / factor
     
     return values_filter
+
+def resample(times, values):
+    diff_times = times[1:] - times[:-1]
+    max_time = numpy.max(diff_times)
+    min_time = numpy.min(diff_times)
+    per = (max_time - min_time)/min_time
+
+    if per > 0.01:
+        #time step is not consistent, resample the time steps to a uniform grid based on the smallest time step size seen
+        times_resample = numpy.arange(times[0], times[-1], min_time)
+        times_resample[-1] = times[-1]
+        diff_times = times_resample[1:] - times_resample[:-1]
+        max_time = numpy.max(diff_times)
+        min_time = numpy.min(diff_times)
+        per = (max_time - min_time)/min_time
+
+        spline_resample = scipy.interpolate.InterpolatedUnivariateSpline(times, values, k=5, ext=3)
+        values_resample = spline_resample(times_resample)
+
+        return times_resample, values_resample
+    else:
+        return times,values
