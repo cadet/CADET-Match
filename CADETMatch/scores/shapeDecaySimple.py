@@ -47,7 +47,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     exp_data_values_smooth, exp_data_values_der_smooth = smoothing.full_smooth(selectedTimes, selectedValues, crit_fs, s, crit_fs_der)
 
     temp = {}
-    temp['peak'] = util.find_peak(selectedTimes, selectedValues)[0]
+    temp['peak'] = util.find_peak(selectedTimes, exp_data_values_smooth)[0]
     
     temp['time_function'] = score.time_function_decay(feature['time'][-1])
     temp['peak_max'] = max(selectedValues)

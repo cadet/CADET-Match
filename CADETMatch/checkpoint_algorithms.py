@@ -55,10 +55,10 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 halloffame = pareto.DummyFront()
             else:
                 halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+            meta_hof = pareto.ParetoFrontMeta(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
                                           slice_object=cache.meta_slice)
             grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-            progress_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+            progress_hof = pareto.ParetoFrontMeta(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
                                           slice_object=cache.meta_slice)
 
             # Evaluate the individuals with an invalid fitness
@@ -191,10 +191,10 @@ def nsga2(populationSize, ngen, cache, tools):
                 halloffame = pareto.DummyFront()
             else:
                 halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-            meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+            meta_hof = pareto.ParetoFrontMeta(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
                                           slice_object=cache.meta_slice)
             grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-            progress_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+            progress_hof = pareto.ParetoFrontMeta(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
                                           slice_object=cache.meta_slice)
             gradCheck = cache.settings.get('gradCheck', 1.0)
 

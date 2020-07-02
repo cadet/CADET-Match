@@ -27,9 +27,9 @@ def run(cache, tools, creator):
             hof = pareto.DummyFront()
         else:
             hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-        meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
+        meta_hof = pareto.ParetoFrontMeta(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
         grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-        progress_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
+        progress_hof = pareto.ParetoFrontMeta(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache))
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
         stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof, 
@@ -57,7 +57,7 @@ def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_sea
                    csv_line=None)
 
     creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0, 1.0, 1.0, -1.0, -1.0])
-    creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None, csv_line=None)
+    creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None, csv_line=None, best=None)
     cache.toolbox.register("individualMeta", util.initIndividual, creator.IndividualMeta, cache)
 
     cache.toolbox.register("individual", util.generateIndividual, creator.Individual,

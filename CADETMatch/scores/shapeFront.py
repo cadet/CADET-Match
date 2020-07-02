@@ -68,7 +68,7 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     [high, low] = util.find_peak(selectedTimes, exp_data_values_der_smooth)
 
     temp = {}
-    temp['peak'] = high
+    temp['peak'] = util.find_peak(selectedTimes, exp_data_values_smooth)[0]
 
     decay = feature.get('decay', 0)
 

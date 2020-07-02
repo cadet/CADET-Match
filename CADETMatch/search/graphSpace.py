@@ -34,7 +34,7 @@ def run(cache, tools, creator):
         hof = pareto.DummyFront()
     else:
         hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-    meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+    meta_hof = pareto.ParetoFrontMeta(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
                                           slice_object=cache.meta_slice)
     grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
     progress_hof = pareto.DummyFront()
@@ -63,7 +63,7 @@ def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_sea
     creator.create("Individual", array.array, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None)
 
     creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0, 1.0, 1.0, -1.0, -1.0])
-    creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None)
+    creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None, best=None)
     cache.toolbox.register("individualMeta", util.initIndividual, creator.IndividualMeta, cache)
 
     cache.toolbox.register("individual", util.generateIndividual, creator.Individual,

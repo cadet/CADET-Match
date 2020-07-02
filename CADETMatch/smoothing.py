@@ -115,9 +115,7 @@ def find_L(x,y):
     max_d = d[max_idx]
     l_x = x[max_idx]
     l_y = y[max_idx]
-
-    print("max_d", max_d)
-    
+   
     if max_d <= 0:
         return None, None
     
