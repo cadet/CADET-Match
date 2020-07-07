@@ -177,13 +177,15 @@ def synthetic_error_simulation(json_path):
     flows_store = []
     load_store = []
     uv_store = {}
+    uv_store_norm = {}
 
     for experiment in cache.cache.settings['kde_synthetic']:
         delay_settings = experiment['delay']
         flow_settings = experiment['flow']
         load_settings = experiment['load']
         experimental_csv = experiment['experimental_csv']
-        uv_noise = experiment['uv_noise']
+        uv_noise = experiment.get('uv_noise', None)
+        uv_noise_norm = experiment.get('uv_noise_norm', None)
         units = experiment['units']
         name = experiment['name']
 
@@ -211,8 +213,19 @@ def synthetic_error_simulation(json_path):
             unit_name = 'unit_%03d' % unit
             for comp in range(temp.root.input.model[unit_name].ncomp):
                 comp_name = 'solution_outlet_comp_%03d' % comp
-                error_uv = numpy.random.normal(uv_noise[0], uv_noise[1], len(temp.root.input.solver.user_solution_times))
+
+                if uv_noise is None:
+                    error_uv = numpy.zeros(len(temp.root.input.solver.user_solution_times))
+                else:
+                    error_uv = numpy.random.normal(uv_noise[0], uv_noise[1], len(temp.root.input.solver.user_solution_times))
                 uv_store['%s_%s_%s' % (name, unit, comp)] = error_uv
+
+                if uv_noise_norm is None:
+                    error_uv = numpy.ones(len(temp.root.input.solver.user_solution_times))
+                else:
+                    error_uv = numpy.random.normal(uv_noise_norm[0], uv_noise_norm[1], len(temp.root.input.solver.user_solution_times))
+                uv_store_norm['%s_%s_%s' % (name, unit, comp)] = error_uv
+
 
         def post_function(simulation):
             #baseline drift need to redo this
@@ -223,7 +236,8 @@ def synthetic_error_simulation(json_path):
                 for comp in range(simulation.root.input.model[unit_name].ncomp):
                     comp_name = 'solution_outlet_comp_%03d' % comp
                     error_uv = uv_store['%s_%s_%s' % (name, unit, comp)]
-                    simulation.root.output.solution[unit_name][comp_name] = simulation.root.output.solution[unit_name][comp_name] + error_uv
+                    error_norm = uv_store_norm['%s_%s_%s' % (name, unit, comp)]
+                    simulation.root.output.solution[unit_name][comp_name] = simulation.root.output.solution[unit_name][comp_name] * error_norm + error_uv
     
         error_delay = Cadet(temp.root)
 
