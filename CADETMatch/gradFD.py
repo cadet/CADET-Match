@@ -105,7 +105,7 @@ def processOffspring(offspring, temp, csv_lines, meta_csv_lines, gradient_result
 
             ind = cache.toolbox.individual_guess(i.x)
 
-            fit, csv_line, results, individual = cache.toolbox.evaluate(ind, run_experiment=runExperimentSens)
+            fit, csv_line, meta_score, results, individual = cache.toolbox.evaluate(ind, run_experiment=runExperimentSens)
 
             ind.fitness.values = fit
 
@@ -120,10 +120,10 @@ def processOffspring(offspring, temp, csv_lines, meta_csv_lines, gradient_result
             ind.csv_line = [time.ctime(), save_name_base] + csv_line
 
             ind_meta = cache.toolbox.individualMeta(ind)
-            ind_meta.fitness.values = csv_line[-len(ind_meta.fitness.weights):]
+            ind_meta.fitness.values = meta_score
             ind_meta.csv_line = [time.ctime(), save_name_base] + csv_line
 
-            util.update_result_data(cache, ind, fit, result_data, results, csv_line[-len(ind_meta.fitness.weights):])
+            util.update_result_data(cache, ind, fit, result_data, results, meta_score)
 
             if csv_line:
                 csv_lines.append([time.ctime(), save_name_base] + csv_line)
@@ -168,7 +168,7 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
 
     lookup = util.create_lookup(checkOffspring)
 
-    for fit, csv_line, results, individual in temp:
+    for fit, csv_line, meta_score, results, individual in temp:
         ind = util.pop_lookup(lookup, individual)
         temp_area_total = 0.0
         temp_area_overlap = 0.0

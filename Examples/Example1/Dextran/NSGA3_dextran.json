@@ -14,7 +14,7 @@
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
   "generations": 1000,
-  "population": 6,
+  "population": 24,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 30,

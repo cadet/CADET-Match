@@ -69,10 +69,10 @@ def log_likelihood(individual, json_path):
         log_likelihood.kde = kde
         log_likelihood.scaler = kde_scaler
 
-    scores, csv_record, results, individual = evo.fitness(individual, json_path)
+    scores, csv_record, meta_score, results, individual = evo.fitness(individual, json_path)
 
     if results is None:
-        return -numpy.inf, scores, csv_record, results, individual
+        return -numpy.inf, scores, csv_record, meta_score, results, individual
 
     if results is not None and kde_previous is not None:
         logPrevious = log_previous(individual, kde_previous, kde_previous_scaler)
@@ -87,7 +87,7 @@ def log_likelihood(individual, json_path):
 
     score = score_kde + log2 + logPrevious #*2 is from mirroring and we need to double the probability to get back to the normalized distribution
 
-    return score, scores, csv_record, results, individual 
+    return score, scores, csv_record, meta_score, results, individual 
 
 def log_posterior_vectorize(population, json_path, cache, halloffame, meta_hof, grad_hof, progress_hof, result_data, writer, csvfile):
     results = cache.toolbox.map(log_posterior, ( (population[i], json_path) for i in range(len(population))))
@@ -101,11 +101,11 @@ def log_posterior(x):
         util.setupLog(cache.cache.settings['resultsDirLog'], "main.log")
         cache.cache.setup(json_path)
 
-    ll, scores, csv_record, results, individual = log_likelihood(theta, json_path)
+    ll, scores, csv_record, meta_score, results, individual = log_likelihood(theta, json_path)
     if results is None:
         return -numpy.inf, None, None, None, None, individual
     else:
-        return ll, theta, scores, csv_record, results, individual
+        return ll, theta, scores, csv_record, meta_score, results, individual
 
 def addChain(*args):
     temp = [arg for arg in args if arg is not None]
@@ -914,11 +914,11 @@ def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_ho
 
     log_likelihoods_lookup = {}
 
-    for ll, theta, fit, csv_line, result, individual in results:
+    for ll, theta, fit, csv_line, meta_score, result, individual in results:
         log_likelihoods_lookup[tuple(individual)] = float(ll)
         if result is not None:
             parameters = theta
-            fitnesses_lookup[tuple(individual)] = (fit, csv_line, result, tuple(individual))
+            fitnesses_lookup[tuple(individual)] = (fit, csv_line, meta_score, result, tuple(individual))
 
             ind = cache.toolbox.individual_guess(parameters)
             population_lookup[tuple(individual)] = ind

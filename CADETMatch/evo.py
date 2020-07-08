@@ -10,6 +10,7 @@ from cadet import Cadet
 
 import CADETMatch.cache as cache
 import CADETMatch.score_calc as score_calc
+import CADETMatch.progress as progress
 
 ERROR = {'scores': None,
          'path': None,
@@ -23,6 +24,16 @@ def fitness_final(individual, json_path, run_experiment=None):
 
 def fitness(individual, json_path, run_experiment=None):
     return fitness_base(runExperiment, 'simulation', individual, json_path, run_experiment)
+
+def meta_score_trans(cache, score):
+    temp = numpy.copy(score)
+
+    if cache.allScoreSSE:
+        temp[:3] = -temp[:3]
+    else:
+        temp[:3] = 1 - temp[:3]
+
+    return temp
 
 def fitness_base(runner, template_name, individual, json_path, run_experiment):
     if json_path != cache.cache.json_path:
@@ -68,10 +79,10 @@ def fitness_base(runner, template_name, individual, json_path, run_experiment):
     csv_record = []
     csv_record.extend(['EVO', 'NA'])
     csv_record.extend(cadetValuesKEQ)
-    csv_record.extend(scores)
-    csv_record.extend(humanScores)
+    csv_record.extend(progress.score_trans(cache.cache, scores))
+    csv_record.extend(meta_score_trans(cache.cache, humanScores))
       
-    return scores, csv_record, results, tuple(individual)
+    return scores, csv_record, humanScores, results, tuple(individual)
 
 def saveExperiments(save_name_base, settings, target, results):
     return util.saveExperiments(save_name_base, settings, target, results, settings['resultsDirEvo'], '%s_%s_EVO.h5')

@@ -178,7 +178,6 @@ def write_results(cache, result_h5, result_data, gen_data, now, sim_start,
         if cache.debugWrite:
             mcmc_score = result_data.get('mcmc_score', None)
             if mcmc_score is not None:
-                mcmc_score = numpy.array(mcmc_score)
                 hf.create_dataset("mcmc_score", data=mcmc_score, maxshape=(None, len(mcmc_score[0])))
 
         if len(hof_param):
@@ -272,7 +271,6 @@ def update_results(cache, result_h5, result_data, gen_data, now, sim_start,
         if cache.debugWrite:
             mcmc_score = result_data.get('mcmc_score', None)
             if mcmc_score is not None:
-                mcmc_score = numpy.array(mcmc_score)
                 hf["mcmc_score"].resize((hf["mcmc_score"].shape[0] + len(mcmc_score)), axis = 0)
                 hf["mcmc_score"][-len(mcmc_score):] = mcmc_score                    
 
@@ -367,7 +365,7 @@ def numpy_result_data(result_data):
             result_data['times'][key] = numpy.array(value)
 
     if 'mcmc_score' in result_data:
-        result_data['mcmc_score'] = numpy.array(result_data['mcmc_store'])
+        result_data['mcmc_score'] = numpy.array(result_data['mcmc_score'])
 
 def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, progress_halloffame,
                   sim_start, generation_start, result_data=None, line_log=True):

@@ -733,7 +733,7 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
             multiprocessing.get_logger().info("Generation %s approximately %.1f %% complete with %s/%s done", generation, percent*100, idx, len(population))
             last_time = time.time()
 
-        fit, csv_line, results, individual = result
+        fit, csv_line, meta_score, results, individual = result
 
         ind = pop_lookup(lookup, individual)
         
@@ -744,10 +744,10 @@ def process_population(toolbox, cache, population, fitnesses, writer, csvfile, h
 
         ind_meta = toolbox.individualMeta(ind)
 
-        ind_meta.fitness.values = csv_line[-len(ind_meta.fitness.weights):]
+        ind_meta.fitness.values = meta_score
         ind_meta.csv_line = [time.ctime(), save_name_base] + csv_line
        
-        update_result_data(cache, ind, fit, result_data, results, csv_line[-len(ind_meta.fitness.weights):])
+        update_result_data(cache, ind, fit, result_data, results, meta_score)
 
         if csv_line:
             csv_lines.append([time.ctime(), save_name_base] + csv_line)
