@@ -1,4 +1,5 @@
 import CADETMatch.util as util
+import CADETMatch.progress as progress
 import CADETMatch.pareto as pareto
 import csv
 from pathlib import Path
@@ -34,7 +35,7 @@ def run(cache, tools, creator):
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
         stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, hof, meta_hof, 
                                                                 progress_hof, -1, result_data)
-        util.writeProgress(cache, -1, pop, hof, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
+        progress.writeProgress(cache, -1, pop, hof, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
 
         if cache.settings.get('condTest' , None):
             for ind in invalid_ind:
@@ -44,7 +45,7 @@ def run(cache, tools, creator):
         population = [cache.toolbox.individual_guess(i) for i in meta_hof]
         stalled, stallWarn, progressWarn = util.eval_population_final(cache.toolbox, cache, population, writer, csvfile, hof, meta_hof, 
                                                                       progress_hof, 0, result_data)
-        util.writeProgress(cache, 0, population, hof, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
+        progress.writeProgress(cache, 0, population, hof, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
         
         util.finish(cache)
         util.graph_corner_process(cache, last=True)

@@ -3,6 +3,7 @@ import pickle
 import random
 import numpy
 import CADETMatch.util as util
+import CADETMatch.progress as progress
 from deap import algorithms
 import time
 import csv
@@ -67,7 +68,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 stalled, stallWarn, progressWarn = util.eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
                                                                         progress_hof, -1, result_data)
 
-                util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
+                progress.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
                 util.graph_process(cache, "First")
                 util.graph_corner_process(cache, last=False)
 
@@ -97,7 +98,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             # Select the next generation population
             population[:] = toolbox.select(offspring + population, mu)
 
-            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
+            progress.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
             util.graph_process(cache, gen)
             util.graph_corner_process(cache, last=False)
 
@@ -131,13 +132,13 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, best_individuals, cache, writer, csvfile, 
                                                                grad_hof, meta_hof, gen, check_all=True, result_data=result_data)
             if newChildren:
-                util.writeProgress(cache, gen, newChildren, halloffame, meta_hof, grad_hof, progress_hof,
+                progress.writeProgress(cache, gen, newChildren, halloffame, meta_hof, grad_hof, progress_hof,
                                    sim_start, generation_start, result_data)
 
         population = [cache.toolbox.individual_guess(i) for i in meta_hof]
         stalled, stallWarn, progressWarn = util.eval_population_final(cache.toolbox, cache, population, writer, csvfile, halloffame, meta_hof, 
                                                                       progress_hof, gen+1, result_data)
-        util.writeProgress(cache, gen+1, population, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
+        progress.writeProgress(cache, gen+1, population, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
 
         util.finish(cache)
         util.graph_corner_process(cache, last=True)
@@ -207,7 +208,7 @@ def nsga2(populationSize, ngen, cache, tools):
             stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, 
                                                                     progress_hof, -1, result_data)
             
-            util.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
+            progress.writeProgress(cache, -1, population, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
             util.graph_process(cache, "First")
             util.graph_corner_process(cache, last=False)
         
@@ -247,7 +248,7 @@ def nsga2(populationSize, ngen, cache, tools):
             gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
             offspring.extend(newChildren)
 
-            util.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
+            progress.writeProgress(cache, gen, offspring, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
             util.graph_process(cache, gen)
             util.graph_corner_process(cache, last=False)
 

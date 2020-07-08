@@ -3,6 +3,7 @@ import random
 from pathlib import Path
 import csv
 import CADETMatch.pareto as pareto
+import CADETMatch.progress as progress
 import multiprocessing
 import time
 import array
@@ -50,7 +51,7 @@ def run(cache, tools, creator):
         stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, pop, writer, csvfile, hof, meta_hof, 
                                                                 None, -1, result_data)
 
-        util.writeProgress(cache, -1, pop, hof, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
+        progress.writeProgress(cache, -1, pop, hof, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
         
         util.finish(cache)
         util.graph_corner_process(cache, last=True)

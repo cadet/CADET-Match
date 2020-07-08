@@ -1,4 +1,5 @@
 import CADETMatch.util as util
+import CADETMatch.progress as progress
 import random
 from pathlib import Path
 import csv
@@ -48,7 +49,7 @@ def run(cache, tools, creator):
         stalled, stallWarn, progressWarn = util.eval_population(cache.toolbox, cache, newChildren, writer, csvfile, hof, meta_hof, 
                                                                 None, -1, result_data)
 
-        util.writeProgress(cache, -1, newChildren, hof, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
+        progress.writeProgress(cache, -1, newChildren, hof, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
         
         util.finish(cache)
         util.graph_corner_process(cache, last=True)

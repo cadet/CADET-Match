@@ -346,3 +346,4 @@ __pycache__/
 /CADETMatch.egg-info
 /Examples/Example1/Dextran/fit_nsga3_shape_single_stat
 /Examples/MCMC/Dextran/nsga3_nodelay
+/Examples/Example1/Dextran/fit_nsga3_shape_single_6

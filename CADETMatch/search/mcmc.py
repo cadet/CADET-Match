@@ -1,6 +1,7 @@
 import random
 import pickle
 import CADETMatch.util as util
+import CADETMatch.progress as progress
 import numpy
 import numpy as np
 import scipy
@@ -934,7 +935,7 @@ def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_ho
                                                           fitnesses, writer, csv_file, 
                                                           halloffame, meta_hof, progress_hof, process.gen, result_data)
 
-    util.writeProgress(cache, process.gen, population, halloffame, meta_hof, grad_hof, progress_hof,
+    progress.writeProgress(cache, process.gen, population, halloffame, meta_hof, grad_hof, progress_hof,
                        process.sim_start, process.generation_start, result_data, line_log=False)
 
     util.graph_process(cache, process.gen)
