@@ -45,7 +45,7 @@ import shutil
 log2 = numpy.log(2)
 
 acceptance_target = 0.234
-acceptance_delta = 0.1
+acceptance_delta = 0.15
 
 def log_previous(cadetValues, kde_previous, kde_previous_scaler):
     #find the right values to use
