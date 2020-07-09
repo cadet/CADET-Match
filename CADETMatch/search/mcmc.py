@@ -936,7 +936,7 @@ def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_ho
                                                           halloffame, meta_hof, progress_hof, process.gen, result_data)
 
     progress.writeProgress(cache, process.gen, population, halloffame, meta_hof, grad_hof, progress_hof,
-                       process.sim_start, process.generation_start, result_data, line_log=False)
+                       process.sim_start, process.generation_start, result_data, line_log=False, probability=numpy.exp(log_likelihoods))
 
     util.graph_process(cache, process.gen)
 

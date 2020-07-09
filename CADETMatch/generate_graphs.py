@@ -393,14 +393,16 @@ def graphSpace(fullGeneration, cache, map_function):
 
     output_2d = cache.settings['resultsDirSpace'] / "2d"
     output_3d = cache.settings['resultsDirSpace'] / "3d"
+    output_prob = cache.settings['resultsDirSpace'] / "probability"
 
     output_2d.mkdir(parents=True, exist_ok=True)
     output_3d.mkdir(parents=True, exist_ok=True)
+    output_prob.mkdir(parents=True, exist_ok=True)
     
     results = H5()
     results.filename = progress_path.as_posix()
 
-    results.load(paths=['/output', '/output_meta', '/is_extended_input'])
+    results.load(paths=['/output', '/output_meta', '/is_extended_input', '/probability'])
 
     if results.root.is_extended_input:
         results.load(paths=['/input_transform_extended'], update=True)
@@ -408,6 +410,13 @@ def graphSpace(fullGeneration, cache, map_function):
     else:
         results.load(paths=['/input_transform'], update=True)
         input = results.root.input_transform
+
+    if isinstance(results.root.probability, Dict):
+        probability = None        
+    else:
+        probability = numpy.squeeze(results.root.probability)
+        probability_idx = numpy.max(probability)/probability < 1e5
+        probability = probability[probability_idx]
 
     output = results.root.output
     output_meta = results.root.output_meta
@@ -434,6 +443,12 @@ def graphSpace(fullGeneration, cache, map_function):
 
         for (x,), y in itertools.product(comp_one, meta_indexes):
             seq.append( [output_2d.as_posix(), input_headers[x], meta_headers[y], input[:,x], output_meta[:,y]] )
+
+
+        if probability is not None:
+            for (x,) in comp_one:
+                seq.append( [output_prob.as_posix(), input_headers[x], "probability", input[probability_idx,x], probability] )
+
         list(map_function(plot_2d, seq))
         multiprocessing.get_logger().info("ending 2d space graphs")
 
@@ -509,8 +524,10 @@ def plot_2d_single(directory_path, header_x, scoreName, data, scores):
         format = 'log10(%s)'
 
     format_scores = '%s'
-    if numpy.max(scores)/numpy.min(scores) > 100.0:
-        scores = numpy.log10(scores)
+    if numpy.max(scores)/numpy.min(scores[scores>0]) > 100.0:
+        keep = scores > 0
+        scores = numpy.log10(scores[keep])
+        data = data[keep]
         format_scores = 'log10(%s)'
 
     data_norm = (data - numpy.min(data))/(numpy.max(data) - numpy.min(data))

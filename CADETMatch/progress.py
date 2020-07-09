@@ -132,7 +132,8 @@ def write_results(cache, result_h5, result_data, gen_data, now, sim_start,
                   population_input, population_output,
                   data, hof_param, hof_param_transform,
                   data_meta, meta_param, meta_param_transform,
-                  data_grad, grad_param, grad_param_transform):
+                  data_grad, grad_param, grad_param_transform,
+                  probability):
      with h5py.File(result_h5, 'w') as hf:
         hf.create_dataset("input", data=result_data['input'], maxshape=(None, len(result_data['input'][0])))
 
@@ -174,6 +175,9 @@ def write_results(cache, result_h5, result_data, gen_data, now, sim_start,
 
         if population_output is not None:
             hf.create_dataset("population_output", data=population_output, maxshape=(None, population_output.shape[1] ))
+
+        if probability is not None:
+            hf.create_dataset("probability", data=probability, maxshape=(None, 1 ))
 
         if cache.debugWrite:
             mcmc_score = result_data.get('mcmc_score', None)
@@ -230,7 +234,8 @@ def update_results(cache, result_h5, result_data, gen_data, now, sim_start,
                   population_input, population_output,
                   data, hof_param, hof_param_transform,
                   data_meta, meta_param, meta_param_transform,
-                  data_grad, grad_param, grad_param_transform):
+                  data_grad, grad_param, grad_param_transform,
+                  probability):
     
     with h5py.File(result_h5, 'a') as hf:
         hf["input"].resize((hf["input"].shape[0] + len(result_data['input'])), axis = 0)
@@ -267,6 +272,10 @@ def update_results(cache, result_h5, result_data, gen_data, now, sim_start,
         if population_output is not None:
             hf["population_output"].resize((hf["population_output"].shape[0] + population_output.shape[0]), axis = 0)
             hf["population_output"][-population_output.shape[0]:] = population_output
+
+        if probability is not None:
+            hf["probability"].resize((hf["probability"].shape[0] + probability.shape[0]), axis = 0)
+            hf["probability"][-probability.shape[0]:] = probability
 
         if cache.debugWrite:
             mcmc_score = result_data.get('mcmc_score', None)
@@ -368,7 +377,7 @@ def numpy_result_data(result_data):
         result_data['mcmc_score'] = numpy.array(result_data['mcmc_score'])
 
 def writeProgress(cache, generation, population, halloffame, meta_halloffame, grad_halloffame, progress_halloffame,
-                  sim_start, generation_start, result_data=None, line_log=True):
+                  sim_start, generation_start, result_data=None, line_log=True, probability=None):
     cpu_time = psutil.Process().cpu_times()
     now = time.time()
 
@@ -382,6 +391,9 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
 
     gen_data = numpy.array([generation, len(result_data['input'])]).reshape(1,2)
 
+    if probability is not None:
+        probability = probability.reshape(-1,1)
+
     population_input, population_output = get_population_information(cache, population, generation)
 
     if result_data is not None:
@@ -393,13 +405,15 @@ def writeProgress(cache, generation, population, halloffame, meta_halloffame, gr
                   population_input, population_output,
                   data, hof_param, hof_param_transform,
                   data_meta, meta_param, meta_param_transform,
-                  data_grad, grad_param, grad_param_transform)
+                  data_grad, grad_param, grad_param_transform,
+                  probability)
         else:
             update_results(cache, result_h5, result_data, gen_data, now, sim_start,
                   population_input, population_output,
                   data, hof_param, hof_param_transform,
                   data_meta, meta_param, meta_param_transform,
-                  data_grad, grad_param, grad_param_transform)
+                  data_grad, grad_param, grad_param_transform,
+                  probability)
 
         clear_result_data(result_data)
 
