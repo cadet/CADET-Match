@@ -1,7 +1,7 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET/VCPKG_4_single/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
-  "resultsDir": "nsga3_nodelay",
+  "resultsDir": "nsga3_nodelay2",
   "tempDir": "L:/",
   "CSV": "dextran_MCMC.csv",
     "checkpointFile": "check",
