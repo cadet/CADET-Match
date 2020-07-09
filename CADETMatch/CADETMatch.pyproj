@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>0067cb6f-0de6-4dd6-8086-20ea899a691d</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>match.py</StartupFile>
+    <StartupFile>generate_graphs.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>..</WorkingDirectory>
@@ -14,7 +14,7 @@
     <IsWindowsApplication>False</IsWindowsApplication>
     <InterpreterId>CondaEnv|CondaEnv|cadet_devel</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\MCMC\Dextran\nsga3_nodelay\mcmc_refine\MCMC_dextran_nsga3.json" 6</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\MCMC\Dextran\nsga3_nodelay\mcmc_refine\MCMC_dextran_nsga3.json" 6 2</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>

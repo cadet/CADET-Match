@@ -454,23 +454,33 @@ def plot_3d(arg):
     "This leaks memory and is run in a separate short-lived process, do not integrate into the matching main process"
     directory_path, header1, header2, header3, data1, data2, scores = arg
     directory = Path(directory_path)
-
-    scoreName = header3
-    if scoreName == 'SSE':
-        scores = -numpy.log10(scores)
-        scoreName = '-log10(%s)' % scoreName
     
+    x_str = '%s'
     x = data1
-    y = data2
+    if max(x)/min(x) > 100:
+        x_str = 'log10(%s)'
+        x = numpy.log10(x)
 
-    fig = figure.Figure()
+    y_str = '%s'
+    y = data2
+    if max(y)/min(y) > 100:
+        y_str = 'log10(%s)'
+        y = numpy.log10(y)
+
+    z_str = '%s'
+    z = scores
+    if max(z)/min(z) > 100:
+        z_str = 'log10(%s)'
+        z = numpy.log10(z)
+
+    fig = figure.Figure(figsize=[20,20])
     canvas = FigureCanvas(fig)
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(numpy.log10(x), numpy.log10(y), scores, c=scores, cmap=my_cmap)
-    ax.set_xlabel('log10(%s)' % header1)
-    ax.set_ylabel('log10(%s)' % header2)
-    ax.set_zlabel(scoreName)
-    filename = "%s_%s_%s.png" % (header1, header2, scoreName)
+    ax.scatter(x,y,z, c=z, cmap=my_cmap)
+    ax.set_xlabel(x_str % header1)
+    ax.set_ylabel(y_str % header2)
+    ax.set_zlabel(z_str % header3)
+    filename = "%s_%s_%s.png" % (header1, header2, header3)
     filename = filename.replace(':', '_').replace('/', '_')
     fig.savefig(str(directory / filename))
     
@@ -481,24 +491,11 @@ def plot_2d(arg):
 
     plot_2d_single(directory_path, header_x, scoreName, data, scores)
 
-    plot_2d_single(directory_path, header_x, '1- ' + scoreName, data, 1-scores)
-
     multiprocessing.get_logger().info("2d graph %s %s stop" % (header_x, scoreName))
     
 
 def plot_2d_single(directory_path, header_x, scoreName, data, scores):
     directory = Path(directory_path)
-
-    if numpy.all(scores <= 0):
-        scores = numpy.abs(scores)
-
-    #score_scale = numpy.max(scores)/numpy.min(scores)
-
-    if  scoreName.startswith('1-'):
-        keep = scores > 0
-        scores = numpy.log10(scores[keep])
-        data = data[keep]
-        scoreName = 'log10(%s)' % scoreName
 
     fig = figure.Figure(figsize=[10,10])
     canvas = FigureCanvas(fig)
@@ -511,6 +508,11 @@ def plot_2d_single(directory_path, header_x, scoreName, data, scores):
         scores = scores[keep]
         format = 'log10(%s)'
 
+    format_scores = '%s'
+    if numpy.max(scores)/numpy.min(scores) > 100.0:
+        scores = numpy.log10(scores)
+        format_scores = 'log10(%s)'
+
     data_norm = (data - numpy.min(data))/(numpy.max(data) - numpy.min(data))
     scores_norm = (scores - numpy.min(scores))/(numpy.max(scores) - numpy.min(scores))
     scatter_data = numpy.array([data_norm,scores_norm]).T
@@ -522,7 +524,7 @@ def plot_2d_single(directory_path, header_x, scoreName, data, scores):
     graph.scatter(data[idx], scores[idx], c=scores[idx], s=counts_norm, cmap=cmap)
 
     graph.set_xlabel(format % header_x)
-    graph.set_ylabel(scoreName)
+    graph.set_ylabel(format_scores % scoreName)
     graph.set_xlim(min(data), max(data), auto=True)
     filename = "%s_%s.png" % (header_x, scoreName)
     filename = filename.replace(':', '_').replace('/', '_')
@@ -539,7 +541,7 @@ def graphProgress(cache, map_function):
     output = cache.settings['resultsDirProgress']
 
     x = ['Generation',]
-    y = ['Meta Front', 'Meta Min', 'Meta Product', 'Meta Mean', 'Meta SSE']
+    y = ['Meta Front', 'Meta Min', 'Meta Product', 'Meta Mean', 'Meta SSE', 'Meta RMSE']
 
     temp = []
     for x,y in itertools.product(x,y):
@@ -559,35 +561,27 @@ def singleGraphProgress(arg):
 
     graph = fig.add_subplot(1, 1, 1)
 
-    graph.plot(df[i],df[j])
-    a = max(df[j])
-    graph.set_ylim((0,1.1*max(df[j])))
-    graph.set_title('%s vs %s' % (i,j))
+    x = df[i].to_numpy()
+    y = df[j].to_numpy()
+
+    title_str = '%s vs %s'
+    y_label = '%s'
+    if numpy.max(y)/numpy.min(y) > 100.0:
+        y = numpy.log10(y)
+        title_str = '%s vs log10(%s)'
+        y_label = 'log10(%s)'
+
+    graph.plot(x,y)
+    y_max = max(y)
+    y_min = min(y)
+    graph.set_ylim((1.1*y_min,1.1*y_max))
+    graph.set_title(title_str % (i,j))
     graph.set_xlabel(i)
-    graph.set_ylabel(j)
+    graph.set_ylabel(y_label % j)
 
     filename = "%s vs %s.png" % (i,j)
     file_path = output / filename
     fig.savefig(str(file_path))
-
-
-
-    fig = figure.Figure(figsize=(10,10))
-    canvas = FigureCanvas(fig)
-
-    graph = fig.add_subplot(1, 1, 1)
-
-    graph.plot(df[i],numpy.log10(1-df[j]))
-    a = max(df[j])
-    #graph.set_ylim((0,1.1*max(df[j])))
-    graph.set_title('%s vs log10(1-%s)' % (i,j))
-    graph.set_xlabel(i)
-    graph.set_ylabel('log10(1-%s)' % j)
-
-    filename = "%s vs log10(1-%s).png" % (i,j)
-    file_path = output / filename
-    fig.savefig(str(file_path))
-
 
 def get_times_values(simulation, target, selected = None):
 

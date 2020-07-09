@@ -210,7 +210,7 @@ def process_mle(chain, gen, cache):
     fitnesses = list(map_function(fitness, temp))
 
     simulations = {}
-    for scores, csv_record, results, individual in fitnesses:
+    for scores, csv_record, meta_score, results, individual in fitnesses:
         for name, value in results.items():
             sims = simulations.get(name, [])
             sims.append(value['simulation'])
