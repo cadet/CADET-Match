@@ -106,8 +106,9 @@ def run(sim_data, feature):
         scores.append(time_score)
         scores.append(value_score)
 
-        graph_sim[component] = list(zip(time_center[selected], fracOffset))
-        graph_exp[component] = list(zip(time_center[selected], exp_values[selected]))
+        graph_sim[component] = list(zip(start[selected], stop[selected], fracOffset))
+        graph_exp[component] = list(zip(start[selected], stop[selected], exp_values[selected]))
+
         graph_sim_offset[component] = time_offset
 
     sim_data['graph_exp'] = graph_exp

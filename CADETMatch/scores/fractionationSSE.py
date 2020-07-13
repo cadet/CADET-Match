@@ -47,8 +47,8 @@ def run(sim_data, feature):
         exp_values_sse.extend(exp_values[selected])
         sim_values_sse.extend(fractions)
 
-        graph_sim[component] = list(zip(time_center[selected], fractions))
-        graph_exp[component] = list(zip(time_center[selected], exp_values[selected]))
+        graph_sim[component] = list(zip(start[selected], stop[selected], fractions))
+        graph_exp[component] = list(zip(start[selected], stop[selected], exp_values[selected]))
 
     #sort lists
     for key, value in graph_sim.items():

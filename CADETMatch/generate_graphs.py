@@ -243,6 +243,16 @@ def graph_simulation_unit(simulation, unit, graph):
         lines, labels = graph.get_legend_handles_labels()
         graph.legend(lines, labels, loc=0)
 
+def convert_frac(start, stop, values):
+    x = []
+    y = []
+    for xl, xu, val in zip(start, stop,values):
+        x.append(xl)
+        y.append(val)
+        x.append(xu)
+        y.append(val)
+    return x,y
+
 def plotExperiments(args):
     save_name_base, json_path, directory, file_pattern = args
     if json_path != cache.json_path:
@@ -341,13 +351,13 @@ def plotExperiments(args):
                 findMax = 0
                 max_comp = {}
                 for idx, (key, value) in enumerate(graph_sim.items()):
-                    (time, values) = zip(*value)
+                    (time_start, time_stop, values) = zip(*value)
                     max_value = max(values)
                     findMax = max(findMax, max_value)
                     max_comp[key] = max_value
 
                 for idx, (key, value) in enumerate(graph_exp.items()):
-                    (time, values) = zip(*value)
+                    (time_start, time_stop, values) = zip(*value)
                     max_value = max(values)
                     findMax = max(findMax, max_value)
                     max_comp[key] = max(max_comp[key], max_value)
@@ -355,7 +365,7 @@ def plotExperiments(args):
                 graph = fig.add_subplot(numPlots, 1, graphIdx) #additional +1 added due to the overview plot
                 factors = []
                 for idx, (key, value) in enumerate(graph_sim.items()):
-                    (time, values) = zip(*value)
+                    (time_start, time_stop, values) = zip(*value)
                     values = numpy.array(values)
                     mult = 1.0
                     if max(values) < (.2 * findMax):
@@ -374,14 +384,19 @@ def plotExperiments(args):
 
                     label = 'Simulation Comp: %s Mult:%.2f %s' % (key, mult, time_str)
 
-                    graph.plot(time, values, '--', color=get_color(idx, len(graph_sim), cm_plot), label=label)
+                    x, y = convert_frac(time_start, time_stop, values)
+                    
+                    graph.plot(x, y, '--', color=get_color(idx, len(graph_sim), cm_plot), label=label)
 
                 for idx, (key, value) in enumerate(graph_exp.items()):
-                    (time, values) = zip(*value)
+                    (time_start, time_stop, values) = zip(*value)
                     values = numpy.array(values)
                     mult = factors[idx]
                     values = values * mult
-                    graph.plot(time, values, ':', color=get_color(idx, len(graph_sim), cm_plot), label='Experiment Comp: %s Mult:%.2f' % (key, mult))
+
+                    x, y = convert_frac(time_start, time_stop, values)
+
+                    graph.plot(x, y, ':', color=get_color(idx, len(graph_sim), cm_plot), label='Experiment Comp: %s Mult:%.2f' % (key, mult))
                 graphIdx += 1
             graph.legend()
         fig.set_size_inches((24,12*numPlots))
