@@ -70,14 +70,9 @@ def get_best(cache, data_meta):
         best_sse = numpy.min(data_meta[:, 3])
         best_rmse = numpy.min(data_meta[:, 4])
 
-        if cache.allScoreSSE:
-            best_product = -best_product
-            best_min = -best_min
-            best_mean = -best_mean
-        else:
-            best_product = 1 - best_product
-            best_min = 1 - best_min
-            best_mean = 1 - best_mean
+        score = (best_product, best_min, best_mean, best_sse, best_rmse)
+
+        (best_product, best_min, best_mean, best_sse, best_rmse) = util.translate_meta_min(score, cache)
 
         return best_product, best_min, best_mean, best_sse, best_rmse
     else:

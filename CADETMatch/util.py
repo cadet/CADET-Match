@@ -1334,3 +1334,12 @@ def fractionate_sim(start_times, stop_times, components, simulation, unit):
         fracs[component] = fractionate(start_times, stop_times, times, sim_value)
 
     return fracs
+
+def translate_meta_min(score, cache):
+    temp = numpy.array(score)
+    if cache.allScoreSSE:
+        temp[:3] = -temp[:3]
+    else:
+        temp[:3] = 1 - temp[:3]
+
+    return temp

@@ -51,6 +51,17 @@ def setupTemplates(cache):
             simulationGrad.root.input.solver.time_integrator.reltol,
         )
 
+def grad_score(values, cache):
+    values = numpy.array(values)
+
+    if cache.allScoreSSE:
+        values = -values
+
+    prod = scipy.stats.gmean(values)
+
+    if not cache.allScoreSSE:
+        prod = 1 - prod
+    return prod
 
 def search(
     gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, generation, check_all=False, result_data=None, filterOverlap=True
@@ -58,7 +69,7 @@ def search(
     if check_all:
         checkOffspring = offspring
     else:
-        checkOffspring = (ind for ind in offspring if util.product_score(ind.fitness.values) > gradCheck)
+        checkOffspring = (ind for ind in offspring if grad_score(ind.fitness.values, cache) <= gradCheck)
     if filterOverlap:
         checkOffspring = filterOverlapArea(cache, checkOffspring)
     newOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad, map(tuple, checkOffspring))
@@ -85,8 +96,14 @@ def search(
 
     if temp:
         best = meta_hof.getBestScores()
-        if 0.9 * best[0] > gradCheck:
-            gradCheck = 0.9 * best[0]
+        prod = best[0]
+        if cache.allScoreSSE:
+            prod = -prod
+        else:
+            prod = 1 - prod
+        if prod < gradCheck:
+            gradCheck = prod
+            multiprocessing.get_logger().info("updating gradCheck %s", gradCheck)
 
     writer.writerows(csv_lines)
 

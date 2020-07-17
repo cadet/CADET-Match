@@ -13,6 +13,15 @@ import multiprocessing
 stallRate = 1.25
 progressRate = 0.75
 
+def stop_iteration(best, stalled, cache):
+    best = util.translate_meta_min(best, cache)
+    stopAverage = cache.settings.get("stopAverage", 0.0)
+    stopBest = cache.settings.get("stopBest", 0.0)
+    stopRMSE = cache.settings.get("stopRMSE", 0.0)
+    if best[2] <= stopAverage or best[1] <= stopBest or stalled or best[-1] <= stopRMSE:
+        return True
+    else:
+        return False
 
 def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings, stats=None, verbose=__debug__, tools=None, cache=None):
     """from DEAP function but with checkpoiting"""
@@ -156,7 +165,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 
             best = meta_hof.getBestScores()
 
-            if best[2] >= settings.get("stopAverage", 1.0) or best[1] >= settings.get("stopBest", 1.0) or stalled:
+            if stop_iteration(best, stalled, cache):
                 break
 
         if cache.finalGradRefinement:
@@ -376,10 +385,11 @@ def nsga2(populationSize, ngen, cache, tools):
 
             best = meta_hof.getBestScores()
 
-            if best[2] >= cache.settings.get("stopAverage", 1.0) or best[1] >= cache.settings.get("stopBest", 1.0) or stalled:
+            if stop_iteration(best, stalled, cache):
                 util.finish(cache)
                 util.graph_corner_process(cache, last=True)
                 return halloffame
+                
         util.finish(cache)
         util.graph_corner_process(cache, last=True)
         return halloffame
