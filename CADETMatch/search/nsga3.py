@@ -102,7 +102,7 @@ def find_ref_point_setup(ndim, max_size):
     S = [1/2.0**n for n in range(len(P))]
     return P, S
 
-def generate_reference_points(ndim, max_size=100):
+def generate_reference_points(ndim, max_size=1000):
     P, SCALES = find_ref_point_setup(ndim, max_size)
     ref_points = [tools.uniform_reference_points(ndim, p, s) for p, s in zip(P, SCALES)]
     ref_points = numpy.concatenate(ref_points, axis=0)

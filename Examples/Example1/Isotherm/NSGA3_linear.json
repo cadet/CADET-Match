@@ -21,6 +21,7 @@
   "continueMCMC":0,
   "graphMetaTime": 600,
   "finalGradRefinement": 1,
+  "dynamicTolerance": 1,
 	"parameters": [
 		{
 			"transform": "keq",
@@ -42,7 +43,6 @@
 			"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
 			"HDF5": "linear_pulse.h5",
 			"name": "main",
-			"timeout": 3.785061836242676,
 			"features": [
 				{
 					"name": "Pulse",
