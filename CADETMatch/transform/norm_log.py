@@ -2,6 +2,7 @@ import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
 import numpy
 
+
 class LogTransform(AbstractTransform):
     @property
     def name(self):
@@ -19,12 +20,16 @@ class LogTransform(AbstractTransform):
         def trans(i):
             return numpy.log(i)
 
-        return [trans,]
+        return [
+            trans,
+        ]
 
     grad_transform = transform
 
     def untransform(self, seq):
-        values = [numpy.exp(seq[0]),]
+        values = [
+            numpy.exp(seq[0]),
+        ]
         headerValues = values
         return values, headerValues
 
@@ -40,15 +45,15 @@ class LogTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get('experiments', None) is None or experiment['name'] in self.parameter['experiments']:
-            location = self.parameter['location']
-    
+        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+            location = self.parameter["location"]
+
             try:
-                comp = self.parameter['component']
-                bound = self.parameter['bound']
+                comp = self.parameter["component"]
+                bound = self.parameter["bound"]
                 index = None
             except KeyError:
-                index = self.parameter['index']
+                index = self.parameter["index"]
                 bound = None
 
             if bound is not None:
@@ -67,26 +72,26 @@ class LogTransform(AbstractTransform):
         return values, headerValues
 
     def getBounds(self):
-        minValue = numpy.log(self.parameter['min'])
-        maxValue = numpy.log(self.parameter['max'])
+        minValue = numpy.log(self.parameter["min"])
+        maxValue = numpy.log(self.parameter["max"])
 
         return [minValue,], [maxValue,]
 
     def getGradBounds(self):
-        return [self.parameter['min'],], [self.parameter['max'],]
+        return [self.parameter["min"],], [self.parameter["max"],]
 
     def getHeaders(self):
-        location = self.parameter['location']
+        location = self.parameter["location"]
 
         try:
-            comp = self.parameter['component']
+            comp = self.parameter["component"]
         except KeyError:
-            comp = 'None'
+            comp = "None"
 
-        name = location.rsplit('/', 1)[-1]
-        bound = self.parameter.get('bound', None)
-        index = self.parameter.get('index', None)
-    
+        name = location.rsplit("/", 1)[-1]
+        bound = self.parameter.get("bound", None)
+        index = self.parameter.get("index", None)
+
         headers = []
         if bound is not None:
             headers.append("%s Comp:%s Bound:%s" % (name, comp, bound))
@@ -98,8 +103,9 @@ class LogTransform(AbstractTransform):
         return self.getHeaders()
 
     def setBounds(self, parameter, lb, ub):
-        parameter['min'] = lb[0]
-        parameter['max'] = ub[0]
+        parameter["min"] = lb[0]
+        parameter["max"] = ub[0]
+
 
 class NormLogTransform(LogTransform):
     @property
@@ -107,23 +113,29 @@ class NormLogTransform(LogTransform):
         return "norm_log"
 
     def transform(self):
-        minValue = numpy.log(self.parameter['min'])
-        maxValue = numpy.log(self.parameter['max'])
+        minValue = numpy.log(self.parameter["min"])
+        maxValue = numpy.log(self.parameter["max"])
 
         def trans(i):
-            return (numpy.log(i) - minValue)/(maxValue-minValue)
+            return (numpy.log(i) - minValue) / (maxValue - minValue)
 
-        return [trans,]
+        return [
+            trans,
+        ]
 
     grad_transform = transform
 
     def untransform(self, seq):
-        minValue = numpy.log(self.parameter['min'])
-        maxValue = numpy.log(self.parameter['max'])
+        minValue = numpy.log(self.parameter["min"])
+        maxValue = numpy.log(self.parameter["max"])
 
-        values = [(maxValue - minValue) * seq[0] + minValue,]
+        values = [
+            (maxValue - minValue) * seq[0] + minValue,
+        ]
 
-        values = [numpy.exp(values[0]),]
+        values = [
+            numpy.exp(values[0]),
+        ]
         headerValues = values
         return values, headerValues
 
@@ -131,8 +143,8 @@ class NormLogTransform(LogTransform):
         return self.untransform(seq, self.cache, self.parameter)[0]
 
     def untransform_matrix(self, matrix):
-        minValue = numpy.log(self.parameter['min'])
-        maxValue = numpy.log(self.parameter['max'])
+        minValue = numpy.log(self.parameter["min"])
+        maxValue = numpy.log(self.parameter["max"])
 
         temp = (maxValue - minValue) * matrix + minValue
 
@@ -146,6 +158,7 @@ class NormLogTransform(LogTransform):
         return [0.0,], [1.0,]
 
     def getGradBounds(self):
-        return [self.parameter['min'],], [self.parameter['max'],]
+        return [self.parameter["min"],], [self.parameter["max"],]
+
 
 plugins = {"norm_log": NormLogTransform, "log": LogTransform}

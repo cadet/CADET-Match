@@ -11,6 +11,7 @@ this is not an appropriate method to solve fractionation problems.
 
 name = "fractionationSSE"
 
+
 def get_settings(feature):
     settings = Dict()
     settings.adaptive = False
@@ -19,28 +20,29 @@ def get_settings(feature):
     settings.count = 1
     return settings
 
+
 def run(sim_data, feature):
     "similarity, value, start stop"
-    simulation = sim_data['simulation']
-    start = feature['start']
-    stop = feature['stop']
-    comps = feature['comps']
-    data = feature['data']
+    simulation = sim_data["simulation"]
+    start = feature["start"]
+    stop = feature["stop"]
+    comps = feature["comps"]
+    data = feature["data"]
 
-    time_center = (start + stop)/2.0
+    time_center = (start + stop) / 2.0
 
     times = simulation.root.output.solution.solution_times
 
     sim_values_sse = []
     exp_values_sse = []
-   
+
     graph_sim = {}
     graph_exp = {}
 
-    for component  in comps:
+    for component in comps:
         exp_values = numpy.array(data[str(component)])
         selected = numpy.isfinite(exp_values)
-        sim_value = simulation.root.output.solution[feature['unit']]["solution_outlet_comp_%03d" % component]
+        sim_value = simulation.root.output.solution[feature["unit"]]["solution_outlet_comp_%03d" % component]
 
         fractions = util.fractionate(start[selected], stop[selected], times, sim_value)
 
@@ -50,29 +52,30 @@ def run(sim_data, feature):
         graph_sim[component] = list(zip(start[selected], stop[selected], fractions))
         graph_exp[component] = list(zip(start[selected], stop[selected], exp_values[selected]))
 
-    #sort lists
+    # sort lists
     for key, value in graph_sim.items():
         value.sort()
     for key, value in graph_exp.items():
         value.sort()
 
-    sim_data['graph_exp'] = graph_exp
-    sim_data['graph_sim'] = graph_sim
+    sim_data["graph_exp"] = graph_exp
+    sim_data["graph_sim"] = graph_sim
 
     sse = util.sse(numpy.array(sim_values_sse), numpy.array(exp_values_sse))
 
     return [-sse,], sse, len(sim_values_sse), time_center, numpy.array(sim_values_sse), numpy.array(exp_values_sse), [sse,]
 
+
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
-    data = pandas.read_csv(feature['fraction_csv'])
+    data = pandas.read_csv(feature["fraction_csv"])
 
-    temp['comps'] = [int(i) for i in data.columns.values.tolist()[2:]]
+    temp["comps"] = [int(i) for i in data.columns.values.tolist()[2:]]
 
-    temp['data'] = data
-    temp['start'] = numpy.array(data.iloc[:, 0])
-    temp['stop'] = numpy.array(data.iloc[:, 1])
-    temp['unit'] = feature['unit_name']
+    temp["data"] = data
+    temp["start"] = numpy.array(data.iloc[:, 0])
+    temp["stop"] = numpy.array(data.iloc[:, 1])
+    temp["unit"] = feature["unit_name"]
 
     start = numpy.array(data.iloc[:, 0])
     stop = numpy.array(data.iloc[:, 1])
@@ -81,11 +84,11 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     abstolFraction = abstol * smallestTime
 
     headers = data.columns.values.tolist()
-    temp['peak_max'] = data.iloc[:,2:].max().min()
+    temp["peak_max"] = data.iloc[:, 2:].max().min()
     return temp
+
 
 def headers(experimentName, feature):
-    name = "%s_%s" % (experimentName, feature['name'])
+    name = "%s_%s" % (experimentName, feature["name"])
     temp = ["%s_SSE" % name]
     return temp
-

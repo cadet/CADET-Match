@@ -2,6 +2,7 @@ import CADETMatch.util as util
 import math
 from CADETMatch.abstract.transform import AbstractTransform
 
+
 class DiameterTransform(AbstractTransform):
     @property
     def name(self):
@@ -19,12 +20,16 @@ class DiameterTransform(AbstractTransform):
         def trans(i):
             return i
 
-        return [trans,]
+        return [
+            trans,
+        ]
 
     grad_transform = transform
 
     def untransform(self, seq):
-        values = [math.pi * seq[0]**2/4.0,]
+        values = [
+            math.pi * seq[0] ** 2 / 4.0,
+        ]
         headerValues = [seq[0], values[0]]
         return values, headerValues
 
@@ -33,7 +38,7 @@ class DiameterTransform(AbstractTransform):
 
     def untransform_matrix(self, matrix):
         values = numpy.zeros(matrix.shape)
-        values[:,0] = math.pi * matrix[:,0]**2/4.0
+        values[:, 0] = math.pi * matrix[:, 0] ** 2 / 4.0
         return values
 
     untransform_matrix_inputorder = untransform_matrix
@@ -41,19 +46,19 @@ class DiameterTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get('experiments', None) is None or experiment['name'] in self.parameter['experiments']:
-            location = self.parameter['location']
+        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+            location = self.parameter["location"]
             sim[location.lower()] = values[0]
         return values, headerValues
 
     def getBounds(self):
-        minValue = self.parameter['min']
-        maxValue = self.parameter['max']
+        minValue = self.parameter["min"]
+        maxValue = self.parameter["max"]
 
         return [minValue,], [maxValue,]
 
     def getGradBounds(self):
-        return [self.parameter['min'],], [self.parameter['max'],]
+        return [self.parameter["min"],], [self.parameter["max"],]
 
     def getHeaders(self):
         headers = []
@@ -67,8 +72,9 @@ class DiameterTransform(AbstractTransform):
         return headers
 
     def setBounds(self, parameter, lb, ub):
-        parameter['min'] = lb[0]
-        parameter['max'] = ub[0]
+        parameter["min"] = lb[0]
+        parameter["max"] = ub[0]
+
 
 class NormDiameterTransform(DiameterTransform):
     @property
@@ -76,23 +82,29 @@ class NormDiameterTransform(DiameterTransform):
         return "norm_diameter"
 
     def transform(self):
-        minValue = self.parameter['min']
-        maxValue = self.parameter['max']
+        minValue = self.parameter["min"]
+        maxValue = self.parameter["max"]
 
         def trans(i):
-            return (i - minValue)/(maxValue-minValue)
+            return (i - minValue) / (maxValue - minValue)
 
-        return [trans,]
+        return [
+            trans,
+        ]
 
     grad_transform = transform
 
     def untransform(self, seq):
-        minValue = self.parameter['min']
-        maxValue = self.parameter['max']
+        minValue = self.parameter["min"]
+        maxValue = self.parameter["max"]
 
-        values_transform = [(maxValue - minValue) * seq[0] + minValue,]
+        values_transform = [
+            (maxValue - minValue) * seq[0] + minValue,
+        ]
 
-        values = [math.pi * values_transform[0]**2/4.0,]
+        values = [
+            math.pi * values_transform[0] ** 2 / 4.0,
+        ]
         headerValues = [values[0], values_transform[0]]
         return values, headerValues
 
@@ -101,12 +113,12 @@ class NormDiameterTransform(DiameterTransform):
 
     def untransform_matrix(self, matrix):
         values = self.untransform_matrix_inputorder(matrix)
-        values[:,0] = math.pi * values[:,0]**2/4.0
+        values[:, 0] = math.pi * values[:, 0] ** 2 / 4.0
         return values
 
     def untransform_matrix_inputorder(self, matrix):
-        minValue = self.parameter['min']
-        maxValue = self.parameter['max']
+        minValue = self.parameter["min"]
+        maxValue = self.parameter["max"]
 
         values = (maxValue - minValue) * matrix + minValue
         return values
@@ -115,8 +127,7 @@ class NormDiameterTransform(DiameterTransform):
         return [0.0,], [1.0,]
 
     def getGradBounds(self):
-        return [self.parameter['min'],], [self.parameter['max'],]
+        return [self.parameter["min"],], [self.parameter["max"],]
+
 
 plugins = {"norm_diameter": NormDiameterTransform, "diameter": DiameterTransform}
-    
-

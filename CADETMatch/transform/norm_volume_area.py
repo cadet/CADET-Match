@@ -2,6 +2,7 @@ import CADETMatch.util as util
 import numpy
 from CADETMatch.abstract.transform import AbstractTransform
 
+
 class VolumeAreaTransform(AbstractTransform):
     @property
     def name(self):
@@ -27,8 +28,8 @@ class VolumeAreaTransform(AbstractTransform):
     grad_transform = transform
 
     def untransform(self, seq):
-        values = [seq[1], seq[0]/seq[1]]
-        headerValues = [values[0], values[1], values[0]*values[1]]
+        values = [seq[1], seq[0] / seq[1]]
+        headerValues = [values[0], values[1], values[0] * values[1]]
         return values, headerValues
 
     def grad_untransform(self, seq):
@@ -37,33 +38,33 @@ class VolumeAreaTransform(AbstractTransform):
     def untransform_matrix(self, matrix):
         temp = self.untransform_matrix_inputorder(matrix)
         values = numpy.zeros(temp.shape)
-        values[:,1] = temp[:,0] / temp[:,1]
-        values[:,0] = temp[:,1]
+        values[:, 1] = temp[:, 0] / temp[:, 1]
+        values[:, 0] = temp[:, 1]
         return values
 
     def untransform_matrix_inputorder(self, matrix):
         values = numpy.zeros(matrix.shape)
-        values[:,0] = matrix[:,0]
-        values[:,1] = matrix[:,1]
+        values[:, 0] = matrix[:, 0]
+        values[:, 1] = matrix[:, 1]
         return values
 
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
-    
-        if self.parameter.get('experiments', None) is None or experiment['name'] in self.parameter['experiments']:
-            area_location = self.parameter['area_location']
-            length_location = self.parameter['length_location']
-    
+
+        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+            area_location = self.parameter["area_location"]
+            length_location = self.parameter["length_location"]
+
             sim[area_location.lower()] = values[0]
             sim[length_location.lower()] = values[1]
 
         return values, headerValues
 
     def getBounds(self):
-        minVolume = self.parameter['minVolume']
-        maxVolume = self.parameter['maxVolume']
-        minArea = self.parameter['minArea']
-        maxArea = self.parameter['maxArea']
+        minVolume = self.parameter["minVolume"]
+        maxVolume = self.parameter["maxVolume"]
+        minArea = self.parameter["minArea"]
+        maxArea = self.parameter["maxArea"]
 
         minValues = [minVolume, minArea]
         maxValues = [maxVolume, maxArea]
@@ -87,10 +88,11 @@ class VolumeAreaTransform(AbstractTransform):
         return headers
 
     def setBounds(self, parameter, lb, ub):
-        parameter['minVolume'] = lb[2]
-        parameter['maxVolume'] = ub[2]
-        parameter['minArea'] = lb[0]
-        parameter['maxArea'] = ub[0]
+        parameter["minVolume"] = lb[2]
+        parameter["maxVolume"] = ub[2]
+        parameter["minArea"] = lb[0]
+        parameter["maxArea"] = ub[0]
+
 
 class NormVolumeAreaTransform(VolumeAreaTransform):
     @property
@@ -98,26 +100,26 @@ class NormVolumeAreaTransform(VolumeAreaTransform):
         return "norm_volume_area"
 
     def transform(self):
-        minVolume = self.parameter['minVolume']
-        maxVolume = self.parameter['maxVolume']
-        minArea = self.parameter['minArea']
-        maxArea = self.parameter['maxArea']
+        minVolume = self.parameter["minVolume"]
+        maxVolume = self.parameter["maxVolume"]
+        minArea = self.parameter["minArea"]
+        maxArea = self.parameter["maxArea"]
 
         def trans_volume(i):
-            return (i - minVolume)/(maxVolume - minVolume)
+            return (i - minVolume) / (maxVolume - minVolume)
 
         def trans_area(i):
-            return (i - minArea)/(maxArea - minArea)
+            return (i - minArea) / (maxArea - minArea)
 
         return [trans_volume, trans_area]
 
     grad_transform = transform
 
     def untransform(self, seq):
-        minVolume = self.parameter['minVolume']
-        maxVolume = self.parameter['maxVolume']
-        minArea = self.parameter['minArea']
-        maxArea = self.parameter['maxArea']
+        minVolume = self.parameter["minVolume"]
+        maxVolume = self.parameter["maxVolume"]
+        minArea = self.parameter["minArea"]
+        maxArea = self.parameter["maxArea"]
 
         minValues = numpy.array([minVolume, minArea])
         maxValues = numpy.array([maxVolume, maxArea])
@@ -126,8 +128,8 @@ class NormVolumeAreaTransform(VolumeAreaTransform):
 
         values = (maxValues - minValues) * values + minValues
 
-        values = [values[1], values[0]/values[1]]
-        headerValues = [values[0], values[1], values[0]*values[1]]
+        values = [values[1], values[0] / values[1]]
+        headerValues = [values[0], values[1], values[0] * values[1]]
         return values, headerValues
 
     def grad_untransform(self, seq):
@@ -136,15 +138,15 @@ class NormVolumeAreaTransform(VolumeAreaTransform):
     def untransform_matrix(self, matrix):
         temp = self.untransform_matrix_inputorder(matrix)
         values = numpy.zeros(temp.shape)
-        values[:,0] = temp[:,1]
-        values[:,1] = temp[:,0] / temp[:,1]
+        values[:, 0] = temp[:, 1]
+        values[:, 1] = temp[:, 0] / temp[:, 1]
         return values
 
     def untransform_matrix_inputorder(self, matrix):
-        minVolume = self.parameter['minVolume']
-        maxVolume = self.parameter['maxVolume']
-        minArea = self.parameter['minArea']
-        maxArea = self.parameter['maxArea']
+        minVolume = self.parameter["minVolume"]
+        maxVolume = self.parameter["maxVolume"]
+        minArea = self.parameter["minArea"]
+        maxArea = self.parameter["maxArea"]
 
         minValues = numpy.array([minVolume, minArea])
         maxValues = numpy.array([maxVolume, maxArea])
@@ -152,8 +154,8 @@ class NormVolumeAreaTransform(VolumeAreaTransform):
         temp = (maxValues - minValues) * matrix + minValues
 
         values = numpy.zeros(temp.shape)
-        values[:,0] = temp[:,0]
-        values[:,1] = temp[:,1]
+        values[:, 0] = temp[:, 0]
+        values[:, 1] = temp[:, 1]
 
         return values
 
@@ -161,6 +163,7 @@ class NormVolumeAreaTransform(VolumeAreaTransform):
         return [0.0, 0.0], [1.0, 1.0]
 
     def getGradBounds(self):
-        return [self.parameter['min'],], [self.parameter['max'],]
+        return [self.parameter["min"],], [self.parameter["max"],]
+
 
 plugins = {"norm_volume_area": NormVolumeAreaTransform, "volume_area": VolumeAreaTransform}

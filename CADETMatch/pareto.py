@@ -9,10 +9,11 @@ smallest = numpy.finfo(1.0).tiny
 
 diff_step = 1e-1
 
+
 class ParetoFront(tools.ParetoFront):
     "Modification of the pareto front in DEAP that takes cache as an argument to update to use for similar comparison"
 
-    def __init__(self, similar=None, similar_fit = None, slice_object = None):
+    def __init__(self, similar=None, similar_fit=None, slice_object=None):
         if similar is None:
             similar = eq
         if similar_fit is not None:
@@ -43,7 +44,7 @@ class ParetoFront(tools.ParetoFront):
             dominates_one = False
             has_twin = False
             to_remove = []
-            for i, hofer in enumerate(self):    # hofer = hall of famer
+            for i, hofer in enumerate(self):  # hofer = hall of famer
                 if not dominates_one and hofer.fitness.dominates(ind.fitness, obj=slice_object):
                     is_dominated = True
                     break
@@ -54,13 +55,13 @@ class ParetoFront(tools.ParetoFront):
                 elif self.similar_fit(ind.fitness.values, hofer.fitness.values) and self.similar(ind, hofer):
                     has_twin = True
                     break
-                            
-            for i in reversed(to_remove):       # Remove the dominated hofer
+
+            for i in reversed(to_remove):  # Remove the dominated hofer
                 self.remove(i)
             if not is_dominated and not has_twin:
-                #if the pareto front is empty or a new item is added to the pareto front that is progress
-                #however if there is only a single objective and it does not significantly dominate then
-                #don't count that as significant progress
+                # if the pareto front is empty or a new item is added to the pareto front that is progress
+                # however if there is only a single objective and it does not significantly dominate then
+                # don't count that as significant progress
                 if pareto_length == 0:
                     significant.append(True)
                 elif numGoals > 1:
@@ -75,10 +76,11 @@ class ParetoFront(tools.ParetoFront):
     def getBestScores(self):
         weights = numpy.array(self[0].fitness.weights)
         data_meta = numpy.array([i.fitness.values for i in self])
-        return numpy.max(data_meta*weights, 0)*weights
+        return numpy.max(data_meta * weights, 0) * weights
+
 
 class ParetoFrontMeta(ParetoFront):
-    def __init__(self, similar=None, similar_fit = None, slice_object = None):
+    def __init__(self, similar=None, similar_fit=None, slice_object=None):
         super().__init__(similar, similar_fit, slice_object)
         self.best_sse = numpy.inf
         self.best_sse_ind = None
@@ -115,17 +117,17 @@ class ParetoFrontMeta(ParetoFront):
 
             if ind_sse < self.best_sse:
                 new_best_sse = ind_sse
-                new_best_sse_ind  = copy.deepcopy(ind)
+                new_best_sse_ind = copy.deepcopy(ind)
                 new_best_sse_ind.best = True
                 new_best_sse_found = True
 
             if ind_rmse < self.best_rmse:
                 new_best_rmse = ind_rmse
-                new_best_rmse_ind  = copy.deepcopy(ind)
+                new_best_rmse_ind = copy.deepcopy(ind)
                 new_best_rmse_ind.best = True
                 new_best_rmse_found = True
 
-            for i, hofer in enumerate(self):    # hofer = hall of famer
+            for i, hofer in enumerate(self):  # hofer = hall of famer
                 if not dominates_one and hofer.fitness.dominates(ind.fitness, obj=slice_object):
                     is_dominated = True
                     break
@@ -136,13 +138,13 @@ class ParetoFrontMeta(ParetoFront):
                 elif self.similar_fit(ind.fitness.values, hofer.fitness.values) and self.similar(ind, hofer):
                     has_twin = True
                     break
-                            
-            for i in reversed(to_remove):       # Remove the dominated hofer
+
+            for i in reversed(to_remove):  # Remove the dominated hofer
                 self.remove(i)
             if not is_dominated and not has_twin:
-                #if the pareto front is empty or a new item is added to the pareto front that is progress
-                #however if there is only a single objective and it does not significantly dominate then
-                #don't count that as significant progress
+                # if the pareto front is empty or a new item is added to the pareto front that is progress
+                # however if there is only a single objective and it does not significantly dominate then
+                # don't count that as significant progress
                 if pareto_length == 0:
                     significant.append(True)
                 elif numGoals > 1:
@@ -152,21 +154,21 @@ class ParetoFrontMeta(ParetoFront):
                 self.insert(ind)
                 new_members.append(ind)
 
-            #add sse and rmse individuals if they are not stored already
+            # add sse and rmse individuals if they are not stored already
             foundSSE = False
             foundRMSE = False
 
             if new_best_rmse_found or new_best_sse_found:
-                #remove old best
+                # remove old best
                 to_remove = []
-                for idx,ind in enumerate(self):
+                for idx, ind in enumerate(self):
                     if ind.best:
-                        removeSSE = (new_best_sse_found and ind.fitness.values == self.best_sse_ind.fitness.values)
-                        removeRMSE = (new_best_rmse_found and ind.fitness.values == self.best_rmse_ind.fitness.values)
+                        removeSSE = new_best_sse_found and ind.fitness.values == self.best_sse_ind.fitness.values
+                        removeRMSE = new_best_rmse_found and ind.fitness.values == self.best_rmse_ind.fitness.values
                         if removeSSE or removeRMSE:
                             to_remove.append(idx)
-                
-                for idx in reversed(to_remove):       # Remove the dominated hofer
+
+                for idx in reversed(to_remove):  # Remove the dominated hofer
                     self.remove(idx)
 
                 if new_best_sse_found:
@@ -175,7 +177,7 @@ class ParetoFrontMeta(ParetoFront):
 
                 if new_best_rmse_found:
                     self.best_rmse_ind = new_best_rmse_ind
-                    self.best_rmse = new_best_rmse                    
+                    self.best_rmse = new_best_rmse
 
             sameInd = self.best_sse_ind.fitness.values == self.best_rmse_ind.fitness.values
 
@@ -189,7 +191,7 @@ class ParetoFrontMeta(ParetoFront):
             if not foundSSE and sameInd:
                 self.insert(self.best_sse_ind)
                 new_members.append(ind)
-            
+
             if not foundSSE and not sameInd:
                 self.insert(self.best_sse_ind)
                 new_members.append(ind)
@@ -213,89 +215,96 @@ class DummyFront(tools.ParetoFront):
         "do not put anything in this front, it is just needed to maintain compatibility"
         return [], False
 
+
 def similar(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
     a = numpy.absolute(numpy.array(a))
     b = numpy.absolute(numpy.array(b))
-    
-    #used to catch division by zero
+
+    # used to catch division by zero
     a[a == 0.0] = smallest
 
-    diff = numpy.abs((a-b)/a)
+    diff = numpy.abs((a - b) / a)
     return numpy.all(diff < diff_step)
+
 
 def similar_fit_norm(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
     a = numpy.absolute(numpy.array(a))
     b = numpy.absolute(numpy.array(b))
 
-    #used to catch division by zero
+    # used to catch division by zero
     a[a == 0.0] = smallest
 
-    a = numpy.log(1-a)
-    b = numpy.log(1-b)
+    a = numpy.log(1 - a)
+    b = numpy.log(1 - b)
 
-    diff = numpy.abs((a-b)/a)
+    diff = numpy.abs((a - b) / a)
     return numpy.all(diff < diff_step)
+
 
 def similar_fit_sse(a, b):
     "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
     a = numpy.absolute(numpy.array(a))
     b = numpy.absolute(numpy.array(b))
 
-    #used to catch division by zero
+    # used to catch division by zero
     a[a == 0.0] = smallest
 
     a = numpy.log(a)
     b = numpy.log(b)
 
-    diff = numpy.abs((a-b)/a)
+    diff = numpy.abs((a - b) / a)
     return numpy.all(diff < diff_step)
+
 
 def similar_fit_meta_norm(a, b):
     a = numpy.array(a)
     b = numpy.array(b)
 
-    #used to catch division by zero
+    # used to catch division by zero
     a[a == 0.0] = smallest
 
-    #SSE is in the last slot so we only want to use the first 3 meta scores
-    a = numpy.log(1-a[:3])
-    b = numpy.log(1-b[:3])
+    # SSE is in the last slot so we only want to use the first 3 meta scores
+    a = numpy.log(1 - a[:3])
+    b = numpy.log(1 - b[:3])
 
-    diff = numpy.abs((a-b)/a)
+    diff = numpy.abs((a - b) / a)
     return numpy.all(diff < diff_step)
+
 
 def similar_fit_meta_sse(a, b):
     "SSE is negative and in the last slot and the only score needed"
     a = a[-2]
     b = b[-2]
 
-    #used to catch division by zero
+    # used to catch division by zero
     if a == 0.0:
-       a = smallest
+        a = smallest
 
-    #SSE should be handled in log scale
+    # SSE should be handled in log scale
     a = math.log(a)
     b = math.log(b)
 
-    diff = numpy.abs((a-b)/a)
+    diff = numpy.abs((a - b) / a)
     return numpy.all(diff < diff_step)
+
 
 def similar_fit_meta_sse_split(a, b):
     "SSE is negative and in the last slot and the only score needed"
     a = numpy.abs(numpy.array(a))
     b = numpy.abs(numpy.array(b))
 
-    #used to catch division by zero
+    # used to catch division by zero
     a[a == 0.0] = smallest
 
-    #SSE should be handled in log scale
+    # SSE should be handled in log scale
     a = numpy.log(a[:3])
     b = numpy.log(b[:3])
 
-    diff = numpy.abs((a-b)/a)
+    diff = numpy.abs((a - b) / a)
     return numpy.all(diff < diff_step)
+
 
 def similar_fit_meta(cache):
     if cache.allScoreNorm:
@@ -306,12 +315,14 @@ def similar_fit_meta(cache):
         else:
             return similar_fit_meta_sse
 
+
 def similar_fit(cache):
     if cache.allScoreNorm:
         return similar_fit_norm
     elif cache.allScoreSSE:
         return similar_fit_sse
 
+
 def updateParetoFront(halloffame, offspring, cache):
-    new_members, significant  = halloffame.update([offspring,], cache.numGoals)
+    new_members, significant = halloffame.update([offspring,], cache.numGoals)
     return bool(new_members), significant

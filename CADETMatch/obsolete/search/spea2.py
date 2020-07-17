@@ -9,7 +9,8 @@ from scipy.spatial.distance import pdist, squareform
 
 import deap.tools.emo
 
-name = 'SPEA2'
+name = "SPEA2"
+
 
 def run(cache, tools, creator):
     "run the parameter estimation"
@@ -17,27 +18,40 @@ def run(cache, tools, creator):
 
     parameters = len(cache.MIN_VALUE)
 
-    LAMBDA = parameters * cache.settings['population']
-    MU = int(math.ceil(cache.settings['keep']*LAMBDA))
+    LAMBDA = parameters * cache.settings["population"]
+    MU = int(math.ceil(cache.settings["keep"] * LAMBDA))
     if MU < 2:
         MU = 2
 
     pop = cache.toolbox.population(n=LAMBDA)
 
     if "seeds" in cache.settings:
-        seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]
+        seed_pop = [
+            cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings["transform"], sublist)])
+            for sublist in cache.settings["seeds"]
+        ]
         pop.extend(seed_pop)
 
-    totalGenerations = parameters * cache.settings['generations']
+    totalGenerations = parameters * cache.settings["generations"]
 
-    #return checkpoint_algorithms.eaMuCommaLambda(pop, toolbox, mu=MU, lambda_=LAMBDA,
+    # return checkpoint_algorithms.eaMuCommaLambda(pop, toolbox, mu=MU, lambda_=LAMBDA,
     #    cxpb=settings['crossoverRate'], mutpb=settings['mutationRate'], ngen=totalGenerations, settings=settings, halloffame=hof, tools=tools)
 
-    result = checkpoint_algorithms.eaMuPlusLambda(pop, cache.toolbox, mu=MU, lambda_=LAMBDA,
-        cxpb=cache.settings['crossoverRate'], mutpb=cache.settings['mutationRate'], ngen=totalGenerations, settings=cache.settings, 
-        tools=tools, cache=cache)
+    result = checkpoint_algorithms.eaMuPlusLambda(
+        pop,
+        cache.toolbox,
+        mu=MU,
+        lambda_=LAMBDA,
+        cxpb=cache.settings["crossoverRate"],
+        mutpb=cache.settings["mutationRate"],
+        ngen=totalGenerations,
+        settings=cache.settings,
+        tools=tools,
+        cache=cache,
+    )
 
     return result
+
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
@@ -48,9 +62,9 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
     creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None)
     cache.toolbox.register("individualMeta", util.initIndividual, creator.IndividualMeta, cache)
 
-    cache.toolbox.register("individual", util.generateIndividual, creator.Individual,
-        len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, cache)
-
+    cache.toolbox.register(
+        "individual", util.generateIndividual, creator.Individual, len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, cache
+    )
 
     if cache.sobolGeneration:
         cache.toolbox.register("population", util.sobolGenerator, creator.Individual, cache)
@@ -62,24 +76,30 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=30.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
 
-    #if cache.adaptive:
+    # if cache.adaptive:
     #    cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
     #    cache.toolbox.register("force_mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
-    #else:
-    cache.toolbox.register("mutate", util.mutPolynomialBounded, eta=70.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
-    cache.toolbox.register("force_mutate", util.mutPolynomialBounded, eta=70.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
+    # else:
+    cache.toolbox.register(
+        "mutate", util.mutPolynomialBounded, eta=70.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0 / len(cache.MIN_VALUE)
+    )
+    cache.toolbox.register(
+        "force_mutate", util.mutPolynomialBounded, eta=70.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0 / len(cache.MIN_VALUE)
+    )
 
     cache.toolbox.register("select", selSPEA2)
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
     cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
-    cache.toolbox.register('grad_search', grad_search)
+    cache.toolbox.register("grad_search", grad_search)
 
-    cache.toolbox.register('map', map_function)
+    cache.toolbox.register("map", map_function)
 
-#From DEAP with vectorization
+
+# From DEAP with vectorization
 ######################################
 # Strength Pareto         (SPEA-II)  #
 ######################################
+
 
 def selSPEA2(individuals, k):
     """Apply SPEA-II selection operator on the *individuals*. Usually, the
@@ -103,50 +123,48 @@ def selSPEA2(individuals, k):
     strength_fits = [0] * N
     fits = [0] * N
     dominating_inds = [list() for i in range(N)]
-    
+
     for i, ind_i in enumerate(individuals):
-        for j, ind_j in enumerate(individuals[i+1:], i+1):
+        for j, ind_j in enumerate(individuals[i + 1 :], i + 1):
             if ind_i.fitness.dominates(ind_j.fitness):
                 strength_fits[i] += 1
                 dominating_inds[j].append(i)
             elif ind_j.fitness.dominates(ind_i.fitness):
                 strength_fits[j] += 1
                 dominating_inds[i].append(j)
-    
+
     for i in range(N):
         for j in dominating_inds[i]:
             fits[i] += strength_fits[j]
-    
+
     # Choose all non-dominated individuals
     chosen_indices = [i for i in range(N) if fits[i] < 1]
-    
-    if len(chosen_indices) < k:     # The archive is too small
+
+    if len(chosen_indices) < k:  # The archive is too small
         for i in range(N):
             distances = [0.0] * N
             for j in range(i + 1, N):
                 dist = 0.0
                 for l in range(L):
-                    val = individuals[i].fitness.values[l] - \
-                          individuals[j].fitness.values[l]
+                    val = individuals[i].fitness.values[l] - individuals[j].fitness.values[l]
                     dist += val * val
                 distances[j] = dist
             kth_dist = deap.tools.emo._randomizedSelect(distances, 0, N - 1, K)
             density = 1.0 / (kth_dist + 2.0)
             fits[i] += density
-            
-        next_indices = [(fits[i], i) for i in range(N)
-                        if not i in chosen_indices]
+
+        next_indices = [(fits[i], i) for i in range(N) if not i in chosen_indices]
         next_indices.sort()
-        #print next_indices
-        chosen_indices += [i for _, i in next_indices[:k - len(chosen_indices)]]
-                
-    elif len(chosen_indices) > k:   # The archive is too large
+        # print next_indices
+        chosen_indices += [i for _, i in next_indices[: k - len(chosen_indices)]]
+
+    elif len(chosen_indices) > k:  # The archive is too large
         N = len(chosen_indices)
         distances = [[0.0] * N for i in range(N)]
         sorted_indices = [[0] * N for i in range(N)]
-        
+
         vec_fitness = numpy.array([individuals[i].fitness.values for i in chosen_indices])
-        vec_distances = squareform(pdist(vec_fitness, 'sqeuclidean'))
+        vec_distances = squareform(pdist(vec_fitness, "sqeuclidean"))
         numpy.fill_diagonal(vec_distances, -1)
         distances = vec_distances
 
@@ -156,8 +174,9 @@ def selSPEA2(individuals, k):
 
         for index in reversed(sorted(to_remove)):
             del chosen_indices[index]
-    
+
     return [individuals[i] for i in chosen_indices]
+
 
 def trim_individuals(k, N, distances, sorted_indices):
     size = N
@@ -167,28 +186,28 @@ def trim_individuals(k, N, distances, sorted_indices):
         min_pos = 0
         for i in range(1, N):
             for j in range(1, size):
-                dist_i_sorted_j = distances[i,sorted_indices[i,j]]
-                dist_min_sorted_j = distances[min_pos,sorted_indices[min_pos,j]]
+                dist_i_sorted_j = distances[i, sorted_indices[i, j]]
+                dist_min_sorted_j = distances[min_pos, sorted_indices[min_pos, j]]
 
                 if dist_i_sorted_j < dist_min_sorted_j:
                     min_pos = i
                     break
                 elif dist_i_sorted_j > dist_min_sorted_j:
                     break
-            
-        distances[:,min_pos] = numpy.inf
-        distances[min_pos,:] = numpy.inf
 
-        #This part is still expensive but I don't know a better way to do it yet.
-        #Essentially all remaining time in this function is in this section
-        #It may even make sense to do this in C++ later since it is trivially parallel
+        distances[:, min_pos] = numpy.inf
+        distances[min_pos, :] = numpy.inf
+
+        # This part is still expensive but I don't know a better way to do it yet.
+        # Essentially all remaining time in this function is in this section
+        # It may even make sense to do this in C++ later since it is trivially parallel
         for i in range(N):
             for j in range(1, size - 1):
-                if sorted_indices[i,j] == min_pos:
-                    sorted_indices[i,j:size - 1] = sorted_indices[i,j + 1:size]
-                    sorted_indices[i,j:size] = min_pos
+                if sorted_indices[i, j] == min_pos:
+                    sorted_indices[i, j : size - 1] = sorted_indices[i, j + 1 : size]
+                    sorted_indices[i, j:size] = min_pos
                     break
-            
+
         # Remove corresponding individual from chosen_indices
         to_remove.append(min_pos)
         size -= 1

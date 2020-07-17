@@ -1,8 +1,8 @@
 from deap import base
 import numpy
 
-class Fitness2(base.Fitness):
 
+class Fitness2(base.Fitness):
     def dominates(self, other, obj=slice(None)):
         """Return true if each objective of *self* is not strictly worse than
         the corresponding objective of *other* and at least one objective is
@@ -25,8 +25,8 @@ class Fitness2(base.Fitness):
             not_equal = False
         return not_equal
 
-class Fitness3(base.Fitness):
 
+class Fitness3(base.Fitness):
     def dominates(self, other, obj=slice(None)):
         """Return true if each objective of *self* is not strictly worse than
         the corresponding objective of *other* and at least one objective is

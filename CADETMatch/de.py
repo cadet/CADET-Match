@@ -36,7 +36,7 @@ class DEMove(RedBlueMove):
         if self.g0 is None:
             # Pure MAGIC:
             ndim = coords.shape[1]
-            self.g0 = 2.38 / np.sqrt(2 * ndim) * 1.5**self.n
+            self.g0 = 2.38 / np.sqrt(2 * ndim) * 1.5 ** self.n
 
     def get_proposal(self, s, c, random):
         Ns = len(s)

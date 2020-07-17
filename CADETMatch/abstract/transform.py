@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from CADETMatch import util
 
+
 class AbstractTransform(ABC):
     def __init__(self, parameter, cache):
         self.cache = cache
@@ -23,7 +24,7 @@ class AbstractTransform(ABC):
         pass
 
     def getUnit(self, location):
-        return location.split('/')[3]
+        return location.split("/")[3]
 
     @abstractmethod
     def transform(self):

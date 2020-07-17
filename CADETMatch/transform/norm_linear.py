@@ -3,6 +3,7 @@ import numpy
 import CADETMatch.calc_coeff as calc_coeff
 from CADETMatch.abstract.transform import AbstractTransform
 
+
 class LinearTransform(AbstractTransform):
     @property
     def name(self):
@@ -44,13 +45,13 @@ class LinearTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get('experiments', None) is None or experiment['name'] in self.parameter['experiments']:
-            location = self.parameter['location']
-    
-            minX = self.parameter['minX']
-            maxX = self.parameter['maxX']
+        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+            location = self.parameter["location"]
 
-            x_name = self.parameter['x_name']
+            minX = self.parameter["minX"]
+            maxX = self.parameter["maxX"]
+
+            x_name = self.parameter["x_name"]
 
             x_value = experiment[x_name]
 
@@ -59,11 +60,11 @@ class LinearTransform(AbstractTransform):
             value = calc_coeff.linear(x_value, slope, intercept)
 
             try:
-                comp = self.parameter['component']
-                bound = self.parameter['bound']
+                comp = self.parameter["component"]
+                bound = self.parameter["bound"]
                 index = None
             except KeyError:
-                index = self.parameter['index']
+                index = self.parameter["index"]
                 bound = None
 
             if bound is not None:
@@ -83,11 +84,11 @@ class LinearTransform(AbstractTransform):
         return values, headerValues
 
     def getBounds(self):
-        minLower = self.parameter['minLower']
-        maxLower = self.parameter['maxLower']
-        minUpper = self.parameter['minUpper']
-        maxUpper = self.parameter['maxUpper']
-    
+        minLower = self.parameter["minLower"]
+        maxLower = self.parameter["maxLower"]
+        minUpper = self.parameter["minUpper"]
+        maxUpper = self.parameter["maxUpper"]
+
         minValues = [minLower, minUpper]
         maxValues = [maxLower, maxUpper]
 
@@ -97,9 +98,9 @@ class LinearTransform(AbstractTransform):
         return self.getBounds()
 
     def getHeaders(self):
-        bound = self.parameter['bound']
-        comp = self.parameter['component']
-    
+        bound = self.parameter["bound"]
+        comp = self.parameter["component"]
+
         headers = []
         headers.append("Lower Comp:%s Bound:%s" % (comp, bound))
         headers.append("Upper Comp:%s Bound:%s" % (comp, bound))
@@ -109,10 +110,11 @@ class LinearTransform(AbstractTransform):
         return self.getHeaders()
 
     def setBounds(self, parameter, lb, ub):
-        parameter['minLower'] = lb[0]
-        parameter['maxLower'] = ub[0]
-        parameter['minUpper'] = lb[1]
-        parameter['maxUpper'] = ub[1]
+        parameter["minLower"] = lb[0]
+        parameter["maxLower"] = ub[0]
+        parameter["minUpper"] = lb[1]
+        parameter["maxUpper"] = ub[1]
+
 
 class NormLinearTransform(LinearTransform):
     @property
@@ -120,29 +122,29 @@ class NormLinearTransform(LinearTransform):
         return "norm_linear"
 
     def transform(self):
-        minLower = self.parameter['minLower']
-        maxLower = self.parameter['maxLower']
-        minUpper = self.parameter['minUpper']
-        maxUpper = self.parameter['maxUpper']
+        minLower = self.parameter["minLower"]
+        maxLower = self.parameter["maxLower"]
+        minUpper = self.parameter["minUpper"]
+        maxUpper = self.parameter["maxUpper"]
 
         def trans_a(i):
-            return (i - minLower)/(maxLower-minLower)
+            return (i - minLower) / (maxLower - minLower)
 
         def trans_b(i):
-            return (i - minUpper)/(maxUpper-minUpper)
+            return (i - minUpper) / (maxUpper - minUpper)
 
         return [trans_a, trans_b]
 
     grad_transform = transform
 
     def untransform(self, seq):
-        minLower = self.parameter['minLower']
-        maxLower = self.parameter['maxLower']
-        minUpper = self.parameter['minUpper']
-        maxUpper = self.parameter['maxUpper']
-        minX = self.parameter['minX']
-        maxX = self.parameter['maxX']
-    
+        minLower = self.parameter["minLower"]
+        maxLower = self.parameter["maxLower"]
+        minUpper = self.parameter["minUpper"]
+        maxUpper = self.parameter["maxUpper"]
+        minX = self.parameter["minX"]
+        maxX = self.parameter["maxX"]
+
         minValues = numpy.array([minLower, minUpper])
         maxValues = numpy.array([maxLower, maxUpper])
 
@@ -156,11 +158,11 @@ class NormLinearTransform(LinearTransform):
         return self.untransform(seq)[0]
 
     def untransform_matrix(self, matrix):
-        minLower = self.parameter['minLower']
-        maxLower = self.parameter['maxLower']
-        minUpper = self.parameter['minUpper']
-        maxUpper = self.parameter['maxUpper']
-    
+        minLower = self.parameter["minLower"]
+        maxLower = self.parameter["maxLower"]
+        minUpper = self.parameter["minUpper"]
+        maxUpper = self.parameter["maxUpper"]
+
         minValues = numpy.array([minLower, minUpper])
         maxValues = numpy.array([maxLower, maxUpper])
 
@@ -174,10 +176,11 @@ class NormLinearTransform(LinearTransform):
         return [0.0, 0.0], [1.0, 1.0]
 
     def getGradBounds(self):
-        minLower = self.parameter['minLower']
-        maxLower = self.parameter['maxLower']
-        minUpper = self.parameter['minUpper']
-        maxUpper = self.parameter['maxUpper']
+        minLower = self.parameter["minLower"]
+        maxLower = self.parameter["maxLower"]
+        minUpper = self.parameter["minUpper"]
+        maxUpper = self.parameter["maxUpper"]
         return [minLower, minUpper], [maxLower, maxUpper]
+
 
 plugins = {"norm_linear": NormLinearTransform, "linear": LinearTransform}

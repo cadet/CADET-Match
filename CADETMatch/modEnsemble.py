@@ -8,12 +8,11 @@ Goodman & Weare, Ensemble Samplers With Affine Invariance
 
 """
 
-from __future__ import (division, print_function, absolute_import,
-                        unicode_literals)
+from __future__ import division, print_function, absolute_import, unicode_literals
 
 __all__ = ["EnsembleSampler"]
 
-#import scipy.stats as scstats
+# import scipy.stats as scstats
 import numpy as np
 
 from emcee.sampler import Sampler
@@ -77,41 +76,53 @@ class EnsembleSampler(Sampler):
         :ref:`loadbalance` for more information.
 
     """
-    def __init__(self, nwalkers, dim, lnpostfn, a=2.0, args=[], kwargs={},
-                 postargs=None, threads=1, pool=None, live_dangerously=False,
-                 runtime_sortingfn=None, jump_ind=[], zero_val =0, jump_prob = 0):
+
+    def __init__(
+        self,
+        nwalkers,
+        dim,
+        lnpostfn,
+        a=2.0,
+        args=[],
+        kwargs={},
+        postargs=None,
+        threads=1,
+        pool=None,
+        live_dangerously=False,
+        runtime_sortingfn=None,
+        jump_ind=[],
+        zero_val=0,
+        jump_prob=0,
+    ):
         self.k = nwalkers
         self.a = a
         self.threads = threads
         self.pool = pool
         self.runtime_sortingfn = runtime_sortingfn
-        self.gamma = 2.38/np.sqrt(2*dim)
+        self.gamma = 2.38 / np.sqrt(2 * dim)
         self.epsilon = 0.01
         self.largeEpsilon = 0.1
         self.dim = dim
-        self.jump_ind=jump_ind
+        self.jump_ind = jump_ind
         self.jump_prob = jump_prob
         self.ord_index = np.array(range(self.dim))
         self.zero_val = zero_val
-        if jump_ind!=[]:
-            self.ord_index = np.delete(self.ord_index,np.array(self.jump_ind))
+        if jump_ind != []:
+            self.ord_index = np.delete(self.ord_index, np.array(self.jump_ind))
 
         if postargs is not None:
             args = postargs
-        super(EnsembleSampler, self).__init__(dim, lnpostfn, args=args,
-                                              kwargs=kwargs)
+        super(EnsembleSampler, self).__init__(dim, lnpostfn, args=args, kwargs=kwargs)
 
         # Do a little bit of _magic_ to make the likelihood call with
         # ``args`` and ``kwargs`` pickleable.
-        self.lnprobfn = _function_wrapper(self.lnprobfn, self.args,
-                                          self.kwargs)
+        self.lnprobfn = _function_wrapper(self.lnprobfn, self.args, self.kwargs)
 
         assert self.k % 2 == 0, "The number of walkers must be even."
         if not live_dangerously:
             assert self.k >= 2 * self.dim, (
-                "The number of walkers needs to be more than twice the "
-                "dimension of your parameter space... unless you're "
-                "crazy!")
+                "The number of walkers needs to be more than twice the " "dimension of your parameter space... unless you're " "crazy!"
+            )
 
         if self.threads > 1 and self.pool is None:
             self.pool = InterruptiblePool(self.threads)
@@ -137,8 +148,7 @@ class EnsembleSampler(Sampler):
         # Initialize list for storing optional metadata blobs.
         self.clear_blobs()
 
-    def sample(self, p0, lnprob0=None, rstate0=None, blobs0=None,
-               iterations=1, thin=1, storechain=True, mh_proposal=None):
+    def sample(self, p0, lnprob0=None, rstate0=None, blobs0=None, iterations=1, thin=1, storechain=True, mh_proposal=None):
         """
         Advance the chain ``iterations`` steps as a generator.
 
@@ -219,11 +229,8 @@ class EnsembleSampler(Sampler):
         # makes a pretty big difference.
         if storechain:
             N = int(iterations / thin)
-            self._chain = np.concatenate((self._chain,
-                                          np.zeros((self.k, N, self.dim))),
-                                         axis=1)
-            self._lnprob = np.concatenate((self._lnprob,
-                                           np.zeros((self.k, N))), axis=1)
+            self._chain = np.concatenate((self._chain, np.zeros((self.k, N, self.dim))), axis=1)
+            self._lnprob = np.concatenate((self._lnprob, np.zeros((self.k, N))), axis=1)
 
         for i in range(int(iterations)):
             self.iterations += 1
@@ -236,12 +243,11 @@ class EnsembleSampler(Sampler):
                 newlnp, blob = self._get_lnprob(q)
 
                 # Accept if newlnp is better; and ...
-                acc = (newlnp > lnprob)
+                acc = newlnp > lnprob
 
                 # ... sometimes accept for steps that got worse
                 worse = np.flatnonzero(~acc)
-                acc[worse] = ((newlnp[worse] - lnprob[worse]) >
-                              np.log(self._random.rand(len(worse))))
+                acc[worse] = (newlnp[worse] - lnprob[worse]) > np.log(self._random.rand(len(worse)))
                 del worse
 
                 # Update the accepted walkers.
@@ -253,7 +259,8 @@ class EnsembleSampler(Sampler):
                     assert blobs is not None, (
                         "If you start sampling with a given lnprob, you also "
                         "need to provide the current list of blobs at that "
-                        "position.")
+                        "position."
+                    )
                     ind = np.arange(self.k)[acc]
                     for j in ind:
                         blobs[j] = blob[j]
@@ -265,13 +272,11 @@ class EnsembleSampler(Sampler):
                 # Slices for the first and second halves
                 first, second = slice(halfk), slice(halfk, self.k)
                 for S0, S1 in [(first, second), (second, first)]:
-                    if not self.jump_ind == None and self._random.rand(1,1)<self.jump_prob:
-                        q, newlnp, acc, blob = self._propose_jump(p[S0], p[S1],
-                                                                 lnprob[S0])
+                    if not self.jump_ind == None and self._random.rand(1, 1) < self.jump_prob:
+                        q, newlnp, acc, blob = self._propose_jump(p[S0], p[S1], lnprob[S0])
 
                     else:
-                        q, newlnp, acc, blob = self._propose_constr_walk(p[S0], p[S1],
-                                                                  lnprob[S0])
+                        q, newlnp, acc, blob = self._propose_constr_walk(p[S0], p[S1], lnprob[S0])
                     if np.any(acc):
                         # Update the positions, log probabilities and
                         # acceptance counts.
@@ -283,7 +288,8 @@ class EnsembleSampler(Sampler):
                             assert blobs is not None, (
                                 "If you start sampling with a given lnprob, "
                                 "you also need to provide the current list of "
-                                "blobs at that position.")
+                                "blobs at that position."
+                            )
                             ind = np.arange(len(acc))[acc]
                             indfull = np.arange(self.k)[S0][acc]
                             for j in range(len(ind)):
@@ -339,7 +345,7 @@ class EnsembleSampler(Sampler):
 
         # Generate the vectors of random numbers that will produce the
         # proposal.
-        zz = ((self.a - 1.) * self._random.rand(Ns) + 1) ** 2. / self.a
+        zz = ((self.a - 1.0) * self._random.rand(Ns) + 1) ** 2.0 / self.a
         rint = self._random.randint(Nc, size=(Ns,))
 
         # Calculate the proposed positions and the log-probability there.
@@ -347,8 +353,8 @@ class EnsembleSampler(Sampler):
         newlnprob, blob = self._get_lnprob(q)
 
         # Decide whether or not the proposals should be accepted.
-        lnpdiff = (self.dim - 1.) * np.log(zz) + newlnprob - lnprob0
-        accept = (lnpdiff > np.log(self._random.rand(len(lnpdiff))))
+        lnpdiff = (self.dim - 1.0) * np.log(zz) + newlnprob - lnprob0
+        accept = lnpdiff > np.log(self._random.rand(len(lnpdiff)))
 
         return q, newlnprob, accept, blob
 
@@ -387,7 +393,7 @@ class EnsembleSampler(Sampler):
 
         # Generate the vectors of random numbers that will produce the
         # proposal.
-        zz = ((self.a - 1.) * self._random.rand(Ns) + 1) ** 2. / self.a
+        zz = ((self.a - 1.0) * self._random.rand(Ns) + 1) ** 2.0 / self.a
         rint = self._random.randint(Nc, size=(Ns,))
 
         # Calculate the proposed positions and the log-probability there.
@@ -395,8 +401,8 @@ class EnsembleSampler(Sampler):
         newlnprob, blob = self._get_lnprob(q)
 
         # Decide whether or not the proposals should be accepted.
-        lnpdiff = (self.dim - 1.) * np.log(zz) + newlnprob - lnprob0
-        accept = (lnpdiff > np.log(self._random.rand(len(lnpdiff))))
+        lnpdiff = (self.dim - 1.0) * np.log(zz) + newlnprob - lnprob0
+        accept = lnpdiff > np.log(self._random.rand(len(lnpdiff)))
 
         return q, newlnprob, accept, blob
 
@@ -432,48 +438,49 @@ class EnsembleSampler(Sampler):
         ind_len = len(self.jump_ind)
 
         perturb = self._random.randint(2, size=(ind_len,))
-        #get the intersection
-        s = np.atleast_2d(p0[:,self.jump_ind])
+        # get the intersection
+        s = np.atleast_2d(p0[:, self.jump_ind])
         Ns = len(s)
         # c = np.atleast_2d(p1[:,self.jump_ind])
         # Nc = len(c)
         # rint1 = self._random.randint(Nc, size=(Ns,))
         # rint2 = self._random.randint(Nc, size=(Ns,))
-        sBin = np.ceil(np.abs(s-self.zero_val))
+        sBin = np.ceil(np.abs(s - self.zero_val))
         # cBin = np.ceil(c)
         # inters = np.multiply(cBin[rint1],cBin[rint2])
         # xsi = np.floor(self._random.rand(Ns,ind_len)*(1+1/(ind_len)))
         # #new bin vec
         xsi = np.floor(self._random.rand(Ns, ind_len) * (1 + 1 / (ind_len)))
-        pBin = (sBin+xsi)%2
+        pBin = (sBin + xsi) % 2
         # #find all states that goes from inactive to active
-        change = np.maximum(pBin-sBin,0)
-        #q[:, self.jump_ind] = np.multiply(np.array(p0[:, self.jump_ind]),pBin)+self._random.rand(Ns,ind_len)*change
+        change = np.maximum(pBin - sBin, 0)
+        # q[:, self.jump_ind] = np.multiply(np.array(p0[:, self.jump_ind]),pBin)+self._random.rand(Ns,ind_len)*change
 
         q = np.zeros((Ns, self.dim))
         q[:, self.ord_index] = np.array(p0[:, self.ord_index])
-        q[:, self.jump_ind] = np.array(p0[:, self.jump_ind])*pBin+((pBin+1)%2)*self.zero_val+(self._random.rand(Ns,ind_len)-self.zero_val)*change
+        q[:, self.jump_ind] = (
+            np.array(p0[:, self.jump_ind]) * pBin
+            + ((pBin + 1) % 2) * self.zero_val
+            + (self._random.rand(Ns, ind_len) - self.zero_val) * change
+        )
         # Generate the vectors of random numbers that will produce the
         # proposal.
-        #r = self._random.normal(0, size=(Ns, self.dim), scale=self.epsilon)
+        # r = self._random.normal(0, size=(Ns, self.dim), scale=self.epsilon)
         # zz = ((self.a - 1.) * self._random.rand(Ns) + 1) ** 2. / self.a
 
         # Calculate the proposed positions and the log-probability there.
         # q = c[rint] - zz[:, np.newaxis] * (c[rint] - s)
-        #q = s + self.gamma * (c[rint1] - c[rint2]) + r
+        # q = s + self.gamma * (c[rint1] - c[rint2]) + r
         newlnprob, blob = self._get_lnprob(q)
 
         # Decide whether or not the proposals should be accepted.
         # lnpdiff = (self.dim - 1.) * np.log(zz) + newlnprob - lnprob0
-        #Now add a poisson prior with one degree of freedom to the number of interactions
-        #lnpdiff = newlnprob +scstats.poisson.logpmf(np.sum(pBin),1) - lnprob0-scstats.poisson.logpmf(np.sum(sBin),1)
+        # Now add a poisson prior with one degree of freedom to the number of interactions
+        # lnpdiff = newlnprob +scstats.poisson.logpmf(np.sum(pBin),1) - lnprob0-scstats.poisson.logpmf(np.sum(sBin),1)
         lnpdiff = newlnprob - lnprob0
-        accept = (lnpdiff > np.log(self._random.rand(len(lnpdiff))))
+        accept = lnpdiff > np.log(self._random.rand(len(lnpdiff)))
 
         return q, newlnprob, accept, blob
-
-
-
 
     def _propose_constr_walk(self, p0, p1, lnprob0):
         """
@@ -504,32 +511,32 @@ class EnsembleSampler(Sampler):
 
         """
 
-        sBin = np.ceil(np.abs(np.atleast_2d(p0[:, self.jump_ind])-self.zero_val))
-        s = np.atleast_2d(p0[:,self.ord_index])
+        sBin = np.ceil(np.abs(np.atleast_2d(p0[:, self.jump_ind]) - self.zero_val))
+        s = np.atleast_2d(p0[:, self.ord_index])
         Ns = len(s)
-        c = np.atleast_2d(p1[:,self.ord_index])
+        c = np.atleast_2d(p1[:, self.ord_index])
         Nc = len(c)
         ord_len = len(self.ord_index)
         jump_len = len(self.jump_ind)
         # Generate the vectors of random numbers that will produce the
         # proposal.
-        r = self._random.normal(0,size=(Ns,ord_len), scale=self.epsilon )
-        #zz = ((self.a - 1.) * self._random.rand(Ns) + 1) ** 2. / self.a
+        r = self._random.normal(0, size=(Ns, ord_len), scale=self.epsilon)
+        # zz = ((self.a - 1.) * self._random.rand(Ns) + 1) ** 2. / self.a
         rint1 = self._random.randint(Nc, size=(Ns,))
         rint2 = self._random.randint(Nc, size=(Ns,))
         # Calculate the proposed positions and the log-probability there.
-        #q = c[rint] - zz[:, np.newaxis] * (c[rint] - s)
-        q= np.zeros((Nc,self.dim))
-        #q = s + self.gamma*(c[rint1]-c[rint2])+r
-        q[:, self.ord_index] = s + self.gamma*(c[rint1]-c[rint2])+r
-        q[:,self.jump_ind] = np.array(p0[:,self.jump_ind])+self._random.normal(0,size=(Ns,jump_len), scale=self.largeEpsilon )*sBin
-        q = np.abs(np.floor(q % 2)-(q % 1))
+        # q = c[rint] - zz[:, np.newaxis] * (c[rint] - s)
+        q = np.zeros((Nc, self.dim))
+        # q = s + self.gamma*(c[rint1]-c[rint2])+r
+        q[:, self.ord_index] = s + self.gamma * (c[rint1] - c[rint2]) + r
+        q[:, self.jump_ind] = np.array(p0[:, self.jump_ind]) + self._random.normal(0, size=(Ns, jump_len), scale=self.largeEpsilon) * sBin
+        q = np.abs(np.floor(q % 2) - (q % 1))
         newlnprob, blob = self._get_lnprob(q)
 
         # Decide whether or not the proposals should be accepted.
-        #lnpdiff = (self.dim - 1.) * np.log(zz) + newlnprob - lnprob0
+        # lnpdiff = (self.dim - 1.) * np.log(zz) + newlnprob - lnprob0
         lnpdiff = newlnprob - lnprob0
-        accept = (lnpdiff > np.log(self._random.rand(len(lnpdiff))))
+        accept = lnpdiff > np.log(self._random.rand(len(lnpdiff)))
 
         return q, newlnprob, accept, blob
 
@@ -576,7 +583,7 @@ class EnsembleSampler(Sampler):
 
         # Run the log-probability calculations (optionally in parallel).
 
-        results = list(M(self.lnprobfn,[p[i] for i in range(len(p))]))
+        results = list(M(self.lnprobfn, [p[i] for i in range(len(p))]))
         results = self.process(results)
 
         try:
@@ -680,6 +687,7 @@ class _function_wrapper(object):
     or ``kwargs`` are also included.
 
     """
+
     def __init__(self, f, args, kwargs):
         self.f = f
         self.args = args
@@ -690,6 +698,7 @@ class _function_wrapper(object):
             return self.f(x, *self.args, **self.kwargs)
         except:
             import traceback
+
             print("emcee: Exception while calling your likelihood function:")
             print("  params:", x)
             print("  args:", self.args)
@@ -697,4 +706,3 @@ class _function_wrapper(object):
             print("  exception:")
             traceback.print_exc()
             raise
-

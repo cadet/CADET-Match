@@ -23,7 +23,7 @@ class StretchMove(RedBlueMove):
         super(StretchMove, self).__init__(**kwargs)
 
     def setup(self, coords):
-        self.a0 = self.a * 1.3**self.n
+        self.a0 = self.a * 1.3 ** self.n
 
     def get_proposal(self, s, c, random):
         c = np.concatenate(c, axis=0)

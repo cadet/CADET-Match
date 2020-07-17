@@ -12,41 +12,51 @@ from collections import Sequence
 
 name = "NSGA3_strategy"
 
+
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
     parameters = len(cache.MIN_VALUE)
 
-    populationSize=parameters * cache.settings['population']
-    CXPB = cache.settings['crossoverRate']
+    populationSize = parameters * cache.settings["population"]
+    CXPB = cache.settings["crossoverRate"]
 
-    totalGenerations = parameters * cache.settings['generations']
+    totalGenerations = parameters * cache.settings["generations"]
 
     pop = cache.toolbox.population(n=populationSize)
 
     if "seeds" in cache.settings:
-        seed_pop = [cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings['transform'], sublist)]) for sublist in cache.settings['seeds']]
+        seed_pop = [
+            cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings["transform"], sublist)])
+            for sublist in cache.settings["seeds"]
+        ]
         pop.extend(seed_pop)
 
-    return checkpoint_algorithms.eaMuPlusLambda(pop, cache.toolbox,
-                              mu=populationSize, 
-                              lambda_=populationSize, 
-                              cxpb=CXPB, 
-                              mutpb=cache.settings['mutationRate'],
-                              ngen=totalGenerations,
-                              settings=cache.settings,
-                              tools=tools,
-                              cache=cache)
+    return checkpoint_algorithms.eaMuPlusLambda(
+        pop,
+        cache.toolbox,
+        mu=populationSize,
+        lambda_=populationSize,
+        cxpb=CXPB,
+        mutpb=cache.settings["mutationRate"],
+        ngen=totalGenerations,
+        settings=cache.settings,
+        tools=tools,
+        cache=cache,
+    )
+
 
 def generateIndividualStrategy(icls, scls, size, imin, imax, smin, smax, cache):
     ind = icls(numpy.random.uniform(imin, imax))
     ind.strategy = scls(numpy.random.uniform(smin, smax))
-    ind.mean = array.array('d', [0.0]*len(imin))
-    ind.confidence = array.array('d', [0.0]*len(imin))
+    ind.mean = array.array("d", [0.0] * len(imin))
+    ind.confidence = array.array("d", [0.0] * len(imin))
     return ind
 
+
 def minmax(x, lb, ub):
-    return min(max(x,lb),ub)
+    return min(max(x, lb), ub)
+
 
 def cxESBlend(ind1, ind2, alpha, imins, imaxs, smins, smaxs):
 
@@ -54,13 +64,14 @@ def cxESBlend(ind1, ind2, alpha, imins, imaxs, smins, smaxs):
 
     for i, (imin, imax, smin, smax) in enumerate(zip(imins, imaxs, smins, smaxs)):
         # Blend the values
-        ind1[i] = minmax( ind1[i], imin, imax )
-        ind2[i] = minmax( ind2[i], imin, imax )
+        ind1[i] = minmax(ind1[i], imin, imax)
+        ind2[i] = minmax(ind2[i], imin, imax)
         # Blend the strategies
-        ind1.strategy[i] = minmax( ind1.strategy[i], smin, smax )
-        ind2.strategy[i] = minmax( ind1.strategy[i], smin, smax )
+        ind1.strategy[i] = minmax(ind1.strategy[i], smin, smax)
+        ind2.strategy[i] = minmax(ind1.strategy[i], smin, smax)
 
     return ind1, ind2
+
 
 def mutESLogNormal(individual, c, indpb, imins, imaxs, smins, smaxs):
 
@@ -70,11 +81,12 @@ def mutESLogNormal(individual, c, indpb, imins, imaxs, smins, smaxs):
 
     for i, (imin, imax, smin, smax) in enumerate(zip(imins, imaxs, smins, smaxs)):
         # Blend the values
-        individual[0][i] = minmax( individual[0][i], imin, imax )
+        individual[0][i] = minmax(individual[0][i], imin, imax)
         # Blend the strategies
-        individual[0].strategy[i] = minmax( individual[0].strategy[i], smin, smax )
+        individual[0].strategy[i] = minmax(individual[0].strategy[i], smin, smax)
 
     return individual
+
 
 def sobolGenerator(icls, scls, cache, smin, smax, n):
     if n > 0:
@@ -86,11 +98,12 @@ def sobolGenerator(icls, scls, cache, smin, smax, n):
 
         for i in data:
             i.strategy = scls(numpy.random.uniform(smin, smax))
-            i.mean = array.array('d', [0.0]*len(smin))
-            i.confidence = array.array('d', [0.0]*len(smin))
+            i.mean = array.array("d", [0.0] * len(smin))
+            i.confidence = array.array("d", [0.0] * len(smin))
         return data
     else:
         return []
+
 
 def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
     "setup the DEAP variables"
@@ -107,10 +120,19 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     MAX_STRAT_START = [120.0] * len(cache.MIN_VALUE)
 
+    cache.toolbox.register(
+        "individual",
+        generateIndividualStrategy,
+        creator.Individual,
+        creator.Strategy,
+        len(cache.MIN_VALUE),
+        cache.MIN_VALUE,
+        cache.MAX_VALUE,
+        MIN_STRAT,
+        MAX_STRAT,
+        cache,
+    )
 
-    cache.toolbox.register("individual", generateIndividualStrategy, creator.Individual, creator.Strategy,
-        len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, MIN_STRAT, MAX_STRAT, cache)
-        
     if cache.sobolGeneration:
         cache.toolbox.register("population", sobolGenerator, creator.Individual, creator.Strategy, cache, MIN_STRAT, MAX_STRAT_START)
     else:
@@ -119,25 +141,41 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
 
     cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
 
-    #cache.toolbox.register("mate", cxESBlend, alpha=0.1, imins=cache.MIN_VALUE, imaxs=cache.MAX_VALUE, smins=MIN_STRAT, smaxs=MAX_STRAT)
-
+    # cache.toolbox.register("mate", cxESBlend, alpha=0.1, imins=cache.MIN_VALUE, imaxs=cache.MAX_VALUE, smins=MIN_STRAT, smaxs=MAX_STRAT)
 
     cache.toolbox.register("mate", cxSimulatedBinaryBounded, low=cache.MIN_VALUE, up=cache.MAX_VALUE, slow=MIN_STRAT, sup=MAX_STRAT)
 
-    #if cache.adaptive:
+    # if cache.adaptive:
     #    cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
     #    cache.toolbox.register("force_mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
-    #else:
-    cache.toolbox.register("mutate", mutESLogNormal, c=0.7, indpb=1.0/len(cache.MIN_VALUE), imins=cache.MIN_VALUE, imaxs=cache.MAX_VALUE, smins=MIN_STRAT, smaxs=MAX_STRAT)
-    cache.toolbox.register("force_mutate", mutESLogNormal, c=0.7, indpb=1.0/len(cache.MIN_VALUE), imins=cache.MIN_VALUE, imaxs=cache.MAX_VALUE, smins=MIN_STRAT, smaxs=MAX_STRAT)
+    # else:
+    cache.toolbox.register(
+        "mutate",
+        mutESLogNormal,
+        c=0.7,
+        indpb=1.0 / len(cache.MIN_VALUE),
+        imins=cache.MIN_VALUE,
+        imaxs=cache.MAX_VALUE,
+        smins=MIN_STRAT,
+        smaxs=MAX_STRAT,
+    )
+    cache.toolbox.register(
+        "force_mutate",
+        mutESLogNormal,
+        c=0.7,
+        indpb=1.0 / len(cache.MIN_VALUE),
+        imins=cache.MIN_VALUE,
+        imaxs=cache.MAX_VALUE,
+        smins=MIN_STRAT,
+        smaxs=MAX_STRAT,
+    )
 
     cache.toolbox.register("select", nsga3_selection.sel_nsga_iii)
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
     cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
-    cache.toolbox.register('grad_search', grad_search)
+    cache.toolbox.register("grad_search", grad_search)
 
-    cache.toolbox.register('map', map_function)
-
+    cache.toolbox.register("map", map_function)
 
 
 def cxSimulatedBinaryBounded(ind1, ind2, low, up, slow, sup):
@@ -187,25 +225,25 @@ def cxSimulatedBinaryBounded(ind1, ind2, low, up, slow, sup):
                     eta1 = ind2.strategy[i]
                     eta2 = ind1.strategy[i]
 
-                #x1 = min(ind1[i], ind2[i])
-                #x2 = max(ind1[i], ind2[i])
+                # x1 = min(ind1[i], ind2[i])
+                # x2 = max(ind1[i], ind2[i])
                 rand = random.random()
 
                 beta = 1.0 + (2.0 * (x1 - xl) / (x2 - x1))
-                alpha = 2.0 - beta**-(eta1 + 1)
+                alpha = 2.0 - beta ** -(eta1 + 1)
                 if rand <= 1.0 / alpha:
-                    beta_q = (rand * alpha)**(1.0 / (eta1 + 1))
+                    beta_q = (rand * alpha) ** (1.0 / (eta1 + 1))
                 else:
-                    beta_q = (1.0 / (2.0 - rand * alpha))**(1.0 / (eta1 + 1))
+                    beta_q = (1.0 / (2.0 - rand * alpha)) ** (1.0 / (eta1 + 1))
 
                 c1 = 0.5 * (x1 + x2 - beta_q * (x2 - x1))
 
                 beta = 1.0 + (2.0 * (xu - x2) / (x2 - x1))
-                alpha = 2.0 - beta**-(eta2 + 1)
+                alpha = 2.0 - beta ** -(eta2 + 1)
                 if rand <= 1.0 / alpha:
-                    beta_q = (rand * alpha)**(1.0 / (eta2 + 1))
+                    beta_q = (rand * alpha) ** (1.0 / (eta2 + 1))
                 else:
-                    beta_q = (1.0 / (2.0 - rand * alpha))**(1.0 / (eta2 + 1))
+                    beta_q = (1.0 / (2.0 - rand * alpha)) ** (1.0 / (eta2 + 1))
                 c2 = 0.5 * (x1 + x2 + beta_q * (x2 - x1))
 
                 c1 = min(max(c1, xl), xu)

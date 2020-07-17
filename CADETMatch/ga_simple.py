@@ -1,5 +1,5 @@
-#This is a simple implemtnation of NSGA2 that runs on a single thread and has the same kind of interface as the scipy optimize tools
-#The reason for this is that finding the maximum likelihood and bandwidth works better with NSGA2 and the optimizers built into scipy
+# This is a simple implemtnation of NSGA2 that runs on a single thread and has the same kind of interface as the scipy optimize tools
+# The reason for this is that finding the maximum likelihood and bandwidth works better with NSGA2 and the optimizers built into scipy
 
 from deap import algorithms
 from deap import base
@@ -13,6 +13,7 @@ import multiprocessing
 
 from addict import Dict
 
+
 def sobolGenerator(icls, dimension, lb, ub, n):
     ub = numpy.array(ub)
     lb = numpy.array(lb)
@@ -20,11 +21,12 @@ def sobolGenerator(icls, dimension, lb, ub, n):
         populationDimension = dimension
         populationSize = n
         sobol = SALib.sample.sobol_sequence.sample(populationSize, populationDimension)
-        data = numpy.apply_along_axis(list, 1, sobol) * (ub-lb) + lb
+        data = numpy.apply_along_axis(list, 1, sobol) * (ub - lb) + lb
         data = list(map(icls, data))
         return data
     else:
         return []
+
 
 def ga_min(func, lb, ub, ngen=500, mu=200, args=None, stop=40):
     FitnessMin = create("FitnessMin", base.Fitness, weights=[-1.0,])
@@ -38,12 +40,12 @@ def ga_min(func, lb, ub, ngen=500, mu=200, args=None, stop=40):
         toolbox.register("evaluate", func)
     toolbox.register("population", sobolGenerator, Individual, len(lb), lb, ub)
     toolbox.register("mate", tools.cxSimulatedBinaryBounded, low=lb, up=ub, eta=30.0)
-    toolbox.register("mutate", tools.mutPolynomialBounded, low=lb, up=ub, eta=20.0, indpb=1.0/len(lb))
+    toolbox.register("mutate", tools.mutPolynomialBounded, low=lb, up=ub, eta=20.0, indpb=1.0 / len(lb))
 
     ref_points = tools.uniform_reference_points(1, 16)
     toolbox.register("select", tools.selSPEA2)
 
-    toolbox.register('map', map)
+    toolbox.register("map", map)
 
     pop = toolbox.population(n=mu)
 
@@ -57,7 +59,9 @@ def ga_min(func, lb, ub, ngen=500, mu=200, args=None, stop=40):
     invalid_ind = [ind for ind in pop if not ind.fitness.valid]
     fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
-        ind.fitness.values = [fit,]
+        ind.fitness.values = [
+            fit,
+        ]
         if fit < best_score:
             best_score = fit
             best = ind
@@ -66,31 +70,32 @@ def ga_min(func, lb, ub, ngen=500, mu=200, args=None, stop=40):
     for gen in range(1, ngen):
         multiprocessing.get_logger().info("%s %s %s", gen, mu, last_progress)
         offspring = algorithms.varAnd(pop, toolbox, 1.0, 1.0)
-   
+
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
         fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
 
         for ind, fit in zip(invalid_ind, fitnesses):
-            ind.fitness.values = [fit,]
+            ind.fitness.values = [
+                fit,
+            ]
 
             if fit < best_score:
                 best_score = fit
                 best = ind
                 last_progress = gen
 
-
         if gen - last_progress > stop:
             break
 
         # Select the next generation population
         pop = toolbox.select(pop + offspring, mu)
-    
+
     result.x = best
     result.fun = best_score
     result.population = pop
 
-    if gen < (ngen-1):
+    if gen < (ngen - 1):
         result.success = True
     else:
         result.success = True
@@ -100,8 +105,8 @@ def ga_min(func, lb, ub, ngen=500, mu=200, args=None, stop=40):
     return result
 
 
-#From DEAP and modified, need to get rid of this entirely and figure out how to just build the class
-#I modified this version so it does not create a global class
+# From DEAP and modified, need to get rid of this entirely and figure out how to just build the class
+# I modified this version so it does not create a global class
 def create(name, base, **kargs):
     dict_inst = {}
     dict_cls = {}
