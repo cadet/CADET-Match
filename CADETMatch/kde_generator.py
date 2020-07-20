@@ -221,7 +221,7 @@ def synthetic_error_simulation(json_path):
         temp.filename = template_path.as_posix()
         temp.load()
 
-        util.setupSimulation(temp, times, cache.cache.target[name]["smallest_peak"], cache.cache)
+        util.setupSimulation(temp, times, name, cache.cache)
 
         nsec = temp.root.input.solver.sections.nsec
 

@@ -114,7 +114,8 @@ class Cache:
             self.settings["resultsDirBase"] = Path(self.settings["resultsDir"])
 
         self.abstolFactor = self.settings.get("abstolFactor", 1e-3)
-        self.abstolFactorGrad = self.settings.get("abstolFactorGrad", 1e-12)
+        self.abstolFactorGrad = self.settings.get("abstolFactorGrad", 1e-7)
+        self.abstolFactorGradMax = self.settings.get("abstolFactorGradMax", 1e-10)
         self.dynamicTolerance = bool(self.settings.get("dynamicTolerance", False))
         self.gradFineStop = self.settings.get("gradFineStop", 1e-14)
 
@@ -490,6 +491,7 @@ class Cache:
                     peak_maxes.append(temp[featureName]["peak_max"] / temp[featureName]["factor"])
 
         temp["smallest_peak"] = min(peak_maxes)
+        temp["largest_peak"] = max(peak_maxes)
         temp["units_used"] = units_used
         return temp
 

@@ -909,6 +909,25 @@ def eval_population_base(
     )
 
 
+def get_grad_tolerance(cache, name):
+    smallest_peak = cache.target[name]['smallest_peak']
+    largest_peak = cache.target[name]['largest_peak']
+
+    grad_tol = cache.abstolFactorGrad * smallest_peak
+    grad_tol_min = cache.abstolFactorGradMax * largest_peak
+
+    return max([grad_tol, grad_tol_min])
+
+def get_evo_tolerance(cache, name):
+    smallest_peak = cache.target[name]['smallest_peak']
+    largest_peak = cache.target[name]['largest_peak']
+
+    evo_tol = cache.abstolFactor * smallest_peak
+    evo_tol_min = cache.abstolFactorGradMax * largest_peak
+
+    return max([evo_tol, evo_tol_min])
+
+
 def writeMetaFront(cache, meta_hof, path_meta_csv):
     new_data = [individual.csv_line for individual in meta_hof.items]
     new_data = pandas.DataFrame(new_data, columns=cache.headers)
@@ -1089,7 +1108,7 @@ def confidence_eta(eta, xl, xu):
     return mean, confidence
 
 
-def setupSimulation(sim, times, smallest_peak, cache):
+def setupSimulation(sim, times, name, cache):
     "set the user solution times to match the times vector and adjust other sim parameters to required settings"
 
     try:
@@ -1106,7 +1125,7 @@ def setupSimulation(sim, times, smallest_peak, cache):
     sim.root.input.solver.sections.section_times[-1] = times[-1]
 
     if cache.dynamicTolerance:
-        sim.root.input.solver.time_integrator.abstol = cache.abstolFactor * smallest_peak
+        sim.root.input.solver.time_integrator.abstol = get_evo_tolerance(cache, name)
         sim.root.input.solver.time_integrator.reltol = 0.0
 
     multiprocessing.get_logger().info(

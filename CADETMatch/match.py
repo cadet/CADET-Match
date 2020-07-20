@@ -243,7 +243,7 @@ def setupTemplates(cache):
         if "set_values_auto" in experiment:
             setTemplateValuesAuto(template, experiment["set_values_auto"], cache)
 
-        util.setupSimulation(template, cache.target[name]["time"], cache.target[name]["smallest_peak"], cache)
+        util.setupSimulation(template, cache.target[name]["time"], name, cache)
 
         start = time.time()
         util.runExperiment(None, experiment, cache.settings, cache.target, template, experiment.get("timeout", 1800), cache)
@@ -278,7 +278,7 @@ def setupTemplates(cache):
         template_final = Cadet(template.root.copy())
         template_final.filename = template_path.as_posix()
         if cache.dynamicTolerance:
-            template_final.root.input.solver.time_integrator.abstol = cache.abstolFactorGrad
+            template_final.root.input.solver.time_integrator.abstol = util.get_grad_tolerance(cache, name)
             template_final.root.input.solver.time_integrator.reltol = 0.0
 
         start = time.time()
