@@ -135,6 +135,7 @@ class Cache:
         self.setupMinMax()
 
         self.WORST = [self.badScore] * self.numGoalsOrig
+        self.WORST_META = [1e308] * len(self.meta_headers)
 
         self.settings["transform"] = self.transform
 

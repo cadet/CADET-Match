@@ -59,7 +59,7 @@ def fitness_base(runner, template_name, individual, json_path, run_experiment):
             sim_values.extend(result["sim_value"])
             exp_values.extend(result["exp_value"])
         else:
-            return cache.cache.WORST, [], None, individual
+            return cache.cache.WORST, [], cache.cache.WORST_META, None, individual
 
     rmse = score_calc.rmse_combine(exp_values, sim_values)
 
@@ -67,7 +67,7 @@ def fitness_base(runner, template_name, individual, json_path, run_experiment):
         multiprocessing.get_logger().info("NaN found for %s %s", individual, scores)
 
     # human scores
-    humanScores = numpy.concatenate([util.calcMetaScores(scores, cache.cache), [error, rmse]])
+    meta_score = numpy.concatenate([util.calcMetaScores(scores, cache.cache), [error, rmse]])
 
     for result in results.values():
         if result["cadetValuesKEQ"]:
@@ -79,9 +79,9 @@ def fitness_base(runner, template_name, individual, json_path, run_experiment):
     csv_record.extend(["EVO", "NA"])
     csv_record.extend(cadetValuesKEQ)
     csv_record.extend(progress.score_trans(cache.cache, scores))
-    csv_record.extend(meta_score_trans(cache.cache, humanScores))
+    csv_record.extend(meta_score_trans(cache.cache, meta_score))
 
-    return scores, csv_record, humanScores, results, tuple(individual)
+    return scores, csv_record, meta_score, results, tuple(individual)
 
 
 def saveExperiments(save_name_base, settings, target, results):

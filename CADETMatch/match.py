@@ -128,7 +128,7 @@ def print_version():
         ("matplotlib", "3.2.1"),
         ("pandas", "1.0.5"),
         ("h5py", "2.10.0"),
-        ("cadet", "0.4"),
+        ("cadet", "0.6"),
         ("seaborn", "0.10.1"),
         ("scikit-learn", "0.23.1"),
     ]
