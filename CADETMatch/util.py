@@ -436,7 +436,7 @@ def setupMCMC(cache):
 def update_json_mcmc(settings):
     data = H5()
     data.filename = settings["mcmc_h5"]
-    data.load(paths="/bounds_change/json")
+    data.load(paths=["/bounds_change/json"])
     json_data = json.loads(data.root.bounds_change.json)
 
     if "parameters_mcmc" in settings:

@@ -303,7 +303,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     if "mcmc_h5" in cache.settings:
         data = cadet.H5()
         data.filename = cache.settings["mcmc_h5"]
-        data.load(paths="/bounds_change/center_trans")
+        data.load(paths=["/bounds_change/center_trans"])
         previous_parameters = data.root.bounds_change.center_trans.shape[1]
     else:
         previous_parameters = 0
