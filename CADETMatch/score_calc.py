@@ -27,7 +27,6 @@ def norm_rmse(exp_data, sim_data):
 
 def rmse_combine(exp_datas, sim_datas):
     len_entries = numpy.array([len(exp_data) for exp_data in exp_datas])
-    total_entries = numpy.sum(len_entries)
     sse_s = numpy.array([sse_norm(exp_data, sim_data) for exp_data, sim_data in zip(exp_datas, sim_datas)])
     mse_s = sse_s / len_entries
     mean_total = numpy.sum(mse_s)
