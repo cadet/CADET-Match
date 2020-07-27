@@ -109,7 +109,7 @@ def log_posterior(x):
 
     ll, scores, csv_record, meta_score, results, individual = log_likelihood(theta, json_path)
     if results is None:
-        return -numpy.inf, None, None, None, None, individual
+        return -numpy.inf, None, None, None, None, None, individual
     else:
         return ll, theta, scores, csv_record, meta_score, results, individual
 
