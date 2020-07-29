@@ -14,7 +14,7 @@ import os
 from cadet import Cadet, H5
 import subprocess
 import sys
-import json
+import jstyleson
 import time
 import csv
 import psutil
@@ -356,7 +356,7 @@ def repeatSimulation(idx):
     "read the original json file and copy it to a subdirectory for each repeat and change where the target data is written"
     settings_file = Path(sys.argv[1])
     with settings_file.open() as json_data:
-        settings = json.load(json_data)
+        settings = jstyleson.load(json_data)
 
         baseDir = settings.get("baseDir", None)
         if baseDir is not None:
@@ -374,7 +374,7 @@ def repeatSimulation(idx):
 
         new_settings_file = resultDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:
-            json.dump(settings, json_data, indent=4, sort_keys=True)
+            jstyleson.dump(settings, json_data, indent=4, sort_keys=True)
         return new_settings_file
 
 
@@ -382,7 +382,7 @@ def setupMCMC(cache):
     "read the original json file and make an mcmc file based on it with new boundaries"
     settings_file = Path(sys.argv[1])
     with settings_file.open() as json_data:
-        settings = json.load(json_data)
+        settings = jstyleson.load(json_data)
         settings["continueMCMC"] = 0
 
         baseDir = settings.get("baseDir", None)
@@ -429,7 +429,7 @@ def setupMCMC(cache):
 
         new_settings_file = resultDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:
-            json.dump(settings, json_data, indent=4, sort_keys=False)
+            jstyleson.dump(settings, json_data, indent=4, sort_keys=False)
         return new_settings_file
 
 
@@ -437,7 +437,7 @@ def update_json_mcmc(settings):
     data = H5()
     data.filename = settings["mcmc_h5"]
     data.load(paths=["/bounds_change/json"])
-    json_data = json.loads(data.root.bounds_change.json)
+    json_data = jstyleson.loads(data.root.bounds_change.json)
 
     if "parameters_mcmc" in settings:
         new_parameters = settings["parameters_mcmc"]
@@ -461,7 +461,7 @@ def setupAltFeature(cache, name):
     "read the original json file and make an mcmc file based on it with new boundaries"
     settings_file = Path(sys.argv[1])
     with settings_file.open() as json_data:
-        settings = json.load(json_data)
+        settings = jstyleson.load(json_data)
 
         baseDir = settings.get("baseDir", None)
         if baseDir is not None:
@@ -499,7 +499,7 @@ def setupAltFeature(cache, name):
 
         new_settings_file = resultDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:
-            json.dump(settings, json_data, indent=4, sort_keys=True)
+            jstyleson.dump(settings, json_data, indent=4, sort_keys=True)
         return new_settings_file
 
 
@@ -537,7 +537,7 @@ def copyCSVWithNoise(idx, center, noise):
     "read the original json file and create a new set of simulation data and simulation file in a subdirectory with noise"
     settings_file = Path(sys.argv[1])
     with settings_file.open() as json_data:
-        settings = json.load(json_data)
+        settings = jstyleson.load(json_data)
 
         baseDir = Path(settings["resultsDir"]) / str(idx)
         baseDir.mkdir(parents=True, exist_ok=True)
@@ -566,7 +566,7 @@ def copyCSVWithNoise(idx, center, noise):
 
         new_settings_file = baseDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:
-            json.dump(settings, json_data)
+            jstyleson.dump(settings, json_data)
         return new_settings_file
 
 

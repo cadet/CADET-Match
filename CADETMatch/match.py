@@ -131,6 +131,7 @@ def print_version():
         ("cadet", "0.6"),
         ("seaborn", "0.10.1"),
         ("scikit-learn", "0.23.1"),
+        ("jstyleson", "0.0.2")
     ]
 
     for module, version_tested in modules:

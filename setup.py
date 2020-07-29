@@ -33,7 +33,8 @@ setuptools.setup(
           'seaborn>=0.10.1',
           'sklearn',
           'scikit-learn>=0.23.1',
-          'importlib-metadata>=1.7.0'
+          'importlib-metadata>=1.7.0',
+          'jstyleson>=0.0.2'
       ],
     classifiers=[
         "Programming Language :: Python :: 3",

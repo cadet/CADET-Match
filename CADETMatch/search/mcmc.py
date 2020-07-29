@@ -39,7 +39,7 @@ import CADETMatch.de as de
 import CADETMatch.de_snooker as de_snooker
 import CADETMatch.stretch as stretch
 
-import json
+import jstyleson
 import shutil
 
 log2 = numpy.log(2)
@@ -249,7 +249,7 @@ def change_bounds_json(cache, lb, ub, mcmc_store):
     new_settings_file = settings_file.with_name(new_name)
 
     with settings_file.open() as json_data:
-        settings = json.load(json_data)
+        settings = jstyleson.load(json_data)
 
         idx = 0
         for parameter in settings["parameters"]:
@@ -263,9 +263,9 @@ def change_bounds_json(cache, lb, ub, mcmc_store):
                 idx = idx + count
 
         with new_settings_file.open(mode="w") as json_data:
-            json.dump(settings, json_data, indent=4, sort_keys=False)
+            jstyleson.dump(settings, json_data, indent=4, sort_keys=False)
 
-        mcmc_store.root.bounds_change.json = json.dumps(settings["parameters"], sort_keys=False)
+        mcmc_store.root.bounds_change.json = jstyleson.dumps(settings["parameters"], sort_keys=False)
 
     # copy the original file to a backup name
     shutil.copy(settings_file, settings_file_backup)
@@ -273,7 +273,7 @@ def change_bounds_json(cache, lb, ub, mcmc_store):
     # copy over our new settings file to the original file also
     # this is so that external programs also see the new bounds
     with settings_file.open(mode="w") as json_data:
-        json.dump(settings, json_data, indent=4, sort_keys=False)
+        jstyleson.dump(settings, json_data, indent=4, sort_keys=False)
 
     return new_settings_file.as_posix()
 

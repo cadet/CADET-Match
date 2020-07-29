@@ -1,7 +1,7 @@
 "Cache module. Used to store per worker information so it does not need to be recalculated"
 
 from pathlib import Path
-import json
+import jstyleson
 from cadet import Cadet
 
 import numpy
@@ -190,7 +190,7 @@ class Cache:
 
             settings_file = Path(self.json_path)
             with settings_file.open() as json_data:
-                settings = json.load(json_data)
+                settings = jstyleson.load(json_data)
 
                 self.settings["parameters"] = settings["parameters"]
 
@@ -225,7 +225,7 @@ class Cache:
     def setupSettings(self):
         settings_file = Path(self.json_path)
         with settings_file.open() as json_data:
-            self.settings = json.load(json_data)
+            self.settings = jstyleson.load(json_data)
 
             if "CSV" in self.settings:
                 self.settings["csv"] = self.settings["CSV"]
