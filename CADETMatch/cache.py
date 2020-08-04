@@ -284,8 +284,8 @@ class Cache:
 
                     settings = self.scores[feature["type"]].get_settings(feature)
 
-                    if settings.meta_mask:
-                        self.numGoals += len(temp)
+                    #if settings.meta_mask:
+                    self.numGoals += len(temp)
                     badScore.append(settings.badScore)
 
                     self.score_headers.extend(temp)

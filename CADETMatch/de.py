@@ -49,5 +49,5 @@ class DEMove(RedBlueMove):
             random.shuffle(w)
             g = np.diff(w, axis=0) * self.g0 + f[i]
             q[i] = s[i] + g
-            q[i] = q[i] % 1
+            #q[i] = q[i] % 1
         return q, np.zeros(Ns, dtype=np.float64)

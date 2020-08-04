@@ -44,9 +44,8 @@ import shutil
 
 log2 = numpy.log(2)
 
-acceptance_target = 0.234
-acceptance_delta = 0.15
-
+min_acceptance = 0.2
+acceptance_delta = 0.05
 
 def log_previous(cadetValues, kde_previous, kde_previous_scaler):
     # find the right values to use
@@ -100,6 +99,12 @@ def log_posterior_vectorize(population, json_path, cache, halloffame, meta_hof, 
     return results
 
 
+def outside_bounds(x, cache):
+    for i, lb, ub in zip(x, cache.MIN_VALUE, cache.MAX_VALUE):
+        if i < lb or i > ub:
+            return True
+    return False
+
 def log_posterior(x):
     theta, json_path = x
     if json_path != cache.cache.json_path:
@@ -107,9 +112,12 @@ def log_posterior(x):
         util.setupLog(cache.cache.settings["resultsDirLog"], "main.log")
         cache.cache.setup(json_path)
 
+    if outside_bounds(theta, cache.cache):
+        return -numpy.inf, theta, cache.cache.WORST, [], cache.cache.WORST_META, None, theta
+
     ll, scores, csv_record, meta_score, results, individual = log_likelihood(theta, json_path)
     if results is None:
-        return -numpy.inf, None, None, None, None, None, individual
+        return -numpy.inf, theta, cache.cache.WORST, [], cache.cache.WORST_META, None, individual
     else:
         return ll, theta, scores, csv_record, meta_score, results, individual
 
@@ -492,7 +500,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
             average_converge = numpy.mean(converge)
-            if (acceptance_target - acceptance_delta) < average_converge < (acceptance_target + acceptance_delta):
+            if average_converge > min_acceptance:
                 multiprocessing.get_logger().info("burn in completed at iteration %s", generation)
                 finished = True
 
@@ -501,7 +509,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
                 finished = True
 
             if not finished:
-                new_distance = numpy.abs(average_converge - acceptance_target)
+                new_distance = min_acceptance - average_converge
                 if new_distance < distance:
                     distance_n = sampler._moves[1].n
                     distance = new_distance
@@ -511,22 +519,13 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
                     )
                     converge[:] = numpy.nan
                     prev_n = sampler._moves[1].n
-                    if average_converge > (acceptance_target + 3 * acceptance_delta):
-                        # n must be increased to decrease the acceptance rate (step size)
-                        power += 4
-                    elif average_converge > (acceptance_target + 2 * acceptance_delta):
-                        # n must be increased to decrease the acceptance rate (step size)
-                        power += 2
-                    elif average_converge > (acceptance_target + 1 * acceptance_delta):
-                        # n must be increased to decrease the acceptance rate (step size)
-                        power += 1
-                    elif average_converge < (acceptance_target - 3 * acceptance_delta):
+                    if average_converge < (min_acceptance - 3 * acceptance_delta):
                         # n must be decreased to increase the acceptance rate (step size)
                         power -= 4
-                    elif average_converge < (acceptance_target - 2 * acceptance_delta):
+                    elif average_converge < (min_acceptance - 2 * acceptance_delta):
                         # n must be decreased to increase the acceptance rate (step size)
                         power -= 2
-                    elif average_converge < (acceptance_target - 1 * acceptance_delta):
+                    elif average_converge < (min_acceptance - 1 * acceptance_delta):
                         # n must be decreased to increase the acceptance rate (step size)
                         power -= 1
                     new_n = power
@@ -859,7 +858,7 @@ def mle_process(last=False, interval=3600):
         mle_process.last_time = time.time()
 
 
-def get_population(base, size, diff=0.05):
+def get_population(base, size, diff=0.02):
     new_population = base
     row, col = base.shape
     multiprocessing.get_logger().info("%s", base)
@@ -1001,21 +1000,26 @@ def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_ho
 
     log_likelihoods_lookup = {}
 
+    keep = set()
+
     for ll, theta, fit, csv_line, meta_score, result, individual in results:
         log_likelihoods_lookup[tuple(individual)] = float(ll)
-        if result is not None:
-            parameters = theta
+        if len(csv_line):
+            #if csv_line is blank it means a simulation failed or is out of bounds, if this is handed on for
+            #processing it will cause problems, failed simulations are arleady recorded and we don't want their
+            #failure data in the recorers where other stuff picks it up
+            keep.add(tuple(individual))            
+
             fitnesses_lookup[tuple(individual)] = (fit, csv_line, meta_score, result, tuple(individual))
 
-            ind = cache.toolbox.individual_guess(parameters)
+            ind = cache.toolbox.individual_guess(individual)
             population_lookup[tuple(individual)] = ind
 
-            # result_data['mcmc_score'].append(ll)
-
     # everything above is async (unordered) and needs to be reordered based on the population_order
-    population = [population_lookup[tuple(row)] for row in population_order]
-    fitnesses = [fitnesses_lookup[tuple(row)] for row in population_order]
-    log_likelihoods = [log_likelihoods_lookup[tuple(row)] for row in population_order]
+    population = [population_lookup[tuple(row)] for row in population_order if tuple(row) in keep]
+    fitnesses = [fitnesses_lookup[tuple(row)] for row in population_order if tuple(row) in keep]
+    log_likelihoods = [log_likelihoods_lookup[tuple(row)] for row in population_order if tuple(row) in keep]
+    log_likelihoods_all = [log_likelihoods_lookup[tuple(row)] for row in population_order]
 
     stalled, stallWarn, progressWarn = util.process_population(
         cache.toolbox, cache, population, fitnesses, writer, csv_file, halloffame, meta_hof, progress_hof, process.gen, result_data
@@ -1040,7 +1044,7 @@ def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_ho
 
     process.gen += 1
     process.generation_start = time.time()
-    return log_likelihoods
+    return log_likelihoods_all
 
 
 def process_chain(chain, cache, idx):

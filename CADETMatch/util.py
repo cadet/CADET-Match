@@ -437,7 +437,7 @@ def update_json_mcmc(settings):
     data = H5()
     data.filename = settings["mcmc_h5"]
     data.load(paths=["/bounds_change/json"])
-    json_data = jstyleson.loads(data.root.bounds_change.json)
+    json_data = jstyleson.loads(str(data.root.bounds_change.json, 'ascii'))
 
     if "parameters_mcmc" in settings:
         new_parameters = settings["parameters_mcmc"]
