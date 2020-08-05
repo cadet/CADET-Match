@@ -12,8 +12,8 @@
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>CondaEnv|CondaEnv|cadet_devel</InterpreterId>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\MCMC\Dextran\mcmc_12_334_log_to_norm\mcmc_refine\MCMC_dextran_nsga3.json" -n 6</CommandLineArguments>
-    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\Example1\Isotherm\NSGA3_linear.json" -n 6</CommandLineArguments>
+    <EnableNativeCodeDebugging>True</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -655,6 +655,12 @@
     <Compile Include="CADETMatch\smoothing.py" />
     <Compile Include="CADETMatch\stretch.py" />
     <Compile Include="CADETMatch\synthetic_error.py" />
+    <Compile Include="CADETMatch\transform\auto.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CADETMatch\transform\auto_keq.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="CADETMatch\transform\norm.py" />
     <Compile Include="CADETMatch\transform\norm_add.py" />
     <Compile Include="CADETMatch\transform\norm_diameter.py" />

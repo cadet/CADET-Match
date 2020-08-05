@@ -1,13 +1,14 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Isotherm",
-  "resultsDir": "fit_deap/",
+  "resultsDir": "deap_auto_log_keq_lin_ka",
+  "stopAverage": 0.0,
+  "stopBest": 0.0,
+  "stopRMSE": 0.0,
+  "gradCheck": 0.0,
   "tempDir": "L:/",
   "CSV": "isotherm_NSGA3.csv",
   "checkpointFile": "check",
-  "stopAverage": 1.1,
-  "stopBest": 1.1,
-  "gradCheck": 1.1,
   "gradVector": 1,
   "searchMethod": "NSGA3",
   "mutationRate": 1.0,
@@ -24,17 +25,17 @@
   "dynamicTolerance": 1,
 	"parameters": [
 		{
-			"transform": "keq",
+			"transform": "auto_keq",
 			"component": 0,
 			"bound": 0,
 			"location": [
 				"/input/model/unit_001/adsorption/LIN_KA",
 				"/input/model/unit_001/adsorption/LIN_KD"
 			],
-			"minKA": 1e-8,
-			"maxKA": 1e8,
-			"minKEQ": 0.0001,
-			"maxKEQ": 10000.0
+			"minKA": 4e-5,
+			"maxKA": 4e-3,
+			"minKEQ": 1e-3,
+			"maxKEQ": 1e3
 		}
 	],
 	"experiments": [
