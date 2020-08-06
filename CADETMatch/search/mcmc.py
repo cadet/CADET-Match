@@ -73,6 +73,7 @@ def log_likelihood(individual, json_path):
     scores, csv_record, meta_score, results, individual = evo.fitness(individual, json_path)
 
     if results is None:
+        multiprocessing.get_logger().info("log_likelihood results is None %s", theta)
         return -numpy.inf, scores, csv_record, meta_score, results, individual
 
     if results is not None and kde_previous is not None:
@@ -113,10 +114,12 @@ def log_posterior(x):
         cache.cache.setup(json_path)
 
     if outside_bounds(theta, cache.cache):
+        multiprocessing.get_logger().info("individual is outside of range %s", theta)
         return -numpy.inf, theta, cache.cache.WORST, [], cache.cache.WORST_META, None, theta
 
     ll, scores, csv_record, meta_score, results, individual = log_likelihood(theta, json_path)
     if results is None:
+        multiprocessing.get_logger().info("log_posterior results is None %s", theta)
         return -numpy.inf, theta, cache.cache.WORST, [], cache.cache.WORST_META, None, individual
     else:
         return ll, theta, scores, csv_record, meta_score, results, individual
@@ -1037,7 +1040,7 @@ def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_ho
         process.generation_start,
         result_data,
         line_log=False,
-        probability=numpy.exp(log_likelihoods),
+        probability=numpy.exp(log_likelihoods)
     )
 
     util.graph_process(cache, process.gen)
