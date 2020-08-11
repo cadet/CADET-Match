@@ -179,8 +179,8 @@ class AutoInverseTransform(AbstractTransform):
         return self.getHeaders()
 
     def setBounds(self, parameter, lb, ub):
-        parameter["min"] = 1.0/lb[0]
-        parameter["max"] = 1.0/ub[0]
+        parameter["min"] = lb[0]
+        parameter["max"] = ub[0]
 
 
 plugins = {"auto_inverse": AutoInverseTransform}

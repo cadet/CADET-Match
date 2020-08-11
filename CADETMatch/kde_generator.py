@@ -105,6 +105,8 @@ def setupKDE(cache):
 
     kde = KernelDensity(kernel="gaussian", bandwidth=bandwidth, atol=bw_tol).fit(scores_scaler)
 
+    probability = kde.score_samples(scores_scaler)
+
     joblib.dump(scaler, mcmcDir / "kde_scaler.joblib")
 
     joblib.dump(kde, mcmcDir / "kde_score.joblib")
@@ -116,6 +118,7 @@ def setupKDE(cache):
     h5_data.root.scores = scores
     h5_data.root.scores_mirror = scores_mirror
     h5_data.root.scores_mirror_scaled = scores_scaler
+    h5_data.root.probability = probability
     h5_data.save()
 
     cwd = str(Path(__file__).parent)

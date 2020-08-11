@@ -44,8 +44,8 @@ import shutil
 
 log2 = numpy.log(2)
 
-min_acceptance = 0.1
-acceptance_delta = 0.05
+min_acceptance = 0.05
+acceptance_delta = 0.02
 
 def log_previous(cadetValues, kde_previous, kde_previous_scaler):
     # find the right values to use
@@ -73,7 +73,7 @@ def log_likelihood(individual, json_path):
     scores, csv_record, meta_score, results, individual = evo.fitness(individual, json_path)
 
     if results is None:
-        multiprocessing.get_logger().info("log_likelihood results is None %s", theta)
+        multiprocessing.get_logger().info("log_likelihood results is None %s", individual)
         return -numpy.inf, scores, csv_record, meta_score, results, individual
 
     if results is not None and kde_previous is not None:
@@ -135,9 +135,10 @@ def addChain(*args):
 
 def converged_bounds(chain, length, error_level):
     if chain.shape[1] < (2 * length):
-        return False, None, None
+        return False, None, None, None
     lb = []
     ub = []
+    mid = []
 
     start = chain.shape[1] - length
     stop = chain.shape[1]
@@ -145,16 +146,18 @@ def converged_bounds(chain, length, error_level):
         temp_chain = chain[:, :i, :]
         temp_chain_shape = temp_chain.shape
         temp_chain_flat = temp_chain.reshape(temp_chain_shape[0] * temp_chain_shape[1], temp_chain_shape[2])
-        lb_5, ub_95 = numpy.percentile(temp_chain_flat, [5, 95], 0)
+        lb_5, mid_50, ub_95 = numpy.percentile(temp_chain_flat, [5, 50, 95], 0)
 
         lb.append(lb_5)
         ub.append(ub_95)
+        mid.append(mid_50)
 
     lb = numpy.array(lb)
     ub = numpy.array(ub)
+    mid = numpy.array(mid)
 
     if numpy.all(numpy.std(lb, axis=0) < error_level) and numpy.all(numpy.std(ub, axis=0) < error_level):
-        return True, numpy.mean(lb, axis=0), numpy.mean(ub, axis=0)
+        return True, numpy.mean(lb, axis=0), numpy.mean(mid, axis=0), numpy.mean(ub, axis=0)
     else:
         multiprocessing.get_logger().info(
             "bounds have not yet converged lb min: %s max: %s std: %s  ub min %s max: %s std: %s",
@@ -165,16 +168,16 @@ def converged_bounds(chain, length, error_level):
             numpy.array2string(numpy.max(ub, axis=0), precision=3, separator=","),
             numpy.array2string(numpy.std(ub, axis=0), precision=4, separator=","),
         )
-        return False, None, None
+        return False, None, None, None
 
 
-def rescale(cache, lb, ub, old_lb, old_ub, mcmc_store):
+def rescale(cache, lb, mid, ub, old_lb, old_ub, mcmc_store):
     "give a new lb and ub that will rescale so that the previous lb and ub takes up about 1/2 of the search width"
     new_size = len(lb)
     old_lb_slice = old_lb[:new_size]
     old_ub_slice = old_ub[:new_size]
 
-    center = (ub + lb) / 2.0
+    center = mid
     old_center = (old_ub + old_lb) / 2.0
 
     new_lb = lb - 2 * (center - lb)
@@ -365,14 +368,14 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         util.graph_corner_process(cache, last=False)
 
         if generation % checkInterval == 0:
-            converged, lb, ub = converged_bounds(bounds_chain[:, :, :new_parameters], 200, 1e-3)
+            converged, lb, mid, ub = converged_bounds(bounds_chain[:, :, :new_parameters], 200, 1e-3)
 
             if converged:
                 # sys.exit()
                 finished = True
 
                 new_min_value, center, new_max_value = rescale(
-                    cache, lb, ub, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE), mcmc_store
+                    cache, lb, mid, ub, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE), mcmc_store
                 )
 
                 json_path = change_bounds_json(cache, new_min_value, new_max_value, mcmc_store)
@@ -522,14 +525,13 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
                     )
                     converge[:] = numpy.nan
                     prev_n = sampler._moves[1].n
-                    if average_converge < (min_acceptance - 3 * acceptance_delta):
+                    if average_converge < (min_acceptance - 2 * acceptance_delta):
                         # n must be decreased to increase the acceptance rate (step size)
-                        power -= 4
-                    elif average_converge < (min_acceptance - 2 * acceptance_delta):
+                        power -= 3
+                    elif average_converge < (min_acceptance - acceptance_delta):
                         # n must be decreased to increase the acceptance rate (step size)
                         power -= 2
-                    elif average_converge < (min_acceptance - 1 * acceptance_delta):
-                        # n must be decreased to increase the acceptance rate (step size)
+                    else:
                         power -= 1
                     new_n = power
                     sampler._moves[1].n = power
@@ -861,7 +863,7 @@ def mle_process(last=False, interval=3600):
         mle_process.last_time = time.time()
 
 
-def get_population(base, size, diff=0.02):
+def get_population(base, size, diff=0.1):
     new_population = base
     row, col = base.shape
     multiprocessing.get_logger().info("%s", base)

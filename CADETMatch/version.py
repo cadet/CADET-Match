@@ -16,5 +16,5 @@ __author__ = "William Heymann"
 __email__ = "w.heymann@fz-juelich.de"
 __license__ = "GNU General Public License v3 (GPLv3)"
 __copyright__ = "2020 %s" % __author__
-__version__ = "0.6.2"
+__version__ = "0.6.3"
 __uri__ = "https://github.com/modsim/CADET-Match"
