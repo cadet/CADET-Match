@@ -37,6 +37,9 @@ import joblib
 import subprocess
 import sys
 
+import SALib.sample.sobol_sequence
+import scipy.stats
+
 atol = 1e-3
 rtol = 1e-3
 
@@ -181,7 +184,8 @@ def generate_data(cache):
     return scores, bandwidth
 
 
-def synthetic_error_simulation(json_path):
+def synthetic_error_simulation(x):
+    json_path, error = x
     if json_path != cache.cache.json_path:
         cache.cache.setup_dir(json_path)
         util.setupLog(cache.cache.settings["resultsDirLog"], "main.log")
@@ -261,17 +265,20 @@ def synthetic_error_simulation(json_path):
 
         error_delay = Cadet(temp.root)
 
-        delays = numpy.random.uniform(delay_settings[0], delay_settings[1], nsec)
+        #delays = numpy.random.uniform(delay_settings[0], delay_settings[1], nsec)
+        delays = error[name]['pump_delays']
         delays_store.extend(delays)
 
         synthetic_error.pump_delay(error_delay, delays)
 
-        flow = numpy.random.normal(flow_settings[0], flow_settings[1], error_delay.root.input.solver.sections.nsec)
+        #flow = numpy.random.normal(flow_settings[0], flow_settings[1], error_delay.root.input.solver.sections.nsec)
+        flow = error[name]['flow_rates']
         flows_store.extend(flow)
 
         synthetic_error.error_flow(error_delay, flow)
 
-        load = numpy.random.normal(load_settings[0], load_settings[1], error_delay.root.input.solver.sections.nsec)
+        #load = numpy.random.normal(load_settings[0], load_settings[1], error_delay.root.input.solver.sections.nsec)
+        load = error[name]['loading_concentrations']
         load_store.extend(load)
 
         synthetic_error.error_load(error_delay, load)
@@ -318,6 +325,128 @@ def synthetic_error_simulation(json_path):
 
     return scores, simulations, outputs, errors
 
+def get_section_counts(cache):
+    sections = []
+
+    for experiment in cache.cache.settings["kde_synthetic"]:
+        name = experiment["name"]
+
+        if "file_path" in experiment:
+            template_path = Path(experiment["file_path"])
+        else:
+            resultsDir = cache.cache.settings["resultsDir"]
+            if "resultsDirOriginal" in cache.cache.settings:
+                resultsDir = Path(cache.cache.settings["resultsDirOriginal"])
+
+            template_path = resultsDir / "misc" / ("template_%s_base.h5" % name)
+
+        temp = Cadet()
+        temp.filename = template_path.as_posix()
+        temp.load()
+
+        nsec = temp.root.input.solver.sections.nsec
+
+        sections.append(nsec)
+
+    return sections
+
+def generate_error_sequence(cache):
+    errors = {}
+
+    for experiment in cache.settings["kde_synthetic"]:
+        delay_settings = experiment["delay"]
+        flow_settings = experiment["flow"]
+        load_settings = experiment["load"]
+        count = experiment['count']
+        name = experiment["name"]
+
+        if "file_path" in experiment:
+            template_path = Path(experiment["file_path"])
+        else:
+            resultsDir = cache.cache.settings["resultsDir"]
+            if "resultsDirOriginal" in cache.settings:
+                resultsDir = Path(cache.settings["resultsDirOriginal"])
+
+            template_path = resultsDir / "misc" / ("template_%s_base.h5" % name)
+
+        temp = Cadet()
+        temp.filename = template_path.as_posix()
+        temp.load()
+
+        nsec = temp.root.input.solver.sections.nsec
+
+        error = {}
+
+        #total space is 1 delay per section 1 flow rate per new section and 1 load per new section
+        delay_size = nsec
+        flow_size = 2*nsec
+        load_size = 2*nsec
+        total_size = delay_size + flow_size + load_size
+
+        errors_exp = SALib.sample.sobol_sequence.sample(count, total_size)
+
+        #set delays
+        block = errors_exp[:,:delay_size]
+        block = scipy.stats.uniform.ppf(block, delay_settings[0], delay_settings[1])
+
+        error['pump_delays'] = block
+
+        #set flow range changes
+        lb = delay_size
+        ub = delay_size + flow_size
+
+        #grab the block to work with easier
+        block = errors_exp[:,lb:ub]
+
+        #sobol sequence is [0, 1) and 0 needs to be removed and set to the same distance as the closest distance to 1
+        min_value = 1 - numpy.max(block)
+
+        block[block < min_value] = min_value
+
+        block = scipy.stats.norm.ppf(block, flow_settings[0], flow_settings[1])
+
+        error['flow_rates'] = block
+
+
+        #set loading changes
+        lb = ub
+        ub = lb + load_size
+
+        #grab the block to work with easier
+        block = errors_exp[:,lb:ub]
+
+        #sobol sequence is [0, 1) and 0 needs to be removed and set to the same distance as the closest distance to 1
+        min_value = 1 - numpy.max(block)
+
+        block[block < min_value] = min_value
+
+        block = scipy.stats.norm.ppf(block, load_settings[0], load_settings[1])
+
+        error['loading_concentrations'] = block
+
+        errors[name] = error
+
+    return errors
+
+def split_errors(errors_all):
+    errors = []
+    for name,experiment in errors_all.items():
+        length = len(experiment['flow_rates'])
+        break
+
+    temp = {}
+    for key in errors_all:
+        temp[key] = {}
+
+    for i in range(length):
+        errors.append({key:{} for key in errors_all})
+    
+    for name,experiment in errors_all.items():
+        for error_name, error_value in experiment.items():
+            for idx in range(length):
+                errors[idx][name][error_name] = error_value[idx,:]
+
+    return errors
 
 def generate_synthetic_error(cache):
     if "kde_synthetic" in cache.settings:
@@ -327,17 +456,15 @@ def generate_synthetic_error(cache):
         times = {}
         outputs_all = {}
 
-        delays_all = []
-        flows_all = []
-        load_all = []
         uv_store_all = {}
 
-        for scores, simulations, outputs, errors in cache.toolbox.map(synthetic_error_simulation, [cache.json_path] * count_settings):
-            if scores and simulations and outputs:
+        errors_all = generate_error_sequence(cache)
 
-                delays_all.append(errors["delays"])
-                flows_all.append(errors["flows"])
-                load_all.append(errors["load"])
+        errors_split = split_errors(errors_all)
+        json_path = itertools.repeat(cache.json_path)
+
+        for scores, simulations, outputs, errors in cache.toolbox.map(synthetic_error_simulation, zip(json_path, errors_split)):
+            if scores and simulations and outputs:
 
                 for key, value in errors["uv_store"].items():
                     uv = uv_store_all.get(key, [])
@@ -371,9 +498,7 @@ def generate_synthetic_error(cache):
         for time_name, time in times.items():
             kde_data.root["%s_time" % time_name] = time
 
-        kde_data.root.errors.flows = convert_to_array(flows_all)
-        kde_data.root.errors.delays = convert_to_array(delays_all)
-        kde_data.root.errors.load = convert_to_array(load_all)
+        kde_data.root.errors = errors_all
 
         for key, value in uv_store_all.items():
             kde_data.root.errors[key] = numpy.array(value)

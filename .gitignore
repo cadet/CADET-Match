@@ -372,3 +372,5 @@ __pycache__/
 /Examples/MCMC/Dextran/mcmc_auto_delay_16000
 /Examples/MCMC/Dextran/mcmc_auto_delay_wide
 /Examples/MCMC/Dextran/mcmc_auto_delay_wide_16000
+/Examples/MCMC/Dextran/mcmc_sobol
+/Examples/MCMC/Dextran/mcmc_sobol_10000
