@@ -36,7 +36,9 @@ def refine_time(dt, exp_time_values, sim_data_values, exp_data_values):
 
         return sse
 
-    result = scipy.optimize.minimize(goal_sse, dt, method="powell")
+    result_de = scipy.optimize.differential_evolution(goal_sse, ((dt-0.2, dt+0.2),))
+
+    result = scipy.optimize.minimize(goal_sse, result_de.x[0], method="powell")
 
     return result.x[0]
 
@@ -119,9 +121,11 @@ def refine_time_fun(dt, exp_time_values, exp_data_values, spline):
 
         return sse
 
-    result = scipy.optimize.minimize(goal_sse, dt, method="powell")
+    result_de = scipy.optimize.differential_evolution(goal_sse, ((dt-0.2, dt+0.2),))
 
-    return result.x[0]
+    result_powell = scipy.optimize.minimize(goal_sse, result_de.x[0], method="powell")
+
+    return result_powell.x[0]
 
 
 def time_function_decay(max_time):

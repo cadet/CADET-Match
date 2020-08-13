@@ -448,6 +448,19 @@ def split_errors(errors_all):
 
     return errors
 
+def keep_data(data, lb=0.5, ub=99.5):
+    cutoffs_lb, cutoffs_ub = numpy.percentile(data, [lb, ub], axis=0)
+    remove = numpy.zeros(data.shape)
+    
+    for i in range(data.shape[1]-2):
+        remove[:,i] = data[:,i] > cutoffs_lb[i]
+    remove[:,-2] = (data[:,-2] > cutoffs_lb[-2]) & (data[:,-2] < cutoffs_ub[-2])
+    remove[:,-1] = (data[:,-1] > cutoffs_lb[-1]) & (data[:,-1] < cutoffs_ub[-1])
+    
+    remove = numpy.all(remove, axis=1)
+    
+    return remove
+
 def generate_synthetic_error(cache):
     if "kde_synthetic" in cache.settings:
         count_settings = int(cache.settings["kde_synthetic"][0]["count"])
@@ -484,24 +497,40 @@ def generate_synthetic_error(cache):
 
         scores = numpy.array(scores_all)
 
+        keep_idx = keep_data(scores)
+
+        kept = numpy.sum(keep_idx)
+        removed = len(scores) - kept
+
         dir_base = cache.settings.get("resultsDirBase")
         file = dir_base / "kde_data.h5"
 
         kde_data = H5()
         kde_data.filename = file.as_posix()
 
-        kde_data.root.scores = scores
+        kde_data.root.kept = kept
+        kde_data.root.removed = removed
+
+        kde_data.root.scores = scores[keep_idx, :]
+
+        kde_data.root.original.scores = scores
 
         for output_name, output in outputs_all.items():
-            kde_data.root[output_name] = numpy.array(output)
+            kde_data.root[output_name] = numpy.array(output)[keep_idx,:]
+            kde_data.root.original[output_name] = numpy.array(output)[keep_idx,:]
 
         for time_name, time in times.items():
             kde_data.root["%s_time" % time_name] = time
+            kde_data.root.original["%s_time" % time_name] = time
 
-        kde_data.root.errors = errors_all
+        for name,experiment in errors_all.items():
+            for error_name, error_value in experiment.items():
+                kde_data.root.errors[name][error_name] = error_value[keep_idx, :]
+                kde_data.root.original.errors[name][error_name] = error_value[keep_idx, :]
 
         for key, value in uv_store_all.items():
-            kde_data.root.errors[key] = numpy.array(value)
+            kde_data.root.errors[key] = numpy.array(value)[keep_idx,:]
+            kde_data.root.original.errors[key] = numpy.array(value)[keep_idx,:]
 
         kde_data.save()
 
