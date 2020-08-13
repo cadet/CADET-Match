@@ -30,6 +30,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 import matplotlib.cm
+from sklearn.preprocessing import MinMaxScaler
 
 cm_plot = matplotlib.cm.gist_rainbow
 
@@ -64,7 +65,7 @@ plt.rc("figure", autolayout=True)
 
 
 def plotTube(cache, chain, kde, scaler):
-    results, combinations = processChainForPlots(cache, chain, kde, scaler)
+    results, combinations, probability = processChainForPlots(cache, chain, kde, scaler)
 
     output_mcmc = cache.settings["resultsDirSpace"] / "mcmc"
     output_mcmc.mkdir(parents=True, exist_ok=True)
@@ -76,7 +77,7 @@ def plotTube(cache, chain, kde, scaler):
 
     for expName, value in combinations.items():
         exp_name = expName.split("_")[0]
-        plot_mcmc(output_mcmc, value, expName, "combine", cache.target[exp_name]["time"], cache.target[exp_name]["value"])
+        plot_mcmc(output_mcmc, value, expName, "combine", cache.target[exp_name]["time"], cache.target[exp_name]["value"], probability)
         h5.root[expName] = value["data"]
         h5.root["exp_%s_time" % expName] = cache.target[exp_name]["time"]
         h5.root["exp_%s_value" % expName] = cache.target[exp_name]["value"]
@@ -85,7 +86,7 @@ def plotTube(cache, chain, kde, scaler):
         for unitName, unit in units.items():
             for comp, data in unit.items():
                 expName = "%s_%s" % (exp, unitName)
-                plot_mcmc(output_mcmc, data, expName, comp, cache.target[exp]["time"], cache.target[exp]["value"])
+                plot_mcmc(output_mcmc, data, expName, comp, cache.target[exp]["time"], cache.target[exp]["value"], probability)
                 h5.root["%s_%s" % (expName, comp)] = data["data"]
                 h5.root["exp_%s_%s_time" % (expName, comp)] = cache.target[exp_name]["time"]
                 h5.root["exp_%s_%s_value" % (expName, comp)] = cache.target[exp_name]["value"]
@@ -99,7 +100,7 @@ def processChainForPlots(cache, chain, kde, scaler):
 
     results, combinations = processResultsForPlotting(results, times)
 
-    return results, combinations
+    return results, combinations, numpy.exp(mcmc_score)
 
 
 def processResultsForPlotting(results, times):
@@ -218,7 +219,7 @@ def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected
     h5.save()
 
 
-def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue):
+def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue, probability):
     data = value["data"]
     times = value["time"]
     mean = value["mean"]
@@ -226,28 +227,33 @@ def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue):
     minValues = value["min"]
     maxValues = value["max"]
 
-    plt.figure(figsize=[10, 10])
+    plt.figure(figsize=[20, 10])
     plt.plot(times, mean, label="mean")
     plt.fill_between(times, mean - std, mean + std, color="green", alpha=0.2, label="high prob")
     plt.fill_between(times, minValues, maxValues, color="red", alpha=0.2, label="low prob")
-    plt.plot(expTime, expValue, "r", label="exp")
+    plt.plot(expTime, expValue, "k", label="exp")
     plt.xlabel("time(s)")
     plt.ylabel("conc(mM)")
     plt.legend()
     plt.savefig(str(output_mcmc / ("%s_%s.png" % (expName, name))))
     plt.close()
 
-    row, col = data.shape
-    alpha = 0.01
-    plt.figure(figsize=[10, 10])
-    plt.plot(times, data[0, :], "g", alpha=0.5, label="prob")
-    plt.plot(times, data.transpose(), "g", alpha=alpha)
-    plt.plot(times, mean, "k", label="mean")
-    plt.plot(expTime, expValue, "r", label="exp")
+    scaler = MinMaxScaler()
+    probability = numpy.squeeze(scaler.fit_transform(probability.reshape(-1, 1)))
+
+    sort_index = numpy.argsort(probability)
+
+    colors = plt.cm.rainbow(probability)
+
+    plt.figure(figsize=[20, 10])
+    for idx in sort_index:
+        plt.plot(times, data[idx,:], color=colors[idx])
+    plt.plot(expTime, expValue, "k", label="exp")
     plt.xlabel("time(s)")
     plt.ylabel("conc(mM)")
     plt.legend()
-
+    sm = plt.cm.ScalarMappable(cmap=plt.cm.rainbow, norm=plt.Normalize(vmin=0, vmax=1))
+    plt.colorbar(sm)
     plt.savefig(str(output_mcmc / ("%s_%s_lines.png" % (expName, name))))
     plt.close()
 

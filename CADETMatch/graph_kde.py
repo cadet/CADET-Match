@@ -11,6 +11,7 @@ from CADETMatch.cache import cache
 
 from pathlib import Path
 import numpy
+from sklearn.preprocessing import MinMaxScaler
 
 
 def main():
@@ -18,13 +19,12 @@ def main():
 
     mcmcDir = Path(cache.settings["resultsDirMCMC"])
 
-    h5_data = H5()
-    h5_data.filename = (mcmcDir / "kde_settings.h5").as_posix()
-    h5_data.load()
+    kde_settings = H5()
+    kde_settings.filename = (mcmcDir / "kde_settings.h5").as_posix()
+    kde_settings.load()
 
-    store = h5_data.root.store
+    store = kde_settings.root.store
 
-    mcmcDir = Path(cache.settings["resultsDirMCMC"])
     plt.figure(figsize=[10, 10])
     plt.scatter(numpy.log10(store[:, 0]), numpy.log10(store[:, 1]))
     plt.xlabel("bandwidth")
@@ -38,12 +38,6 @@ def main():
     plt.ylabel("cross_val_score")
     plt.savefig(str(mcmcDir / "bandwidth.png"), bbox_inches="tight")
     plt.close()
-
-    mcmcDir = Path(cache.settings["resultsDirMCMC"])
-
-    h5_data = H5()
-    h5_data.filename = (mcmcDir / "kde_settings.h5").as_posix()
-    h5_data.load()
 
     dir_base = cache.settings.get("resultsDirBase")
     file = dir_base / "kde_data.h5"
@@ -63,14 +57,24 @@ def main():
     error_model = mcmcDir / "error_model"
     error_model.mkdir(parents=True, exist_ok=True)
 
+    scaler = MinMaxScaler()
+    prob = numpy.exp(kde_settings.root.probability)
+    prob = prob[:kde_settings.root.scores.shape[0]]
+    prob = numpy.squeeze(scaler.fit_transform(prob.reshape(-1, 1)))
+
+    sort_index = numpy.argsort(prob)
+
+    colors = plt.cm.rainbow(prob)
+
     for key, value in values.items():
         time = times[key.split("_unit", 1)[0]]
-        plt.figure(figsize=[10, 10])
-        row, col = value.shape
-        alpha = max(1.0 / row, 0.01)
-        plt.plot(time, value.T, "g", alpha=alpha)
+        plt.figure(figsize=[20, 10])
+        for idx in sort_index:
+            plt.plot(time, value[idx,:], color=colors[idx])
         plt.xlabel("time")
         plt.ylabel("concentration")
+        sm = plt.cm.ScalarMappable(cmap=plt.cm.rainbow, norm=plt.Normalize(vmin=0, vmax=1))
+        plt.colorbar(sm)
         plt.savefig((error_model / ("%s.png" % key)).as_posix(), bbox_inches="tight")
         plt.close()
 

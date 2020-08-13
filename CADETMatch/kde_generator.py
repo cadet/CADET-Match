@@ -534,9 +534,9 @@ def generate_synthetic_error(cache):
 
         kde_data.save()
 
-        return scores
+        return scores[keep_idx,:]
 
-    return None, None
+    return None
 
 
 def convert_to_array(seq):
