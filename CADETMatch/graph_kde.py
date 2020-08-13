@@ -78,6 +78,36 @@ def main():
         plt.savefig((error_model / ("%s.png" % key)).as_posix(), bbox_inches="tight")
         plt.close()
 
+    for exp_name in kde_data.root.errors:
+        plt.figure(figsize=[10,10])
+        plt.hist(kde_data.root.errors[exp_name].pump_delays.reshape(-1, 1), bins=40)
+        plt.savefig((error_model / ("%s_pump_delays.png" % exp_name)).as_posix(), bbox_inches="tight")
+        plt.close()
+
+        plt.figure(figsize=[10,10])
+        plt.hist(kde_data.root.errors[exp_name].flow_rates.reshape(-1, 1), bins=40)
+        plt.savefig((error_model / ("%s_flow_rates.png" % exp_name)).as_posix(), bbox_inches="tight")
+        plt.close()
+
+        plt.figure(figsize=[10,10])
+        plt.hist(kde_data.root.errors[exp_name].loading_concentrations.reshape(-1, 1), bins=40)
+        plt.savefig((error_model / ("%s_loading_concentrations.png" % exp_name)).as_posix(), bbox_inches="tight")
+        plt.close()
+
+    (error_model / "scores").mkdir(parents=True, exist_ok=True)
+    for idx in range(kde_settings.root.scores.shape[1]):
+        plt.figure(figsize=[10,10])
+        temp = kde_settings.root.scores[:,idx]
+        plt.hist(temp[temp > 0], bins=40)
+        plt.savefig((error_model / "scores"/ ("%s.png" % idx)).as_posix(), bbox_inches="tight")
+        plt.close()
+
+    (error_model / "scores_mirror_scaled").mkdir(parents=True, exist_ok=True)
+    for idx in range(kde_settings.root.scores_mirror_scaled.shape[1]):
+        plt.figure(figsize=[10,10])
+        plt.hist(kde_settings.root.scores_mirror_scaled[:,idx], bins=40)
+        plt.savefig((error_model / "scores_mirror_scaled"/ ("%s.png" % idx)).as_posix(), bbox_inches="tight")
+        plt.close()
 
 if __name__ == "__main__":
     main()

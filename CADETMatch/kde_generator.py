@@ -529,8 +529,8 @@ def generate_synthetic_error(cache):
                 kde_data.root.original.errors[name][error_name] = error_value[keep_idx, :]
 
         for key, value in uv_store_all.items():
-            kde_data.root.errors[key] = numpy.array(value)[keep_idx,:]
-            kde_data.root.original.errors[key] = numpy.array(value)[keep_idx,:]
+            kde_data.root.uv_store[key] = numpy.array(value)[keep_idx,:]
+            kde_data.root.original.uv_store[key] = numpy.array(value)[keep_idx,:]
 
         kde_data.save()
 
