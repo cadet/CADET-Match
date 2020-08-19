@@ -499,8 +499,8 @@ def generate_synthetic_error(cache):
 
         keep_idx = keep_data(scores)
 
-        kept = numpy.sum(keep_idx)
-        removed = len(scores) - kept
+        kept = int(numpy.sum(keep_idx))
+        removed = int(len(scores) - kept)
 
         dir_base = cache.settings.get("resultsDirBase")
         file = dir_base / "kde_data.h5"

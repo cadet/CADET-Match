@@ -79,20 +79,26 @@ def main():
         plt.close()
 
     for exp_name in kde_data.root.errors:
-        plt.figure(figsize=[10,10])
-        plt.hist(kde_data.root.errors[exp_name].pump_delays.reshape(-1, 1), bins=40)
-        plt.savefig((error_model / ("%s_pump_delays.png" % exp_name)).as_posix(), bbox_inches="tight")
-        plt.close()
+        temp = kde_data.root.errors[exp_name].pump_delays.reshape(-1, 1)
+        if numpy.any(temp > 0):
+            plt.figure(figsize=[10,10])
+            plt.hist(temp, bins=40)
+            plt.savefig((error_model / ("%s_pump_delays.png" % exp_name)).as_posix(), bbox_inches="tight")
+            plt.close()
 
-        plt.figure(figsize=[10,10])
-        plt.hist(kde_data.root.errors[exp_name].flow_rates.reshape(-1, 1), bins=40)
-        plt.savefig((error_model / ("%s_flow_rates.png" % exp_name)).as_posix(), bbox_inches="tight")
-        plt.close()
+        temp = kde_data.root.errors[exp_name].flow_rates.reshape(-1, 1)
+        if numpy.any(temp > 0):
+            plt.figure(figsize=[10,10])
+            plt.hist(temp, bins=40)
+            plt.savefig((error_model / ("%s_flow_rates.png" % exp_name)).as_posix(), bbox_inches="tight")
+            plt.close()
 
-        plt.figure(figsize=[10,10])
-        plt.hist(kde_data.root.errors[exp_name].loading_concentrations.reshape(-1, 1), bins=40)
-        plt.savefig((error_model / ("%s_loading_concentrations.png" % exp_name)).as_posix(), bbox_inches="tight")
-        plt.close()
+        temp = kde_data.root.errors[exp_name].loading_concentrations.reshape(-1, 1)
+        if numpy.any(temp > 0):
+            plt.figure(figsize=[10,10])
+            plt.hist(temp, bins=40)
+            plt.savefig((error_model / ("%s_loading_concentrations.png" % exp_name)).as_posix(), bbox_inches="tight")
+            plt.close()
 
     (error_model / "scores").mkdir(parents=True, exist_ok=True)
     for idx in range(kde_settings.root.scores.shape[1]):
