@@ -41,32 +41,6 @@ import CADETMatch.util as util
 import logging
 import CADETMatch.loggerwriter as loggerwriter
 
-saltIsotherms = {
-    b"STERIC_MASS_ACTION",
-    b"SELF_ASSOCIATION",
-    b"MULTISTATE_STERIC_MASS_ACTION",
-    b"SIMPLE_MULTISTATE_STERIC_MASS_ACTION",
-    b"BI_STERIC_MASS_ACTION",
-}
-
-
-from matplotlib.colors import ListedColormap
-import matplotlib.cm
-
-cmap = matplotlib.cm.winter
-
-# Get the colormap colors
-my_cmap = cmap(numpy.arange(cmap.N))
-
-# Set alpha
-my_cmap[:, -1] = 0.05
-
-# Create new colormap
-my_cmap = ListedColormap(my_cmap)
-
-cm_plot = matplotlib.cm.gist_rainbow
-
-
 def new_range(flat_chain):
     lb_data, mid_data, ub_data = numpy.percentile(flat_chain, [5, 50, 95], 0)
 
@@ -76,11 +50,6 @@ def new_range(flat_chain):
     ub_range = mid_data + 2 * distance
 
     return numpy.array([lb_range, ub_range])
-
-
-def get_color(idx, max_colors, cmap):
-    return cmap(1.0 * float(idx) / max_colors)
-
 
 def main():
     cache.setup_dir(sys.argv[1])

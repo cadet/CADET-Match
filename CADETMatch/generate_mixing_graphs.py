@@ -39,31 +39,36 @@ import CADETMatch.util as util
 import logging
 import CADETMatch.loggerwriter as loggerwriter
 
-from emcee import autocorr
-
 def main(map_function):
     cache.setup_dir(sys.argv[1])
-    util.setupLog(cache.settings["resultsDirLog"], "autocorr.log")
+    util.setupLog(cache.settings["resultsDirLog"], "mixing.log")
     cache.setup(sys.argv[1])
 
-    multiprocessing.get_logger().info("autocorr graphing directory %s", os.getcwd())
+    multiprocessing.get_logger().info("mixing graphing directory %s", os.getcwd())
 
     mcmcDir = Path(cache.settings["resultsDirMCMC"])
     mcmc_h5 = mcmcDir / "mcmc.h5"
     if mcmc_h5.exists():
         mcmc_store = H5()
         mcmc_store.filename = mcmc_h5.as_posix()
-        mcmc_store.load(paths=["/full_chain", "/train_full_chain", "/bounds_full_chain"])
+        mcmc_store.load(paths=["/full_chain", "/train_full_chain", "/bounds_full_chain",
+                               "/full_chain_transform", "/train_full_chain_transform", "/bounds_full_chain_transform"])
 
         progress_path = Path(cache.settings["resultsDirBase"]) / "result.h5"
 
         graph_dir = cache.settings["resultsDirSpace"] / "mcmc"
 
+        mixing = graph_dir / "mixing"
+        mixing.mkdir(parents=True, exist_ok=True)
+
         input_headers = cache.parameter_headers_actual
 
-        for chain in ("full_chain", "train_full_chain", "bounds_full_chain"):
+        chain_names = ("full_chain", "train_full_chain", "bounds_full_chain", 
+                       "full_chain_transform", "train_full_chain_transform", "bounds_full_chain_transform")
+
+        for chain in chain_names:
             if chain in mcmc_store.root:
-                plot_chain(input_headers, mcmc_store.root[chain], chain, graph_dir / chain)
+                plot_chain(input_headers, mcmc_store.root[chain], chain, mixing / ("mixing_%s" % chain))
 
 
 def plot_chain(headers, chain, chain_name, graph_dir):
@@ -75,34 +80,19 @@ def plot_chain(headers, chain, chain_name, graph_dir):
         canvas = FigureCanvas(fig)
         graph = fig.add_subplot(1, 1, 1)
 
+        chain_length = chain.shape[1]
+        x = numpy.linspace(0, chain_length -1, chain_length)
+
         lines = []
         for j in range(chain.shape[0]):
-            lines.append(autocorr.function_1d(chain[j, :, i]))
-            graph.plot(lines[-1])
-        graph.plot(numpy.mean(numpy.array(lines), axis=0), "k", linewidth=4)
+            graph.plot(x, chain[j, :, i])
 
-        graph.set_xlabel("time")
-        graph.set_ylabel("correlation")
-        filename = "correlation_%s.png" % (headers[i])
+        graph.set_xlabel("chain length")
+        graph.set_ylabel("value")
+        filename = "mixing_%s.png" % (headers[i])
         filename = filename.replace(":", "_").replace("/", "_")
 
-        sum_lines = numpy.sum(numpy.array(lines), axis=0)
-        sum_lines = sum_lines / chain.shape[0]
-        taus = 2.0 * numpy.cumsum(sum_lines) - 1.0
-        tau = taus[autocorr.auto_window(taus, 5)]
-
-        graph.set_title("Correlation graph %s  Tau: %.2f" % (headers[i], tau))
-        fig.savefig((graph_dir / filename).as_posix())
-
-        fig = figure.Figure(figsize=[15, 7])
-        canvas = FigureCanvas(fig)
-        graph = fig.add_subplot(1, 1, 1)
-        graph.set_title("Tau graph %s  Tau: %.2f" % (headers[i], tau))
-        graph.set_xlabel("time")
-        graph.set_ylabel("tau")
-        graph.plot(taus, "k", linewidth=4)
-        filename = "tau_%s.png" % (headers[i])
-        filename = filename.replace(":", "_").replace("/", "_")
+        graph.set_title("Mixing graph %s" % headers[i])
         fig.savefig((graph_dir / filename).as_posix())
 
 
