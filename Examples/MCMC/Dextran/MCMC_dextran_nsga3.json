@@ -1,7 +1,7 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET/VCPKG_4_single/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
-  "resultsDir": "mcmc_sobol_de_1000",
+  "resultsDir": "mcmc_sobol_de_1000_test3",
   "tempDir": "L:/",
   "CSV": "dextran_MCMC.csv",
   "stopAverage": 0.0,
@@ -25,15 +25,15 @@
             ],
             "delay": [
                 0.0,
-                10.0
+                0.0
             ],
             "flow": [
               1.0,
-              0.0065
+              0.001
             ],
             "load": [
               1.0,
-              0.009
+              0.001
             ],
             "uv_noise_norm": [1.0, 0.001],
             "count": 1000
@@ -53,8 +53,8 @@
       "component": -1,
       "bound": -1,
       "location": "/input/model/unit_001/COL_POROSITY",
-      "min": 0.3,
-      "max": 0.5
+      "min": 0.2,
+      "max": 0.6
     }
   ],
   "experiments": [

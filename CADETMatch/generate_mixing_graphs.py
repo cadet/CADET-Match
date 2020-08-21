@@ -39,6 +39,14 @@ import CADETMatch.util as util
 import logging
 import CADETMatch.loggerwriter as loggerwriter
 
+from matplotlib.colors import ListedColormap
+import matplotlib.cm
+
+cm_plot = matplotlib.cm.gist_rainbow
+
+def get_color(idx, max_colors, cmap):
+    return cmap(1.0 * float(idx) / max_colors)
+
 def main(map_function):
     cache.setup_dir(sys.argv[1])
     util.setupLog(cache.settings["resultsDirLog"], "mixing.log")
@@ -85,7 +93,7 @@ def plot_chain(headers, chain, chain_name, graph_dir):
 
         lines = []
         for j in range(chain.shape[0]):
-            graph.plot(x, chain[j, :, i])
+            graph.plot(x, chain[j, :, i], color = get_color(j, chain.shape[0] - 1, cm_plot))
 
         graph.set_xlabel("chain length")
         graph.set_ylabel("value")

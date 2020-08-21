@@ -371,23 +371,36 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
             converged, lb, mid, ub = converged_bounds(bounds_chain[:, :, :new_parameters], 200, 1e-3)
 
             if converged:
-                # sys.exit()
                 finished = True
 
                 new_min_value, center, new_max_value = rescale(
                     cache, lb, mid, ub, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE), mcmc_store
                 )
 
+                p_burn_trans = util.convert_population(p, cache)
+
+                multiprocessing.get_logger().info("before bounds conversion %s", p_burn_trans)
+                multiprocessing.get_logger().info("before bounds conversion p_burn %s", p)
+
                 json_path = change_bounds_json(cache, new_min_value, new_max_value, mcmc_store)
                 cache.resetTransform(json_path)
                 sampler.log_prob_fn.args[0] = json_path
                 sampler.log_prob_fn.args[1] = cache
+
+                p_burn = numpy.array([util.convert_individual_inverse(i, cache) for i in p_burn_trans])
+
+                p_burn_trans = util.convert_population(p_burn, cache)
+
+                multiprocessing.get_logger().info("after bounds conversion %s", p_burn_trans)
+                multiprocessing.get_logger().info("after bounds conversion p_burn %s", p_burn)
             else:
                 multiprocessing.get_logger().info("bounds have not yet converged in gen %s", generation)
 
     sampler.reset()
     checkpoint["state"] = "burn_in"
-    checkpoint["p_burn"] = p
+    checkpoint["p_burn"] = p_burn
+    checkpoint['ln_prob_burn'] = ln_prob
+    checkpoint['rstate_burn'] = random_state
 
     write_interval(-1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_auto_bounds_write)
 
@@ -557,7 +570,9 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     checkpoint["state"] = "chain"
     checkpoint["p_chain"] = p
     checkpoint["ln_prob_burn"] = ln_prob
+    checkpoint["ln_prob_chain"] = ln_prob
     checkpoint["rstate_burn"] = random_state
+    checkpoint["rstate_chain"] = random_state
     checkpoint["sampler_a"] = sampler._moves[1].n
 
     write_interval(-1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_burn_write)
@@ -863,7 +878,7 @@ def mle_process(last=False, interval=3600):
         mle_process.last_time = time.time()
 
 
-def get_population(base, size, diff=0.1):
+def get_population(base, size, diff=0.02):
     new_population = base
     row, col = base.shape
     multiprocessing.get_logger().info("%s", base)
@@ -873,20 +888,20 @@ def get_population(base, size, diff=0.1):
         # create new entries
         indexes = numpy.random.choice(new_population.shape[0], size - row, replace=True)
         temp = new_population[indexes, :]
-        rand = numpy.random.uniform(1.0 - diff, 1.0 + diff, size=temp.shape)
+        rand = numpy.random.normal(1.0, diff, size=temp.shape)
         new_population = numpy.concatenate([new_population, temp * rand])
     if row > size:
         # randomly select entries to keep
         indexes = numpy.random.choice(new_population.shape[0], size, replace=False)
         multiprocessing.get_logger().info("indexes: %s", indexes)
         new_population = new_population[indexes, :]
-    change = numpy.random.normal(1.0, 0.01, new_population.shape)
-    multiprocessing.get_logger().info(
-        "Initial population condition number before %s  after %s",
-        numpy.linalg.cond(new_population),
-        numpy.linalg.cond(new_population * change),
-    )
-    return new_population * change
+    #change = numpy.random.normal(1.0, 0.01, new_population.shape)
+    #multiprocessing.get_logger().info(
+    #    "Initial population condition number before %s  after %s",
+    #    numpy.linalg.cond(new_population),
+    #    numpy.linalg.cond(new_population * change),
+    #)
+    return new_population #* change
 
 
 def resetPopulation(checkpoint, cache):
@@ -916,13 +931,14 @@ def resetPopulation(checkpoint, cache):
             previousResults = numpy.hstack([previousResults, numpy.repeat(stat_MLE, row, 0)])
             multiprocessing.get_logger().info("row: %s  col:%s   shape: %s", row, col, previousResults.shape)
 
-        population = get_population(previousResults, populationSize, diff=0.1)
+        population = get_population(previousResults, populationSize, diff=0.02)
+        checkpoint["starting_population"] = population
         checkpoint["starting_population"] = [util.convert_individual_inverse(i, cache) for i in population]
         multiprocessing.get_logger().info("p_burn startup population: %s", population)
         multiprocessing.get_logger().info("p_burn startup: %s", checkpoint["starting_population"])
     else:
         checkpoint["starting_population"] = SALib.sample.sobol_sequence.sample(populationSize, parameters)
-    checkpoint["p_burn"] = checkpoint["p_bounds"] = checkpoint["starting_population"]
+    checkpoint["p_bounds"] = checkpoint["starting_population"]
 
 
 def getCheckPoint(checkpointFile, cache):

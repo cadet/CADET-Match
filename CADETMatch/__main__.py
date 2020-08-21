@@ -26,6 +26,8 @@ def makeParser():
 
     parser.add_argument("--generate_mcmc_plot_tube", help="Generate mcmc plot tube graphs", action="store_true")
 
+    parser.add_argument("--generate_mcmc_mixing", help="Generate mcmc mixing graphs", action="store_true")
+
     parser.add_argument("--generate_mle", help="Generate maximum liklihood", action="store_true")
 
     parser.add_argument("-n", help="Number of scoop processes to use. Use 1 for debugging", default=0)
@@ -64,6 +66,8 @@ if __name__ == "__main__":
         sys.exit(run_command("CADETMatch.generate_corner_graphs", args.json, args.n))
     if args.generate_graphs_autocorr:
         sys.exit(run_command("CADETMatch.generate_autocorr_graphs", args.json, args.n))
+    if args.generate_mcmc_mixing:
+        sys.exit(run_command("CADETMatch.generate_mixing_graphs", args.json, args.n))
     if args.generate_graphs:
         sys.exit(run_command("CADETMatch.generate_graphs", args.json, args.n, ["1"]))
     if args.generate_graphs_all:

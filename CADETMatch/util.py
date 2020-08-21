@@ -1186,42 +1186,31 @@ def graph_corner_process(cache, last=False, interval=1200):
 
     cwd = str(Path(__file__).parent)
 
-    if last:
-        ret = subprocess.run(
-            [sys.executable, "generate_corner_graphs.py", str(cache.json_path), str(getCoreCounts())],
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            close_fds=True,
-            cwd=cwd,
-        )
+    graph_scripts = ("generate_corner_graphs.py", "generate_autocorr_graphs.py", "generate_mixing_graphs.py")
 
-        ret = subprocess.run(
-            [sys.executable, "generate_autocorr_graphs.py", str(cache.json_path), str(getCoreCounts())],
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            close_fds=True,
-            cwd=cwd,
-        )
+    if last:
+        for script in graph_scripts:
+            ret = subprocess.run(
+                [sys.executable, script, str(cache.json_path), str(getCoreCounts())],
+                stdin=None,
+                stdout=None,
+                stderr=None,
+                close_fds=True,
+                cwd=cwd,
+            )
+
         graph_corner_process.last_time = time.time()
     elif (time.time() - graph_corner_process.last_time) > interval:
-        subprocess.run(
-            [sys.executable, "generate_corner_graphs.py", str(cache.json_path), str(getCoreCounts())],
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            close_fds=True,
-            cwd=cwd,
-        )
-        subprocess.run(
-            [sys.executable, "generate_autocorr_graphs.py", str(cache.json_path), str(getCoreCounts())],
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            close_fds=True,
-            cwd=cwd,
-        )
+        for script in graph_scripts:
+            subprocess.run(
+                [sys.executable, script, str(cache.json_path), str(getCoreCounts())],
+                stdin=None,
+                stdout=None,
+                stderr=None,
+                close_fds=True,
+                cwd=cwd,
+            )
+
         graph_corner_process.last_time = time.time()
 
 
