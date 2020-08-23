@@ -305,6 +305,48 @@ def process_sampler_auto_bounds_write(cache, mcmc_store):
     mcmc_store.root.bounds_flat_chain_transform = bounds_chain_flat_transform
 
 
+def select_bounds(chain, lb_per=15.9, ub_per=84.1, max_time=5):
+    chain_shape = chain.shape
+    flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
+    size = chain_shape[0]
+    lb, ub = numpy.percentile(flat_chain, [lb_per, ub_per], axis=0)
+
+    multiprocessing.get_logger().info("bounds selected  lb(%s) %s  ub(%s) %s", lb_per, lb, ub_per, ub)
+
+    selected = (flat_chain > lb) & (flat_chain< ub)
+    selected = numpy.all(selected, 1)
+
+    multiprocessing.get_logger().info("bounds selected %s from %s", sum(selected), len(flat_chain))
+
+    data_reduced = flat_chain[selected, :]
+
+    a = set()
+
+    #if this takes more than max_time to create enough entries take the existing ones and just augment them
+    #this should prevent getting trapped
+    start = time.time()
+
+    while len(a) < size:
+        idx = numpy.random.randint(0, data_reduced.shape[0])
+        sample = data_reduced[idx,:]
+        a.add(tuple(sample))
+
+        if time.time() > (start+max_time):
+            multiprocessing.get_logger().info("bounds time exceeded need to augment")
+            break
+    
+    select = numpy.array(list(a))
+    row = len(select)
+
+    if row < size:
+        indexes = numpy.random.choice(select.shape[0], size - row, replace=True)
+        temp = select[indexes, :]
+        rand = numpy.random.normal(1.0, diff, size=temp.shape)
+        select = numpy.concatenate([select, temp * rand])
+
+    return select
+
+
 def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     bounds_seq = checkpoint.get("bounds_seq", [])
 
@@ -379,10 +421,12 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
                     cache, lb, mid, ub, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE), mcmc_store
                 )
 
-                p_burn_trans = util.convert_population(p, cache)
+                p_burn = select_bounds(bounds_chain, lb_per=15.9, ub_per=84.1, max_time=5)
+
+                p_burn_trans = util.convert_population(p_burn, cache)
 
                 multiprocessing.get_logger().info("before bounds conversion %s", p_burn_trans)
-                multiprocessing.get_logger().info("before bounds conversion p_burn %s", p)
+                multiprocessing.get_logger().info("before bounds conversion p_burn %s", p_burn)
 
                 json_path = change_bounds_json(cache, new_min_value, new_max_value, mcmc_store)
                 cache.resetTransform(json_path)
@@ -400,6 +444,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
                 checkpoint["p_burn"] = p_burn
                 checkpoint['ln_prob_burn'] = ln_prob
                 checkpoint['rstate_burn'] = random_state
+                checkpoint["starting_population"] = p_burn
 
                 write_checkpoint(-1, checkpoint, checkpointFile)
 
