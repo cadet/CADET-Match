@@ -373,6 +373,8 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
             if converged:
                 finished = True
 
+                write_interval(-1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_auto_bounds_write)
+
                 new_min_value, center, new_max_value = rescale(
                     cache, lb, mid, ub, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE), mcmc_store
                 )
@@ -393,17 +395,18 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
                 multiprocessing.get_logger().info("after bounds conversion %s", p_burn_trans)
                 multiprocessing.get_logger().info("after bounds conversion p_burn %s", p_burn)
+
+                checkpoint["state"] = "burn_in"
+                checkpoint["p_burn"] = p_burn
+                checkpoint['ln_prob_burn'] = ln_prob
+                checkpoint['rstate_burn'] = random_state
+
+                write_checkpoint(-1, checkpoint, checkpointFile)
+
+                sampler.reset()
             else:
                 multiprocessing.get_logger().info("bounds have not yet converged in gen %s", generation)
-
-    sampler.reset()
-    checkpoint["state"] = "burn_in"
-    checkpoint["p_burn"] = p_burn
-    checkpoint['ln_prob_burn'] = ln_prob
-    checkpoint['rstate_burn'] = random_state
-
-    write_interval(-1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_auto_bounds_write)
-
+                
 
 def process_interval(cache, mcmc_store, interval_chain, interval_chain_transform):
     mean = numpy.mean(interval_chain_transform, 0)
@@ -697,15 +700,25 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     write_interval(-1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_run_write)
 
 
+def write_checkpoint(interval, checkpoint, checkpointFile):
+    "write the checkpoint and mcmc data at most every n seconds"
+    if "last_time" not in write_checkpoint.__dict__:
+        write_checkpoint.last_time = time.time()
+
+    if time.time() - write_checkpoint.last_time > interval:
+        with checkpointFile.open("wb") as cp_file:
+            pickle.dump(checkpoint, cp_file)
+
+        write_checkpoint.last_time = time.time()
+
 def write_interval(interval, cache, checkpoint, checkpointFile, mcmc_store, process_mcmc_store):
     "write the checkpoint and mcmc data at most every n seconds"
     if "last_time" not in write_interval.__dict__:
         write_interval.last_time = time.time()
 
-    if time.time() - write_interval.last_time > interval:
-        with checkpointFile.open("wb") as cp_file:
-            pickle.dump(checkpoint, cp_file)
+    write_checkpoint(interval, checkpoint, checkpointFile)
 
+    if time.time() - write_interval.last_time > interval:
         writeMCMC(cache, mcmc_store, process_mcmc_store)
 
         write_interval.last_time = time.time()
