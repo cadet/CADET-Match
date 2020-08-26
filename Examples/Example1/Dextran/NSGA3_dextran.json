@@ -1,9 +1,9 @@
 {
-  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET/VCPKG_4_single/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Dextran",
   //tempDir should point to a temporary drive or fast drive
     "tempDir": "L:/",
-  "resultsDir": "fit_vector_true",
+  "resultsDir": "L:/fit_vector_true",
   "CSV": "dextran_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 0.0,
@@ -15,7 +15,7 @@
   "localRefine": "gradient",
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
-  "generations": 1000,
+  "generations": 4,
   "population": 100,
   "metaResultsOnly": 1,
   "sobolGeneration":1,

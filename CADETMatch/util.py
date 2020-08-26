@@ -65,7 +65,6 @@ def get_times_values(simulation, target, selected=None):
 
     return times[selected], values[selected] * target["factor"]
 
-
 def sse(data1, data2):
     return numpy.sum((data1 - data2) ** 2)
 
