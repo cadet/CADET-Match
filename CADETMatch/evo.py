@@ -12,6 +12,8 @@ import CADETMatch.cache as cache
 import CADETMatch.score_calc as score_calc
 import CADETMatch.progress as progress
 
+import multiprocessing
+
 ERROR = {"scores": None, "path": None, "simulation": None, "error": None, "cadetValues": None, "cadetValuesKEQ": None}
 
 

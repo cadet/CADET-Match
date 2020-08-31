@@ -322,9 +322,13 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
         featureName = feature["name"]
 
         if featureType in cache.scores:
-            scores, sse, sse_count, sim_time, sim_value, exp_value, minimize = cache.scores[featureType].run(
-                temp, target[experiment["name"]][featureName]
-            )
+            try:
+                scores, sse, sse_count, sim_time, sim_value, exp_value, minimize = cache.scores[featureType].run(
+                    temp, target[experiment["name"]][featureName]
+                )
+            except TypeError:
+                return None
+
             diff = sim_value - exp_value
 
             temp["scores"].extend(scores)

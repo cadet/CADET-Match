@@ -35,6 +35,9 @@ def run(sim_data, feature):
         feature["smoothing_factor"],
     )
 
+    if sim_spline is None:
+        return None
+
     pearson, diff_time = score.pearson_spline_fun(exp_time_zero, exp_data_zero, sim_spline)
 
     exp_data_zero_sse = feature["exp_data_zero_sse"]
@@ -53,7 +56,6 @@ def run(sim_data, feature):
         exp_data_zero_sse,
         [1.0 - i for i in temp],
     )
-
     return data
 
 
@@ -184,9 +186,12 @@ def cut_front(times, values, min_value, max_value, crit_fs, s):
     min_time = float(result.x[0])
 
     needed_points = int((max_time - min_time) * 10)
-    new_times_spline = numpy.linspace(min_time, max_time, needed_points)
-    new_values_spline = spline(new_times_spline)
+    if needed_points > 10:
+        new_times_spline = numpy.linspace(min_time, max_time, needed_points)
+        new_values_spline = spline(new_times_spline)
 
-    spline = scipy.interpolate.InterpolatedUnivariateSpline(new_times_spline, new_values_spline, ext=1)
+        spline = scipy.interpolate.InterpolatedUnivariateSpline(new_times_spline, new_values_spline, ext=1)
 
-    return spline, score.cut_zero(times, smooth_value, min_value, max_value)[0]
+        return spline, score.cut_zero(times, smooth_value, min_value, max_value)[0]
+    else:
+        return None,None
