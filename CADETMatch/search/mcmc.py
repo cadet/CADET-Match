@@ -874,7 +874,6 @@ def run(cache, tools, creator):
     chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 
     if checkpoint["state"] == "complete":
-        tube_process(last=True)
         util.finish(cache)
         checkpoint["state"] = "plot_finish"
 
@@ -883,6 +882,7 @@ def run(cache, tools, creator):
 
     if checkpoint["state"] == "plot_finish":
         mle_process(last=True)
+        tube_process(last=True)
         util.graph_corner_process(cache, last=True)
     return numpy.mean(chain, 0)
 

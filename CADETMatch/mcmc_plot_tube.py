@@ -141,24 +141,16 @@ def fitness(individual):
 
 def genRandomChoice(cache, chain, kde, scaler):
     "want about 1000 items and will be removing about 10% of them"
-    size = 1100
-    chain = chain[~numpy.all(chain == 0, axis=1)]
-    if len(chain) > size:
-        indexes = numpy.random.choice(chain.shape[0], size, replace=False)
-        chain = chain[indexes, :]
+    size = 4000
+    mcmcDir = Path(cache.settings["resultsDirMCMC"])
+    scaler_mle = joblib.load(mcmcDir / "kde_prior_scaler.joblib")
+    kde_mle = joblib.load(mcmcDir / "kde_prior.joblib")  
 
-    lb, ub = numpy.percentile(chain, [5, 95], 0)
-    selected = (chain >= lb) & (chain <= ub)
-    bools = numpy.all(selected, 1)
-    chain = chain[bools, :]
-
-    individuals = []
-
-    for idx in range(len(chain)):
-        individuals.append(chain[idx, :])
+    individuals_mle = kde_mle.sample(size)
+    individuals_scaled = scaler_mle.inverse_transform(individuals_mle)
 
     map_function = util.getMapFunction()
-    fitnesses = map_function(fitness, individuals)
+    fitnesses = map_function(fitness, individuals_scaled)
 
     results = {}
     times = {}

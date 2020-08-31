@@ -115,9 +115,28 @@ def goal_kde(x, kde):
     return -score[0]
 
 
+def get_bounds(bw_sample, bw_score):
+    idx = numpy.argmin(bw_score)
+    bw_start = bw_sample[idx]
+
+    max_idx = len(bw_sample)-1
+
+    idx_lb = idx -2
+    idx_ub = idx + 2
+
+    if idx_lb < 0:
+        idx_lb = 0
+    if idx_ub > max_idx:
+        idx_ub = max_idx
+
+    lb = bw_sample[idx_lb]
+    ub = bw_sample[idx_ub]
+
+    return bw_start, lb, ub
+
 def get_mle(data):
     multiprocessing.get_logger().info("setting up scaler and reducing data")
-    data, data_reduced, data_reduced_bw, scaler = reduce_data(data, 32000, 1000)
+    data, data_reduced, data_reduced_bw, scaler = reduce_data(data, 32000, 10000)
     multiprocessing.get_logger().info("finished setting up scaler and reducing data")
     multiprocessing.get_logger().info("data_reduced shape %s", data_reduced.shape)
 
@@ -134,9 +153,9 @@ def get_mle(data):
     args = zip(bw_sample, itertools.repeat(data_reduced_bw),)
     bw_score = list(map_function(bandwidth_score_map, args))
 
-    idx = numpy.argmin(bw_score)
-    bw_start = bw_sample[idx]
-    result = scipy.optimize.minimize(bandwidth_score, bw_start, args=(data_reduced_bw,), method="powell")
+    bw_start, lb, ub = get_bounds(bw_sample, bw_score)
+
+    result = scipy.optimize.minimize(bandwidth_score, bw_start, args=(data_reduced_bw,), method="powell", bounds=[(lb, ub)])
     bw = 10 ** result.x[0]
 
     multiprocessing.get_logger().info("mle bandwidth: %.2g", bw)
@@ -144,14 +163,12 @@ def get_mle(data):
     kde_ga = KernelDensity(kernel="gaussian", bandwidth=bw, atol=atol, rtol=rtol)
 
     multiprocessing.get_logger().info("fitting kde with mle bandwidth")
-    kde_ga = kde_ga.fit(data_reduced)
+    kde_ga = kde_ga.fit(data)
     multiprocessing.get_logger().info("finished fitting and starting mle search")
 
     result_kde = scipy.optimize.differential_evolution(
-        goal_kde, bounds=list(zip(BOUND_LOW_trans, BOUND_UP_trans)), args=(kde_ga,), updating="deferred", disp=True, popsize=100
+        goal_kde, bounds=list(zip(BOUND_LOW_trans, BOUND_UP_trans)), args=(kde_ga,), disp=True, popsize=100
     )
-
-    # result_kde_powell = scipy.optimize.minimize(goal_kde, result_kde.x, args = (kde_ga,), method='powell')
 
     multiprocessing.get_logger().info("finished mle search")
 

@@ -1285,7 +1285,7 @@ def getMapFunction():
     cores = getCoreCounts()
     if cores == 1:
 
-        multiprocessing.get_logger().info("CADETMatch startup: running single threaded", cores)
+        multiprocessing.get_logger().info("CADETMatch startup: running single threaded")
 
         return map
     else:
