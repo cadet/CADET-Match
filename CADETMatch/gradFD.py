@@ -309,7 +309,7 @@ def refine(x, xtol):
 
         try:
             x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
-            val = scipy.optimize.minimize(goal, x, method="powell", options={"xtol": xtol}, bounds=[(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)])
+            val = scipy.optimize.minimize(goal, x, method="powell", options={"xtol": xtol}, bounds=list(zip(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)))
 
             cadetValues, cadetValuesExtended = util.convert_individual(val.x, cache.cache)
             cadetValuesInput, cadetValuesExtendedInput = util.convert_individual(x, cache.cache)

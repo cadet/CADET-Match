@@ -3,7 +3,7 @@
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Dextran",
   //tempDir should point to a temporary drive or fast drive
     "tempDir": "L:/",
-  "resultsDir": "L:/fit_vector_true",
+  "resultsDir": "fit_vector_true",
   "CSV": "dextran_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 0.0,
@@ -12,7 +12,7 @@
   "gradCheck": 0.0,
   "gradVector": 1,
   "searchMethod": "NSGA3",
-  "localRefine": "gradient",
+  "localRefine": "powell",
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
   "generations": 4,
