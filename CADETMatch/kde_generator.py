@@ -52,6 +52,25 @@ def bandwidth_score(bw, data, store):
     store.append([bandwidth, mean])
     return mean
 
+def get_bounds(bw_sample, bw_score):
+    idx = numpy.argmin(bw_score)
+    bw_start = bw_sample[idx]
+
+    max_idx = len(bw_sample)-1
+
+    idx_lb = idx -2
+    idx_ub = idx + 2
+
+    if idx_lb < 0:
+        idx_lb = 0
+    if idx_ub > max_idx:
+        idx_ub = max_idx
+
+    lb = bw_sample[idx_lb]
+    ub = bw_sample[idx_ub]
+
+    return bw_start, lb, ub
+
 
 def get_bandwidth(scores, cache):
     store = []
@@ -60,11 +79,9 @@ def get_bandwidth(scores, cache):
 
     bw_score = [bandwidth_score([bw,], scores, store) for bw in bw_sample]
 
-    idx = numpy.argmin(bw_score)
+    bw_start, lb, ub = get_bounds(bw_sample, bw_score)
 
-    bw_start = bw_sample[idx]
-
-    result = scipy.optimize.minimize(bandwidth_score, bw_start, args=(scores, store,), method="powell")
+    result = scipy.optimize.minimize(bandwidth_score, bw_start, args=(scores, store,), method="powell", bounds=[(lb, ub)])
     bandwidth = 10 ** result.x[0]
     multiprocessing.get_logger().info("selected bandwidth %s", bandwidth)
 

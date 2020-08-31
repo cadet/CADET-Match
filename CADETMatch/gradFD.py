@@ -304,15 +304,12 @@ def refine(x, xtol):
     if localRefine == "powell":
 
         def goal(x):
-            if numpy.any(x < cache.cache.MIN_VALUE) or numpy.any(x > cache.cache.MAX_VALUE):
-                return 1e300
-
             diff = fitness_grad(x)
             return numpy.sum(diff ** 2.0)
 
         try:
             x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
-            val = scipy.optimize.minimize(goal, x, method="powell", options={"xtol": xtol})
+            val = scipy.optimize.minimize(goal, x, method="powell", options={"xtol": xtol}, bounds=[(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)])
 
             cadetValues, cadetValuesExtended = util.convert_individual(val.x, cache.cache)
             cadetValuesInput, cadetValuesExtendedInput = util.convert_individual(x, cache.cache)
