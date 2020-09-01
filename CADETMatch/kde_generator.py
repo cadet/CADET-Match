@@ -404,7 +404,10 @@ def generate_error_sequence(cache):
 
         #set delays
         block = errors_exp[:,:delay_size]
-        block = scipy.stats.uniform.ppf(block, delay_settings[0], delay_settings[1])
+        if delay_settings[0] != delay_settings[1]:
+            block = scipy.stats.uniform.ppf(block, delay_settings[0], delay_settings[1])
+        else:
+            block = numpy.ones(block.shape) * delay_settings[0]
 
         error['pump_delays'] = block
 
@@ -420,7 +423,10 @@ def generate_error_sequence(cache):
 
         block[block < min_value] = min_value
 
-        block = scipy.stats.norm.ppf(block, flow_settings[0], flow_settings[1])
+        if flow_settings[1] != 0:
+            block = scipy.stats.norm.ppf(block, flow_settings[0], flow_settings[1])
+        else:
+            block = numpy.ones(block.shape) * flow_settings[0]
 
         error['flow_rates'] = block
 
@@ -435,9 +441,12 @@ def generate_error_sequence(cache):
         #sobol sequence is [0, 1) and 0 needs to be removed and set to the same distance as the closest distance to 1
         min_value = 1 - numpy.max(block)
 
-        block[block < min_value] = min_value
+        block[block < min_value] = min_value        
 
-        block = scipy.stats.norm.ppf(block, load_settings[0], load_settings[1])
+        if load_settings[1] != 0:
+            block = scipy.stats.norm.ppf(block, load_settings[0], load_settings[1])
+        else:
+            block = numpy.ones(block.shape) * load_settings[0]
 
         error['loading_concentrations'] = block
 
@@ -493,8 +502,11 @@ def generate_synthetic_error(cache):
         errors_split = split_errors(errors_all)
         json_path = itertools.repeat(cache.json_path)
 
-        for scores, simulations, outputs, errors in cache.toolbox.map(synthetic_error_simulation, zip(json_path, errors_split)):
+        indexes = []
+
+        for idx, (scores, simulations, outputs, errors) in enumerate(cache.toolbox.map(synthetic_error_simulation, zip(json_path, errors_split))):
             if scores and simulations and outputs:
+                indexes.append(idx)
 
                 for key, value in errors["uv_store"].items():
                     uv = uv_store_all.get(key, [])
@@ -511,6 +523,12 @@ def generate_synthetic_error(cache):
                 for key, sim in simulations.items():
                     if key not in times:
                         times[key] = sim.root.output.solution.solution_times
+
+        indexes = numpy.array(indexes)
+
+        for name,experiment in errors_all.items():
+            for error_name, error_value in experiment.items():
+                errors_all[name][error_name] = error_value[indexes,:]
 
         scores = numpy.array(scores_all)
 
