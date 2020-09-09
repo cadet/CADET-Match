@@ -3,6 +3,8 @@ from CADETMatch.cache import cache
 from pathlib import Path
 
 import matplotlib
+import matplotlib.style as mplstyle
+mplstyle.use('fast')
 
 matplotlib.use("Agg")
 

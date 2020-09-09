@@ -21,6 +21,8 @@ with warnings.catch_warnings():
     import h5py
 
 import matplotlib
+import matplotlib.style as mplstyle
+mplstyle.use('fast')
 
 matplotlib.use("Agg")
 
@@ -227,7 +229,7 @@ def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue, probability)
     plt.xlabel("time(s)")
     plt.ylabel("conc(mM)")
     plt.legend()
-    plt.savefig(str(output_mcmc / ("%s_%s.png" % (expName, name))))
+    plt.savefig(str(output_mcmc / ("%s_%s.png" % (expName, name))), bbox_inches="tight", dpi=600)
     plt.close()
 
     scaler = MinMaxScaler()
@@ -246,7 +248,7 @@ def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue, probability)
     plt.legend()
     sm = plt.cm.ScalarMappable(cmap=plt.cm.rainbow, norm=plt.Normalize(vmin=0, vmax=1))
     plt.colorbar(sm)
-    plt.savefig(str(output_mcmc / ("%s_%s_lines.png" % (expName, name))))
+    plt.savefig(str(output_mcmc / ("%s_%s_lines.png" % (expName, name))), bbox_inches="tight", dpi=600)
     plt.close()
 
 

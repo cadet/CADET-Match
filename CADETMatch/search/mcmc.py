@@ -953,13 +953,7 @@ def get_population(base, size, diff=0.02):
         indexes = numpy.random.choice(new_population.shape[0], size, replace=False)
         multiprocessing.get_logger().info("indexes: %s", indexes)
         new_population = new_population[indexes, :]
-    #change = numpy.random.normal(1.0, 0.01, new_population.shape)
-    #multiprocessing.get_logger().info(
-    #    "Initial population condition number before %s  after %s",
-    #    numpy.linalg.cond(new_population),
-    #    numpy.linalg.cond(new_population * change),
-    #)
-    return new_population #* change
+    return new_population
 
 
 def resetPopulation(checkpoint, cache):

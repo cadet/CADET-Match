@@ -159,7 +159,8 @@ def cut_front(times, values, min_value, max_value, crit_fs, s):
         return spline, numpy.zeros(len(times))
 
     def goal(time):
-        return (spline(time) - max_value) ** 2
+        sse = float((spline(time) - max_value) ** 2)
+        return sse
 
     result = scipy.optimize.minimize(goal, max_time, method="powell", tol=1e-5, bounds=[(times[0], times[-1])])
 
@@ -179,7 +180,8 @@ def cut_front(times, values, min_value, max_value, crit_fs, s):
                 break
 
     def goal(time):
-        return (spline(time) - min_value) ** 2
+        sse = float((spline(time) - min_value) ** 2)
+        return sse
 
     result = scipy.optimize.minimize(goal, min_time, method="powell", tol=1e-5, bounds=[(times[0], max_time)])
 

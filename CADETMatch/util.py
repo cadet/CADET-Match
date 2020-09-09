@@ -44,6 +44,8 @@ import CADETMatch.pareto as pareto
 import logging
 import os
 
+#numpy.warnings.filterwarnings('error', category=numpy.VisibleDeprecationWarning)
+
 
 def get_times_values(simulation, target, selected=None):
 

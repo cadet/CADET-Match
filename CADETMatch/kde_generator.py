@@ -9,12 +9,12 @@
 
 import itertools
 import CADETMatch.score as score
+import CADETMatch.kde_util as kde_util
 from cadet import Cadet, H5
 from pathlib import Path
 import numpy
 import multiprocessing
 from sklearn.neighbors import KernelDensity
-from sklearn.model_selection import cross_val_score
 from sklearn import preprocessing
 import copy
 
@@ -42,52 +42,6 @@ import scipy.stats
 
 atol = 1e-3
 rtol = 1e-3
-
-
-def bandwidth_score(bw, data, store):
-    bandwidth = 10 ** bw[0]
-    kde_bw = KernelDensity(kernel="gaussian", bandwidth=bandwidth, atol=atol, rtol=rtol)
-    scores = cross_val_score(kde_bw, data, cv=3)
-    mean = -numpy.mean(scores)
-    store.append([bandwidth, mean])
-    return mean
-
-def get_bounds(bw_sample, bw_score):
-    idx = numpy.argmin(bw_score)
-    bw_start = bw_sample[idx]
-
-    max_idx = len(bw_sample)-1
-
-    idx_lb = idx -2
-    idx_ub = idx + 2
-
-    if idx_lb < 0:
-        idx_lb = 0
-    if idx_ub > max_idx:
-        idx_ub = max_idx
-
-    lb = bw_sample[idx_lb]
-    ub = bw_sample[idx_ub]
-
-    return bw_start, lb, ub
-
-
-def get_bandwidth(scores, cache):
-    store = []
-
-    bw_sample = numpy.linspace(-3, 0, 20)
-
-    bw_score = [bandwidth_score([bw,], scores, store) for bw in bw_sample]
-
-    bw_start, lb, ub = get_bounds(bw_sample, bw_score)
-
-    result = scipy.optimize.minimize(bandwidth_score, bw_start, args=(scores, store,), method="powell", bounds=[(lb, ub)])
-    bandwidth = 10 ** result.x[0]
-    multiprocessing.get_logger().info("selected bandwidth %s", bandwidth)
-
-    store = numpy.array(store)
-    return bandwidth, store
-
 
 def mirror(data):
     data_max = numpy.max(data, 0)
@@ -121,9 +75,11 @@ def setupKDE(cache):
 
     scores_scaler = scaler.transform(scores_mirror)
 
-    bandwidth, store = get_bandwidth(scores_scaler, cache)
+    kde = KernelDensity(kernel='gaussian', atol=atol, rtol=rtol)
 
-    kde = KernelDensity(kernel="gaussian", bandwidth=bandwidth, atol=bw_tol).fit(scores_scaler)
+    kde, bandwidth, store = kde_util.get_bandwidth(kde, scores_scaler)
+
+    kde.fit(scores_scaler)
 
     probability = kde.score_samples(scores_scaler)
 
@@ -154,7 +110,7 @@ def setupKDE(cache):
 
 
 def getScaler(data):
-    scaler = preprocessing.StandardScaler().fit(data)
+    scaler = preprocessing.RobustScaler().fit(data)
     return scaler
 
 
@@ -196,7 +152,7 @@ def generate_data(cache):
 
     scores_scaler = scaler.transform(scores_mirror)
 
-    bandwidth, store = get_bandwidth(scores_scaler, cache)
+    bandwidth, store = get_bandwidth(scores_scaler)
 
     return scores, bandwidth
 

@@ -1,7 +1,6 @@
 import numpy
 from sklearn import preprocessing
 from sklearn.neighbors import KernelDensity
-from sklearn.model_selection import cross_val_score
 import scipy
 import multiprocessing
 import sys
@@ -13,6 +12,7 @@ import pandas
 from addict import Dict
 from CADETMatch.cache import cache
 import CADETMatch.smoothing as smoothing
+import CADETMatch.kde_util as kde_util
 from pathlib import Path
 import warnings
 import joblib
@@ -22,6 +22,8 @@ with warnings.catch_warnings():
     import h5py
 
 import matplotlib
+import matplotlib.style as mplstyle
+mplstyle.use('fast')
 
 matplotlib.use("Agg")
 
@@ -76,7 +78,7 @@ def reduce_data(data, size, bw_size):
 
     data = data[selected, :]
 
-    scaler = preprocessing.StandardScaler().fit(data)
+    scaler = preprocessing.RobustScaler().fit(data)
 
     data = scaler.transform(data)
 
@@ -97,42 +99,10 @@ def reduce_data(data, size, bw_size):
     return data, data_reduced, bw_data_reduced, scaler
 
 
-def bandwidth_score_map(x):
-    return bandwidth_score([x[0],], x[1])
-
-
-def bandwidth_score(bw, data):
-    bandwidth = 10 ** bw[0]
-    kde_bw = KernelDensity(kernel="gaussian", bandwidth=bandwidth, atol=atol, rtol=rtol)
-    scores = cross_val_score(kde_bw, data, cv=3)
-    mean = -numpy.mean(scores)
-    return mean
-
-
 def goal_kde(x, kde):
     test_value = numpy.array(x).reshape(1, -1)
     score = kde.score_samples(test_value)
     return -score[0]
-
-
-def get_bounds(bw_sample, bw_score):
-    idx = numpy.argmin(bw_score)
-    bw_start = bw_sample[idx]
-
-    max_idx = len(bw_sample)-1
-
-    idx_lb = idx -2
-    idx_ub = idx + 2
-
-    if idx_lb < 0:
-        idx_lb = 0
-    if idx_ub > max_idx:
-        idx_ub = max_idx
-
-    lb = bw_sample[idx_lb]
-    ub = bw_sample[idx_ub]
-
-    return bw_start, lb, ub
 
 def get_mle(data):
     multiprocessing.get_logger().info("setting up scaler and reducing data")
@@ -146,24 +116,14 @@ def get_mle(data):
     BOUND_LOW_trans = list(BOUND_LOW_num)
     BOUND_UP_trans = list(BOUND_UP_num)
 
-    map_function = util.getMapFunction()
+    kde_ga = KernelDensity(kernel="gaussian", atol=atol, rtol=rtol)
 
-    bw_sample = numpy.linspace(-3, 0, 20)
+    kde_ga, bandwidth, store = kde_util.get_bandwidth(kde_ga, data_reduced_bw)
 
-    args = zip(bw_sample, itertools.repeat(data_reduced_bw),)
-    bw_score = list(map_function(bandwidth_score_map, args))
-
-    bw_start, lb, ub = get_bounds(bw_sample, bw_score)
-
-    result = scipy.optimize.minimize(bandwidth_score, bw_start, args=(data_reduced_bw,), method="powell", bounds=[(lb, ub)])
-    bw = 10 ** result.x[0]
-
-    multiprocessing.get_logger().info("mle bandwidth: %.2g", bw)
-
-    kde_ga = KernelDensity(kernel="gaussian", bandwidth=bw, atol=atol, rtol=rtol)
+    multiprocessing.get_logger().info("mle bandwidth: %.2g", bandwidth)
 
     multiprocessing.get_logger().info("fitting kde with mle bandwidth")
-    kde_ga = kde_ga.fit(data)
+    kde_ga.fit(data)
     multiprocessing.get_logger().info("finished fitting and starting mle search")
 
     result_kde = scipy.optimize.differential_evolution(
@@ -210,7 +170,10 @@ def process_mle(chain, gen, cache):
     # This step cleans up bad entries
     chain = chain[~numpy.all(chain == 0, axis=1)]
     multiprocessing.get_logger().info("process mle chain shape after cleaning 0 entries %s", chain.shape)
+
+
     mle_x, kde, scaler = get_mle(chain)
+
     multiprocessing.get_logger().info("mle_x: %s", mle_x)
 
     mcmcDir = Path(cache.settings["resultsDirMCMC"])

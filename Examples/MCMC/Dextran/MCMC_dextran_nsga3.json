@@ -1,7 +1,7 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET/VCPKG_4_single/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
-  "resultsDir": "mcmc",
+  "resultsDir": "mcmc_scaler",
   "tempDir": "L:/",
   "CSV": "dextran_MCMC.csv",
   "stopAverage": 0.0,
@@ -15,7 +15,7 @@
     "stallGenerations": 15,
     "continueMCMC": 1,
     "normalizeOutput": 1,
-    "generations": 2,
+    "generations": 20,
   "kde_synthetic": [
 		{
 			"file_path": "dextran_pulse.h5",
@@ -37,7 +37,7 @@
               0.001
             ],
             "uv_noise_norm": [1.0, 0.001],
-            "count": 50
+            "count": 10000
 		}
 	],
   "parameters": [

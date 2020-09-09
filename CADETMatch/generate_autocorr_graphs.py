@@ -1,6 +1,8 @@
 import sys
 
 import matplotlib
+import matplotlib.style as mplstyle
+mplstyle.use('fast')
 
 matplotlib.use("Agg")
 

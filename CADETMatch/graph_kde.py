@@ -1,6 +1,8 @@
 import sys
 
 import matplotlib
+import matplotlib.style as mplstyle
+mplstyle.use('fast')
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -12,6 +14,7 @@ from CADETMatch.cache import cache
 from pathlib import Path
 import numpy
 from sklearn.preprocessing import MinMaxScaler
+
 
 
 def main():
@@ -26,10 +29,21 @@ def main():
     store = kde_settings.root.store
 
     plt.figure(figsize=[10, 10])
-    plt.scatter(numpy.log10(store[:, 0]), numpy.log10(store[:, 1]))
+    plt.scatter(store[:, 0], store[:, 1])
     plt.xlabel("bandwidth")
     plt.ylabel("cross_val_score")
+    plt.yscale('log')
+    plt.xscale('log')
     plt.savefig(str(mcmcDir / "log_bandwidth.png"), bbox_inches="tight")
+    plt.close()
+
+    plt.figure(figsize=[10, 10])
+    plt.scatter(store[:, 0], 1-store[:, 1])
+    plt.xlabel("bandwidth")
+    plt.ylabel("1 - cross_val_score")
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.savefig(str(mcmcDir / "1-log_bandwidth.png"), bbox_inches="tight")
     plt.close()
 
     plt.figure(figsize=[10, 10])
@@ -75,7 +89,7 @@ def main():
         plt.ylabel("concentration")
         sm = plt.cm.ScalarMappable(cmap=plt.cm.rainbow, norm=plt.Normalize(vmin=0, vmax=1))
         plt.colorbar(sm)
-        plt.savefig((error_model / ("%s.png" % key)).as_posix(), bbox_inches="tight")
+        plt.savefig((error_model / ("%s.png" % key)).as_posix(), bbox_inches="tight", dpi=600)
         plt.close()
 
     for exp_name in kde_data.root.errors:
