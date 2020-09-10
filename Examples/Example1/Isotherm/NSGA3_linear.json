@@ -1,7 +1,7 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Isotherm",
-  "resultsDir": "deap_auto_log_keq_lin_ka",
+  "resultsDir": "deap_0",
   "stopAverage": 0.0,
   "stopBest": 0.0,
   "stopRMSE": 0.0,
@@ -47,7 +47,7 @@
 			"features": [
 				{
 					"name": "Pulse",
-					"type": "Shape"
+					"type": "DextranShape"
 				}
 			]
 		}

@@ -27,7 +27,7 @@ def get_settings(feature):
 def goal(offset, frac_exp, sim_data_time, spline, start, stop):
     sim_data_value = spline(sim_data_time - offset)
     frac_sim = util.fractionate(start, stop, sim_data_time, sim_data_value)
-    return numpy.sum((frac_exp - frac_sim) ** 2)
+    return float(numpy.sum((frac_exp - frac_sim) ** 2))
 
 
 def searchRange(times, start_frac, stop_frac, CV_time):

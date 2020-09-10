@@ -70,7 +70,7 @@ def find_time(times, values):
     search_value = 0.9 * max_value
 
     def goal(time):
-        return abs(spline(time) - search_value)
+        return float(abs(spline(time) - search_value))
 
     time_index = numpy.argmax(values >= search_value)
     time_search = times[time_index]

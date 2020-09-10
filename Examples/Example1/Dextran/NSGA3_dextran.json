@@ -12,11 +12,10 @@
   "gradCheck": 0.0,
   "gradVector": 1,
   "searchMethod": "NSGA3",
-  "localRefine": "powell",
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
-  "generations": 4,
-  "population": 100,
+  "generations": 1000,
+  "population": 20,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 30,
@@ -25,12 +24,7 @@
   "continueMCMC":0,
   "graphMetaTime": 600,
   "finalGradRefinement": 1,
-  "fullTrainingData": 1,
   "progress_elapsed_time": 360,
-  "dynamicTolerance":1,
-  "multiStartPercent":0.2,
-  "MultiObjectiveSSE": 1,
-  "abstolFactor":1e-3,
   "parameters": [
     {
       "transform": "norm_log",
@@ -59,7 +53,7 @@
       "features": [
         {
             "name": "Pulse1",
-            "type": "Shape"
+            "type": "DextranShape"
         }
       ]
     }

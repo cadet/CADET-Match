@@ -305,7 +305,7 @@ def refine(x, xtol):
 
         def goal(x):
             diff = fitness_grad(x)
-            return numpy.sum(diff ** 2.0)
+            return float(numpy.sum(diff ** 2.0))
 
         try:
             x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)

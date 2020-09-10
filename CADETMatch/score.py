@@ -271,7 +271,7 @@ def find_cuts(times, values, spline, spline_der):
     max_time = times[max_index]
 
     def goal(time):
-        return -spline_der(time)
+        return -float(spline_der(time))
 
     result = scipy.optimize.minimize(goal, max_time, method="powell")
 
@@ -282,7 +282,7 @@ def find_cuts(times, values, spline, spline_der):
     min_time = times[min_index]
 
     def goal(time):
-        return abs(spline(time) - 1e-3 * max_value)
+        return float(abs(spline(time) - 1e-3 * max_value))
 
     result = scipy.optimize.minimize(goal, min_time, method="powell")
 
