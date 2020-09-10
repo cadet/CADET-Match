@@ -54,6 +54,10 @@
         {
             "name": "Pulse1",
             "type": "DextranShape"
+        },
+        {
+          "name": "AbsTime",
+          "type": "AbsoluteTime"
         }
       ]
     }

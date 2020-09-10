@@ -1,5 +1,6 @@
 import CADETMatch.util as util
 import CADETMatch.calc_coeff as calc_coeff
+import CADETMatch.score as score
 import numpy
 from addict import Dict
 import scipy
@@ -66,15 +67,10 @@ def headers(experimentName, feature):
 def find_time(times, values):
     spline = scipy.interpolate.InterpolatedUnivariateSpline(times, values, ext=3)
 
-    max_value = max(values)
+    arg_max = numpy.argmax(values)
+    max_value = values[arg_max]
     search_value = 0.9 * max_value
 
-    def goal(time):
-        return float(abs(spline(time) - search_value))
+    time = score.find_target(spline, search_value, times[:arg_max], values[:arg_max])
 
-    time_index = numpy.argmax(values >= search_value)
-    time_search = times[time_index]
-
-    result = scipy.optimize.minimize(goal, time_search, method="powell")
-
-    return float(result.x[0])
+    return time

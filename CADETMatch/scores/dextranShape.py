@@ -151,9 +151,9 @@ def cut_front(times, values, min_value, max_value, crit_fs, s):
 
     spline = scipy.interpolate.InterpolatedUnivariateSpline(times, smooth_value, ext=1)
 
-    max_time = find_target(spline, max_value, times, smooth_value)
+    max_time = score.find_target(spline, max_value, times, smooth_value)
 
-    min_time = find_target(spline, min_value, times, smooth_value)
+    min_time = score.find_target(spline, min_value, times, smooth_value)
 
     if max_time is None or min_time is None:
         # result is truly garbage, this means the shape is so distorted compared to the real system that even the spline is not accurate
@@ -171,42 +171,3 @@ def cut_front(times, values, min_value, max_value, crit_fs, s):
         return spline, score.cut_zero(times, smooth_value, min_value, max_value)[0]
     else:
         return None,None
-
-
-def find_target(spline, target, times, values, rate=10):
-    max_index = numpy.argmax(values)
-    max_time = times[max_index]
-    
-    test_times = numpy.linspace(0, max_time, int(max_time)*rate)
-
-    if not len(test_times):
-        return None
-
-    test_values = spline(test_times)
-    
-    error = (test_values - target)**2
-    idx = numpy.argmin(error) 
-    min_idx = 0
-    max_idx = len(test_times) -1
-    
-    lb = test_times[max(idx-1, min_idx)]
-
-    guess = test_times[idx]
-
-    ub = test_times[min(idx+1, max_idx)]
-    
-    def goal(time):
-        sse = float((spline(time) - target) ** 2)
-        return sse
-
-    result = scipy.optimize.minimize(goal, guess, method="powell", tol=1e-5, bounds=[(lb,ub),])
-
-    if result.success is False:
-        multiprocessing.get_logger().info("target %s time %s value %s lb %s guess %s ub %s", target, float(result.x[0]), spline(float(result.x[0])),
-                                          lb, guess, ub)
-        return None
-
-    found_time = float(result.x[0])
-    found_value = spline(found_time)
-    
-    return found_time

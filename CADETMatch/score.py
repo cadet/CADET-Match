@@ -231,39 +231,25 @@ def cut_zero(times, values, min_value, max_value):
     "cut the raw times and values as close to min_value and max_value as possible and set the rest to zero without smoothing"
     data_zero = numpy.zeros(len(times))
 
-    offset = numpy.array([-1, 0, 1])
-
     # find the starting point for the min_index and max_index, the real value could be off by 1 in either direction
     peak_max_index = numpy.argmax(values)
 
-    max_index = numpy.argmax(values[:peak_max_index] >= max_value)
-
-    if not max_index:
-        # if max_index is zero the whole array is below the value we are searching for so just returnt the whole array
+    if values[peak_max_index] < max_value:
+        # the whole array is below the max_value we are looking for
         return values, None, None, None, None
 
-    min_index = numpy.argmax(values[:max_index] >= min_value)
+    max_index = numpy.argmin((values[:peak_max_index] - max_value)**2)
+    min_index = numpy.argmin((values[:max_index] - min_value)**2)
 
-    check_max_index = max_index + offset
-    check_max_value = values[check_max_index]
-    check_max_diff = numpy.abs(check_max_value - max_value)
+    min_time_found = times[min_index]
+    min_value_found = values[min_index]
 
-    check_min_index = min_index + offset
-    check_min_value = values[check_min_index]
-    check_min_diff = numpy.abs(check_min_value - min_value)
-
-    min_index = min_index + offset[numpy.argmin(check_min_diff)]
-    max_index = max_index + offset[numpy.argmin(check_max_diff)]
-
-    min_time = times[min_index]
-    min_value = values[min_index]
-
-    max_time = times[max_index]
-    max_value = values[max_index]
+    max_time_found = times[max_index]
+    max_value_found = values[max_index]
 
     data_zero[min_index : max_index + 1] = values[min_index : max_index + 1]
 
-    return data_zero, min_time, min_value, max_time, max_value
+    return data_zero, min_time_found, min_value_found, max_time_found, max_value_found
 
 
 def find_cuts(times, values, spline, spline_der):
@@ -273,20 +259,63 @@ def find_cuts(times, values, spline, spline_der):
     def goal(time):
         return -float(spline_der(time))
 
-    result = scipy.optimize.minimize(goal, max_time, method="powell")
+    time_space = numpy.linspace(0, max_time, int(max_time)*10)
+    goal_space = -(spline_der(time_space))
+
+    idx = numpy.argmin(goal_space)
+
+    indexes = numpy.array([idx-1, idx, idx+1])
+
+    lb, guess, ub = time_space[indexes]
+
+    result = scipy.optimize.minimize(goal, guess, method="powell", bounds=[(lb, ub),])
 
     max_time = float(result.x[0])
     max_value = float(spline(max_time))
 
-    min_index = numpy.argmax(values >= 1e-3 * max_value)
-    min_time = times[min_index]
+    max_target_time = find_target(spline_der, 1, times, values)
 
-    def goal(time):
-        return float(abs(spline(time) - 1e-3 * max_value))
+    max_index = numpy.argmin((values - max_value)**2)
 
-    result = scipy.optimize.minimize(goal, min_time, method="powell")
-
-    min_time = float(result.x[0])
+    min_time = find_target(spline, 1e-3 * max_value, times[:max_index], values[:max_index])
     min_value = float(spline(min_time))
 
     return min_time, min_value, max_time, max_value
+
+def find_target(spline, target, times, values, rate=10):
+    max_index = numpy.argmax(values)
+    max_time = times[max_index]
+    
+    test_times = numpy.linspace(0, max_time, int(max_time)*rate)
+
+    if not len(test_times):
+        return None
+
+    test_values = spline(test_times)
+    
+    error = (test_values - target)**2
+    idx = numpy.argmin(error) 
+    min_idx = 0
+    max_idx = len(test_times) -1
+    
+    lb = test_times[max(idx-1, min_idx)]
+
+    guess = test_times[idx]
+
+    ub = test_times[min(idx+1, max_idx)]
+    
+    def goal(time):
+        sse = float((spline(time) - target) ** 2)
+        return sse
+
+    result = scipy.optimize.minimize(goal, guess, method="powell", tol=1e-5, bounds=[(lb,ub),])
+
+    found_time = float(result.x[0])
+    found_value = spline(found_time)
+
+    if result.success is False:
+        multiprocessing.get_logger().info("target %s time %s value %s lb %s guess %s ub %s", target, found_time, 
+                                          found_value, lb, guess, ub)
+        return None    
+    
+    return found_time
