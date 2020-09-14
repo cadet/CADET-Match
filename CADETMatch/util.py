@@ -43,6 +43,7 @@ import CADETMatch.pareto as pareto
 
 import logging
 import os
+import scipy.interpolate
 
 #numpy.warnings.filterwarnings('error', category=numpy.VisibleDeprecationWarning)
 
@@ -1366,8 +1367,9 @@ def fractionate_sim(start_times, stop_times, components, simulation, unit):
     fracs = {}
     for component in components:
         sim_value = simulation.root.output.solution[unit]["solution_outlet_comp_%03d" % component]
+        spline = scipy.interpolate.InterpolatedUnivariateSpline(times, sim_value, ext=1)
 
-        fracs[component] = fractionate(start_times, stop_times, times, sim_value)
+        fracs[component] = fractionate_spline(start_times, stop_times, spline)
 
     return fracs
 

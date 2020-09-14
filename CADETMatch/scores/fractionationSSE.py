@@ -4,6 +4,7 @@ import numpy
 import pandas
 from addict import Dict
 import sys
+import scipy.interpolate
 
 """DO NOT USE THIS SCORE. This score only exists for the purpose of a paper to confirm that
 this is not an appropriate method to solve fractionation problems.
@@ -44,7 +45,9 @@ def run(sim_data, feature):
         selected = numpy.isfinite(exp_values)
         sim_value = simulation.root.output.solution[feature["unit"]]["solution_outlet_comp_%03d" % component]
 
-        fractions = util.fractionate(start[selected], stop[selected], times, sim_value)
+        spline = scipy.interpolate.InterpolatedUnivariateSpline(times, sim_value, ext=1)
+
+        fractions = util.fractionate_spline(start[selected], stop[selected], spline)
 
         exp_values_sse.extend(exp_values[selected])
         sim_values_sse.extend(fractions)

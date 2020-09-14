@@ -77,9 +77,7 @@ def run(sim_data, feature):
         )
 
         time_offset = result_powell.x[0]
-        sim_data_value = spline(times - time_offset)
 
-        #fracOffset = util.fractionate(start[selected], stop[selected], times, sim_data_value)
         fracOffset = util.fractionate_spline(start[selected] - time_offset, stop[selected] - time_offset, spline)
 
         # if the simulation scale and exp scale are too different the estimation of similarity, offset etc is not accurate discard if value max/min > 1e3
