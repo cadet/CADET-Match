@@ -25,24 +25,8 @@ def get_settings(feature):
 
 
 def goal(offset, frac_exp, sim_data_time, spline, start, stop):
-    sim_data_value = spline(sim_data_time - offset)
-    frac_sim = util.fractionate(start, stop, sim_data_time, sim_data_value)
+    frac_sim = util.fractionate_spline(start + offset, stop + offset, spline)
     return float(numpy.sum((frac_exp - frac_sim) ** 2))
-
-
-def searchRange(times, start_frac, stop_frac, CV_time):
-    collectionStart = min(start_frac)
-    collectionStop = max(stop_frac)
-
-    searchStart = collectionStart - CV_time
-    searchStop = collectionStop + CV_time
-
-    searchStart = max(searchStart, times[0])
-    searchStop = min(searchStop, times[-1])
-
-    searchIndexStart = numpy.argmax(times[times <= searchStart])
-    searchIndexStop = numpy.argmax(times[times <= searchStop])
-    return searchIndexStart, searchIndexStop
 
 
 def run(sim_data, feature):
@@ -70,8 +54,6 @@ def run(sim_data, feature):
     graph_exp = {}
     graph_sim_offset = {}
 
-    searchIndexStart, searchIndexStop = searchRange(times, start, stop, CV_time)
-
     for component, value_func in funcs:
         exp_values = numpy.array(data[str(component)])
         selected = numpy.isfinite(exp_values)
@@ -79,19 +61,26 @@ def run(sim_data, feature):
 
         spline = scipy.interpolate.InterpolatedUnivariateSpline(times, sim_value, ext=1)
 
-        # get a starting point estimate
-        offsets = numpy.linspace(-times[-1], times[-1], 50)
-        errors = [goal(offset, exp_values[selected], times, spline, start[selected], stop[selected]) for offset in offsets]
-        offset_start = offsets[numpy.argmin(errors)]
+        lb = times[numpy.argmax(sim_value)] - times[-1]
+        ub = times[numpy.argmax(sim_value)] - times[0]
+
+        #getting a starting point estimate
+        offsets = numpy.linspace(lb, ub, 100)
+        errors = numpy.array([goal(offset, exp_values[selected], times, spline, start[selected], stop[selected]) for offset in offsets])
+        idx_min = numpy.argmin(errors)
+
+        offset_start, min_offsets, min_errors = util.find_opt_poly(offsets, errors, idx_min)
 
         result_powell = scipy.optimize.minimize(
-            goal, offset_start, args=(exp_values[selected], times, spline, start[selected], stop[selected]), method="powell"
+            goal, offset_start, args=(exp_values[selected], times, spline, start[selected], stop[selected]), method="powell",
+            bounds=[(min_offsets[0], min_offsets[-1]),]
         )
 
         time_offset = result_powell.x[0]
         sim_data_value = spline(times - time_offset)
 
-        fracOffset = util.fractionate(start[selected], stop[selected], times, sim_data_value)
+        #fracOffset = util.fractionate(start[selected], stop[selected], times, sim_data_value)
+        fracOffset = util.fractionate_spline(start[selected] - time_offset, stop[selected] - time_offset, spline)
 
         # if the simulation scale and exp scale are too different the estimation of similarity, offset etc is not accurate discard if value max/min > 1e3
         max_exp = max(exp_values[selected])

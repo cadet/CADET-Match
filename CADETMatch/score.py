@@ -24,6 +24,28 @@ def roll_spline(times, values, shift):
     return values_new
 
 
+def root_poly(corr, len_times, dt):
+    index = numpy.argmax(corr)
+
+    dt_pre = (index - len_times + 1) * dt
+
+    if index == 0:
+        indexes = numpy.array([index, index+1, index+2])
+        multiprocessing.get_logger().warn("min index encountered in root poly  index: %s  dt: %s", index, dt_pre)
+    elif index == (len(corr)-1):
+        indexes = numpy.array([index-2, index-1, index])
+        multiprocessing.get_logger().warn("max index encountered in root poly  index: %s  dt: %s", index, dt_pre)
+    else:
+        indexes = numpy.array([index-1, index, index+1])
+        
+    x = (indexes - len_times + 1) * dt
+    y = corr[indexes]
+    
+    poly, res = numpy.polynomial.Polynomial.fit(x,y,2, full=True)
+    
+    dt = poly.deriv().roots()[0]
+    return dt
+
 def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     # resample to a much smaller time step to get a more precise offset
     dt_approx = 1e-2
@@ -38,17 +60,7 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
 
     corr = scipy.signal.correlate(exp_resample, sim_resample)
 
-    index = numpy.argmax(corr)
-    
-    dt_pre = (index - len(times) + 1) * dt
-    
-    indexes = numpy.array([index-1, index, index+1])
-    x = (indexes - len(times) + 1) * dt
-    y = corr[indexes]
-    
-    poly, res = numpy.polynomial.Polynomial.fit(x,y,2, full=True)
-    
-    dt = poly.deriv().roots()[0]
+    dt = root_poly(corr, len(times), dt)
     
     # calculate pearson correlation at the new time
     sim_data_values_copy = sim_spline(exp_time_values - dt)
@@ -79,17 +91,7 @@ def pearson_spline_fun(exp_time_values, exp_data_values, sim_spline):
 
     corr = scipy.signal.correlate(exp_resample, sim_resample)
 
-    index = numpy.argmax(corr)
-    
-    dt_pre = (index - len(times) + 1) * dt
-    
-    indexes = numpy.array([index-1, index, index+1])
-    x = (indexes - len(times) + 1) * dt
-    y = corr[indexes]
-    
-    poly, res = numpy.polynomial.Polynomial.fit(x,y,2, full=True)
-    
-    dt = poly.deriv().roots()[0]
+    dt = root_poly(corr, len(times), dt)
     
     # calculate pearson correlation at the new time
     sim_data_values_copy = sim_spline(exp_time_values - dt)

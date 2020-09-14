@@ -600,6 +600,29 @@ def fracStat(time_center, value):
     return mean_time, variance_time, skew_time, mean_value, variance_value, skew_value
 
 
+def fractionate_spline(start_seq, stop_seq, spline):
+    temp = []
+    for (start, stop) in zip(start_seq, stop_seq):
+        temp.append(spline.integral(start, stop) / (stop - start))
+    return numpy.array(temp)
+
+
+def find_opt_poly(x,y, index):
+    if index == 0:
+        indexes = numpy.array([index, index+1, index+2])
+    elif index == (len(x)-1):
+        indexes = numpy.array([index-2, index-1, index])
+    else:
+        indexes = numpy.array([index-1, index, index+1])
+
+    x = x[indexes]
+    y = y[indexes]
+
+    poly, res = numpy.polynomial.Polynomial.fit(x, y,2, full=True)
+    root = poly.deriv().roots()[0]
+    root = numpy.clip(root, x[0], x[1])
+    return root, x, y
+
 def fractionate(start_seq, stop_seq, times, values):
     temp = []
     for (start, stop) in zip(start_seq, stop_seq):

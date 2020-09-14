@@ -14,7 +14,7 @@
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
   "generations": 1000,
-  "population": 12,
+  "population": 100,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 10,
@@ -32,10 +32,10 @@
 				"/input/model/unit_001/adsorption/LIN_KA",
 				"/input/model/unit_001/adsorption/LIN_KD"
 			],
-			"minKA": 4e-5,
-			"maxKA": 4e-3,
-			"minKEQ": 1e-3,
-			"maxKEQ": 1e3
+			"minKA": 4e-20,
+			"maxKA": 4e20,
+			"minKEQ": 1e-20,
+			"maxKEQ": 1e20
 		}
 	],
 	"experiments": [
@@ -47,7 +47,7 @@
 			"features": [
 				{
 					"name": "Pulse",
-					"type": "DextranShape"
+					"type": "Shape"
 				}
 			]
 		}
