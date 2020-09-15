@@ -1,7 +1,7 @@
 {
 	"CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
     "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Fractionation",
-	"resultsDir": "fit_shape",
+	"resultsDir": "fit_sse_38",
 	"tempDir": "L:/",
 	"CSV": "NSGA3.csv",
       "checkpointFile": "check",
@@ -63,7 +63,7 @@
 			"features": [
 				{
 					"name": "PulseComb",
-					"type": "Shape",
+					"type": "SSE",
 					"CSV": "linear2_pulse_comb.csv",
 					"isotherm": [
 						"/output/solution/unit_001/SOLUTION_OUTLET_COMP_000",
@@ -72,7 +72,7 @@
 				},
 				{
 					"name": "Fraction",
-					"type": "fractionationSlide",
+					"type": "fractionationSSE",
 					"fraction_csv": "linear_fraction.csv",
                     "unit_name": "unit_002",
 					"isotherm": "/output/solution/unit_001/SOLUTION_OUTLET_COMP_001"

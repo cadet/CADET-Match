@@ -3,7 +3,7 @@
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Dextran",
   //tempDir should point to a temporary drive or fast drive
     "tempDir": "L:/",
-  "resultsDir": "fit_vector_true",
+  "resultsDir": "fit_cur",
   "CSV": "dextran_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 0.0,
@@ -15,7 +15,7 @@
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
   "generations": 1000,
-  "population": 20,
+  "population": 100,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 30,
@@ -54,10 +54,6 @@
         {
             "name": "Pulse1",
             "type": "DextranShape"
-        },
-        {
-          "name": "AbsTime",
-          "type": "AbsoluteTime"
         }
       ]
     }
