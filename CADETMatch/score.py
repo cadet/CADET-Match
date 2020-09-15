@@ -266,11 +266,14 @@ def find_cuts(times, values, spline, spline_der):
 
     idx = numpy.argmin(goal_space)
 
-    indexes = numpy.array([idx-1, idx, idx+1])
+    guess, time_found, goal_found = util.find_opt_poly(time_space, goal_space, idx)
 
-    lb, guess, ub = time_space[indexes]
+    lb = time_found[0]
+    ub = time_found[-1]
 
     result = scipy.optimize.minimize(goal, guess, method="powell", bounds=[(lb, ub),])
+
+    multiprocessing.get_logger().warn("nfev: %s", result.nfev)
 
     max_time = float(result.x[0])
     max_value = float(spline(max_time))
@@ -297,20 +300,19 @@ def find_target(spline, target, times, values, rate=10):
     
     error = (test_values - target)**2
     idx = numpy.argmin(error) 
-    min_idx = 0
-    max_idx = len(test_times) -1
-    
-    lb = test_times[max(idx-1, min_idx)]
 
-    guess = test_times[idx]
+    guess, time_found, goal_found = util.find_opt_poly(test_times, error, idx)
 
-    ub = test_times[min(idx+1, max_idx)]
+    lb = time_found[0]
+    ub = time_found[-1]
     
     def goal(time):
         sse = float((spline(time) - target) ** 2)
         return sse
 
     result = scipy.optimize.minimize(goal, guess, method="powell", tol=1e-5, bounds=[(lb,ub),])
+
+    multiprocessing.get_logger().warn("nfev: %s", result.nfev)
 
     found_time = float(result.x[0])
     found_value = spline(found_time)
