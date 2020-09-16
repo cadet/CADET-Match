@@ -52,21 +52,16 @@ def refine_butter(times, values, x, y, fs, start):
 
         return -d
 
-    start = numpy.log10(start)
-    lb = numpy.log10(x[-1])
-    ub = numpy.log10(x[0])
-    diff = min(start - lb, ub - start)
-
-    ub_max = fs / 2.0
-    ub_max = numpy.log(ub_max)
-
-    lb = start - 0.2 * diff
-    ub = start + 0.2 * diff
-    ub = min(ub, ub_max)
-
-    result_evo = scipy.optimize.differential_evolution(goal, ((lb, ub),), polish=False)
-
-    crit_fs = 10 ** result_evo.x[0]
+    lb = numpy.log10(x[0])
+    ub = numpy.log10(x[-1])
+    
+    crit_fs_sample = numpy.linspace(lb, ub, 50)
+    errors = numpy.array([goal([i]) for i in crit_fs_sample])
+    
+    root, fs_x, fs_y = util.find_opt_poly(crit_fs_sample, errors, numpy.argmin(errors))
+    
+    result = scipy.optimize.minimize(goal, root, method="powell", bounds=[(fs_x[0], fs_x[-1]),])
+    crit_fs = 10 ** result.x[0]
 
     return crit_fs
 
@@ -92,17 +87,16 @@ def refine_smooth(times, values, x, y, start, name):
 
         return -d
 
-    start = numpy.log10(start)
-    lb = numpy.log10(x[-1])
-    ub = numpy.log10(x[0])
-    diff = min(start - lb, ub - start)
-
-    lb = start - 0.2 * diff
-    ub = start + 0.2 * diff
-
-    result_evo = scipy.optimize.differential_evolution(goal, ((lb, ub),), polish=False)
-
-    s = 10 ** result_evo.x[0]
+    lb = numpy.log10(x[0])
+    ub = numpy.log10(x[-1])
+    
+    smoothing_sample = numpy.linspace(lb, ub, 50)
+    errors = numpy.array([goal([i]) for i in smoothing_sample])
+    
+    root, fs_x, fs_y = util.find_opt_poly(smoothing_sample, errors, numpy.argmin(errors))
+    
+    result = scipy.optimize.minimize(goal, root, method="powell", bounds=[(fs_x[0], fs_x[-1]),])
+    s = 10 ** result.x[0]
 
     spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=5, ext=3)
 

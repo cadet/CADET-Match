@@ -48,35 +48,8 @@ def root_poly(corr, len_times, dt):
 
 def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     # resample to a much smaller time step to get a more precise offset
-    dt_approx = 1e-2
-    points = math.ceil((exp_time_values[-1] - exp_time_values[0])/dt_approx)
-    times = numpy.linspace(exp_time_values[0], exp_time_values[-1], points)
-    dt = times[1] - times[0]
-
     sim_spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)
-    sim_resample = sim_spline(times)
-    exp_spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, exp_data_values, ext=3)
-    exp_resample = exp_spline(times)
-
-    corr = scipy.signal.correlate(exp_resample, sim_resample)
-
-    dt = root_poly(corr, len(times), dt)
-    
-    # calculate pearson correlation at the new time
-    sim_data_values_copy = sim_spline(exp_time_values - dt)
-    try:
-        pear = scipy.stats.pearsonr(exp_data_values, sim_data_values_copy)[0]
-    except ValueError:
-        multiprocessing.get_logger().warn(
-            "Pearson correlation failed to do NaN or InF in array  exp_array: [%s]   sim_array: [%s]",
-            list(exp_data_values),
-            list(sim_data_values_copy),
-        )
-        pear = 0
-    score = pear_corr(pear)
-
-    return score, dt
-
+    return pearson_spline_fun(exp_time_values, exp_data_values, sim_spline)
 
 def pearson_spline_fun(exp_time_values, exp_data_values, sim_spline):
     # resample to a much smaller time step to get a more precise offset
@@ -226,7 +199,6 @@ def pear_corr(cr):
 
     # so far in looking cr has never been negative and the scores mostly just sit in the 0.8 to 0.99999 range
     # I am not even sure if cr could be negative with chromatography (indicating inverse relationship between simulation and experiment)
-    # return (1.0+cr)/2.0
 
 
 def cut_zero(times, values, min_value, max_value):
@@ -273,8 +245,6 @@ def find_cuts(times, values, spline, spline_der):
 
     result = scipy.optimize.minimize(goal, guess, method="powell", bounds=[(lb, ub),])
 
-    multiprocessing.get_logger().warn("nfev: %s", result.nfev)
-
     max_time = float(result.x[0])
     max_value = float(spline(max_time))
 
@@ -311,8 +281,6 @@ def find_target(spline, target, times, values, rate=10):
         return sse
 
     result = scipy.optimize.minimize(goal, guess, method="powell", tol=1e-5, bounds=[(lb,ub),])
-
-    multiprocessing.get_logger().warn("nfev: %s", result.nfev)
 
     found_time = float(result.x[0])
     found_value = spline(found_time)

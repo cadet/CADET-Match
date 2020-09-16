@@ -619,6 +619,10 @@ def find_opt_poly(x,y, index):
     x = x[indexes]
     y = y[indexes]
 
+    if x[0] > x[-1]:  #need to invert order
+        x = x[::-1]
+        y = y[::-1]
+
     poly, res = numpy.polynomial.Polynomial.fit(x, y,2, full=True)
     root = poly.deriv().roots()[0]
     root = numpy.clip(root, x[0], x[1])
