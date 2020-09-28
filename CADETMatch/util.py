@@ -145,7 +145,18 @@ def saveExperiments(save_name_base, settings, target, results, directory, file_p
 
         dst = Path(directory, file_pattern % (save_name_base, experimentName))
 
-        if dst.is_file():  # File already exists don't try to write over it
+        same = False
+        if dst.is_file():
+            #load tolerance to see if the files are actually the same
+            sim_dst = Cadet()
+            sim_dst.filename = dst.as_posix()
+            sim_dst.load(paths=['/input/solver/time_integrator',])
+
+            dst_tol = sim_dst.root.input.solver.time_integrator.abstol
+            sim_tol = simulation.root.input.solver.time_integrator.abstol
+            same = sim_tol == dst_tol
+
+        if same:
             return False
         else:
             simulation.filename = dst.as_posix()

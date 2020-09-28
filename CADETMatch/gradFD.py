@@ -140,7 +140,7 @@ def processOffspring(offspring, temp, csv_lines, meta_csv_lines, gradient_result
 
             ind = cache.toolbox.individual_guess(i.x)
 
-            fit, csv_line, meta_score, results, individual = cache.toolbox.evaluate(ind, run_experiment=runExperimentSens)
+            fit, csv_line, meta_score, results, individual = cache.toolbox.evaluate_final(ind, run_experiment=runExperimentSens)
 
             ind.fitness.values = fit
 
