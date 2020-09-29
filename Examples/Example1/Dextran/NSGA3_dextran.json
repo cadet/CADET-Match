@@ -15,10 +15,10 @@
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
   "generations": 1000,
-  "population": 100,
+  "population": 10,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
-  "stallGenerations": 30,
+  "stallGenerations": 10,
   "progressCorrect": 2,
   "normalizeOutput":1,
   "continueMCMC":0,
@@ -55,7 +55,27 @@
             "name": "Pulse1",
             "type": "DextranShape"
         }
-      ]
+      ],
+      "featuresAlt": [
+        {
+            "features": [
+              {
+                "name": "Pulse1",
+                "type": "Shape"
+            }
+            ],
+            "name": "Shape"
+        },
+        {
+          "features": [
+            {
+              "name": "Pulse1",
+              "type": "ShapeDecay"
+          }
+          ],
+          "name": "ShapeDecay"
+      }
+    ]
     }
   ]
 }

@@ -497,22 +497,13 @@ def setupAltFeature(cache, name):
         if baseDir is not None:
             settings["baseDir"] = baseDir.as_posix()
 
-        settings["searchMethod"] = "ScoreTest"
-
-        data = H5()
-        data.filename = resultsOriginal.as_posix()
-        data.load(
-            paths=["/meta_population",]
-        )
-
-        population = convert_population_inputorder(data.root.meta_population, cache)
-
-        settings["seeds"] = [list(i) for i in population]
+        settings["searchMethod"] = "AltScore"
 
         for experiment in settings["experiments"]:
             for feature in experiment["featuresAlt"]:
                 if feature["name"] == name:
                     experiment["features"] = feature["features"]
+            del experiment["featuresAlt"]
 
         new_settings_file = resultDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:
