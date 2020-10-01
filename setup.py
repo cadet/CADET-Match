@@ -20,7 +20,7 @@ setuptools.setup(
           'addict>=2.2.1',
           'emcee>=3.0.2',
           'SAlib',
-          'corner>=2.0.1',
+          'corner>=2.1.0',
           'deap>=1.3.1',
           'psutil>=5.7.0',
           'openpyxl>=3.0.3',
@@ -40,5 +40,5 @@ setuptools.setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.7',
 ) 
