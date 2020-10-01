@@ -31,7 +31,6 @@ setuptools.setup(
           'h5py>=2.10.0',
           'CADET>=0.6',
           'seaborn>=0.10.1',
-          'sklearn',
           'scikit-learn>=0.23.1',
           'importlib-metadata>=1.7.0',
           'jstyleson>=0.0.2'
@@ -41,5 +40,5 @@ setuptools.setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.7',
 ) 

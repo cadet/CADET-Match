@@ -8,6 +8,7 @@ import time
 import CADETMatch.jacobian as jacobian
 import multiprocessing
 import array
+import numpy
 
 name = "AltScore"
 
@@ -35,12 +36,20 @@ def run(cache, tools, creator):
         previousResults = cache.settings["PreviousResults"]
         data = H5()
         data.filename = previousResults
-        data.load(paths=["/meta_population",])
+        data.load(paths=["/meta_population","/meta_population_transform"])
 
         meta_population = data.root.meta_population
+        meta_population_transform = data.root.meta_population_transform
 
         for line in meta_population:
             pop.append(cache.toolbox.individual_guess(line))
+
+        multiprocessing.get_logger().info("altScore starting population %s %s", len(pop), pop)
+        multiprocessing.get_logger().info("altScore starting population (transform) %s %s", len(meta_population_transform), meta_population_transform)
+
+        convert = util.convert_population(numpy.array(pop), cache)
+
+        multiprocessing.get_logger().info("altScore starting population (convert) %s %s", len(convert), convert)
 
         if cache.metaResultsOnly:
             hof = pareto.DummyFront()
