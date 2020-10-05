@@ -1,12 +1,12 @@
 {
-  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
+  "CADETPath": "C:/Users/kosh_000/cadet_build/CADET/VCPKG_4_single/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Linear",
-  "resultsDir": "fit/",
+  "resultsDir": "fit_auto_keq/",
   "CSV": "linear_MCMC.csv",
   "checkpointFile": "check",
-  "stopAverage": 1.1,
-  "stopBest": 1.1,
-  "gradCheck": 1.1,
+  "stopAverage": 0,
+  "stopBest": 0,
+  "gradCheck": 0,
   "gradVector": 1,
   "searchMethod": "NSGA3",
   "mutationRate": 1.0,
@@ -27,17 +27,17 @@
 			"experimental_csv": "linear_pulse.csv",
 			"name": "main",
 			"units": [2],
-            "delay": [0.0, 2.0],
+            "delay": [0.0, 0.0],
             "flow": [1.0,0.007],
             "load": [1.0,0.007],
             "uv_noise": [0.0,1e-8],
             "base": 100.0,
-            "count": 4000
+            "count": 1000
 		}
 	],
 	"parameters": [
 		{
-			"transform": "norm_keq",
+			"transform": "auto_keq",
 			"component": 0,
 			"bound": 0,
 			"location": [
@@ -46,8 +46,8 @@
 			],
 			"minKA": 1e-8,
 			"maxKA": 1e8,
-			"minKEQ": 0.0001,
-			"maxKEQ": 10000.0
+			"minKEQ": 1e-2,
+			"maxKEQ": 1
 		}
 	],
 	"experiments": [

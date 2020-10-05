@@ -59,13 +59,19 @@ class AutoTransform(AbstractTransform):
 
     grad_transform = transform
 
+    def untransform_inputorder(self, seq):
+        if self.okay_log:
+            return self.untransform_log_inputorder(seq)
+        else:
+            return self.untransform_linear_inputorder(seq)
+
     def untransform(self, seq):
         if self.okay_log:
             return self.untransform_log(seq)
         else:
             return self.untransform_linear(seq)
 
-    def untransform_log(self, seq):
+    def untransform_log_inputorder(self, seq):
         minValue = numpy.log(self.parameter["min"])
         maxValue = numpy.log(self.parameter["max"])
 
@@ -76,16 +82,25 @@ class AutoTransform(AbstractTransform):
         values = [
             numpy.exp(values[0]),
         ]
+        return values
+
+    def untransform_log(self, seq):
+        values = self.untransform_log_inputorder(seq)
         headerValues = values
         return values, headerValues
 
-    def untransform_linear(self, seq):
+
+    def untransform_linear_inputorder(self, seq):
         minValue = self.parameter["min"]
         maxValue = self.parameter["max"]
 
         values = [
             (maxValue - minValue) * seq[0] + minValue,
         ]
+        return values
+
+    def untransform_linear(self, seq):
+        values = self.untransform_linear_inputorder(seq)
         headerValues = values
         return values, headerValues
 

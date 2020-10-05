@@ -64,7 +64,7 @@ class AutoKeqTransform(AbstractTransform):
 
     grad_transform = transform
 
-    def untransform(self, seq):
+    def untransform_inputorder(self, seq):
         minKA = self.parameter["minKA"]
         maxKA = self.parameter["maxKA"]
         minKEQ = self.parameter["minKEQ"]
@@ -80,8 +80,12 @@ class AutoKeqTransform(AbstractTransform):
             keq = (numpy.log(maxKEQ) - numpy.log(minKEQ)) * seq[1] + numpy.log(minKEQ)
             keq = numpy.exp(keq)
         else:
-            keq = (maxKEQ - minKEQ) * seq[0] + minKEQ
+            keq = (maxKEQ - minKEQ) * seq[1] + minKEQ
 
+        return [ka, keq]
+
+    def untransform(self, seq):
+        ka, keq = self.untransform_inputorder(seq)
         kd = ka/keq
 
         values = [ka, kd]
@@ -188,8 +192,8 @@ class AutoKeqTransform(AbstractTransform):
     def setBounds(self, parameter, lb, ub):
         parameter["minKA"] = lb[0]
         parameter["maxKA"] = ub[0]
-        parameter["minKEQ"] = lb[2]
-        parameter["maxKEQ"] = ub[2]
+        parameter["minKEQ"] = lb[1]
+        parameter["maxKEQ"] = ub[1]
 
 
 plugins = {"auto_keq": AutoKeqTransform}

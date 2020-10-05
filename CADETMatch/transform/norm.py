@@ -25,10 +25,15 @@ class NullTransform(AbstractTransform):
 
     grad_transform = transform
 
-    def untransform(self, seq):
+
+    def untransform_inputorder(self, seq):
         values = [
             seq[0],
         ]
+        return values
+
+    def untransform(self, seq):
+        values = self.untransform_inputorder(seq)
         headerValues = values
         return values, headerValues
 
@@ -125,15 +130,15 @@ class NormTransform(NullTransform):
 
     grad_transform = transform
 
-    def untransform(self, seq):
+    def untransform_inputorder(self, seq):
         minValue = self.parameter["min"]
         maxValue = self.parameter["max"]
 
         values = [
             (maxValue - minValue) * seq[0] + minValue,
         ]
-        headerValues = values
-        return values, headerValues
+        return values
+
 
     def grad_untransform(self, seq):
         return self.untransform(seq)[0]

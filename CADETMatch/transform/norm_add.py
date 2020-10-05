@@ -34,7 +34,7 @@ class NormAddTransform(AbstractTransform):
 
     grad_transform = transform
 
-    def untransform(self, seq):
+    def untransform_inputorder(self, seq):
         if self.count:
             minValue = self.parameter["min"]
             maxValue = self.parameter["max"]
@@ -42,6 +42,13 @@ class NormAddTransform(AbstractTransform):
             values = [
                 (maxValue - minValue) * seq[0] + minValue,
             ]
+            return values
+        else:
+            return []
+
+    def untransform(self, seq):
+        values = self.untransform_inputorder(seq)
+        if self.count:
             headerValues = values
             return values, headerValues
         else:

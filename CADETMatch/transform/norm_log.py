@@ -26,10 +26,14 @@ class LogTransform(AbstractTransform):
 
     grad_transform = transform
 
-    def untransform(self, seq):
+    def untransform_inputorder(self, seq):
         values = [
             numpy.exp(seq[0]),
         ]
+        return values
+
+    def untransform(self, seq):
+        values = self.untransform_inputorder(seq)
         headerValues = values
         return values, headerValues
 
@@ -125,7 +129,7 @@ class NormLogTransform(LogTransform):
 
     grad_transform = transform
 
-    def untransform(self, seq):
+    def untransform_inputorder(self, seq):
         minValue = numpy.log(self.parameter["min"])
         maxValue = numpy.log(self.parameter["max"])
 
@@ -136,8 +140,7 @@ class NormLogTransform(LogTransform):
         values = [
             numpy.exp(values[0]),
         ]
-        headerValues = values
-        return values, headerValues
+        return values
 
     def grad_untransform(self, seq):
         return self.untransform(seq, self.cache, self.parameter)[0]

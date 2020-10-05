@@ -76,7 +76,7 @@ def log_likelihood(individual, json_path):
     scores, csv_record, meta_score, results, individual = evo.fitness(individual, json_path)
 
     if results is None:
-        multiprocessing.get_logger().info("log_likelihood results is None %s (%s)", individual, util.convert_individual(individual, cache.cache)[0])
+        multiprocessing.get_logger().info("log_likelihood results is None %s (%s)", individual, util.convert_individual_inputorder(individual, cache.cache))
         return -numpy.inf, scores, csv_record, meta_score, results, individual
 
     if results is not None and log_likelihood.kde_previous is not None:
@@ -117,13 +117,13 @@ def log_posterior(x):
         cache.cache.setup(json_path)
 
     if outside_bounds(theta, cache.cache):
-        multiprocessing.get_logger().info("individual is outside of range %s (%s)", theta, util.convert_individual(theta, cache.cache)[0])
+        multiprocessing.get_logger().info("individual is outside of range %s (%s)", theta, util.convert_individual_inputorder(theta, cache.cache))
         return -numpy.inf, theta, cache.cache.WORST, [], cache.cache.WORST_META, None, theta
 
     ll, scores, csv_record, meta_score, results, individual = log_likelihood(theta, json_path)
 
     if results is None:
-        multiprocessing.get_logger().info("log_posterior results is None %s (%s)", theta, util.convert_individual(theta, cache.cache)[0])
+        multiprocessing.get_logger().info("log_posterior results is None %s (%s)", theta, util.convert_individual_inputorder(theta, cache.cache))
         return -numpy.inf, theta, cache.cache.WORST, [], cache.cache.WORST_META, None, individual
     else:
         return ll, theta, scores, csv_record, meta_score, results, individual
@@ -205,9 +205,9 @@ def rescale(cache, lb, mid, ub, old_lb, old_ub, mcmc_store):
     center_trans[1, :new_size] = center
     center_trans[2, :new_size] = center
 
-    lb_trans_conv = util.convert_population(lb_trans, cache)
-    center_trans_conv = util.convert_population(center_trans, cache)
-    ub_trans_conv = util.convert_population(ub_trans, cache)
+    lb_trans_conv = util.convert_population_inputorder(lb_trans, cache)
+    center_trans_conv = util.convert_population_inputorder(center_trans, cache)
+    ub_trans_conv = util.convert_population_inputorder(ub_trans, cache)
 
     mcmc_store.root.bounds_change.lb_trans = lb_trans
     mcmc_store.root.bounds_change.ub_trans = ub_trans
@@ -256,8 +256,8 @@ def flatten(chain):
 def change_bounds_json(cache, lb, ub, mcmc_store):
     "change the bounds based on lb and ub and then save it as a new json file and return the path to the new file"
     multiprocessing.get_logger().info("change_bounds_json  lb %s  ub %s", lb, ub)
-    lb_trans = util.convert_individual(lb, cache)[1]
-    ub_trans = util.convert_individual(ub, cache)[1]
+    lb_trans = util.convert_individual_inputorder(lb, cache)
+    ub_trans = util.convert_individual_inputorder(ub, cache)
 
     settings_file = Path(cache.json_path)
     settings_file_backup = settings_file.with_suffix(".json.backup")
@@ -272,7 +272,7 @@ def change_bounds_json(cache, lb, ub, mcmc_store):
         idx = 0
         for parameter in settings["parameters"]:
             transform = cache.transforms[parameter["transform"]](parameter, cache)
-            count = transform.count_extended
+            count = transform.count
             if count:
                 multiprocessing.get_logger().warn("%s %s %s", idx, count, transform)
                 lb_local = lb_trans[idx : idx + count]
@@ -427,7 +427,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
                 p_burn = select_bounds(bounds_chain, lb_per=15.9, ub_per=84.1, max_time=5)
 
-                p_burn_trans = util.convert_population(p_burn, cache)
+                p_burn_trans = util.convert_population_inputorder(p_burn, cache)
 
                 multiprocessing.get_logger().info("before bounds conversion %s", p_burn_trans)
                 multiprocessing.get_logger().info("before bounds conversion p_burn %s", p_burn)
@@ -439,7 +439,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
                 p_burn = numpy.array([util.convert_individual_inverse(i, cache) for i in p_burn_trans])
 
-                p_burn_trans = util.convert_population(p_burn, cache)
+                p_burn_trans = util.convert_population_inputorder(p_burn, cache)
 
                 multiprocessing.get_logger().info("after bounds conversion %s", p_burn_trans)
                 multiprocessing.get_logger().info("after bounds conversion p_burn %s", p_burn)
@@ -848,9 +848,11 @@ def run(cache, tools, creator):
 
         if checkpoint["state"] == "auto_bounds":
             sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store)
+            util.graph_corner_process(cache, last=False, interval=60)
 
         if checkpoint["state"] == "burn_in":
             sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store)
+            util.graph_corner_process(cache, last=False, interval=60)
 
         if checkpoint["state"] == "chain":
             run_chain = checkpoint.get("run_chain", None)
@@ -872,6 +874,7 @@ def run(cache, tools, creator):
 
         if checkpoint["state"] == "chain":
             sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store)
+            util.graph_corner_process(cache, last=False, interval=60)
 
     chain = checkpoint["run_chain"]
     chain_shape = chain.shape
@@ -1128,7 +1131,7 @@ def process_chain(chain, cache, idx):
     chain_shape = chain.shape
     flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
 
-    flat_chain_transform = util.convert_population(flat_chain, cache)
+    flat_chain_transform = util.convert_population_inputorder(flat_chain, cache)
     chain_transform = flat_chain_transform.reshape(chain_shape)
 
     return chain, flat_chain, chain_transform, flat_chain_transform

@@ -28,8 +28,12 @@ class LinearTransform(AbstractTransform):
 
     grad_transform = transform
 
-    def untransform(self, seq):
+    def untransform_inputorder(self, seq):
         values = [seq[0], seq[1]]
+        return values
+
+    def untransform(self, seq):
+        values = self.untransform_inputorder(seq)
         headerValues = values
         return values, headerValues
 
@@ -137,7 +141,7 @@ class NormLinearTransform(LinearTransform):
 
     grad_transform = transform
 
-    def untransform(self, seq):
+    def untransform_inputorder(self, seq):
         minLower = self.parameter["minLower"]
         maxLower = self.parameter["maxLower"]
         minUpper = self.parameter["minUpper"]
@@ -151,8 +155,7 @@ class NormLinearTransform(LinearTransform):
         values = numpy.array(seq)
 
         values = (maxValues - minValues) * values + minValues
-        headerValues = values
-        return values, headerValues
+        return values
 
     def grad_untransform(self, seq):
         return self.untransform(seq)[0]

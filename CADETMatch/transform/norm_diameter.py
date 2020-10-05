@@ -26,11 +26,16 @@ class DiameterTransform(AbstractTransform):
 
     grad_transform = transform
 
+    def untransform_inputorder(self, seq):
+        diameter = seq[0]
+        return [diameter,]
+
     def untransform(self, seq):
+        diameter = self.untransform_inputorder(seq)
         values = [
-            math.pi * seq[0] ** 2 / 4.0,
+            math.pi * diameter ** 2 / 4.0,
         ]
-        headerValues = [seq[0], values[0]]
+        headerValues = [values[0], diameter]
         return values, headerValues
 
     def grad_untransform(self, seq):

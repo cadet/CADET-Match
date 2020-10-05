@@ -18,7 +18,7 @@ with warnings.catch_warnings():
 def process_pareto(cache, hof):
     data = numpy.array([i.fitness.values for i in hof])
     data_param = numpy.array(hof)
-    data_param_transform = numpy.array([util.convert_individual(i, cache)[0] for i in hof])
+    data_param_transform = util.convert_population_inputorder(data_param, cache)
 
     return data, data_param, data_param_transform
 

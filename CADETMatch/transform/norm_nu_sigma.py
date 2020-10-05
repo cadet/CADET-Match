@@ -27,9 +27,16 @@ class NuSigmaTransform(AbstractTransform):
 
     grad_transform = transform
 
+    def untransform_inputorder(self, seq):
+        nu = seq[0]
+        nu_sigma = seq[1]
+        return [nu, nu_sigma]
+
     def untransform(self, seq):
-        values = [seq[0], seq[1] - seq[0]]
-        headerValues = [values[0], values[1], values[0] + values[1]]
+        nu, nu_sigma  = self.untransform_inputorder(seq)
+        sigma = nu_sigma - nu
+        values = [nu, sigma]
+        headerValues = [nu, sigma, nu_sigma]
         return values, headerValues
 
     def grad_untransform(self, seq):
@@ -134,7 +141,7 @@ class NormNuSigmaTransform(NuSigmaTransform):
 
     grad_transform = transform
 
-    def untransform(self, seq):
+    def untransform_inputorder(self, seq):
         minNu = self.parameter["minNu"]
         maxNu = self.parameter["maxNu"]
         minSigma = self.parameter["minSigma"]
@@ -146,10 +153,7 @@ class NormNuSigmaTransform(NuSigmaTransform):
         values = numpy.array(seq)
 
         values = (maxValues - minValues) * values + minValues
-
-        values = [values[0], values[1] - values[0]]
-        headerValues = [values[0], values[1], values[0] + values[1]]
-        return values, headerValues
+        return values
 
     def grad_untransform(self, seq):
         return self.untransform(seq)[0]

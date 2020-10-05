@@ -47,7 +47,7 @@ def run(cache, tools, creator):
         multiprocessing.get_logger().info("altScore starting population %s %s", len(pop), pop)
         multiprocessing.get_logger().info("altScore starting population (transform) %s %s", len(meta_population_transform), meta_population_transform)
 
-        convert = util.convert_population(numpy.array(pop), cache)
+        convert = util.convert_population_inputorder(numpy.array(pop), cache)
 
         multiprocessing.get_logger().info("altScore starting population (convert) %s %s", len(convert), convert)
 

@@ -27,9 +27,16 @@ class VolumeAreaTransform(AbstractTransform):
 
     grad_transform = transform
 
+    def untransform_inputorder(self, seq):
+        volume = seq[0]
+        area = seq[1]
+        return [volume,area]
+
     def untransform(self, seq):
-        values = [seq[1], seq[0] / seq[1]]
-        headerValues = [values[0], values[1], values[0] * values[1]]
+        volume, area = self.untransform_inputorder(seq)
+        length = volume/area
+        values = [area, length]
+        headerValues = [area,length,volume]
         return values, headerValues
 
     def grad_untransform(self, seq):
@@ -88,10 +95,10 @@ class VolumeAreaTransform(AbstractTransform):
         return headers
 
     def setBounds(self, parameter, lb, ub):
-        parameter["minVolume"] = lb[2]
-        parameter["maxVolume"] = ub[2]
-        parameter["minArea"] = lb[0]
-        parameter["maxArea"] = ub[0]
+        parameter["minVolume"] = lb[0]
+        parameter["maxVolume"] = ub[0]
+        parameter["minArea"] = lb[1]
+        parameter["maxArea"] = ub[1]
 
 
 class NormVolumeAreaTransform(VolumeAreaTransform):

@@ -168,6 +168,21 @@ def saveExperiments(save_name_base, settings, target, results, directory, file_p
     return True
 
 
+def convert_individual_inputorder(individual, cache):
+    cadetValues = []
+
+    idx = 0
+    for parameter in cache.parameters:
+        count = parameter.count
+        if count:
+            seq = individual[idx : idx + count]
+            values = parameter.untransform_inputorder(seq)
+            cadetValues.extend(values)
+            idx += count
+
+    return cadetValues
+
+
 def convert_individual(individual, cache):
     cadetValues = []
     cadetValuesExtended = []
@@ -216,18 +231,21 @@ def convert_population(population, cache):
 
 
 def convert_population_inputorder(population, cache):
-    cadetValues = numpy.zeros(population.shape)
+    if len(population):
+        cadetValues = numpy.zeros(population.shape)
 
-    idx = 0
-    for parameter in cache.parameters:
-        count = parameter.count
-        if count:
-            matrix = population[:, idx : idx + count]
-            values = parameter.untransform_matrix_inputorder(matrix)
-            cadetValues[:, idx : idx + count] = values
-            idx += count
+        idx = 0
+        for parameter in cache.parameters:
+            count = parameter.count
+            if count:
+                matrix = population[:, idx : idx + count]
+                values = parameter.untransform_matrix_inputorder(matrix)
+                cadetValues[:, idx : idx + count] = values
+                idx += count
 
-    return cadetValues
+        return cadetValues
+    else:
+        return numpy.array([])
 
 
 def convert_individual_inverse(individual, cache):

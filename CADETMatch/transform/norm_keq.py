@@ -27,9 +27,16 @@ class KeqTransform(AbstractTransform):
 
     grad_transform = transform
 
+    def untransform_inputorder(self, seq):
+        ka = numpy.exp(seq[0])
+        keq = numpy.exp(seq[1])
+        return [ka, keq]
+
     def untransform(self, seq):
-        values = [numpy.exp(seq[0]), numpy.exp(seq[0]) / (numpy.exp(seq[1]))]
-        headerValues = [values[0], values[1], values[0] / values[1]]
+        ka, keq = self.untransform_inputorder(seq)
+        kd = ka/keq
+        values = [ka, kd]
+        headerValues = [ka, kd, keq]
         return values, headerValues
 
     def grad_untransform(self, seq):
@@ -104,8 +111,8 @@ class KeqTransform(AbstractTransform):
     def setBounds(self, parameter, lb, ub):
         parameter["minKA"] = lb[0]
         parameter["maxKA"] = ub[0]
-        parameter["minKEQ"] = lb[2]
-        parameter["maxKEQ"] = ub[2]
+        parameter["minKEQ"] = lb[1]
+        parameter["maxKEQ"] = ub[1]
 
 
 class NormKeqTransform(KeqTransform):
@@ -129,7 +136,8 @@ class NormKeqTransform(KeqTransform):
 
     grad_transform = transform
 
-    def untransform(self, seq):
+
+    def untransform_inputorder(self, seq):
         minKA = self.parameter["minKA"]
         maxKA = self.parameter["maxKA"]
         minKEQ = self.parameter["minKEQ"]
@@ -142,9 +150,11 @@ class NormKeqTransform(KeqTransform):
 
         values = (maxValues - minValues) * values + minValues
 
-        values = [numpy.exp(values[0]), numpy.exp(values[0]) / (numpy.exp(values[1]))]
-        headerValues = [values[0], values[1], values[0] / values[1]]
-        return values, headerValues
+        ka = numpy.exp(values[0])
+        keq = numpy.exp(values[1])
+
+        return [ka, keq]
+
 
     def grad_untransform(self, seq):
         return self.untransform(seq)[0]

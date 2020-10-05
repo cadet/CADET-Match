@@ -39,6 +39,10 @@ class AbstractTransform(ABC):
         pass
 
     @abstractmethod
+    def untransform_inputorder(self, seq):
+        pass
+
+    @abstractmethod
     def grad_untransform(self, seq):
         pass
 

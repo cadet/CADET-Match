@@ -55,7 +55,7 @@ def run(cache, tools, creator):
     with path.open("a", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=",", quoting=csv.QUOTE_ALL)
 
-        multiprocessing.get_logger().info("Population %s", [util.convert_individual(i, cache) for i in pop])
+        multiprocessing.get_logger().info("Population %s", [util.convert_individual_inputorder(i, cache) for i in pop])
 
         gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, pop, cache, writer, csvfile, hof, meta_hof, -1, check_all=True)
 

@@ -20,6 +20,9 @@ class SumTransform(AbstractTransform):
 
     grad_transform = transform
 
+    def untransform_inputorder(self, seq):
+        return []
+
     def untransform(self, seq):
         return [], []
 

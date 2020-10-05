@@ -405,3 +405,6 @@ __pycache__/
 /Examples/Example1/Dextran/fit_smooth
 /Examples/Example1/Dextran/grad_sse
 /build/lib.linux-x86_64-2.7/CADETMatch
+/Examples/MCMC/Linear/fit_auto_keq
+/Examples/MCMC/Linear/fit_norm
+/Examples/MCMC/Linear/fit_norm_keq

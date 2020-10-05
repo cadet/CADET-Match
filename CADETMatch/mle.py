@@ -180,7 +180,7 @@ def process_mle(chain, gen, cache):
     joblib.dump(scaler, mcmcDir / "kde_prior_scaler.joblib")
     joblib.dump(kde, mcmcDir / "kde_prior.joblib")
 
-    mle_ind = util.convert_individual(mle_x, cache)[0]
+    mle_ind = util.convert_individual_inputorder(mle_x, cache)
 
     multiprocessing.get_logger().info("mle_ind: %s", mle_ind)
 
@@ -199,7 +199,7 @@ def process_mle(chain, gen, cache):
     for row in percentile:
         temp.append(list(row))
 
-    cadetValues = [util.convert_individual(i, cache)[0] for i in temp]
+    cadetValues = [util.convert_individual_inputorder(i, cache) for i in temp]
     cadetValues = numpy.array(cadetValues)
 
     multiprocessing.get_logger().info("cadetValues: %s %s", cadetValues.shape, cadetValues)

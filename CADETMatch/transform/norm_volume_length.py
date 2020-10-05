@@ -27,9 +27,16 @@ class VolumeLengthTransform(AbstractTransform):
 
     grad_transform = transform
 
+    def untransform_inputorder(self, seq):
+        volume = seq[0]
+        length = seq[1]
+        return [volume, length]
+
     def untransform(self, seq):
-        values = [seq[0] / seq[1], seq[1]]
-        headerValues = [values[0], values[1], values[0] * values[1]]
+        volume,length = self.untransform_inputorder(seq)
+        area = volume/length
+        values = [area, length]
+        headerValues = [area, length, volume]
         return values, headerValues
 
     def grad_untransform(self, seq):
@@ -86,8 +93,8 @@ class VolumeLengthTransform(AbstractTransform):
         return headers
 
     def setBounds(self, parameter, lb, ub):
-        parameter["minVolume"] = lb[2]
-        parameter["maxVolume"] = ub[2]
+        parameter["minVolume"] = lb[0]
+        parameter["maxVolume"] = ub[0]
         parameter["minLength"] = lb[1]
         parameter["maxLength"] = ub[1]
 
@@ -113,7 +120,7 @@ class NormVolumeLengthTransform(VolumeLengthTransform):
 
     grad_transform = transform
 
-    def untransform(self, seq):
+    def untransform_inputorder(self, seq):
         minVolume = self.parameter["minVolume"]
         maxVolume = self.parameter["maxVolume"]
         minLength = self.parameter["minLength"]
@@ -125,10 +132,7 @@ class NormVolumeLengthTransform(VolumeLengthTransform):
         values = numpy.array(seq)
 
         values = (maxValues - minValues) * values + minValues
-
-        values = [values[0] / values[1], values[1]]
-        headerValues = [values[0], values[1], values[0] * values[1]]
-        return values, headerValues
+        return values
 
     def grad_untransform(self, seq):
         return self.untransform(seq)[0]
