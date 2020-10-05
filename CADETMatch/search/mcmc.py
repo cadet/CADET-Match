@@ -62,8 +62,11 @@ def log_likelihood(individual, json_path):
         cache.cache.setup_dir(json_path)
         util.setupLog(cache.cache.settings["resultsDirLog"], "main.log")
         cache.cache.setup(json_path, False)
-
-    kde_previous, kde_previous_scaler = kde_generator.getKDEPrevious(cache.cache)
+        
+    if "kde_previous" not in log_likelihood.__dict__:
+        kde_previous, kde_previous_scaler = kde_generator.getKDEPrevious(cache.cache)
+        log_likelihood.kde_previous = kde_previous
+        log_likelihood.kde_previous_scaler = kde_previous_scaler
 
     if "kde" not in log_likelihood.__dict__:
         kde, kde_scaler = kde_generator.getKDE(cache.cache)
@@ -76,8 +79,8 @@ def log_likelihood(individual, json_path):
         multiprocessing.get_logger().info("log_likelihood results is None %s (%s)", individual, util.convert_individual(individual, cache.cache)[0])
         return -numpy.inf, scores, csv_record, meta_score, results, individual
 
-    if results is not None and kde_previous is not None:
-        logPrevious = log_previous(individual, kde_previous, kde_previous_scaler)
+    if results is not None and log_likelihood.kde_previous is not None:
+        logPrevious = log_previous(individual, log_likelihood.kde_previous, log_likelihood.kde_previous_scaler)
     else:
         logPrevious = 0.0
 
@@ -118,6 +121,7 @@ def log_posterior(x):
         return -numpy.inf, theta, cache.cache.WORST, [], cache.cache.WORST_META, None, theta
 
     ll, scores, csv_record, meta_score, results, individual = log_likelihood(theta, json_path)
+
     if results is None:
         multiprocessing.get_logger().info("log_posterior results is None %s (%s)", theta, util.convert_individual(theta, cache.cache)[0])
         return -numpy.inf, theta, cache.cache.WORST, [], cache.cache.WORST_META, None, individual
