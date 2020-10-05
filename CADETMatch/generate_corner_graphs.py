@@ -73,6 +73,9 @@ def plotChain(flat_chain, flat_chain_transform, headers, out_dir, prefix):
         chain = flat_chain
         chain_transform = flat_chain_transform
 
+    if len(chain) == 0:
+        return
+
     # stat corner plot
     fig_size = 6 * len(headers)
     fig = corner.corner(

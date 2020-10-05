@@ -46,8 +46,8 @@
 			],
 			"minKA": 1e-8,
 			"maxKA": 1e8,
-			"minKEQ": 1e-2,
-			"maxKEQ": 1
+			"minKEQ": 1e-4,
+			"maxKEQ": 1e4
 		}
 	],
 	"experiments": [
