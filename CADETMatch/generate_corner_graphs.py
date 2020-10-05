@@ -118,7 +118,8 @@ def plotMCMCParam(out_dir, param, chain, header):
     graph.legend()
     graph.set_title(header)
     fig.set_size_inches((12, 12))
-    fig.savefig(str(out_dir / ("%s.png" % header)))
+    print(header, header.replace('/', '_'))
+    fig.savefig(str(out_dir / ("%s.png" % header.replace('/', '_'))))
 
 
 def plotMCMCVars(out_dir, headers, data):
