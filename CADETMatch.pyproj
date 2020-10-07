@@ -539,7 +539,7 @@
     <Content Include="Examples\MCMC\NonBinding\fit_delay\space\2d\PAR_POROSITY Comp_-1 Bound_-1_Product Root Score.png" />
     <Content Include="Examples\MCMC\NonBinding\fit_delay\space\2d\PAR_POROSITY Comp_-1 Bound_-1_SSE.png" />
     <Content Include="Examples\pulse.png" />
-    <Content Include="report.txt" />
+    <Content Include="MANIFEST.in" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CADETMatch\abstract\transform.py" />
