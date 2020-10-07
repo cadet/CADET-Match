@@ -351,10 +351,86 @@ def select_bounds(chain, lb_per=15.9, ub_per=84.1, max_time=5):
     return select
 
 
+def auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5):
+    auto_chain = None
+    auto_probability = None
+
+    pop_size = checkpoint["populationSize"]
+
+    for i in range(steps):
+        chain, probability = auto_high_probability_iterations(cache, checkpoint, sampler, iterations)
+
+        #store chain
+        auto_chain = addChain(auto_chain, chain)
+        auto_probability = addChain(auto_probability, probability)
+        
+        #setup next step
+        flat_probability = numpy.squeeze(probability.reshape(-1, 1))
+        flat_chain = flatten(chain)
+
+        flat_chain, unique_indexes = numpy.unique(flat_chain, return_index=True, axis=0)
+        flat_probability = flat_probability[unique_indexes]
+
+        #the selected points must be unique or it can cause a crash with a nan so fix it so there are no duplicates
+
+        sort_idx = numpy.argsort(flat_probability)
+        sort_idx = sort_idx[numpy.isfinite(sort_idx)]
+
+        best = sort_idx[-pop_size:]
+
+        best_chain = flat_chain[best,:]
+        best_prob = flat_probability[best]
+
+        multiprocessing.get_logger().info("best_chain %s", best_chain)
+        multiprocessing.get_logger().info("best_prob %s", best_prob)
+
+        checkpoint["p_bounds"] = best_chain
+        checkpoint["ln_prob_bounds"] = best_prob
+        checkpoint["rstate_bounds"] = None
+
+
+    return auto_chain, auto_probability
+
+
+def auto_high_probability_iterations(cache, checkpoint, sampler, iterations):
+    auto_chain = None
+    auto_probability = None
+    best = -numpy.inf
+
+    for i in range(iterations):
+        state = next(
+            sampler.sample(
+                checkpoint["p_bounds"], log_prob0=checkpoint["ln_prob_bounds"], rstate0=checkpoint["rstate_bounds"], iterations=1
+            )
+        )
+
+        p = state.coords
+        ln_prob = state.log_prob
+        random_state = state.random_state
+
+        if any(ln_prob > best):
+            best = numpy.max(ln_prob)
+
+        accept = numpy.mean(sampler.acceptance_fraction)
+
+        auto_chain = addChain(auto_chain, p[:, numpy.newaxis, :])
+        auto_probability = addChain(auto_probability, ln_prob[:, numpy.newaxis])
+
+        multiprocessing.get_logger().info("auto run: idx: %s accept: %.3f max ln(prob): %.3f", i, accept, best)
+
+        checkpoint["p_bounds"] = p
+        checkpoint["ln_prob_bounds"] = ln_prob
+        checkpoint["rstate_bounds"] = random_state
+    
+    sampler.reset()
+    return auto_chain, auto_probability
+
+
 def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     bounds_seq = checkpoint.get("bounds_seq", [])
 
     bounds_chain = checkpoint.get("bounds_chain", None)
+    bounds_probability = checkpoint.get("bounds_probability", None)
 
     checkInterval = 25
 
@@ -378,6 +454,13 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     sampler.naccepted = checkpoint["sampler_naccepted"]
     sampler._moves[1].n = checkpoint["sampler_n"]
 
+    auto_chain, auto_probability = auto_high_probability(cache, checkpoint, sampler, iterations=50, steps=5)
+
+    mcmc_store.root.bounds.auto_chain = auto_chain
+    mcmc_store.root.bounds.auto_probability = auto_probability
+
+    mcmc_store.save()
+
     while not finished:
         state = next(
             sampler.sample(
@@ -393,6 +476,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         bounds_seq.append(accept)
 
         bounds_chain = addChain(bounds_chain, p[:, numpy.newaxis, :])
+        bounds_probability = addChain(bounds_probability, ln_prob[:, numpy.newaxis])
 
         multiprocessing.get_logger().info("run:  idx: %s accept: %.3f", generation, accept)
 
@@ -403,12 +487,15 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         checkpoint["rstate_bounds"] = random_state
         checkpoint["idx_bounds"] = generation
         checkpoint["bounds_chain"] = bounds_chain
+        checkpoint['bounds_probability'] = bounds_probability
         checkpoint["bounds_seq"] = bounds_seq
         checkpoint["bounds_iterations"] = sampler.iterations
         checkpoint["bounds_naccepted"] = sampler.naccepted
 
         mcmc_store.root.bounds_acceptance = numpy.array(bounds_seq).reshape(-1, 1)
         mcmc_store.root.bounds_full_chain = bounds_chain
+        mcmc_store.root.bounds_probability = bounds_probability
+        mcmc_store.root.bounds_probability_flat = bounds_probability.reshape(-1, 1)
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_auto_bounds_write)
         util.graph_corner_process(cache, last=False)
@@ -498,6 +585,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     burn_seq = checkpoint.get("burn_seq", [])
 
     train_chain = checkpoint.get("train_chain", None)
+    train_probability = checkpoint.get('train_probability', None)
 
     train_chain_stat = checkpoint.get("train_chain_stat", None)
 
@@ -518,6 +606,13 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     sampler.naccepted = checkpoint["sampler_naccepted"]
     sampler._moves[1].n = checkpoint["sampler_n"]
 
+    auto_chain, auto_probability = auto_high_probability(cache, checkpoint, sampler, iterations=50, steps=5)
+
+    mcmc_store.root.burn.auto_chain = auto_chain
+    mcmc_store.root.burn.auto_probability = auto_probability
+
+    mcmc_store.save()
+
     while not finished:
         state = next(
             sampler.sample(
@@ -535,6 +630,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         converge[-1] = accept
 
         train_chain = addChain(train_chain, p[:, numpy.newaxis, :])
+        train_probability = addChain(train_probability, ln_prob[:, numpy.newaxis])
 
         train_chain_stat = addChain(train_chain_stat, numpy.percentile(flatten(train_chain), [5, 50, 95], 0)[:, numpy.newaxis, :])
 
@@ -555,6 +651,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         checkpoint["rstate_burn"] = random_state
         checkpoint["idx_burn"] = generation
         checkpoint["train_chain"] = train_chain
+        checkpoint['train_probability'] = train_probability
         checkpoint["burn_seq"] = burn_seq
         checkpoint["converge"] = converge
         checkpoint["sampler_iterations"] = sampler.iterations
@@ -565,6 +662,8 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         mcmc_store.root.train_full_chain = train_chain
         mcmc_store.root.burn_seq = numpy.array(burn_seq).reshape(-1, 1)
         mcmc_store.root.train_chain_stat = train_chain_stat
+        mcmc_store.root.train_probability = train_probability
+        mcmc_store.root.train_probability_flat = train_probability.reshape(-1, 1)
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_burn_write)
         util.graph_corner_process(cache, last=False)
@@ -654,6 +753,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     chain_seq = checkpoint.get("chain_seq", [])
 
     run_chain = checkpoint.get("run_chain", None)
+    run_probability = checkpoint.get('run_probability', None)
 
     run_chain_stat = checkpoint.get("run_chain_stat", None)
 
@@ -685,6 +785,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         chain_seq.append(accept)
 
         run_chain = addChain(run_chain, p[:, numpy.newaxis, :])
+        run_probability = addChain(run_probability, ln_prob[:, numpy.newaxis])
 
         run_chain_stat = addChain(run_chain_stat, numpy.percentile(flatten(run_chain), [5, 50, 95], 0)[:, numpy.newaxis, :])
 
@@ -697,6 +798,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         checkpoint["rstate_chain"] = random_state
         checkpoint["idx_chain"] = generation
         checkpoint["run_chain"] = run_chain
+        checkpoint['run_probability'] = run_probability
         checkpoint["chain_seq"] = chain_seq
         checkpoint["sampler_iterations"] = sampler.iterations
         checkpoint["sampler_naccepted"] = sampler.naccepted
@@ -705,6 +807,8 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         mcmc_store.root.full_chain = run_chain
         mcmc_store.root.mcmc_acceptance = numpy.array(chain_seq).reshape(-1, 1)
         mcmc_store.root.run_chain_stat = run_chain_stat
+        mcmc_store.root.run_probability = run_probability
+        mcmc_store.root.run_probability_flat = run_probability.reshape(-1, 1)
 
         if generation % checkInterval == 0:
             try:
@@ -743,6 +847,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     checkpoint["rstate_chain"] = random_state
     checkpoint["idx_chain"] = generation
     checkpoint["run_chain"] = run_chain
+    checkpoint['run_probability'] = run_probability
     checkpoint["chain_seq"] = chain_seq
     checkpoint["state"] = "complete"
 

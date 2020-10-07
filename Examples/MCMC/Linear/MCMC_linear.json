@@ -1,7 +1,7 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET/VCPKG_4_single/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Linear",
-  "resultsDir": "fit_auto_keq/",
+  "resultsDir": "fit_auto_keq2/",
   "CSV": "linear_MCMC.csv",
   "checkpointFile": "check",
   "stopAverage": 0,
