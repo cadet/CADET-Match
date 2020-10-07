@@ -29,6 +29,8 @@ import numpy
 import scipy.interpolate
 import itertools
 
+from sklearn.preprocessing import MinMaxScaler
+
 from cadet import Cadet, H5
 from addict import Dict
 
@@ -62,7 +64,8 @@ def main(map_function):
         mcmc_store = H5()
         mcmc_store.filename = mcmc_h5.as_posix()
         mcmc_store.load(paths=["/full_chain", "/train_full_chain", "/bounds_full_chain",
-                               "/full_chain_transform", "/train_full_chain_transform", "/bounds_full_chain_transform"])
+                               "/full_chain_transform", "/train_full_chain_transform", "/bounds_full_chain_transform",
+                               "/bounds_probability", "/train_probability", "/run_probability"])
 
         progress_path = Path(cache.settings["resultsDirBase"]) / "result.h5"
 
@@ -73,38 +76,69 @@ def main(map_function):
 
         input_headers = cache.parameter_headers_actual
 
-        chain_names = ("full_chain", "train_full_chain", "bounds_full_chain", 
-                       "full_chain_transform", "train_full_chain_transform", "bounds_full_chain_transform")
+        chain_names = (("full_chain", "run_probability"), 
+                       ("train_full_chain", "train_probability"), 
+                       ("bounds_full_chain", "bounds_probability"), 
+                       ("full_chain_transform", "run_probability"), 
+                       ("train_full_chain_transform", "train_probability"),  
+                       ("bounds_full_chain_transform", "bounds_probability"))
 
-        for chain in chain_names:
+        for chain, probability in chain_names:
             if chain in mcmc_store.root:
-                plot_chain(input_headers, mcmc_store.root[chain], chain, mixing / ("mixing_%s" % chain))
+                plot_chain(input_headers, mcmc_store.root[chain], mcmc_store.root[probability], mixing / ("mixing_%s" % chain))
 
 
-def plot_chain(headers, chain, chain_name, graph_dir):
+def plot_chain(headers, chain, probability, graph_dir):
     graph_dir.mkdir(parents=True, exist_ok=True)
 
     for i in range(chain.shape[2]):
+        graph_mix(headers[i], chain[:, :, i], graph_dir)
+        graph_probability(headers[i], chain[:, :, i], probability, graph_dir)
+        
 
-        fig = figure.Figure(figsize=[15, 7])
-        canvas = FigureCanvas(fig)
-        graph = fig.add_subplot(1, 1, 1)
+def graph_mix(header, chain, graph_dir):
+    fig = figure.Figure(figsize=[15, 7])
+    canvas = FigureCanvas(fig)
+    graph = fig.add_subplot(1, 1, 1)
 
-        chain_length = chain.shape[1]
-        x = numpy.linspace(0, chain_length -1, chain_length)
+    chain_length = chain.shape[1]
+    x = numpy.linspace(0, chain_length -1, chain_length)
 
-        lines = []
-        for j in range(chain.shape[0]):
-            graph.plot(x, chain[j, :, i], color = get_color(j, chain.shape[0] - 1, cm_plot))
+    lines = []
+    for j in range(chain.shape[0]):
+        graph.plot(x, chain[j, :], color = get_color(j, chain.shape[0] - 1, cm_plot))
 
-        graph.set_xlabel("chain length")
-        graph.set_ylabel("value")
-        filename = "mixing_%s.png" % (headers[i])
-        filename = filename.replace(":", "_").replace("/", "_")
+    graph.set_xlabel("chain length")
+    graph.set_ylabel("value")
+    filename = "mixing_%s.png" % (header)
+    filename = filename.replace(":", "_").replace("/", "_")
 
-        graph.set_title("Mixing graph %s" % headers[i])
-        fig.savefig((graph_dir / filename).as_posix())
+    graph.set_title("Mixing graph %s" % header)
+    fig.savefig((graph_dir / filename).as_posix())
 
+
+def graph_probability(header, chain, probability, graph_dir):
+    scaler = MinMaxScaler()
+    probability = scaler.fit_transform(probability)
+
+    fig = figure.Figure(figsize=[15, 7])
+    canvas = FigureCanvas(fig)
+    graph = fig.add_subplot(1, 1, 1)
+
+    chain_length = chain.shape[1]
+    x = numpy.linspace(0, chain_length -1, chain_length)
+
+    lines = []
+    for j in range(chain.shape[0]):
+        graph.scatter(x, chain[j, :], color = matplotlib.cm.rainbow(probability[j,:]))
+
+    graph.set_xlabel("chain length")
+    graph.set_ylabel("value")
+    filename = "mixing_%s_probability.png" % (header)
+    filename = filename.replace(":", "_").replace("/", "_")
+
+    graph.set_title("Mixing graph %s" % header)
+    fig.savefig((graph_dir / filename).as_posix())
 
 if __name__ == "__main__":
     map_function = util.getMapFunction()
