@@ -308,8 +308,6 @@ def process_sampler_auto_bounds_write(cache, mcmc_store):
     mcmc_store.root.bounds_flat_chain = bounds_chain_flat
     mcmc_store.root.bounds_flat_chain_transform = bounds_chain_flat_transform
 
-    return select
-
 def select_best(chain, probability):
     #setup next step
     pop_size = chain.shape[0]
