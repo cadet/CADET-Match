@@ -308,48 +308,28 @@ def process_sampler_auto_bounds_write(cache, mcmc_store):
     mcmc_store.root.bounds_flat_chain = bounds_chain_flat
     mcmc_store.root.bounds_flat_chain_transform = bounds_chain_flat_transform
 
-
-def select_bounds(chain, lb_per=15.9, ub_per=84.1, max_time=5):
-    chain_shape = chain.shape
-    flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
-    size = chain_shape[0]
-    lb, ub = numpy.percentile(flat_chain, [lb_per, ub_per], axis=0)
-
-    multiprocessing.get_logger().info("bounds selected  lb(%s) %s  ub(%s) %s", lb_per, lb, ub_per, ub)
-
-    selected = (flat_chain > lb) & (flat_chain< ub)
-    selected = numpy.all(selected, 1)
-
-    multiprocessing.get_logger().info("bounds selected %s from %s", sum(selected), len(flat_chain))
-
-    data_reduced = flat_chain[selected, :]
-
-    a = set()
-
-    #if this takes more than max_time to create enough entries take the existing ones and just augment them
-    #this should prevent getting trapped
-    start = time.time()
-
-    while len(a) < size:
-        idx = numpy.random.randint(0, data_reduced.shape[0])
-        sample = data_reduced[idx,:]
-        a.add(tuple(sample))
-
-        if time.time() > (start+max_time):
-            multiprocessing.get_logger().info("bounds time exceeded need to augment")
-            break
-    
-    select = numpy.array(list(a))
-    row = len(select)
-
-    if row < size:
-        indexes = numpy.random.choice(select.shape[0], size - row, replace=True)
-        temp = select[indexes, :]
-        rand = numpy.random.normal(1.0, diff, size=temp.shape)
-        select = numpy.concatenate([select, temp * rand])
-
     return select
 
+def select_best(chain, probability):
+    #setup next step
+    pop_size = chain.shape[0]
+    flat_probability = numpy.squeeze(probability.reshape(-1, 1))
+    flat_chain = flatten(chain)
+
+    flat_chain, unique_indexes = numpy.unique(flat_chain, return_index=True, axis=0)
+    flat_probability = flat_probability[unique_indexes]
+
+    #the selected points must be unique or it can cause a crash with a nan so fix it so there are no duplicates
+
+    sort_idx = numpy.argsort(flat_probability)
+    sort_idx = sort_idx[numpy.isfinite(sort_idx)]
+
+    best = sort_idx[-pop_size:]
+
+    best_chain = flat_chain[best,:]
+    best_prob = flat_probability[best]
+
+    return best_chain, best_prob
 
 def auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5):
     auto_chain = None
@@ -363,23 +343,8 @@ def auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5):
         #store chain
         auto_chain = addChain(auto_chain, chain)
         auto_probability = addChain(auto_probability, probability)
-        
-        #setup next step
-        flat_probability = numpy.squeeze(probability.reshape(-1, 1))
-        flat_chain = flatten(chain)
 
-        flat_chain, unique_indexes = numpy.unique(flat_chain, return_index=True, axis=0)
-        flat_probability = flat_probability[unique_indexes]
-
-        #the selected points must be unique or it can cause a crash with a nan so fix it so there are no duplicates
-
-        sort_idx = numpy.argsort(flat_probability)
-        sort_idx = sort_idx[numpy.isfinite(sort_idx)]
-
-        best = sort_idx[-pop_size:]
-
-        best_chain = flat_chain[best,:]
-        best_prob = flat_probability[best]
+        best_chain, best_prob = select_best(auto_chain, auto_probability)
 
         multiprocessing.get_logger().info("best_chain %s", best_chain)
         multiprocessing.get_logger().info("best_prob %s", best_prob)
@@ -387,7 +352,6 @@ def auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5):
         checkpoint["p_bounds"] = best_chain
         checkpoint["ln_prob_bounds"] = best_prob
         checkpoint["rstate_bounds"] = None
-
 
     return auto_chain, auto_probability
 
@@ -454,7 +418,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     sampler.naccepted = checkpoint["sampler_naccepted"]
     sampler._moves[1].n = checkpoint["sampler_n"]
 
-    auto_chain, auto_probability = auto_high_probability(cache, checkpoint, sampler, iterations=50, steps=5)
+    auto_chain, auto_probability = auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5)
 
     mcmc_store.root.bounds.auto_chain = auto_chain
     mcmc_store.root.bounds.auto_probability = auto_probability
@@ -512,7 +476,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
                     cache, lb, mid, ub, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE), mcmc_store
                 )
 
-                p_burn = select_bounds(bounds_chain, lb_per=15.9, ub_per=84.1, max_time=5)
+                p_burn, ln_prob = select_best(bounds_chain, bounds_probability)
 
                 p_burn_trans = util.convert_population_inputorder(p_burn, cache)
 
@@ -534,7 +498,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
                 checkpoint["state"] = "burn_in"
                 checkpoint["p_burn"] = p_burn
                 checkpoint['ln_prob_burn'] = ln_prob
-                checkpoint['rstate_burn'] = random_state
+                checkpoint['rstate_burn'] = None
                 checkpoint["starting_population"] = p_burn
 
                 write_checkpoint(-1, checkpoint, checkpointFile)
@@ -606,7 +570,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     sampler.naccepted = checkpoint["sampler_naccepted"]
     sampler._moves[1].n = checkpoint["sampler_n"]
 
-    auto_chain, auto_probability = auto_high_probability(cache, checkpoint, sampler, iterations=50, steps=5)
+    auto_chain, auto_probability = auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5)
 
     mcmc_store.root.burn.auto_chain = auto_chain
     mcmc_store.root.burn.auto_probability = auto_probability
