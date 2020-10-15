@@ -44,8 +44,6 @@ import CADETMatch.stretch as stretch
 import jstyleson
 import shutil
 
-log2 = numpy.log(2)
-
 min_acceptance = 0.05
 acceptance_delta = 0.02
 
@@ -86,15 +84,15 @@ def log_likelihood(individual, json_path):
     else:
         logPrevious = 0.0
 
-    scores_shape = numpy.array(scores).reshape(1, -1)
+    scores_shape = numpy.array(scores)
+    scores_shape[:-2] = numpy.log(1-scores_shape[:-2])
+    scores_shape = scores_shape.reshape(1, -1)
 
     score_scaler = log_likelihood.scaler.transform(scores_shape)
 
     score_kde = log_likelihood.kde.score_samples(score_scaler)
 
-    score = (
-        score_kde + log2 + logPrevious
-    )  # *2 is from mirroring and we need to double the probability to get back to the normalized distribution
+    score = score_kde + logPrevious
 
     return score, scores, csv_record, meta_score, results, individual
 

@@ -1328,7 +1328,11 @@ def setupLog(log_directory, log_name):
 
 
 def getCoreCounts():
-    cpus = int(sys.argv[-1])
+    try:
+        cpus = int(sys.argv[-1])
+    except ValueError:
+        #This happens when running in jupyter notebook or if the number can't be found, in either way default to just use availab cpu
+        cpus = None
     if cpus:
         return cpus
     else:

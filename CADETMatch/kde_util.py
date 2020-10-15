@@ -4,11 +4,6 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
 from sklearn.neighbors import KernelDensity
 import SALib.sample.sobol_sequence
-import matplotlib
-import matplotlib.style as mplstyle
-mplstyle.use('fast')
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import CADETMatch.util as util
 from sklearn import preprocessing
 import multiprocessing
@@ -26,7 +21,7 @@ def get_bandwidth(kde, scores):
     start = time.time()
     map = util.getMapFunction()
     
-    bw = numpy.logspace(-5, 2, 80)
+    bw = numpy.logspace(-5, 0, 80)
     
     results = list(map(fit, zip(bw, itertools.repeat(kde.get_params()), itertools.repeat(scores))))
 
