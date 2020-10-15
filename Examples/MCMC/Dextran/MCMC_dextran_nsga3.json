@@ -15,7 +15,7 @@
     "stallGenerations": 15,
     "continueMCMC": 1,
     "normalizeOutput": 1,
-    "generations": 20,
+    "generations": 1000,
   "kde_synthetic": [
 		{
 			"file_path": "dextran_pulse.h5",

@@ -9,7 +9,6 @@ import sys
 import cadet
 import CADETMatch.util as util
 import CADETMatch.evo as evo
-import pandas
 from addict import Dict
 from CADETMatch.cache import cache
 from pathlib import Path

@@ -24,7 +24,6 @@ from mpl_toolkits.mplot3d import Axes3D
 from CADETMatch.cache import cache
 
 from pathlib import Path
-import pandas
 import numpy
 import scipy.interpolate
 import itertools

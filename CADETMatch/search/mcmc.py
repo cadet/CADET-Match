@@ -25,6 +25,8 @@ import multiprocessing
 import pandas
 import array
 import emcee.autocorr as autocorr
+from sklearn.cluster import KMeans
+import scipy.spatial
 
 import CADETMatch.kde_generator as kde_generator
 from sklearn.neighbors import KernelDensity
@@ -329,6 +331,51 @@ def select_best(chain, probability):
 
     return best_chain, best_prob
 
+def select_best_kmeans(chain, probability):
+    chain_shape = chain.shape
+    flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
+    flat_probability = numpy.squeeze(probability.reshape(-1, 1))
+
+    #unique    
+    flat_chain_unique, unique_indexes = numpy.unique(flat_chain, return_index=True, axis=0)
+    flat_probability_unique = flat_probability[unique_indexes]
+   
+    #remove low probability
+    flat_prob = numpy.exp(flat_probability_unique)
+    max_prob = numpy.max(flat_prob)
+    min_prob = max_prob/1000
+    
+    selected = (flat_prob >= min_prob) & (flat_prob <= max_prob)
+    
+    flat_chain = flat_chain_unique[selected]
+    flat_probability = flat_probability_unique[selected]
+
+    if len(flat_chain) > (2* chain_shape[0]): 
+        #kmeans clustering
+        km = KMeans(chain_shape[0])
+        km.fit(flat_chain)
+    
+        dist = scipy.spatial.distance.cdist(flat_chain, km.cluster_centers_)
+    
+        idx_closest = numpy.argmin(dist, 0)
+    
+        closest = dist[idx_closest, range(chain_shape[0])]
+
+        best_chain = flat_chain[idx_closest]
+        best_prob = flat_probability[idx_closest]
+    else:
+        pop_size = chain.shape[0]
+        sort_idx = numpy.argsort(flat_probability_unique)
+        sort_idx = sort_idx[numpy.isfinite(sort_idx)]
+
+        best = sort_idx[-pop_size:]
+
+        best_chain = flat_chain_unique[best,:]
+        best_prob = flat_probability_unique[best]
+
+    return best_chain, best_prob
+
+
 def auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5):
     auto_chain = None
     auto_probability = None
@@ -342,7 +389,7 @@ def auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5):
         auto_chain = addChain(auto_chain, chain)
         auto_probability = addChain(auto_probability, probability)
 
-        best_chain, best_prob = select_best(auto_chain, auto_probability)
+        best_chain, best_prob = select_best_kmeans(auto_chain, auto_probability)
 
         multiprocessing.get_logger().info("best_chain %s", best_chain)
         multiprocessing.get_logger().info("best_prob %s", best_prob)
@@ -474,7 +521,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
                     cache, lb, mid, ub, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE), mcmc_store
                 )
 
-                p_burn, ln_prob = select_best(bounds_chain, bounds_probability)
+                p_burn, ln_prob = select_best_kmeans(bounds_chain, bounds_probability)
 
                 p_burn_trans = util.convert_population_inputorder(p_burn, cache)
 
