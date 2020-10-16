@@ -1347,11 +1347,12 @@ def getMapFunction():
 
         return map
     else:
-        pool = multiprocessing.Pool(cores)
+        if "pool" not in getMapFunction.__dict__:
+            pool = multiprocessing.Pool(cores)
+            getMapFunction.pool = pool
+            multiprocessing.get_logger().info("CADETMatch startup: created a parallel pool of %s workers", cores)
 
-        multiprocessing.get_logger().info("CADETMatch startup: created a parallel pool of %s workers", cores)
-
-        return pool.imap_unordered
+        return getMapFunction.pool.imap_unordered
 
 
 def create_lookup(seq):

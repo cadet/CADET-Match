@@ -44,6 +44,7 @@ import CADETMatch.stretch as stretch
 import jstyleson
 import shutil
 
+log2 = numpy.log(2)
 min_acceptance = 0.05
 acceptance_delta = 0.02
 
@@ -85,14 +86,14 @@ def log_likelihood(individual, json_path):
         logPrevious = 0.0
 
     scores_shape = numpy.array(scores)
-    scores_shape[:-2] = numpy.log(1-scores_shape[:-2])
     scores_shape = scores_shape.reshape(1, -1)
 
     score_scaler = log_likelihood.scaler.transform(scores_shape)
 
     score_kde = log_likelihood.kde.score_samples(score_scaler)
 
-    score = score_kde + logPrevious
+    score = score_kde + log2 + logPrevious
+    # *2 is from mirroring and we need to double the probability to get back to the normalized distribution
 
     return score, scores, csv_record, meta_score, results, individual
 
@@ -341,7 +342,7 @@ def select_best_kmeans(chain, probability):
     #remove low probability
     flat_prob = numpy.exp(flat_probability_unique)
     max_prob = numpy.max(flat_prob)
-    min_prob = max_prob/1000
+    min_prob = max_prob/10  #10% of max prob cutoff
     
     selected = (flat_prob >= min_prob) & (flat_prob <= max_prob)
     

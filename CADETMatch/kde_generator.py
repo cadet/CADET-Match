@@ -44,13 +44,24 @@ atol = 1e-3
 rtol = 1e-3
 
 def mirror(data):
-    data = numpy.copy(data)
     data_max = numpy.max(data, 0)
+
     mirror_index = data_max <= 1.0
     keep_index = data_max > 1.0
-    for index in mirror_index.nonzero()[0]:
-        data[:,index] = numpy.log(1-data[:,index])
-    return data
+
+    data_min = data_max - data
+    data_mask = numpy.ma.masked_equal(data_min, 0.0, copy=False)
+    min_value = data_mask.min(axis=0)
+
+    data_mirror = numpy.zeros(data.shape)
+
+    data_mirror[:, mirror_index] = (
+        data_max[mirror_index] + data_max[mirror_index] - numpy.copy(data[:, mirror_index]) + min_value[mirror_index]
+    )
+    data_mirror[:, keep_index] = data[:, keep_index]
+    full_data = numpy.vstack([data_mirror, data])
+
+    return full_data
 
 
 def setupKDE(cache):
