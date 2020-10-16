@@ -40,9 +40,6 @@ import sys
 import SALib.sample.sobol_sequence
 import scipy.stats
 
-atol = 1e-3
-rtol = 1e-3
-
 def mirror(data):
     data_max = numpy.max(data, 0)
 
@@ -75,7 +72,7 @@ def setupKDE(cache):
 
     scores_scaler = scaler.transform(scores_mirror)
 
-    kde = KernelDensity(kernel='gaussian', atol=atol, rtol=rtol)
+    kde = KernelDensity(kernel='gaussian')
 
     kde, bandwidth, store = kde_util.get_bandwidth(kde, scores_scaler)
 

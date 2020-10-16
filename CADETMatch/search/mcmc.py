@@ -29,7 +29,6 @@ from sklearn.cluster import KMeans
 import scipy.spatial
 
 import CADETMatch.kde_generator as kde_generator
-from sklearn.neighbors import KernelDensity
 
 name = "MCMC"
 

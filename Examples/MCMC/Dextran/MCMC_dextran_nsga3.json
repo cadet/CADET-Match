@@ -1,7 +1,7 @@
 {
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET/VCPKG_4_single/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/MCMC/Dextran",
-  "resultsDir": "mcmc_scaler",
+  "resultsDir": "mcmc_scaler_tol",
   "tempDir": "L:/",
   "CSV": "dextran_MCMC.csv",
   "stopAverage": 0.0,

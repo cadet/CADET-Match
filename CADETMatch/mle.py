@@ -65,10 +65,6 @@ plt.rc("legend", fontsize=size)  # legend fontsize
 plt.rc("figure", titlesize=size)  # fontsize of the figure title
 plt.rc("figure", autolayout=True)
 
-atol = 1e-3
-rtol = 1e-3
-
-
 def reduce_data(data, size, bw_size):
     # size reduces data for normal usage, bw_size reduces the size just for bandwidth estimation
     lb, ub = numpy.percentile(data, [5, 95], 0)
@@ -116,7 +112,7 @@ def get_mle(data):
     BOUND_LOW_trans = list(BOUND_LOW_num)
     BOUND_UP_trans = list(BOUND_UP_num)
 
-    kde_ga = KernelDensity(kernel="gaussian", atol=atol, rtol=rtol)
+    kde_ga = KernelDensity(kernel="gaussian")
 
     kde_ga, bandwidth, store = kde_util.get_bandwidth(kde_ga, data_reduced_bw)
 
