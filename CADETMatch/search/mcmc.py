@@ -308,27 +308,6 @@ def process_sampler_auto_bounds_write(cache, mcmc_store):
     mcmc_store.root.bounds_flat_chain = bounds_chain_flat
     mcmc_store.root.bounds_flat_chain_transform = bounds_chain_flat_transform
 
-def select_best(chain, probability):
-    #setup next step
-    pop_size = chain.shape[0]
-    flat_probability = numpy.squeeze(probability.reshape(-1, 1))
-    flat_chain = flatten(chain)
-
-    flat_chain, unique_indexes = numpy.unique(flat_chain, return_index=True, axis=0)
-    flat_probability = flat_probability[unique_indexes]
-
-    #the selected points must be unique or it can cause a crash with a nan so fix it so there are no duplicates
-
-    sort_idx = numpy.argsort(flat_probability)
-    sort_idx = sort_idx[numpy.isfinite(sort_idx)]
-
-    best = sort_idx[-pop_size:]
-
-    best_chain = flat_chain[best,:]
-    best_prob = flat_probability[best]
-
-    return best_chain, best_prob
-
 def select_best_kmeans(chain, probability):
     chain_shape = chain.shape
     flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
