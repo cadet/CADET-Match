@@ -61,15 +61,15 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             cache.generationsOfProgress = cp["generationsOfProgress"]
             cache.lastProgressGeneration = cp["lastProgressGeneration"]
 
-            if cp["gradCheck"] > cache.settings.get("gradCheck", 1.0):
+            if cp["gradCheck"] > cache.settings.get("gradCheck", 0.0):
                 gradCheck = cp["gradCheck"]
             else:
-                gradCheck = cache.settings.get("gradCheck", 1.0)
+                gradCheck = cache.settings.get("gradCheck", 0.0)
         else:
             # Start a new evolution
             start_gen = 0
 
-            gradCheck = settings.get("gradCheck", 1.0)
+            gradCheck = settings.get("gradCheck", 0.0)
 
             if cache.metaResultsOnly:
                 halloffame = pareto.DummyFront()
@@ -230,10 +230,10 @@ def nsga2(populationSize, ngen, cache, tools):
             cache.generationsOfProgress = cp["generationsOfProgress"]
             cache.lastProgressGeneration = cp["lastProgressGeneration"]
 
-            if cp["gradCheck"] > cache.settings.get("gradCheck", 1.0):
+            if cp["gradCheck"] > cache.settings.get("gradCheck", 0.0):
                 gradCheck = cp["gradCheck"]
             else:
-                gradCheck = cache.settings.get("gradCheck", 1.0)
+                gradCheck = cache.settings.get("gradCheck", 0.0)
 
         else:
             # Start a new evolution
@@ -260,7 +260,7 @@ def nsga2(populationSize, ngen, cache, tools):
             progress_hof = pareto.ParetoFrontMeta(
                 similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache), slice_object=cache.meta_slice
             )
-            gradCheck = cache.settings.get("gradCheck", 1.0)
+            gradCheck = cache.settings.get("gradCheck", 0.0)
 
         sim_start = generation_start = time.time()
 

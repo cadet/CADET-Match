@@ -195,7 +195,7 @@ def genRandomChoice(cache, chain, kde, scaler):
     mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)
     mcmc_selected_score = numpy.array(mcmc_selected_score)
 
-    mcmc_score = kde.score_samples(scaler.transform(mcmc_selected_score)) + numpy.log(2)
+    mcmc_score = kde.score_samples(scaler.transform(mcmc_selected_score))
 
     return mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, results, times, mcmc_score
 

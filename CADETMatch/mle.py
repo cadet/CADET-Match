@@ -67,12 +67,12 @@ plt.rc("figure", autolayout=True)
 
 def reduce_data(data, size, bw_size):
     # size reduces data for normal usage, bw_size reduces the size just for bandwidth estimation
-    lb, ub = numpy.percentile(data, [5, 95], 0)
-    selected = (data >= lb) & (data <= ub)
+    #lb, ub = numpy.percentile(data, [5, 95], 0)
+    #selected = (data >= lb) & (data <= ub)
 
-    selected = numpy.all(selected, 1)
+    #selected = numpy.all(selected, 1)
 
-    data = data[selected, :]
+    #data = data[selected, :]
 
     scaler = preprocessing.RobustScaler().fit(data)
 
@@ -98,16 +98,19 @@ def reduce_data(data, size, bw_size):
 def goal_kde(x, kde):
     test_value = numpy.array(x).reshape(1, -1)
     score = kde.score_samples(test_value)
+    score_exp = numpy.exp(score)
     return -score[0]
 
 def get_mle(data):
+    popsize = 100
+    
     multiprocessing.get_logger().info("setting up scaler and reducing data")
-    data, data_reduced, data_reduced_bw, scaler = reduce_data(data, 32000, 10000)
+    data_transform, data_reduced, data_reduced_bw, scaler = reduce_data(data, 32000, 10000)
     multiprocessing.get_logger().info("finished setting up scaler and reducing data")
     multiprocessing.get_logger().info("data_reduced shape %s", data_reduced.shape)
 
-    BOUND_LOW_num = numpy.min(data, 0)
-    BOUND_UP_num = numpy.max(data, 0)
+    BOUND_LOW_num = numpy.min(data_transform, 0)
+    BOUND_UP_num = numpy.max(data_transform, 0)
 
     BOUND_LOW_trans = list(BOUND_LOW_num)
     BOUND_UP_trans = list(BOUND_UP_num)
@@ -119,11 +122,24 @@ def get_mle(data):
     multiprocessing.get_logger().info("mle bandwidth: %.2g", bandwidth)
 
     multiprocessing.get_logger().info("fitting kde with mle bandwidth")
-    kde_ga.fit(data)
+    kde_ga.fit(data_reduced)
     multiprocessing.get_logger().info("finished fitting and starting mle search")
 
+    probability_ln = kde_ga.score_samples(data_transform)
+
+    idx_max_ln = numpy.argmax(probability_ln)
+    prob_best_ln = probability_ln[idx_max_ln]
+    best_point = data_transform[idx_max_ln].reshape(1, -1)
+
+    multiprocessing.get_logger().info("starting point %s=%s", data_transform[idx_max_ln], prob_best_ln)
+
+    individuals_mle = kde_ga.sample(popsize-1)
+
+    init = numpy.concatenate([best_point, individuals_mle])
+
     result_kde = scipy.optimize.differential_evolution(
-        goal_kde, bounds=list(zip(BOUND_LOW_trans, BOUND_UP_trans)), args=(kde_ga,), disp=True, popsize=100
+        goal_kde, bounds=list(zip(BOUND_LOW_trans, BOUND_UP_trans)), args=(kde_ga,), disp=True, popsize=popsize,
+        init=init
     )
 
     multiprocessing.get_logger().info("finished mle search")
@@ -158,7 +174,7 @@ def process_mle(chain, gen, cache):
     if mle_h5.exists():
         h5.load()
 
-        if 0:  # h5.root.generations[-1] == gen:
+        if 0: #h5.root.generations[-1] == gen:
             multiprocessing.get_logger().info("new information is not yet available and mle will quit")
             return
 

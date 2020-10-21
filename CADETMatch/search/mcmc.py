@@ -997,7 +997,7 @@ def tube_process(last=False, interval=3600):
     )
 
 
-def mle_process(last=False, interval=3600):
+def mle_process(last=False, interval=3600*24):
     if "last_time" not in mle_process.__dict__:
         mle_process.last_time = time.time()
 
@@ -1021,8 +1021,6 @@ def mle_process(last=False, interval=3600):
         )
         mle_process.last_time = time.time()
     elif (time.time() - mle_process.last_time) > interval:
-        # mle_process.child = subprocess.Popen([sys.executable, 'mle.py', str(cache.cache.json_path), str(util.getCoreCounts())],
-        #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
         subprocess.run(
             [sys.executable, "mle.py", str(cache.cache.json_path), str(util.getCoreCounts())],
             stdin=None,
