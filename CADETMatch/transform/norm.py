@@ -1,5 +1,6 @@
 import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
+import numpy
 
 
 class NullTransform(AbstractTransform):

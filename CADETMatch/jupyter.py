@@ -17,8 +17,8 @@ class Match:
         self.cache.setup(json_path)
 
     def start_sim(self):
-        # ncpus = psutil.cpu_count(logical=False)
-        command = [sys.executable, CADETMatch.match.__file__, str(self.json_path), str(1)]  #'-n', str(ncpus),
+        ncpus = psutil.cpu_count(logical=False)
+        command = [sys.executable, CADETMatch.match.__file__, str(self.json_path), str(ncpus)]  #'-n', str(ncpus),
         pipe = subprocess.PIPE
 
         proc = subprocess.Popen(command, stdout=pipe, stderr=subprocess.STDOUT, bufsize=1)
