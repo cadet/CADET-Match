@@ -3,7 +3,7 @@
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Dextran",
   //tempDir should point to a temporary drive or fast drive
     "tempDir": "L:/",
-  "resultsDir": "L:/fit_smooth",
+  "resultsDir": "L:/fit_smooth_100_100",
   "CSV": "dextran_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 0.0,
@@ -15,7 +15,7 @@
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
   "generations": 1000,
-  "population": 10,
+  "population": 100,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 10,
@@ -27,7 +27,7 @@
   "progress_elapsed_time": 360,
   "parameters": [
     {
-      "transform": "norm_log",
+      "transform": "auto",
       "component": -1,
       "bound": -1,
       "location": "/input/model/unit_001/COL_DISPERSION",
@@ -35,7 +35,7 @@
       "max": 1e-3
     },
     {
-      "transform": "norm",
+      "transform": "auto",
       "component": -1,
       "bound": -1,
       "location": "/input/model/unit_001/COL_POROSITY",

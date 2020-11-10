@@ -644,7 +644,11 @@ def find_opt_poly(x,y, index):
         y = y[::-1]
 
     poly, res = numpy.polynomial.Polynomial.fit(x, y,2, full=True)
-    root = poly.deriv().roots()[0]
+    try:
+        root = poly.deriv().roots()[0]
+    except IndexError:
+        #this happens if all y values are the same in which case just take the center value
+        root = x[indexes[1]]
     root = numpy.clip(root, x[0], x[1])
     return root, x, y
 
@@ -1176,6 +1180,7 @@ def setupSimulation(sim, times, name, cache):
 
     sim.root.input.solver.user_solution_times = times
     sim.root.input.solver.sections.section_times[-1] = times[-1]
+    sim.root.input["return"].split_components_data = 1
 
     if cache.dynamicTolerance:
         sim.root.input.solver.time_integrator.abstol = get_evo_tolerance(cache, name)
@@ -1198,7 +1203,6 @@ def setupSimulation(sim, times, name, cache):
             sim.root.input["return"][unit].write_solution_solid = 0
             sim.root.input["return"][unit].write_solution_column_inlet = 0
             sim.root.input["return"][unit].write_solution_inlet = 0
-            sim.root.input["return"][unit].split_components_data = 0
 
             sim.root.input["return"][unit].write_sens_bulk = 0
             sim.root.input["return"][unit].write_sens_inlet = 0

@@ -51,21 +51,68 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     sim_spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)
     return pearson_spline_fun(exp_time_values, exp_data_values, sim_spline)
 
-def pearson_spline_fun(exp_time_values, exp_data_values, sim_spline):
-    # resample to a much smaller time step to get a more precise offset
-    dt_approx = 1e-2
-    points = math.ceil((exp_time_values[-1] - exp_time_values[0])/dt_approx)
-    times = numpy.linspace(exp_time_values[0], exp_time_values[-1], points)
-    dt = times[1] - times[0]
+def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
+    scores = []
 
-    sim_resample = sim_spline(times)
-    exp_spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, exp_data_values, ext=3)
-    exp_resample = exp_spline(times)
+    for offset in offsets:
+        rolled = sim_spline(exp_time_values - offset)
 
-    corr = scipy.signal.correlate(exp_resample, sim_resample)
+        score = numpy.trapz(numpy.min([exp_data_values,rolled], axis=0), exp_time_values)
+        scores.append(score)
 
-    dt = root_poly(corr, len(times), dt)
+    scores = numpy.array(scores)
+    scores[numpy.isnan(scores)] = 0.0
+    return scores
+
+def pearson_spline_fun(exp_time_values, exp_data_values, sim_spline, size=100, nest=10, bounds=2, tol=1e-8):
+    for i in range(nest+1):
+        if i == 0:
+            lb = -exp_time_values[-1]
+            ub = exp_time_values[-1]
+            local_size = min(1000, int((ub-lb)*2))
+        else:    
+            idx_max = numpy.argmax(pearson)
+            lb = offsets[idx_max-bounds]
+            ub = offsets[idx_max+bounds]
+            local_size = size
+        
+        if ub - lb < tol:
+            break
     
+        offsets = numpy.linspace(lb, ub, local_size)
+        
+        pearson = eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values)
+        
+        idx_max = numpy.argmax(pearson)
+        
+        expand_lb = max(bounds - idx_max, 0)
+        expand_ub = max(bounds - (len(pearson) -1 - idx_max), 0)
+        
+        if expand_lb or expand_ub:
+            #need to expand boundaries to handle our new edges
+            #if boundaries do have to be expanded make sure to expand by double the amount required since it is only done once
+            expand_lb = expand_lb * 2
+            expand_ub = expand_ub * 2
+            dt = offsets[1] - offsets[0]
+            if expand_lb:
+                local_offsets = numpy.linspace(offsets[0] - expand_lb*dt, offsets[0] - dt, expand_lb)
+                local_pearson = eval_offsets(local_offsets, sim_spline, exp_time_values, exp_data_values)
+                
+                offsets = numpy.concatenate([local_offsets, offsets])
+                pearson = numpy.concatenate([local_pearson, pearson])
+                
+            if expand_ub:
+                local_offsets = numpy.linspace(offsets[-1] + dt, offsets[-1] + expand_ub * dt, expand_ub)
+                
+                local_pearson = eval_offsets(local_offsets, sim_spline, exp_time_values, exp_data_values)
+                
+                offsets = numpy.concatenate([offsets, local_offsets])
+                pearson = numpy.concatenate([pearson, local_pearson])
+                
+    idx = numpy.argmax(pearson)
+
+    dt, time_found, goal_found = util.find_opt_poly(offsets, pearson, idx)
+     
     # calculate pearson correlation at the new time
     sim_data_values_copy = sim_spline(exp_time_values - dt)
     try:

@@ -114,7 +114,7 @@ def cut_front_find(times, values, name, cache):
     min_time, min_value, max_time, max_value = score.find_cuts(times, smooth_value, spline, spline_der)
 
     # resample to 100 points/second
-    needed_points = int((times[-1] - times[0]) * 100)
+    needed_points = int((times[-1] - times[0]) * 10)
 
     new_times = numpy.linspace(times[0], times[-1], needed_points)
     new_values = spline(new_times)

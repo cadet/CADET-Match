@@ -8,7 +8,7 @@ import psutil
 def makeParser():
     """Create the CADETMatch module arguments parser."""
     parser = argparse.ArgumentParser(
-        description="Starts a parallel version of match using SCOOP.", prog="{0} -m CADETMatch".format(sys.executable),
+        description="Starts a parallel version of match using multiprocessing.", prog="{0} -m CADETMatch".format(sys.executable),
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--json", "-j", help="Path to JSON file", metavar="JSON")

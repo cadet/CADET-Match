@@ -358,7 +358,7 @@ def generate_error_sequence(cache):
         #set delays
         block = errors_exp[:,:delay_size]
         if delay_settings[0] != delay_settings[1]:
-            block = scipy.stats.uniform.ppf(block, delay_settings[0], delay_settings[1])
+            block = scipy.stats.uniform.ppf(block, delay_settings[0], delay_settings[1]-delay_settings[0])
         else:
             block = numpy.ones(block.shape) * delay_settings[0]
 
