@@ -37,7 +37,7 @@ def run(sim_data, feature):
 
     pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_values_smooth, feature["smooth_value"])
 
-    pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_data_values_der_smooth, exp_data_values_spline)
+    pearson_der = score.pearson_offset(diff_time, exp_time_values, sim_data_values_der_smooth, exp_data_values_spline)
 
     [highs_der, lows_der] = util.find_peak(exp_time_values, sim_data_values_der_smooth)
 

@@ -3,7 +3,7 @@
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Dextran",
   //tempDir should point to a temporary drive or fast drive
     "tempDir": "L:/",
-  "resultsDir": "L:/fit_smooth_100_100",
+  "resultsDir": "L:/fit_smooth_dextran",
   "CSV": "dextran_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 0.0,

@@ -46,7 +46,7 @@ def run(sim_data, feature):
     derivative = feature.get("derivative", 1)
 
     if derivative:
-        pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_data_values_der_smooth, exp_data_values_spline)
+        pearson_der = score.pearson_offset(diff_time, exp_time_values, sim_data_values_der_smooth, exp_data_values_spline)
         [highs_der, lows_der] = util.find_peak(exp_time_values, sim_data_values_der_smooth)
 
     temp = [pearson, feature["value_function"](value_high), feature["time_function"](numpy.abs(diff_time))]

@@ -48,7 +48,7 @@ def root_poly(corr, len_times, dt):
 
 def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     # resample to a much smaller time step to get a more precise offset
-    sim_spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=3)
+    sim_spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=1)
     return pearson_spline_fun(exp_time_values, exp_data_values, sim_spline)
 
 def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
@@ -64,6 +64,21 @@ def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
     scores[numpy.isnan(scores)] = 0.0
     return scores
 
+def pearson_offset(offset, times, sim_data, exp_data):
+    sim_spline = scipy.interpolate.InterpolatedUnivariateSpline(times, sim_data, ext=1)
+    sim_data_offset = sim_spline(times - offset)
+    try:
+        pear = scipy.stats.pearsonr(exp_data, sim_data_offset)[0]
+    except ValueError:
+        multiprocessing.get_logger().warn(
+            "Pearson correlation failed to do NaN or InF in array  exp_array: [%s]   sim_array: [%s]",
+            list(exp_data),
+            list(sim_data_offset),
+        )
+        pear = 0
+    score_local = pear_corr(pear)
+    return score_local
+
 def pearson_spline_fun(exp_time_values, exp_data_values, sim_spline, size=100, nest=10, bounds=2, tol=1e-8):
     for i in range(nest+1):
         if i == 0:
@@ -72,8 +87,16 @@ def pearson_spline_fun(exp_time_values, exp_data_values, sim_spline, size=100, n
             local_size = min(1000, int((ub-lb)*2))
         else:    
             idx_max = numpy.argmax(pearson)
-            lb = offsets[idx_max-bounds]
-            ub = offsets[idx_max+bounds]
+            
+            try:
+                lb = offsets[idx_max-bounds]
+            except IndexError:
+                lb = offsets[0]
+            
+            try:
+                ub = offsets[idx_max+bounds]
+            except IndexError:
+                ub = offsets[-1]
             local_size = size
         
         if ub - lb < tol:

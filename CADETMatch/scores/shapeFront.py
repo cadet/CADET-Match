@@ -26,6 +26,56 @@ def get_settings(feature):
 
     return settings
 
+def slice_front(times, seq, seq_der, feature):
+    "create an array of zeros with only the slice we need in it"
+    #resample to 10hz
+    new_times = numpy.linspace(times[0], times[-1], int(times[-1]-times[0])*10)
+
+    spline = scipy.interpolate.InterpolatedUnivariateSpline(times, seq, ext=1)
+    spline_der = scipy.interpolate.InterpolatedUnivariateSpline(times, seq_der, ext=1)
+    
+    seq_resample = spline(new_times)
+    seq_der_resample = spline_der(new_times)
+
+    new_seq = numpy.zeros(new_times.shape)
+    new_seq_der = numpy.zeros(new_times.shape)
+    
+    max_value = numpy.max(seq_resample)
+
+    max_percent = feature.get('max_percent', 0.98)
+    min_percent = feature.get('min_percent', 0.02)
+    
+    select_max = max_percent * max_value
+    select_min = min_percent * max_value
+    
+    max_index = numpy.argmax(seq_resample)
+    idx_min = numpy.argmin((seq_resample[:max_index] - select_min)**2)
+    idx_max = numpy.argmin((seq_resample[:max_index] - select_max)**2)
+     
+    min_value = seq_resample[idx_min]
+    max_value = seq_resample[idx_max]
+    new_seq[idx_min:idx_max+1] = seq_resample[idx_min:idx_max+1]
+    new_seq_der[idx_min:idx_max+1] = seq_der_resample[idx_min:idx_max+1]
+    return new_times, new_seq, new_seq_der, min_value, max_value
+
+def slice_front_values(new_times, times, seq, seq_der, min_value, max_value, feature):
+    "create an array of zeros with only the slice we need in it"
+    spline = scipy.interpolate.InterpolatedUnivariateSpline(times, seq, ext=1)
+    spline_der = scipy.interpolate.InterpolatedUnivariateSpline(times, seq_der, ext=1)
+    
+    seq_resample = spline(new_times)
+    seq_der_resample = spline_der(new_times)
+
+    new_seq = numpy.zeros(new_times.shape)
+    new_seq_der = numpy.zeros(new_times.shape)
+    
+    max_index = numpy.argmax(seq_resample)
+    idx_min = numpy.argmin((seq_resample[:max_index] - min_value)**2)
+    idx_max = numpy.argmin((seq_resample[:max_index] - max_value)**2)
+     
+    new_seq[idx_min:idx_max+1] = seq_resample[idx_min:idx_max+1]
+    new_seq_der[idx_min:idx_max+1] = seq_der_resample[idx_min:idx_max+1]
+    return new_seq, new_seq_der
 
 def run(sim_data, feature):
     "similarity, value, start stop"
@@ -34,22 +84,29 @@ def run(sim_data, feature):
 
     exp_data_values = feature["value"][selected]
     exp_time_values = feature["time"][selected]
-    exp_data_values_spline = feature["exp_data_values_spline"]
+    exp_data_values_der_smooth = feature["exp_data_values_der_smooth"]
+    exp_data_values_smooth = feature['exp_data_values_smooth']
+    new_times = feature['new_times']
+    min_value = feature['min_value']
+    max_value = feature['max_value']
 
     sim_data_values_smooth, sim_data_values_der_smooth = smoothing.full_smooth(
         exp_time_values, sim_data_values, feature["critical_frequency"], feature["smoothing_factor"], feature["critical_frequency_der"]
     )
 
+    ret = slice_front_values(new_times, exp_time_values, sim_data_values_smooth, sim_data_values_der_smooth, min_value, max_value, feature)
+    sim_data_values_smooth_cut, sim_data_values_der_smooth_cut = ret
+
     [high, low] = util.find_peak(exp_time_values, sim_data_values_smooth)
 
     time_high, value_high = high
 
-    pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_values_smooth, feature["smooth_value"])
+    pearson, diff_time = score.pearson_spline(new_times, sim_data_values_smooth_cut, exp_data_values_smooth)
 
     derivative = feature.get("derivative", 1)
 
     if derivative:
-        pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_data_values_der_smooth, exp_data_values_spline)
+        pearson_der = score.pearson_offset(diff_time, new_times, sim_data_values_der_smooth_cut, exp_data_values_der_smooth)
         [highs_der, lows_der] = util.find_peak(exp_time_values, sim_data_values_der_smooth)
 
     temp = [pearson, feature["value_function"](value_high), feature["time_function"](numpy.abs(diff_time))]
@@ -77,6 +134,9 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
     temp["peak"] = util.find_peak(selectedTimes, exp_data_values_smooth)[0]
 
+    ret = slice_front(selectedTimes, exp_data_values_smooth, exp_data_values_der_smooth, feature)
+    selectedTimes, exp_data_values_smooth, exp_data_values_der_smooth, min_value, max_value = ret
+
     decay = feature.get("decay", 0)
 
     if decay:
@@ -90,8 +150,11 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp["smoothing_factor"] = s
     temp["critical_frequency"] = crit_fs
     temp["critical_frequency_der"] = crit_fs_der
-    temp["smooth_value"] = exp_data_values_smooth
-    temp["exp_data_values_spline"] = exp_data_values_der_smooth
+    temp['new_times'] = selectedTimes
+    temp["exp_data_values_smooth"] = exp_data_values_smooth
+    temp["exp_data_values_der_smooth"] = exp_data_values_der_smooth
+    temp['min_value'] = min_value
+    temp['max_value'] = max_value
     return temp
 
 

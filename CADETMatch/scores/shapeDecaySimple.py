@@ -36,7 +36,7 @@ def run(sim_data, feature):
 
     pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_values_smooth, feature["smooth_value"])
 
-    pearson_der, diff_time_der = score.pearson_spline(exp_time_values, sim_data_values_der_smooth, feature["smooth_value_der"])
+    pearson_der = score.pearson_offset(diff_time, exp_time_values, sim_data_values_der_smooth, feature["smooth_value_der"])
 
     temp = [pearson, feature["time_function"](numpy.abs(diff_time)), pearson_der]
     return (
