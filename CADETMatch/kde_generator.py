@@ -9,6 +9,7 @@
 
 import itertools
 import CADETMatch.score as score
+import CADETMatch.sub as sub
 import CADETMatch.kde_util as kde_util
 from cadet import Cadet, H5
 from pathlib import Path
@@ -34,7 +35,6 @@ import CADETMatch.cache as cache
 import CADETMatch.synthetic_error as synthetic_error
 
 import joblib
-import subprocess
 import sys
 
 import SALib.sample.sobol_sequence
@@ -94,14 +94,7 @@ def setupKDE(cache):
     h5_data.root.probability = probability
     h5_data.save()
 
-    cwd = str(Path(__file__).parent)
-    ret = subprocess.run(
-        [sys.executable, "graph_kde.py", str(cache.json_path), str(util.getCoreCounts())],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        cwd=cwd,
-    )
-    util.log_subprocess("graph_kde.py", ret)
+    sub.graph_kde()
 
     return kde, scaler
 

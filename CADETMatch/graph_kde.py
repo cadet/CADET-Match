@@ -1,4 +1,5 @@
 import sys
+import filelock
 
 import matplotlib
 import matplotlib.style as mplstyle
@@ -22,9 +23,24 @@ def main():
 
     mcmcDir = Path(cache.settings["resultsDirMCMC"])
 
+    dir_base = Path(cache.settings["resultsDirBase"])
+    result_lock = dir_base / "result.lock"
+
+    lock = filelock.FileLock(result_lock.as_posix())
+
+    lock.acquire()
+
     kde_settings = H5()
     kde_settings.filename = (mcmcDir / "kde_settings.h5").as_posix()
     kde_settings.load()
+
+    file = dir_base / "kde_data.h5"
+
+    kde_data = H5()
+    kde_data.filename = file.as_posix()
+    kde_data.load()
+
+    lock.release()
 
     store = kde_settings.root.store
 
@@ -52,13 +68,6 @@ def main():
     plt.ylabel("cross_val_score")
     plt.savefig(str(mcmcDir / "bandwidth.png"), bbox_inches="tight")
     plt.close()
-
-    dir_base = cache.settings.get("resultsDirBase")
-    file = dir_base / "kde_data.h5"
-
-    kde_data = H5()
-    kde_data.filename = file.as_posix()
-    kde_data.load()
 
     times = {}
     values = {}

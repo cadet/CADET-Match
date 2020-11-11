@@ -38,6 +38,11 @@ def run_sub(cache, key, line, file_name):
         lock.acquire()
         multiprocessing.get_logger().info("acquired lock subprocess %s for %s", key, file_name)
 
+    process_sub(key, file_name)
+
+def process_sub(key, file_name):
+    sub = processes.get(key, None)
+
     if sub is not None:
         finished = sub.poll() is not None
         if finished is not False:
@@ -89,6 +94,12 @@ def graph_main(cache, graph_type):
 def wait_main():
     wait_sub('main', "generate_graphs.py")
 
+def graph_kde():
+    line = [sys.executable, "graph_kde.py", str(cache.json_path), str(util.getCoreCounts())]
+    run_sub(cache, 'graph_kde', line, "graph_kde.py")
+
+def process_kde():
+    process_sub('graph_kde', "graph_kde.py")
 
 def graph_process(cache, generation, last=0):
     lastGraphTime = times.get('lastGraphTime', time.time())
@@ -113,9 +124,8 @@ def graph_process(cache, generation, last=0):
 def graph_corner_process(cache, last=False, interval=1200):
     last_corner_time = times.get('last_corner_time', time.time())
 
-    graph_scripts = ("generate_corner_graphs.py", "generate_autocorr_graphs.py", "generate_mixing_graphs.py")
-
     if last:
+        process_kde()
         graph_corner(cache)
         graph_autocorr(cache)
         graph_mixing(cache)
@@ -126,6 +136,7 @@ def graph_corner_process(cache, last=False, interval=1200):
 
         last_corner_time = time.time()
     elif (time.time() - last_corner_time) > interval:
+        process_kde()
         graph_corner(cache)
         graph_autocorr(cache)
         graph_mixing(cache)

@@ -3,7 +3,7 @@
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example1/Dextran",
   //tempDir should point to a temporary drive or fast drive
     "tempDir": "L:/",
-  "resultsDir": "L:/fit_smooth_shape_front_pear",
+  "resultsDir": "L:/fit_smooth_shape_front_pear2",
   "CSV": "dextran_NSGA3.csv",
   "checkpointFile": "check",
   "stopAverage": 0.0,
@@ -22,8 +22,6 @@
   "progressCorrect": 2,
   "normalizeOutput":1,
   "continueMCMC":0,
-  "graphMetaTime": 60,
-  "graphGenerateTime": 120,
   "finalGradRefinement": 1,
   "progress_elapsed_time": 360,
   "parameters": [
