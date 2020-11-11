@@ -43,7 +43,12 @@ def root_poly(corr, len_times, dt):
     
     poly, res = numpy.polynomial.Polynomial.fit(x,y,2, full=True)
     
-    dt = poly.deriv().roots()[0]
+    try:
+        dt = poly.deriv().roots()[0]
+    except IndexError:
+        #this happens if all y values are the same in which case just take the center value
+        multiprocessing.get_logger().warn("root poly index_error x %s  y %s", x, y)
+        dt = x[indexes[1]]
     return dt
 
 def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
@@ -56,8 +61,7 @@ def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
 
     for offset in offsets:
         rolled = sim_spline(exp_time_values - offset)
-
-        score = numpy.trapz(numpy.min([exp_data_values,rolled], axis=0), exp_time_values)
+        score = scipy.stats.pearsonr(exp_data_values, rolled)[0]
         scores.append(score)
 
     scores = numpy.array(scores)
@@ -84,7 +88,7 @@ def pearson_spline_fun(exp_time_values, exp_data_values, sim_spline, size=100, n
         if i == 0:
             lb = -exp_time_values[-1]
             ub = exp_time_values[-1]
-            local_size = min(1000, int((ub-lb)*2))
+            local_size = min(1000+1, int((ub-lb)*2+1))
         else:    
             idx_max = numpy.argmax(pearson)
             
