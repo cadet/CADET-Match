@@ -1,5 +1,5 @@
 import sys
-
+import filelock
 import matplotlib
 import matplotlib.style as mplstyle
 mplstyle.use('fast')
@@ -79,23 +79,42 @@ def main(map_function):
 
     multiprocessing.get_logger().info("graphing directory %s", os.getcwd())
 
+    # full generation 1 = 2D, 2 = 2D + 3D
     fullGeneration = int(sys.argv[2])
 
-    # full generation 1 = 2D, 2 = 2D + 3D
 
+    #load all data, all data that can be changed by the main process MUST be loaded and this point and the files locked
+    #this allows the main process to wait for data loading and then continue once complete
+        
+    resultDir = Path(cache.settings["resultsDirBase"])
+    progress = resultDir / "progress.csv"
+    result_lock = resultDir / "result.lock"
+
+    result_h5 = resultDir / "result.h5"
+
+    lock = filelock.FileLock(result_lock.as_posix())
+
+    lock.acquire()
+ 
+    progress_df = pandas.read_csv(progress)
+    
+    result_data = H5()
+    result_data.filename = result_h5.as_posix()
+    result_data.load(paths=["/output", "/output_meta", "/is_extended_input", "/probability",
+                            "/input_transform_extended", "/input_transform",
+                            "/mean", "/confidence", "/distance_correct"])
+
+    lock.release()
+     
     graphMeta(cache, map_function)
-    graphProgress(cache, map_function)
+    graphProgress(cache, map_function, progress_df)
 
     if fullGeneration:
-        graphSpace(fullGeneration, cache, map_function)
+        graphSpace(fullGeneration, cache, map_function, result_data)
         graphExperiments(cache, map_function)
 
 
-def graphDistance(cache, map_function):
-
-    resultDir = Path(cache.settings["resultsDir"])
-    result_h5 = resultDir / "result.h5"
-
+def graphDistance(cache, map_function, data):
     output_distance = cache.settings["resultsDirSpace"] / "distance"
     output_distance_meta = output_distance / "meta"
 
@@ -107,47 +126,42 @@ def graphDistance(cache, map_function):
     score_headers = cache.score_headers
     meta_headers = cache.meta_headers
 
-    if result_h5.exists():
-        data = H5()
-        data.filename = result_h5.as_posix()
-        data.load()
+    temp = []
 
-        temp = []
-
-        if "mean" in data.root and "confidence" in data.root and "distance_correct" in data.root:
-            for idx_parameter, parameter in enumerate(parameter_headers_actual):
-                for idx_score, score in enumerate(score_headers):
-                    temp.append(
-                        (
-                            output_distance,
-                            parameter,
-                            idx_parameter,
-                            score,
-                            idx_score,
-                            data.root.distance_correct[:, idx_parameter],
-                            data.root.output[:, idx_score],
-                            data.root.mean[:, idx_parameter],
-                            data.root.confidence[:, idx_parameter],
-                        )
+    if "mean" in data.root and "confidence" in data.root and "distance_correct" in data.root:
+        for idx_parameter, parameter in enumerate(parameter_headers_actual):
+            for idx_score, score in enumerate(score_headers):
+                temp.append(
+                    (
+                        output_distance,
+                        parameter,
+                        idx_parameter,
+                        score,
+                        idx_score,
+                        data.root.distance_correct[:, idx_parameter],
+                        data.root.output[:, idx_score],
+                        data.root.mean[:, idx_parameter],
+                        data.root.confidence[:, idx_parameter],
                     )
+                )
 
-            for idx_parameter, parameter in enumerate(parameter_headers_actual):
-                for idx_score, score in enumerate(meta_headers):
-                    temp.append(
-                        (
-                            output_distance_meta,
-                            parameter,
-                            idx_parameter,
-                            score,
-                            idx_score,
-                            data.root.distance_correct[:, idx_parameter],
-                            data["output_meta"][:, idx_score],
-                            data.root.mean[:, idx_parameter],
-                            data.root.confidence[:, idx_parameter],
-                        )
+        for idx_parameter, parameter in enumerate(parameter_headers_actual):
+            for idx_score, score in enumerate(meta_headers):
+                temp.append(
+                    (
+                        output_distance_meta,
+                        parameter,
+                        idx_parameter,
+                        score,
+                        idx_score,
+                        data.root.distance_correct[:, idx_parameter],
+                        data["output_meta"][:, idx_score],
+                        data.root.mean[:, idx_parameter],
+                        data.root.confidence[:, idx_parameter],
                     )
+                )
 
-            list(map_function(plot_2d_scatter, temp))
+        list(map_function(plot_2d_scatter, temp))
 
 
 def plot_2d_scatter(args):
@@ -359,31 +373,12 @@ def plotExperiments(args):
             if featureType in (
                 "similarity",
                 "similarityDecay",
-                "similarityHybrid",
-                "similarityHybrid2",
-                "similarityHybrid2_spline",
-                "similarityHybridDecay",
-                "similarityHybridDecay2",
                 "curve",
-                "breakthrough",
-                "dextran",
-                "dextranHybrid",
-                "dextranHybrid2",
-                "dextranHybrid2_spline",
-                "similarityCross",
-                "similarityCrossDecay",
-                "breakthroughCross",
                 "SSE",
                 "LogSSE",
-                "breakthroughHybrid",
-                "breakthroughHybrid2",
                 "Shape",
                 "ShapeDecay",
                 "Dextran",
-                "DextranAngle",
-                "DextranTest",
-                "DextranQuad",
-                "Dextran3",
                 "DextranShape",
                 "ShapeDecaySimple",
                 "ShapeSimple",
@@ -400,13 +395,6 @@ def plotExperiments(args):
                 graphIdx += 1
 
             if featureType in (
-                "derivative_similarity",
-                "derivative_similarity_hybrid",
-                "derivative_similarity_hybrid2",
-                "derivative_similarity_cross",
-                "derivative_similarity_cross_alt",
-                "derivative_similarity_hybrid2_spline",
-                "similarityHybridDecay2_spline",
                 "Shape",
                 "ShapeDecay",
                 "ShapeFront",
@@ -425,10 +413,6 @@ def plotExperiments(args):
                 graphIdx += 1
 
             if featureType in (
-                "fractionation",
-                "fractionationCombine",
-                "fractionationMeanVariance",
-                "fractionationMoment",
                 "fractionationSlide",
                 "fractionationSSE",
             ):
@@ -495,10 +479,8 @@ def plotExperiments(args):
         fig.savefig(str(dst))
 
 
-def graphSpace(fullGeneration, cache, map_function):
+def graphSpace(fullGeneration, cache, map_function, results):
     multiprocessing.get_logger().info("starting space graphs")
-    progress_path = Path(cache.settings["resultsDirBase"]) / "result.h5"
-
     output_2d = cache.settings["resultsDirSpace"] / "2d"
     output_3d = cache.settings["resultsDirSpace"] / "3d"
     output_prob = cache.settings["resultsDirSpace"] / "probability"
@@ -507,16 +489,9 @@ def graphSpace(fullGeneration, cache, map_function):
     output_3d.mkdir(parents=True, exist_ok=True)
     output_prob.mkdir(parents=True, exist_ok=True)
 
-    results = H5()
-    results.filename = progress_path.as_posix()
-
-    results.load(paths=["/output", "/output_meta", "/is_extended_input", "/probability"])
-
     if results.root.is_extended_input:
-        results.load(paths=["/input_transform_extended"], update=True)
         input = results.root.input_transform_extended
     else:
-        results.load(paths=["/input_transform"], update=True)
         input = results.root.input_transform
 
     if isinstance(results.root.probability, Dict):
@@ -543,7 +518,7 @@ def graphSpace(fullGeneration, cache, map_function):
     # 2d plots
     if fullGeneration >= 1:
         multiprocessing.get_logger().info("starting 2d space graphs")
-        graphDistance(cache, map_function)
+        graphDistance(cache, map_function, results)
 
         seq = []
         for (x,), y in itertools.product(comp_one, output_indexes):
@@ -662,13 +637,8 @@ def plot_2d_single(directory_path, header_x, scoreName, data, scores):
     fig.savefig(str(directory / filename))
 
 
-def graphProgress(cache, map_function):
+def graphProgress(cache, map_function, df):
     multiprocessing.get_logger().info("starting progress graphs")
-    results = Path(cache.settings["resultsDirBase"])
-    progress = results / "progress.csv"
-
-    df = pandas.read_csv(progress)
-
     output = cache.settings["resultsDirProgress"]
 
     x = [

@@ -22,7 +22,8 @@
   "progressCorrect": 2,
   "normalizeOutput":1,
   "continueMCMC":0,
-  "graphMetaTime": 600,
+  "graphMetaTime": 60,
+  "graphGenerateTime": 120,
   "finalGradRefinement": 1,
   "progress_elapsed_time": 360,
   "parameters": [

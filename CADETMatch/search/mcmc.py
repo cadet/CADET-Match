@@ -1,6 +1,7 @@
 import random
 import pickle
 import CADETMatch.util as util
+import CADETMatch.sub as sub
 import CADETMatch.progress as progress
 import numpy
 import numpy as np
@@ -484,7 +485,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         mcmc_store.root.bounds_probability_flat = bounds_probability.reshape(-1, 1)
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_auto_bounds_write)
-        util.graph_corner_process(cache, last=False)
+        sub.graph_corner_process(cache, last=False)
 
         if generation % checkInterval == 0:
             converged, lb, mid, ub = converged_bounds(bounds_chain[:, :, :new_parameters], 200, 1e-3)
@@ -652,7 +653,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         mcmc_store.root.train_probability_flat = train_probability.reshape(-1, 1)
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_burn_write)
-        util.graph_corner_process(cache, last=False)
+        sub.graph_corner_process(cache, last=False)
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
             average_converge = numpy.mean(converge)
@@ -826,7 +827,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_run_write)
         mle_process(last=False)
-        util.graph_corner_process(cache, last=False)
+        sub.graph_corner_process(cache, last=False)
 
     checkpoint["p_chain"] = p
     checkpoint["ln_prob_chain"] = ln_prob
@@ -939,11 +940,11 @@ def run(cache, tools, creator):
 
         if checkpoint["state"] == "auto_bounds":
             sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store)
-            util.graph_corner_process(cache, last=False, interval=60)
+            sub.graph_corner_process(cache, last=False, interval=60)
 
         if checkpoint["state"] == "burn_in":
             sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store)
-            util.graph_corner_process(cache, last=False, interval=60)
+            sub.graph_corner_process(cache, last=False, interval=60)
 
         if checkpoint["state"] == "chain":
             run_chain = checkpoint.get("run_chain", None)
@@ -965,7 +966,7 @@ def run(cache, tools, creator):
 
         if checkpoint["state"] == "chain":
             sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store)
-            util.graph_corner_process(cache, last=False, interval=60)
+            sub.graph_corner_process(cache, last=False, interval=60)
 
     chain = checkpoint["run_chain"]
     chain_shape = chain.shape
@@ -981,7 +982,7 @@ def run(cache, tools, creator):
     if checkpoint["state"] == "plot_finish":
         mle_process(last=True)
         tube_process(last=True)
-        util.graph_corner_process(cache, last=True)
+        sub.graph_corner_process(cache, last=True)
     return numpy.mean(chain, 0)
 
 
@@ -1209,7 +1210,7 @@ def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_ho
         probability=numpy.exp(log_likelihoods)
     )
 
-    util.graph_process(cache, process.gen)
+    sub.graph_process(cache, process.gen)
 
     process.gen += 1
     process.generation_start = time.time()

@@ -1,4 +1,5 @@
 import sys
+import filelock
 
 import matplotlib
 import matplotlib.style as mplstyle
@@ -60,7 +61,33 @@ def main():
 
     multiprocessing.get_logger().info("graphing directory %s", os.getcwd())
 
-    graphCorner(cache)
+    resultDir = Path(cache.settings["resultsDirBase"])
+    result_lock = resultDir / "result.lock"
+
+    lock = filelock.FileLock(result_lock.as_posix())
+
+    lock.acquire()
+
+    miscDir = Path(cache.settings["resultsDirMCMC"])
+    mcmc_h5 = miscDir / "mcmc.h5"
+    result_h5 = resultDir / "result.h5"
+
+    if mcmc_h5.exists():
+        data_mcmc = H5()
+        data_mcmc.filename = mcmc_h5.as_posix()
+        data_mcmc.load()
+
+        data_results = None
+    else:
+        data_results = H5()
+        data_results.filename = result_h5.as_posix()
+        data_results.load()
+
+        data_mcmc = None
+
+    lock.release()
+
+    graphCorner(cache, data_mcmc, data_results)
 
 
 def plotChain(flat_chain, flat_chain_transform, headers, out_dir, prefix):
@@ -149,7 +176,7 @@ def clean_header(header):
     return " ".join(temp)
 
 
-def graphCorner(cache):
+def graphCorner(cache, data_mcmc=None, data_results=None):
     multiprocessing.get_logger().info("plotting corner plots")
     headers = list(cache.parameter_headers_actual)
     headers = [clean_header(header) for header in headers]
@@ -160,10 +187,8 @@ def graphCorner(cache):
     miscDir = Path(cache.settings["resultsDirMCMC"])
     mcmc_h5 = miscDir / "mcmc.h5"
 
-    if mcmc_h5.exists():
-        data = H5()
-        data.filename = mcmc_h5.as_posix()
-        data.load()
+    if data_mcmc is not None:
+        data = data_mcmc
 
         out_dir = cache.settings["resultsDirProgress"]
 
@@ -245,9 +270,7 @@ def graphCorner(cache):
         plotMCMCVars(out_dir, headers, data)
 
     else:
-        data = H5()
-        data.filename = result_h5.as_posix()
-        data.load()
+        data = data_results
 
         if len(data.root.input) > 1e5:
             indexes = numpy.random.choice(data.root.input.shape[0], int(1e5), replace=False)

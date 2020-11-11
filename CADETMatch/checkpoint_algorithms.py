@@ -3,6 +3,7 @@ import pickle
 import random
 import numpy
 import CADETMatch.util as util
+import CADETMatch.sub as sub
 import CADETMatch.progress as progress
 from deap import algorithms
 import time
@@ -93,8 +94,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
                 progress.writeProgress(
                     cache, -1, population, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data
                 )
-                util.graph_process(cache, "First")
-                util.graph_corner_process(cache, last=False)
+                sub.graph_process(cache, "First")
+                sub.graph_corner_process(cache, last=False)
 
             cp = dict(
                 population=population,
@@ -134,8 +135,8 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             progress.writeProgress(
                 cache, gen, offspring, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data
             )
-            util.graph_process(cache, gen)
-            util.graph_corner_process(cache, last=False)
+            sub.graph_process(cache, gen)
+            sub.graph_corner_process(cache, last=False)
 
             cp = dict(
                 population=population,
@@ -188,7 +189,7 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
         )
 
         util.finish(cache)
-        util.graph_corner_process(cache, last=True)
+        sub.graph_corner_process(cache, last=True)
         return halloffame
 
 
@@ -274,8 +275,8 @@ def nsga2(populationSize, ngen, cache, tools):
             progress.writeProgress(
                 cache, -1, population, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data
             )
-            util.graph_process(cache, "First")
-            util.graph_corner_process(cache, last=False)
+            sub.graph_process(cache, "First")
+            sub.graph_corner_process(cache, last=False)
 
         # This is just to assign the crowding distance to the individuals
         # no actual selection is done
@@ -324,8 +325,8 @@ def nsga2(populationSize, ngen, cache, tools):
             progress.writeProgress(
                 cache, gen, offspring, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data
             )
-            util.graph_process(cache, gen)
-            util.graph_corner_process(cache, last=False)
+            sub.graph_process(cache, gen)
+            sub.graph_corner_process(cache, last=False)
 
             # Select the next generation population
             population = cache.toolbox.select(population + offspring, populationSize)
@@ -387,9 +388,9 @@ def nsga2(populationSize, ngen, cache, tools):
 
             if stop_iteration(best, stalled, cache):
                 util.finish(cache)
-                util.graph_corner_process(cache, last=True)
+                sub.graph_corner_process(cache, last=True)
                 return halloffame
                 
         util.finish(cache)
-        util.graph_corner_process(cache, last=True)
+        sub.graph_corner_process(cache, last=True)
         return halloffame

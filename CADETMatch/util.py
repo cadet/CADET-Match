@@ -21,6 +21,7 @@ import psutil
 
 import random
 import CADETMatch.calc_coeff as calc_coeff
+import CADETMatch.sub as sub
 import warnings
 
 with warnings.catch_warnings():
@@ -1034,75 +1035,16 @@ def cleanDir(dir, hof):
             path.unlink()
 
 
-def graph_process(cache, generation, last=0):
-    if "lastGraphTime" not in graph_process.__dict__:
-        graph_process.lastGraphTime = time.time()
-    if "lastMetaTime" not in graph_process.__dict__:
-        graph_process.lastMetaTime = time.time()
-
-    if "child" in graph_process.__dict__:
-        if graph_process.child.poll() is None:  # This is false if the child has completed
-            if last:
-                graph_process.child.wait()
-            else:
-                return
-
-    cwd = str(Path(__file__).parent)
-
-    if cache.graphSpearman:  # This is mostly just for debugging now and is not run async
-        ret = subprocess.run(
-            [sys.executable, "graph_spearman.py", str(cache.json_path), str(generation), str(getCoreCounts())],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            cwd=cwd,
-        )
-        log_subprocess("graph_spearman.py", ret)
-
-    if last:
-        ret = subprocess.run(
-            [sys.executable, "generate_graphs.py", str(cache.json_path), str(cache.graphType), str(getCoreCounts())],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            cwd=cwd,
-        )
-        graph_process.lastGraphTime = time.time()
-    elif (time.time() - graph_process.lastGraphTime) > cache.graphGenerateTime:
-        # graph_process.child = subprocess.Popen([sys.executable, 'generate_graphs.py', str(cache.json_path), '1', str(getCoreCounts())],
-        #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
-        subprocess.run(
-            [sys.executable, "generate_graphs.py", str(cache.json_path), str(cache.graphType), str(getCoreCounts())],
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            close_fds=True,
-            cwd=cwd,
-        )
-        graph_process.lastGraphTime = time.time()
-    else:
-        if (time.time() - graph_process.lastMetaTime) > cache.graphMetaTime:
-            # graph_process.child = subprocess.Popen([sys.executable, 'generate_graphs.py', str(cache.json_path), '0', str(getCoreCounts())],
-            #    stdin=None, stdout=None, stderr=None, close_fds=True,  cwd=cwd)
-            subprocess.run(
-                [sys.executable, "generate_graphs.py", str(cache.json_path), "0", str(getCoreCounts())],
-                stdin=None,
-                stdout=None,
-                stderr=None,
-                close_fds=True,
-                cwd=cwd,
-            )
-            graph_process.lastMetaTime = time.time()
-
-
 def log_subprocess(name, ret):
-    for line in ret.stdout.splitlines():
+    for line in ret.stdout.read().splitlines():
         multiprocessing.get_logger().info("%s stdout: %s", name, line)
 
-    for line in ret.stderr.splitlines():
+    for line in ret.stderr.read().splitlines():
         multiprocessing.get_logger().info("%s stderr: %s", name, line)
 
 
 def finish(cache):
-    graph_process(cache, "Last", last=True)
+    sub.graph_process(cache, "Last", last=True)
 
     if cache.graphSpearman:
         cwd = str(Path(__file__).parent)
@@ -1228,48 +1170,6 @@ def setupSimulation(sim, times, name, cache):
                 sim.root.input["return"][unit].write_solution_outlet = 0
                 sim.root.input["return"][unit].write_sens_outlet = 0
     sim.root.input.solver.nthreads = 1
-
-
-def graph_corner_process(cache, last=False, interval=1200):
-    if "last_time" not in graph_corner_process.__dict__:
-        graph_corner_process.last_time = time.time()
-
-    if "child" in graph_corner_process.__dict__:
-        if graph_corner_process.child.poll() is None:  # This is false if the child has completed
-            if last:
-                graph_corner_process.child.wait()
-            else:
-                return
-
-    cwd = str(Path(__file__).parent)
-
-    graph_scripts = ("generate_corner_graphs.py", "generate_autocorr_graphs.py", "generate_mixing_graphs.py")
-
-    if last:
-        for script in graph_scripts:
-            ret = subprocess.run(
-                [sys.executable, script, str(cache.json_path), str(getCoreCounts())],
-                stdin=None,
-                stdout=None,
-                stderr=None,
-                close_fds=True,
-                cwd=cwd,
-            )
-
-        graph_corner_process.last_time = time.time()
-    elif (time.time() - graph_corner_process.last_time) > interval:
-        for script in graph_scripts:
-            subprocess.run(
-                [sys.executable, script, str(cache.json_path), str(getCoreCounts())],
-                stdin=None,
-                stdout=None,
-                stderr=None,
-                close_fds=True,
-                cwd=cwd,
-            )
-
-        graph_corner_process.last_time = time.time()
-
 
 def biasSimulation(simulation, experiment, cache):
 

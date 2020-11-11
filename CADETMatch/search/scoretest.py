@@ -1,4 +1,5 @@
 import CADETMatch.util as util
+import CADETMatch.sub as sub
 import CADETMatch.progress as progress
 import CADETMatch.pareto as pareto
 import csv
@@ -64,7 +65,7 @@ def run(cache, tools, creator):
         progress.writeProgress(cache, 0, population, hof, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data)
 
         util.finish(cache)
-        util.graph_corner_process(cache, last=True)
+        sub.graph_corner_process(cache, last=True)
         return hof
 
 
