@@ -61,7 +61,12 @@ def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
 
     for offset in offsets:
         rolled = sim_spline(exp_time_values - offset)
-        score = scipy.stats.pearsonr(exp_data_values, rolled)[0]
+
+        if (exp_data_values == exp_data_values[0]).all() or (rolled == rolled[0]).all():
+            score = 0
+        else:
+            score = scipy.stats.pearsonr(exp_data_values, rolled)[0]
+
         scores.append(score)
 
     scores = numpy.array(scores)

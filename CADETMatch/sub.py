@@ -94,28 +94,28 @@ def graph_main(cache, graph_type):
 def wait_main():
     wait_sub('main', "generate_graphs.py")
 
-def graph_kde():
+def graph_kde(cache):
     line = [sys.executable, "graph_kde.py", str(cache.json_path), str(util.getCoreCounts())]
     run_sub(cache, 'graph_kde', line, "graph_kde.py")
 
 def process_kde():
     process_sub('graph_kde', "graph_kde.py")
 
-def graph_mle():
+def graph_mle(cache):
     line = [sys.executable, "mle.py", str(cache.cache.json_path), str(util.getCoreCounts())]
     run_sub(cache, 'graph_mle', line, "mle.py")
 
 def wait_mle():
     wait_sub('graph_mle', "mle.py")
 
-def graph_tube():
+def graph_tube(cache):
     line = [sys.executable, "mcmc_plot_tube.py", str(cache.cache.json_path), str(util.getCoreCounts())]
     run_sub(cache, 'graph_tube', line, "mcmc_plot_tube.py")
 
 def wait_tube():
     wait_sub('graph_tube', "mcmc_plot_tube.py")
 
-def graph_spearman_video():
+def graph_spearman_video(cache):
     line = [sys.executable, "video_spearman.py", str(cache.json_path), str(getCoreCounts())]
     run_sub(cache, 'spearman_video', line, "video_spearman.py")
 

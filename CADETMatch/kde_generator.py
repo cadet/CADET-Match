@@ -94,7 +94,7 @@ def setupKDE(cache):
     h5_data.root.probability = probability
     h5_data.save()
 
-    sub.graph_kde()
+    sub.graph_kde(cache)
 
     return kde, scaler
 
