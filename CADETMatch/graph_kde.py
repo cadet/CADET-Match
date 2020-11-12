@@ -29,6 +29,7 @@ def main():
     lock = filelock.FileLock(result_lock.as_posix())
 
     lock.acquire()
+    multiprocessing.get_logger().info("locking kde subprocess %s", lock.lock_file)
 
     kde_settings = H5()
     kde_settings.filename = (mcmcDir / "kde_settings.h5").as_posix()
@@ -41,6 +42,7 @@ def main():
     kde_data.load()
 
     lock.release()
+    multiprocessing.get_logger().info("unlocking kde subprocess")
 
     store = kde_settings.root.store
 

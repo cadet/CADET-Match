@@ -95,6 +95,7 @@ def main(map_function):
     lock = filelock.FileLock(result_lock.as_posix())
 
     lock.acquire()
+    multiprocessing.get_logger().info("locking graph subprocess %s", lock.lock_file)
  
     progress_df = pandas.read_csv(progress)
     
@@ -105,7 +106,8 @@ def main(map_function):
                             "/mean", "/confidence", "/distance_correct"])
 
     lock.release()
-     
+    multiprocessing.get_logger().info("unlocking graph subprocess") 
+
     graphMeta(cache, map_function)
     graphProgress(cache, map_function, progress_df)
 

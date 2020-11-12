@@ -4,6 +4,7 @@ from sklearn.model_selection import cross_val_score
 import scipy
 import multiprocessing
 import sys
+import filelock
 
 import cadet
 import CADETMatch.util as util
@@ -255,14 +256,26 @@ def main():
     util.setupLog(cache.settings["resultsDirLog"], "mcmc_plot_tube.log")
     cache.setup(sys.argv[1])
 
-    kde, kde_scaler = kde_generator.getKDE(cache)
-
     mcmcDir = Path(cache.settings["resultsDirMCMC"])
     mcmc_h5 = mcmcDir / "mcmc.h5"
 
-    with h5py.File(mcmc_h5, "r") as h5:
-        flat_chain = h5["/flat_chain"][()]
-        plotTube(cache, flat_chain, kde, kde_scaler)
+    resultDir = Path(cache.settings["resultsDirBase"])
+    result_lock = resultDir / "result.lock"
+
+    lock = filelock.FileLock(result_lock.as_posix())
+
+    lock.acquire()
+    multiprocessing.get_logger().info("locking plot_tube subprocess %s", lock.lock_file)
+
+    mcmc_store = H5()
+    mcmc_store.filename = mcmc_h5.as_posix()
+    mcmc_store.load(paths=["/flat_chain",])
+
+    lock.release()
+    multiprocessing.get_logger().info("unlocking plot_tube subprocess")
+
+    kde, kde_scaler = kde_generator.getKDE(cache)
+    plotTube(cache, mcmc_store.root.flat_chain, kde, kde_scaler)
 
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ def run_sub(cache, key, line, file_name):
     if sub is None:
         lock = get_lock(cache)
         lock.release()
-        multiprocessing.get_logger().info("creating subprocess %s for %s", key, file_name)
+        multiprocessing.get_logger().info("creating subprocess %s for %s %s", key, file_name, lock.lock_file)
         sub = subprocess.Popen(
             line,
             stdout=subprocess.PIPE,

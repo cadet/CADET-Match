@@ -4,6 +4,7 @@ from sklearn.neighbors import KernelDensity
 import scipy
 import multiprocessing
 import sys
+import filelock
 
 import cadet
 import CADETMatch.util as util
@@ -16,10 +17,6 @@ import CADETMatch.kde_util as kde_util
 from pathlib import Path
 import warnings
 import joblib
-
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", category=FutureWarning)
-    import h5py
 
 import matplotlib
 import matplotlib.style as mplstyle
@@ -503,10 +500,22 @@ def main():
     mcmcDir = Path(cache.settings["resultsDirMCMC"])
     mcmc_h5 = mcmcDir / "mcmc.h5"
 
-    with h5py.File(mcmc_h5, "r") as h5:
-        flat_chain = h5["/flat_chain"][()]
-        mcmc_acceptance = h5["/mcmc_acceptance"][()]
-        process_mle(flat_chain, len(mcmc_acceptance), cache)
+    resultDir = Path(cache.settings["resultsDirBase"])
+    result_lock = resultDir / "result.lock"
+
+    lock = filelock.FileLock(result_lock.as_posix())
+
+    lock.acquire()
+    multiprocessing.get_logger().info("locking mle subprocess %s", lock.lock_file)
+
+    mcmc_store = H5()
+    mcmc_store.filename = mcmc_h5.as_posix()
+    mcmc_store.load(paths=["/flat_chain", "/mcmc_acceptance"])
+
+    lock.release()
+    multiprocessing.get_logger().info("unlocking mle subprocess")
+
+    process_mle(mcmc_store.root.flat_chain, len(mcmc_store.root.mcmc_acceptance), cache)
 
 
 if __name__ == "__main__":

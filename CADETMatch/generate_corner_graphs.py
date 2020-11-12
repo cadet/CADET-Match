@@ -67,6 +67,7 @@ def main():
     lock = filelock.FileLock(result_lock.as_posix())
 
     lock.acquire()
+    multiprocessing.get_logger().info("locking corner subprocess %s", lock.lock_file)
 
     miscDir = Path(cache.settings["resultsDirMCMC"])
     mcmc_h5 = miscDir / "mcmc.h5"
@@ -86,6 +87,7 @@ def main():
         data_mcmc = None
 
     lock.release()
+    multiprocessing.get_logger().info("unlockig corner subprocess")
 
     graphCorner(cache, data_mcmc, data_results)
 
