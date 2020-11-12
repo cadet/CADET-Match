@@ -101,6 +101,27 @@ def graph_kde():
 def process_kde():
     process_sub('graph_kde', "graph_kde.py")
 
+def graph_mle():
+    line = [sys.executable, "mle.py", str(cache.cache.json_path), str(util.getCoreCounts())]
+    run_sub(cache, 'graph_mle', line, "mle.py")
+
+def wait_mle():
+    wait_sub('graph_mle', "mle.py")
+
+def graph_tube():
+    line = [sys.executable, "mcmc_plot_tube.py", str(cache.cache.json_path), str(util.getCoreCounts())]
+    run_sub(cache, 'graph_tube', line, "mcmc_plot_tube.py")
+
+def wait_tube():
+    wait_sub('graph_tube', "mcmc_plot_tube.py")
+
+def graph_spearman_video():
+    line = [sys.executable, "video_spearman.py", str(cache.json_path), str(getCoreCounts())]
+    run_sub(cache, 'spearman_video', line, "video_spearman.py")
+
+def wait_spearman_video():
+    wait_sub('spearman_video', "video_spearman.py")
+
 def graph_process(cache, generation, last=0):
     lastGraphTime = times.get('lastGraphTime', time.time())
     lastMetaTime = times.get('lastMetaTime', time.time())
@@ -143,3 +164,42 @@ def graph_corner_process(cache, last=False, interval=1200):
 
         last_corner_time= time.time()
     times['last_corner_time'] = last_corner_time
+
+def mle_process(cache, last=False, interval=3600):
+    last_mle_time = times.get('last_mle_time', time.time())
+
+    cwd = str(Path(__file__).parent.parent)
+
+    if last:
+        graph_mle(cache)
+        wait_mle(cache)
+
+        last_mle_time = time.time()
+    elif (time.time() - last_mle_time) > interval:
+        graph_mle(cache)
+
+        last_mle_time = time.time()
+
+    times['last_mle_time'] = last_mle_time
+
+def tube_process(cache, last=False, interval=3600):
+    last_tube_time = times.get('last_tube_time', time.time())
+
+    cwd = str(Path(__file__).parent.parent)
+
+    if last:
+        graph_tube(cache)
+        wait_tube(cache)
+
+        last_tube_time = time.time()
+    elif (time.time() - last_tube_time) > interval:
+        graph_tube(cache)
+
+        last_tube_time = time.time()
+
+    times['last_tube_time'] = last_tube_time
+
+def graph_spearman(cache):
+    if cache.graphSpearman:
+        graph_spearman_video(cache)
+        wait_spearman_video(cache)

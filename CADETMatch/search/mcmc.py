@@ -14,7 +14,6 @@ import cadet
 import emcee
 import SALib.sample.sobol_sequence
 
-import subprocess
 import sys
 
 import CADETMatch.evo as evo
@@ -826,7 +825,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
             mcmc_store.root.tau_percent = tau_percent.reshape(-1, 1)
 
         write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_run_write)
-        mle_process(last=False)
+        sub.mle_process(cache, last=False)
         sub.graph_corner_process(cache, last=False)
 
     checkpoint["p_chain"] = p
@@ -980,57 +979,10 @@ def run(cache, tools, creator):
             pickle.dump(checkpoint, cp_file)
 
     if checkpoint["state"] == "plot_finish":
-        mle_process(last=True)
-        tube_process(last=True)
+        sub.mle_process(cache, last=True)
+        sub.tube_process(cache, last=True)
         sub.graph_corner_process(cache, last=True)
     return numpy.mean(chain, 0)
-
-
-def tube_process(last=False, interval=3600):
-    cwd = str(Path(__file__).parent.parent)
-    ret = subprocess.run(
-        [sys.executable, "mcmc_plot_tube.py", str(cache.cache.json_path), str(util.getCoreCounts())],
-        stdin=None,
-        stdout=None,
-        stderr=None,
-        close_fds=True,
-        cwd=cwd,
-    )
-
-
-def mle_process(last=False, interval=3600*24):
-    if "last_time" not in mle_process.__dict__:
-        mle_process.last_time = time.time()
-
-    if "child" in mle_process.__dict__:
-        if mle_process.child.poll() is None:  # This is false if the child has completed
-            if last:
-                mle_process.child.wait()
-            else:
-                return
-
-    cwd = str(Path(__file__).parent.parent)
-
-    if last:
-        ret = subprocess.run(
-            [sys.executable, "mle.py", str(cache.cache.json_path), str(util.getCoreCounts())],
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            close_fds=True,
-            cwd=cwd,
-        )
-        mle_process.last_time = time.time()
-    elif (time.time() - mle_process.last_time) > interval:
-        subprocess.run(
-            [sys.executable, "mle.py", str(cache.cache.json_path), str(util.getCoreCounts())],
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            close_fds=True,
-            cwd=cwd,
-        )
-        mle_process.last_time = time.time()
 
 
 def get_population(base, size, diff=0.02):
