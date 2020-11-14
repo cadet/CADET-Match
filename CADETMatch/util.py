@@ -1035,14 +1035,6 @@ def cleanDir(dir, hof):
             path.unlink()
 
 
-def log_subprocess(name, ret):
-    for line in ret.stdout.read().splitlines():
-        multiprocessing.get_logger().info("%s stdout: %s", name, line)
-
-    for line in ret.stderr.read().splitlines():
-        multiprocessing.get_logger().info("%s stderr: %s", name, line)
-
-
 def finish(cache):
     sub.graph_process(cache, "Last", last=True)
     sub.graph_spearman(cache)

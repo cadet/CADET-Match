@@ -6,7 +6,7 @@ import multiprocessing
 import sys
 import filelock
 
-import cadet
+from cadet import Cadet, H5
 import CADETMatch.util as util
 import CADETMatch.evo as evo
 import pandas
@@ -166,7 +166,7 @@ def process_mle(chain, gen, cache):
     mcmc_csv = Path(cache.settings["resultsDirMCMC"]) / "prob.csv"
     mle_h5 = Path(cache.settings["resultsDirMCMC"]) / "mle.h5"
 
-    h5 = cadet.H5()
+    h5 = H5()
     h5.filename = mle_h5.as_posix()
     if mle_h5.exists():
         h5.load()

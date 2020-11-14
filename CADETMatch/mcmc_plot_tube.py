@@ -6,7 +6,7 @@ import multiprocessing
 import sys
 import filelock
 
-import cadet
+from cadet import Cadet, H5
 import CADETMatch.util as util
 import CADETMatch.evo as evo
 from addict import Dict
@@ -14,10 +14,6 @@ from CADETMatch.cache import cache
 from pathlib import Path
 import warnings
 import joblib
-
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", category=FutureWarning)
-    import h5py
 
 import matplotlib
 import matplotlib.style as mplstyle
@@ -73,7 +69,7 @@ def plotTube(cache, chain, kde, scaler):
 
     mcmc_h5 = output_mcmc / "mcmc_plots.h5"
 
-    h5 = cadet.H5()
+    h5 = H5()
     h5.filename = mcmc_h5.as_posix()
 
     for expName, value in combinations.items():
@@ -203,7 +199,7 @@ def genRandomChoice(cache, chain, kde, scaler):
 
 def writeSelected(cache, mcmc_selected, mcmc_selected_transformed, mcmc_selected_score, mcmc_score):
     mcmc_h5 = Path(cache.settings["resultsDirMCMC"]) / "mcmc_selected.h5"
-    h5 = cadet.H5()
+    h5 = H5()
     h5.filename = mcmc_h5.as_posix()
     h5.root.mcmc_selected = numpy.array(mcmc_selected)
     h5.root.mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)

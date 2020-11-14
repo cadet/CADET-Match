@@ -47,16 +47,25 @@ def process_sub(key, file_name):
         finished = sub.poll() is not None
         if finished is not False:
             del processes[key]
+            stdout, stderr = sub.communicate()
             multiprocessing.get_logger().info("finished subprocess %s for %s", key, file_name)
-            util.log_subprocess(file_name, sub)
+            log_subprocess(file_name, stdout.decode('utf-8'), stderr.decode('utf-8'))
 
 def wait_sub(key, file_name):
     sub = processes.get(key, None)
     if sub is not None:
         multiprocessing.get_logger().info("waiting for subprocess %s for %s", key, file_name)
-        sub.wait()
+        stdout, stderr = sub.communicate()
+        del processes[key]
         multiprocessing.get_logger().info("finished subprocess %s for %s", key, file_name)
-        util.log_subprocess(file_name, sub)
+        log_subprocess(file_name, stdout.decode('utf-8'), stderr.decode('utf-8'))
+
+def log_subprocess(name, stdout, stderr):
+    for line in stdout.splitlines():
+        multiprocessing.get_logger().info("%s stdout: %s", name, line)
+
+    for line in stderr.splitlines():
+        multiprocessing.get_logger().info("%s stderr: %s", name, line)
 
 def graph_spearman(cache, generation):
     if cache.graphSpearman:
@@ -102,14 +111,14 @@ def process_kde():
     process_sub('graph_kde', "graph_kde.py")
 
 def graph_mle(cache):
-    line = [sys.executable, "mle.py", str(cache.cache.json_path), str(util.getCoreCounts())]
+    line = [sys.executable, "mle.py", str(cache.json_path), str(util.getCoreCounts())]
     run_sub(cache, 'graph_mle', line, "mle.py")
 
 def wait_mle():
     wait_sub('graph_mle', "mle.py")
 
 def graph_tube(cache):
-    line = [sys.executable, "mcmc_plot_tube.py", str(cache.cache.json_path), str(util.getCoreCounts())]
+    line = [sys.executable, "mcmc_plot_tube.py", str(cache.json_path), str(util.getCoreCounts())]
     run_sub(cache, 'graph_tube', line, "mcmc_plot_tube.py")
 
 def wait_tube():
@@ -122,11 +131,13 @@ def graph_spearman_video(cache):
 def wait_spearman_video():
     wait_sub('spearman_video', "video_spearman.py")
 
-def graph_process(cache, generation, last=0):
+def graph_process(cache, generation, last=False):
     lastGraphTime = times.get('lastGraphTime', time.time())
     lastMetaTime = times.get('lastMetaTime', time.time())
 
     if last:
+        wait_main()
+
         graph_main(cache, str(cache.graphType))
         wait_main()
         lastGraphTime = time.time()
@@ -147,6 +158,12 @@ def graph_corner_process(cache, last=False, interval=1200):
 
     if last:
         process_kde()
+
+        #there may be processes already running we need to wait for them and then run a last set on the final data set
+        wait_corner()
+        wait_autocorr()
+        wait_mixing()
+
         graph_corner(cache)
         graph_autocorr(cache)
         graph_mixing(cache)
@@ -171,8 +188,10 @@ def mle_process(cache, last=False, interval=3600):
     cwd = str(Path(__file__).parent.parent)
 
     if last:
+        wait_mle()
+
         graph_mle(cache)
-        wait_mle(cache)
+        wait_mle()
 
         last_mle_time = time.time()
     elif (time.time() - last_mle_time) > interval:
@@ -188,8 +207,10 @@ def tube_process(cache, last=False, interval=3600):
     cwd = str(Path(__file__).parent.parent)
 
     if last:
+        wait_tube()
+
         graph_tube(cache)
-        wait_tube(cache)
+        wait_tube()
 
         last_tube_time = time.time()
     elif (time.time() - last_tube_time) > interval:

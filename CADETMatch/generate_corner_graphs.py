@@ -69,8 +69,8 @@ def main():
     lock.acquire()
     multiprocessing.get_logger().info("locking corner subprocess %s", lock.lock_file)
 
-    miscDir = Path(cache.settings["resultsDirMCMC"])
-    mcmc_h5 = miscDir / "mcmc.h5"
+    mcmcDir = Path(cache.settings["resultsDirMCMC"])
+    mcmc_h5 = mcmcDir / "mcmc.h5"
     result_h5 = resultDir / "result.h5"
 
     if mcmc_h5.exists():
@@ -87,7 +87,7 @@ def main():
         data_mcmc = None
 
     lock.release()
-    multiprocessing.get_logger().info("unlockig corner subprocess")
+    multiprocessing.get_logger().info("unlocking corner subprocess")
 
     graphCorner(cache, data_mcmc, data_results)
 
@@ -182,12 +182,6 @@ def graphCorner(cache, data_mcmc=None, data_results=None):
     multiprocessing.get_logger().info("plotting corner plots")
     headers = list(cache.parameter_headers_actual)
     headers = [clean_header(header) for header in headers]
-
-    resultDir = Path(cache.settings["resultsDir"])
-    result_h5 = resultDir / "result.h5"
-
-    miscDir = Path(cache.settings["resultsDirMCMC"])
-    mcmc_h5 = miscDir / "mcmc.h5"
 
     if data_mcmc is not None:
         data = data_mcmc
