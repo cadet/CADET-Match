@@ -23,10 +23,6 @@ bw_tol = 1e-4
 
 import warnings
 
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", category=FutureWarning)
-    import h5py
-
 import scipy.optimize
 
 import CADETMatch.util as util

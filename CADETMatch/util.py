@@ -24,10 +24,6 @@ import CADETMatch.calc_coeff as calc_coeff
 import CADETMatch.sub as sub
 import warnings
 
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", category=FutureWarning)
-    import h5py
-
 import multiprocessing
 import copy
 

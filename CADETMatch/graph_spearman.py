@@ -18,6 +18,7 @@ with warnings.catch_warnings():
     import h5py
 import numpy
 import scipy.stats
+import multiprocessing
 
 
 def main():
