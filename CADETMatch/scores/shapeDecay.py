@@ -1,10 +1,11 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
-import scipy.stats
-import scipy.interpolate
 import numpy
+import scipy.interpolate
+import scipy.stats
 from addict import Dict
+
+import CADETMatch.score as score
 import CADETMatch.smoothing as smoothing
+import CADETMatch.util as util
 
 name = "ShapeDecay"
 
@@ -20,7 +21,9 @@ def get_settings(feature):
 
 def run(sim_data, feature):
     "similarity, value, start stop"
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature
+    )
     selected = feature["selected"]
 
     exp_data_values = feature["value"][selected]
@@ -28,16 +31,24 @@ def run(sim_data, feature):
     exp_data_values_spline = feature["exp_data_values_spline"]
 
     sim_data_values_smooth, sim_data_values_der_smooth = smoothing.full_smooth(
-        exp_time_values, sim_data_values, feature["critical_frequency"], feature["smoothing_factor"], feature["critical_frequency_der"]
+        exp_time_values,
+        sim_data_values,
+        feature["critical_frequency"],
+        feature["smoothing_factor"],
+        feature["critical_frequency_der"],
     )
 
     [high, low] = util.find_peak(exp_time_values, sim_data_values_smooth)
 
     time_high, value_high = high
 
-    pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_values_smooth, feature["smooth_value"])
+    pearson, diff_time = score.pearson_spline(
+        exp_time_values, sim_data_values_smooth, feature["smooth_value"]
+    )
 
-    pearson_der = score.pearson_offset(diff_time, exp_time_values, sim_data_values_der_smooth, exp_data_values_spline)
+    pearson_der = score.pearson_offset(
+        diff_time, exp_time_values, sim_data_values_der_smooth, exp_data_values_spline
+    )
 
     [highs_der, lows_der] = util.find_peak(exp_time_values, sim_data_values_der_smooth)
 
@@ -62,8 +73,12 @@ def run(sim_data, feature):
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     name = "%s_%s" % (sim.root.experiment_name, feature["name"])
-    s, crit_fs, crit_fs_der = smoothing.find_smoothing_factors(selectedTimes, selectedValues, name, cache)
-    exp_data_values_smooth, exp_data_values_der_smooth = smoothing.full_smooth(selectedTimes, selectedValues, crit_fs, s, crit_fs_der)
+    s, crit_fs, crit_fs_der = smoothing.find_smoothing_factors(
+        selectedTimes, selectedValues, name, cache
+    )
+    exp_data_values_smooth, exp_data_values_der_smooth = smoothing.full_smooth(
+        selectedTimes, selectedValues, crit_fs, s, crit_fs_der
+    )
 
     [high, low] = util.find_peak(selectedTimes, exp_data_values_der_smooth)
 
@@ -71,7 +86,9 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp["peak"] = util.find_peak(selectedTimes, exp_data_values_smooth)[0]
     temp["time_function"] = score.time_function_decay(feature["time"][-1])
     temp["value_function"] = score.value_function(temp["peak"][1], abstol)
-    temp["value_function_high"] = score.value_function(high[1], numpy.abs(high[1]) / 1000)
+    temp["value_function_high"] = score.value_function(
+        high[1], numpy.abs(high[1]) / 1000
+    )
     temp["value_function_low"] = score.value_function(low[1], numpy.abs(low[1]) / 1000)
     temp["peak_max"] = max(selectedValues)
     temp["smoothing_factor"] = s

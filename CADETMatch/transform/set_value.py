@@ -35,7 +35,10 @@ class SetTransform(AbstractTransform):
     untransform_matrix_inputorder = untransform_matrix
 
     def setSimulation(self, sim, seq, experiment):
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             locationFrom = self.parameter["locationFrom"]
             locationTo = self.parameter["locationTo"]
 
@@ -47,7 +50,9 @@ class SetTransform(AbstractTransform):
                 indexFrom = self.parameter["indexFrom"]
                 boundFrom = None
                 compFrom = None
-            valueFrom = self.getValue(sim, locationFrom, bound=boundFrom, comp=compFrom, index=indexFrom)
+            valueFrom = self.getValue(
+                sim, locationFrom, bound=boundFrom, comp=compFrom, index=indexFrom
+            )
 
             try:
                 compTo = self.parameter["componentTo"]
@@ -57,7 +62,9 @@ class SetTransform(AbstractTransform):
                 indexTo = self.parameter["indexTo"]
                 boundTo = None
                 compTo = None
-            self.setValue(sim, valueFrom, locationTo, bound=boundTo, comp=compTo, index=indexTo)
+            self.setValue(
+                sim, valueFrom, locationTo, bound=boundTo, comp=compTo, index=indexTo
+            )
 
         return [], []
 

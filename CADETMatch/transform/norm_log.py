@@ -1,6 +1,7 @@
+import numpy
+
 import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
-import numpy
 
 
 class LogTransform(AbstractTransform):
@@ -49,7 +50,10 @@ class LogTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             location = self.parameter["location"]
 
             try:
@@ -79,10 +83,14 @@ class LogTransform(AbstractTransform):
         minValue = numpy.log(self.parameter["min"])
         maxValue = numpy.log(self.parameter["max"])
 
-        return [minValue,], [maxValue,]
+        return [minValue,], [
+            maxValue,
+        ]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
     def getHeaders(self):
         location = self.parameter["location"]
@@ -158,10 +166,14 @@ class NormLogTransform(LogTransform):
     untransform_matrix_inputorder = untransform_matrix
 
     def getBounds(self):
-        return [0.0,], [1.0,]
+        return [0.0,], [
+            1.0,
+        ]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
 
 plugins = {"norm_log": NormLogTransform, "log": LogTransform}

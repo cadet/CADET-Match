@@ -1,36 +1,70 @@
-import importlib
 import argparse
-import sys
+import importlib
 import subprocess
+import sys
+
 import psutil
 
 
 def makeParser():
     """Create the CADETMatch module arguments parser."""
     parser = argparse.ArgumentParser(
-        description="Starts a parallel version of match using multiprocessing.", prog="{0} -m CADETMatch".format(sys.executable),
+        description="Starts a parallel version of match using multiprocessing.",
+        prog="{0} -m CADETMatch".format(sys.executable),
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--json", "-j", help="Path to JSON file", metavar="JSON")
-    parser.add_argument("--match", help="Run CADETMatch with Parameter Estimation and Error Modeling", action="store_true")
+    parser.add_argument(
+        "--match",
+        help="Run CADETMatch with Parameter Estimation and Error Modeling",
+        action="store_true",
+    )
 
-    parser.add_argument("--generate_corner", help="Generate corner graphs", action="store_true")
+    parser.add_argument(
+        "--generate_corner", help="Generate corner graphs", action="store_true"
+    )
 
-    parser.add_argument("--generate_graphs", help="Generate general graphs excluding 3D", action="store_true")
+    parser.add_argument(
+        "--generate_graphs",
+        help="Generate general graphs excluding 3D",
+        action="store_true",
+    )
 
-    parser.add_argument("--generate_graphs_all", help="Generate general graphs including 3D", action="store_true")
+    parser.add_argument(
+        "--generate_graphs_all",
+        help="Generate general graphs including 3D",
+        action="store_true",
+    )
 
-    parser.add_argument("--generate_graphs_autocorr", help="Generate autocorrelation graphs", action="store_true")
+    parser.add_argument(
+        "--generate_graphs_autocorr",
+        help="Generate autocorrelation graphs",
+        action="store_true",
+    )
 
-    parser.add_argument("--generate_spearman", help="Generate spearman graphs", action="store_true")
+    parser.add_argument(
+        "--generate_spearman", help="Generate spearman graphs", action="store_true"
+    )
 
-    parser.add_argument("--generate_mcmc_plot_tube", help="Generate mcmc plot tube graphs", action="store_true")
+    parser.add_argument(
+        "--generate_mcmc_plot_tube",
+        help="Generate mcmc plot tube graphs",
+        action="store_true",
+    )
 
-    parser.add_argument("--generate_mcmc_mixing", help="Generate mcmc mixing graphs", action="store_true")
+    parser.add_argument(
+        "--generate_mcmc_mixing",
+        help="Generate mcmc mixing graphs",
+        action="store_true",
+    )
 
-    parser.add_argument("--generate_mle", help="Generate maximum liklihood", action="store_true")
+    parser.add_argument(
+        "--generate_mle", help="Generate maximum liklihood", action="store_true"
+    )
 
-    parser.add_argument("-n", help="Number of scoop processes to use. Use 1 for debugging", default=0)
+    parser.add_argument(
+        "-n", help="Number of scoop processes to use. Use 1 for debugging", default=0
+    )
 
     return parser
 

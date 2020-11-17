@@ -8,15 +8,14 @@ Goodman & Weare, Ensemble Samplers With Affine Invariance
 
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 __all__ = ["EnsembleSampler"]
 
 # import scipy.stats as scstats
 import numpy as np
-
-from emcee.sampler import Sampler
 from emcee.interruptible_pool import InterruptiblePool
+from emcee.sampler import Sampler
 
 
 class EnsembleSampler(Sampler):
@@ -121,7 +120,9 @@ class EnsembleSampler(Sampler):
         assert self.k % 2 == 0, "The number of walkers must be even."
         if not live_dangerously:
             assert self.k >= 2 * self.dim, (
-                "The number of walkers needs to be more than twice the " "dimension of your parameter space... unless you're " "crazy!"
+                "The number of walkers needs to be more than twice the "
+                "dimension of your parameter space... unless you're "
+                "crazy!"
             )
 
         if self.threads > 1 and self.pool is None:
@@ -148,7 +149,17 @@ class EnsembleSampler(Sampler):
         # Initialize list for storing optional metadata blobs.
         self.clear_blobs()
 
-    def sample(self, p0, lnprob0=None, rstate0=None, blobs0=None, iterations=1, thin=1, storechain=True, mh_proposal=None):
+    def sample(
+        self,
+        p0,
+        lnprob0=None,
+        rstate0=None,
+        blobs0=None,
+        iterations=1,
+        thin=1,
+        storechain=True,
+        mh_proposal=None,
+    ):
         """
         Advance the chain ``iterations`` steps as a generator.
 
@@ -229,7 +240,9 @@ class EnsembleSampler(Sampler):
         # makes a pretty big difference.
         if storechain:
             N = int(iterations / thin)
-            self._chain = np.concatenate((self._chain, np.zeros((self.k, N, self.dim))), axis=1)
+            self._chain = np.concatenate(
+                (self._chain, np.zeros((self.k, N, self.dim))), axis=1
+            )
             self._lnprob = np.concatenate((self._lnprob, np.zeros((self.k, N))), axis=1)
 
         for i in range(int(iterations)):
@@ -247,7 +260,9 @@ class EnsembleSampler(Sampler):
 
                 # ... sometimes accept for steps that got worse
                 worse = np.flatnonzero(~acc)
-                acc[worse] = (newlnp[worse] - lnprob[worse]) > np.log(self._random.rand(len(worse)))
+                acc[worse] = (newlnp[worse] - lnprob[worse]) > np.log(
+                    self._random.rand(len(worse))
+                )
                 del worse
 
                 # Update the accepted walkers.
@@ -272,11 +287,18 @@ class EnsembleSampler(Sampler):
                 # Slices for the first and second halves
                 first, second = slice(halfk), slice(halfk, self.k)
                 for S0, S1 in [(first, second), (second, first)]:
-                    if not self.jump_ind == None and self._random.rand(1, 1) < self.jump_prob:
-                        q, newlnp, acc, blob = self._propose_jump(p[S0], p[S1], lnprob[S0])
+                    if (
+                        not self.jump_ind == None
+                        and self._random.rand(1, 1) < self.jump_prob
+                    ):
+                        q, newlnp, acc, blob = self._propose_jump(
+                            p[S0], p[S1], lnprob[S0]
+                        )
 
                     else:
-                        q, newlnp, acc, blob = self._propose_constr_walk(p[S0], p[S1], lnprob[S0])
+                        q, newlnp, acc, blob = self._propose_constr_walk(
+                            p[S0], p[S1], lnprob[S0]
+                        )
                     if np.any(acc):
                         # Update the positions, log probabilities and
                         # acceptance counts.
@@ -529,7 +551,11 @@ class EnsembleSampler(Sampler):
         q = np.zeros((Nc, self.dim))
         # q = s + self.gamma*(c[rint1]-c[rint2])+r
         q[:, self.ord_index] = s + self.gamma * (c[rint1] - c[rint2]) + r
-        q[:, self.jump_ind] = np.array(p0[:, self.jump_ind]) + self._random.normal(0, size=(Ns, jump_len), scale=self.largeEpsilon) * sBin
+        q[:, self.jump_ind] = (
+            np.array(p0[:, self.jump_ind])
+            + self._random.normal(0, size=(Ns, jump_len), scale=self.largeEpsilon)
+            * sBin
+        )
         q = np.abs(np.floor(q % 2) - (q % 1))
         newlnprob, blob = self._get_lnprob(q)
 

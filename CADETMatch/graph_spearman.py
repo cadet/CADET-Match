@@ -2,23 +2,26 @@ import sys
 
 import matplotlib
 import matplotlib.style as mplstyle
-mplstyle.use('fast')
+
+mplstyle.use("fast")
 
 matplotlib.use("Agg")
+import warnings
+from pathlib import Path
+
 from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 from CADETMatch.cache import cache
 
-from pathlib import Path
-import warnings
-
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
     import h5py
+
+import multiprocessing
+
 import numpy
 import scipy.stats
-import multiprocessing
 
 
 def main():

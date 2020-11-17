@@ -1,9 +1,10 @@
 import sys
-import filelock
 
+import filelock
 import matplotlib
 import matplotlib.style as mplstyle
-mplstyle.use('fast')
+
+mplstyle.use("fast")
 
 matplotlib.use("Agg")
 
@@ -18,30 +19,28 @@ matplotlib.rc("legend", fontsize=size)  # legend fontsize
 matplotlib.rc("figure", titlesize=size)  # fontsize of the figure title
 matplotlib.rc("figure", autolayout=True)
 
+import itertools
+import logging
+
+# parallelization
+import multiprocessing
+import os
+import warnings
+from pathlib import Path
+
+import numpy
+import scipy.interpolate
+from addict import Dict
+from cadet import H5, Cadet
+from emcee import autocorr
 from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D
 
+import CADETMatch.loggerwriter as loggerwriter
+import CADETMatch.util as util
 from CADETMatch.cache import cache
 
-from pathlib import Path
-import numpy
-import scipy.interpolate
-import itertools
-
-from cadet import Cadet, H5
-from addict import Dict
-
-# parallelization
-import multiprocessing
-
-import os
-import warnings
-import CADETMatch.util as util
-import logging
-import CADETMatch.loggerwriter as loggerwriter
-
-from emcee import autocorr
 
 def main(map_function):
     cache.setup_dir(sys.argv[1])
@@ -59,11 +58,15 @@ def main(map_function):
         lock = filelock.FileLock(result_lock.as_posix())
 
         lock.acquire()
-        multiprocessing.get_logger().info("locking autocorr subprocess %s", lock.lock_file)
+        multiprocessing.get_logger().info(
+            "locking autocorr subprocess %s", lock.lock_file
+        )
 
         mcmc_store = H5()
         mcmc_store.filename = mcmc_h5.as_posix()
-        mcmc_store.load(paths=["/full_chain", "/train_full_chain", "/bounds_full_chain"])
+        mcmc_store.load(
+            paths=["/full_chain", "/train_full_chain", "/bounds_full_chain"]
+        )
 
         lock.release()
         multiprocessing.get_logger().info("unlocking autocorr subprocess")
@@ -76,7 +79,9 @@ def main(map_function):
 
         for chain in ("full_chain", "train_full_chain", "bounds_full_chain"):
             if chain in mcmc_store.root:
-                plot_chain(input_headers, mcmc_store.root[chain], chain, graph_dir / chain)
+                plot_chain(
+                    input_headers, mcmc_store.root[chain], chain, graph_dir / chain
+                )
 
 
 def plot_chain(headers, chain, chain_name, graph_dir):

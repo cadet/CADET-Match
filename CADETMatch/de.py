@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
-
-from emcee.moves.red_blue import RedBlueMove
 import multiprocessing
+
+import numpy as np
+from emcee.moves.red_blue import RedBlueMove
 
 __all__ = ["DEMove"]
 
@@ -52,7 +52,7 @@ class DEMove(RedBlueMove):
             q[i] = s[i] + g
             q[i] = q[i] % 1
 
-            #if np.any(np.isnan(q[i])):
+            # if np.any(np.isnan(q[i])):
             #    multiprocessing.get_logger().info("de q[%s]=%s  g %s w %s  s %s", i, q[i], g, w, s[i])
-        #multiprocessing.get_logger().info("de q %s  s %s  c %s", q, s, c)
+        # multiprocessing.get_logger().info("de q %s  s %s  c %s", q, s, c)
         return q, np.zeros(Ns, dtype=np.float64)

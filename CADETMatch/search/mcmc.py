@@ -1,51 +1,47 @@
-import random
+import array
+import csv
+import multiprocessing
 import pickle
-import CADETMatch.util as util
-import CADETMatch.sub as sub
-import CADETMatch.progress as progress
+import random
+import sys
+import time
+from pathlib import Path
+
+import cadet
+import emcee
+import emcee.autocorr as autocorr
 import numpy
 import numpy as np
-import scipy
-from pathlib import Path
-import time
-import csv
-import cadet
-
-import emcee
-import SALib.sample.sobol_sequence
-
-import sys
-
-import CADETMatch.evo as evo
-import CADETMatch.cache as cache
-
-import CADETMatch.pareto as pareto
-
-import multiprocessing
 import pandas
-import array
-import emcee.autocorr as autocorr
-from sklearn.cluster import KMeans
+import SALib.sample.sobol_sequence
+import scipy
 import scipy.spatial
+from sklearn.cluster import KMeans
 
+import CADETMatch.cache as cache
+import CADETMatch.evo as evo
 import CADETMatch.kde_generator as kde_generator
+import CADETMatch.pareto as pareto
+import CADETMatch.progress as progress
+import CADETMatch.sub as sub
+import CADETMatch.util as util
 
 name = "MCMC"
 
-from addict import Dict
+import shutil
 
 import joblib
+import jstyleson
+from addict import Dict
 
 import CADETMatch.de as de
 import CADETMatch.de_snooker as de_snooker
 import CADETMatch.stretch as stretch
 
-import jstyleson
-import shutil
-
 log2 = numpy.log(2)
 min_acceptance = 0.05
 acceptance_delta = 0.02
+
 
 def log_previous(cadetValues, kde_previous, kde_previous_scaler):
     # find the right values to use
@@ -62,7 +58,7 @@ def log_likelihood(individual, json_path):
         cache.cache.setup_dir(json_path)
         util.setupLog(cache.cache.settings["resultsDirLog"], "main.log")
         cache.cache.setup(json_path, False)
-        
+
     if "kde_previous" not in log_likelihood.__dict__:
         kde_previous, kde_previous_scaler = kde_generator.getKDEPrevious(cache.cache)
         log_likelihood.kde_previous = kde_previous
@@ -73,14 +69,22 @@ def log_likelihood(individual, json_path):
         log_likelihood.kde = kde
         log_likelihood.scaler = kde_scaler
 
-    scores, csv_record, meta_score, results, individual = evo.fitness(individual, json_path)
+    scores, csv_record, meta_score, results, individual = evo.fitness(
+        individual, json_path
+    )
 
     if results is None:
-        multiprocessing.get_logger().info("log_likelihood results is None %s (%s)", individual, util.convert_individual_inputorder(individual, cache.cache))
+        multiprocessing.get_logger().info(
+            "log_likelihood results is None %s (%s)",
+            individual,
+            util.convert_individual_inputorder(individual, cache.cache),
+        )
         return -numpy.inf, scores, csv_record, meta_score, results, individual
 
     if results is not None and log_likelihood.kde_previous is not None:
-        logPrevious = log_previous(individual, log_likelihood.kde_previous, log_likelihood.kde_previous_scaler)
+        logPrevious = log_previous(
+            individual, log_likelihood.kde_previous, log_likelihood.kde_previous_scaler
+        )
     else:
         logPrevious = 0.0
 
@@ -97,9 +101,33 @@ def log_likelihood(individual, json_path):
     return score, scores, csv_record, meta_score, results, individual
 
 
-def log_posterior_vectorize(population, json_path, cache, halloffame, meta_hof, grad_hof, progress_hof, result_data, writer, csvfile):
-    results = cache.toolbox.map(log_posterior, ((population[i], json_path) for i in range(len(population))))
-    results = process(population, cache, halloffame, meta_hof, grad_hof, progress_hof, result_data, results, writer, csvfile)
+def log_posterior_vectorize(
+    population,
+    json_path,
+    cache,
+    halloffame,
+    meta_hof,
+    grad_hof,
+    progress_hof,
+    result_data,
+    writer,
+    csvfile,
+):
+    results = cache.toolbox.map(
+        log_posterior, ((population[i], json_path) for i in range(len(population)))
+    )
+    results = process(
+        population,
+        cache,
+        halloffame,
+        meta_hof,
+        grad_hof,
+        progress_hof,
+        result_data,
+        results,
+        writer,
+        csvfile,
+    )
     return results
 
 
@@ -109,6 +137,7 @@ def outside_bounds(x, cache):
             return True
     return False
 
+
 def log_posterior(x):
     theta, json_path = x
     if json_path != cache.cache.json_path:
@@ -117,14 +146,40 @@ def log_posterior(x):
         cache.cache.setup(json_path)
 
     if outside_bounds(theta, cache.cache):
-        multiprocessing.get_logger().info("individual is outside of range %s (%s)", theta, util.convert_individual_inputorder(theta, cache.cache))
-        return -numpy.inf, theta, cache.cache.WORST, [], cache.cache.WORST_META, None, theta
+        multiprocessing.get_logger().info(
+            "individual is outside of range %s (%s)",
+            theta,
+            util.convert_individual_inputorder(theta, cache.cache),
+        )
+        return (
+            -numpy.inf,
+            theta,
+            cache.cache.WORST,
+            [],
+            cache.cache.WORST_META,
+            None,
+            theta,
+        )
 
-    ll, scores, csv_record, meta_score, results, individual = log_likelihood(theta, json_path)
+    ll, scores, csv_record, meta_score, results, individual = log_likelihood(
+        theta, json_path
+    )
 
     if results is None:
-        multiprocessing.get_logger().info("log_posterior results is None %s (%s)", theta, util.convert_individual_inputorder(theta, cache.cache))
-        return -numpy.inf, theta, cache.cache.WORST, [], cache.cache.WORST_META, None, individual
+        multiprocessing.get_logger().info(
+            "log_posterior results is None %s (%s)",
+            theta,
+            util.convert_individual_inputorder(theta, cache.cache),
+        )
+        return (
+            -numpy.inf,
+            theta,
+            cache.cache.WORST,
+            [],
+            cache.cache.WORST_META,
+            None,
+            individual,
+        )
     else:
         return ll, theta, scores, csv_record, meta_score, results, individual
 
@@ -149,7 +204,9 @@ def converged_bounds(chain, length, error_level):
     for i in range(start, stop):
         temp_chain = chain[:, :i, :]
         temp_chain_shape = temp_chain.shape
-        temp_chain_flat = temp_chain.reshape(temp_chain_shape[0] * temp_chain_shape[1], temp_chain_shape[2])
+        temp_chain_flat = temp_chain.reshape(
+            temp_chain_shape[0] * temp_chain_shape[1], temp_chain_shape[2]
+        )
         lb_5, mid_50, ub_95 = numpy.percentile(temp_chain_flat, [5, 50, 95], 0)
 
         lb.append(lb_5)
@@ -160,8 +217,15 @@ def converged_bounds(chain, length, error_level):
     ub = numpy.array(ub)
     mid = numpy.array(mid)
 
-    if numpy.all(numpy.std(lb, axis=0) < error_level) and numpy.all(numpy.std(ub, axis=0) < error_level):
-        return True, numpy.mean(lb, axis=0), numpy.mean(mid, axis=0), numpy.mean(ub, axis=0)
+    if numpy.all(numpy.std(lb, axis=0) < error_level) and numpy.all(
+        numpy.std(ub, axis=0) < error_level
+    ):
+        return (
+            True,
+            numpy.mean(lb, axis=0),
+            numpy.mean(mid, axis=0),
+            numpy.mean(ub, axis=0),
+        )
     else:
         multiprocessing.get_logger().info(
             "bounds have not yet converged lb min: %s max: %s std: %s  ub min %s max: %s std: %s",
@@ -283,7 +347,9 @@ def change_bounds_json(cache, lb, ub, mcmc_store):
         with new_settings_file.open(mode="w") as json_data:
             jstyleson.dump(settings, json_data, indent=4, sort_keys=False)
 
-        mcmc_store.root.bounds_change.json = jstyleson.dumps(settings["parameters"], sort_keys=False)
+        mcmc_store.root.bounds_change.json = jstyleson.dumps(
+            settings["parameters"], sort_keys=False
+        )
 
     # copy the original file to a backup name
     shutil.copy(settings_file, settings_file_backup)
@@ -300,42 +366,48 @@ def process_sampler_auto_bounds_write(cache, mcmc_store):
     bounds_seq = mcmc_store.root.bounds_acceptance
     bounds_chain = mcmc_store.root.bounds_full_chain
 
-    bounds_chain, bounds_chain_flat, bounds_chain_transform, bounds_chain_flat_transform = process_chain(
-        bounds_chain, cache, len(bounds_seq) - 1
-    )
+    (
+        bounds_chain,
+        bounds_chain_flat,
+        bounds_chain_transform,
+        bounds_chain_flat_transform,
+    ) = process_chain(bounds_chain, cache, len(bounds_seq) - 1)
 
     mcmc_store.root.bounds_full_chain_transform = bounds_chain_transform
     mcmc_store.root.bounds_flat_chain = bounds_chain_flat
     mcmc_store.root.bounds_flat_chain_transform = bounds_chain_flat_transform
+
 
 def select_best_kmeans(chain, probability):
     chain_shape = chain.shape
     flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
     flat_probability = numpy.squeeze(probability.reshape(-1, 1))
 
-    #unique    
-    flat_chain_unique, unique_indexes = numpy.unique(flat_chain, return_index=True, axis=0)
+    # unique
+    flat_chain_unique, unique_indexes = numpy.unique(
+        flat_chain, return_index=True, axis=0
+    )
     flat_probability_unique = flat_probability[unique_indexes]
-   
-    #remove low probability
+
+    # remove low probability
     flat_prob = numpy.exp(flat_probability_unique)
     max_prob = numpy.max(flat_prob)
-    min_prob = max_prob/10  #10% of max prob cutoff
-    
+    min_prob = max_prob / 10  # 10% of max prob cutoff
+
     selected = (flat_prob >= min_prob) & (flat_prob <= max_prob)
-    
+
     flat_chain = flat_chain_unique[selected]
     flat_probability = flat_probability_unique[selected]
 
-    if len(flat_chain) > (2* chain_shape[0]): 
-        #kmeans clustering
+    if len(flat_chain) > (2 * chain_shape[0]):
+        # kmeans clustering
         km = KMeans(chain_shape[0])
         km.fit(flat_chain)
-    
+
         dist = scipy.spatial.distance.cdist(flat_chain, km.cluster_centers_)
-    
+
         idx_closest = numpy.argmin(dist, 0)
-    
+
         closest = dist[idx_closest, range(chain_shape[0])]
 
         best_chain = flat_chain[idx_closest]
@@ -347,7 +419,7 @@ def select_best_kmeans(chain, probability):
 
         best = sort_idx[-pop_size:]
 
-        best_chain = flat_chain_unique[best,:]
+        best_chain = flat_chain_unique[best, :]
         best_prob = flat_probability_unique[best]
 
     return best_chain, best_prob
@@ -360,9 +432,11 @@ def auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5):
     pop_size = checkpoint["populationSize"]
 
     for i in range(steps):
-        chain, probability = auto_high_probability_iterations(cache, checkpoint, sampler, iterations)
+        chain, probability = auto_high_probability_iterations(
+            cache, checkpoint, sampler, iterations
+        )
 
-        #store chain
+        # store chain
         auto_chain = addChain(auto_chain, chain)
         auto_probability = addChain(auto_probability, probability)
 
@@ -386,7 +460,10 @@ def auto_high_probability_iterations(cache, checkpoint, sampler, iterations):
     for i in range(iterations):
         state = next(
             sampler.sample(
-                checkpoint["p_bounds"], log_prob0=checkpoint["ln_prob_bounds"], rstate0=checkpoint["rstate_bounds"], iterations=1
+                checkpoint["p_bounds"],
+                log_prob0=checkpoint["ln_prob_bounds"],
+                rstate0=checkpoint["rstate_bounds"],
+                iterations=1,
             )
         )
 
@@ -402,12 +479,14 @@ def auto_high_probability_iterations(cache, checkpoint, sampler, iterations):
         auto_chain = addChain(auto_chain, p[:, numpy.newaxis, :])
         auto_probability = addChain(auto_probability, ln_prob[:, numpy.newaxis])
 
-        multiprocessing.get_logger().info("auto run: idx: %s accept: %.3f max ln(prob): %.3f", i, accept, best)
+        multiprocessing.get_logger().info(
+            "auto run: idx: %s accept: %.3f max ln(prob): %.3f", i, accept, best
+        )
 
         checkpoint["p_bounds"] = p
         checkpoint["ln_prob_bounds"] = ln_prob
         checkpoint["rstate_bounds"] = random_state
-    
+
     sampler.reset()
     return auto_chain, auto_probability
 
@@ -440,7 +519,9 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     sampler.naccepted = checkpoint["sampler_naccepted"]
     sampler._moves[1].n = checkpoint["sampler_n"]
 
-    auto_chain, auto_probability = auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5)
+    auto_chain, auto_probability = auto_high_probability(
+        cache, checkpoint, sampler, iterations=100, steps=5
+    )
 
     mcmc_store.root.bounds.auto_chain = auto_chain
     mcmc_store.root.bounds.auto_probability = auto_probability
@@ -450,7 +531,10 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     while not finished:
         state = next(
             sampler.sample(
-                checkpoint["p_bounds"], log_prob0=checkpoint["ln_prob_bounds"], rstate0=checkpoint["rstate_bounds"], iterations=1
+                checkpoint["p_bounds"],
+                log_prob0=checkpoint["ln_prob_bounds"],
+                rstate0=checkpoint["rstate_bounds"],
+                iterations=1,
             )
         )
 
@@ -464,7 +548,9 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         bounds_chain = addChain(bounds_chain, p[:, numpy.newaxis, :])
         bounds_probability = addChain(bounds_probability, ln_prob[:, numpy.newaxis])
 
-        multiprocessing.get_logger().info("run:  idx: %s accept: %.3f", generation, accept)
+        multiprocessing.get_logger().info(
+            "run:  idx: %s accept: %.3f", generation, accept
+        )
 
         generation += 1
 
@@ -473,7 +559,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         checkpoint["rstate_bounds"] = random_state
         checkpoint["idx_bounds"] = generation
         checkpoint["bounds_chain"] = bounds_chain
-        checkpoint['bounds_probability'] = bounds_probability
+        checkpoint["bounds_probability"] = bounds_probability
         checkpoint["bounds_seq"] = bounds_seq
         checkpoint["bounds_iterations"] = sampler.iterations
         checkpoint["bounds_naccepted"] = sampler.naccepted
@@ -483,52 +569,88 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         mcmc_store.root.bounds_probability = bounds_probability
         mcmc_store.root.bounds_probability_flat = bounds_probability.reshape(-1, 1)
 
-        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_auto_bounds_write)
+        write_interval(
+            cache.checkpointInterval,
+            cache,
+            checkpoint,
+            checkpointFile,
+            mcmc_store,
+            process_sampler_auto_bounds_write,
+        )
         sub.graph_corner_process(cache, last=False)
 
         if generation % checkInterval == 0:
-            converged, lb, mid, ub = converged_bounds(bounds_chain[:, :, :new_parameters], 200, 1e-3)
+            converged, lb, mid, ub = converged_bounds(
+                bounds_chain[:, :, :new_parameters], 200, 1e-3
+            )
 
             if converged:
                 finished = True
 
-                write_interval(-1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_auto_bounds_write)
+                write_interval(
+                    -1,
+                    cache,
+                    checkpoint,
+                    checkpointFile,
+                    mcmc_store,
+                    process_sampler_auto_bounds_write,
+                )
 
                 new_min_value, center, new_max_value = rescale(
-                    cache, lb, mid, ub, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE), mcmc_store
+                    cache,
+                    lb,
+                    mid,
+                    ub,
+                    numpy.array(cache.MIN_VALUE),
+                    numpy.array(cache.MAX_VALUE),
+                    mcmc_store,
                 )
 
                 p_burn, ln_prob = select_best_kmeans(bounds_chain, bounds_probability)
 
                 p_burn_trans = util.convert_population_inputorder(p_burn, cache)
 
-                multiprocessing.get_logger().info("before bounds conversion %s", p_burn_trans)
-                multiprocessing.get_logger().info("before bounds conversion p_burn %s", p_burn)
+                multiprocessing.get_logger().info(
+                    "before bounds conversion %s", p_burn_trans
+                )
+                multiprocessing.get_logger().info(
+                    "before bounds conversion p_burn %s", p_burn
+                )
 
-                json_path = change_bounds_json(cache, new_min_value, new_max_value, mcmc_store)
+                json_path = change_bounds_json(
+                    cache, new_min_value, new_max_value, mcmc_store
+                )
                 cache.resetTransform(json_path)
                 sampler.log_prob_fn.args[0] = json_path
                 sampler.log_prob_fn.args[1] = cache
 
-                p_burn = numpy.array([util.convert_individual_inverse(i, cache) for i in p_burn_trans])
+                p_burn = numpy.array(
+                    [util.convert_individual_inverse(i, cache) for i in p_burn_trans]
+                )
 
                 p_burn_trans = util.convert_population_inputorder(p_burn, cache)
 
-                multiprocessing.get_logger().info("after bounds conversion %s", p_burn_trans)
-                multiprocessing.get_logger().info("after bounds conversion p_burn %s", p_burn)
+                multiprocessing.get_logger().info(
+                    "after bounds conversion %s", p_burn_trans
+                )
+                multiprocessing.get_logger().info(
+                    "after bounds conversion p_burn %s", p_burn
+                )
 
                 checkpoint["state"] = "burn_in"
                 checkpoint["p_burn"] = p_burn
-                checkpoint['ln_prob_burn'] = ln_prob
-                checkpoint['rstate_burn'] = None
+                checkpoint["ln_prob_burn"] = ln_prob
+                checkpoint["rstate_burn"] = None
                 checkpoint["starting_population"] = p_burn
 
                 write_checkpoint(-1, checkpoint, checkpointFile)
 
                 sampler.reset()
             else:
-                multiprocessing.get_logger().info("bounds have not yet converged in gen %s", generation)
-                
+                multiprocessing.get_logger().info(
+                    "bounds have not yet converged in gen %s", generation
+                )
+
 
 def process_interval(cache, mcmc_store, interval_chain, interval_chain_transform):
     mean = numpy.mean(interval_chain_transform, 0)
@@ -552,13 +674,20 @@ def process_sampler_burn_write(cache, mcmc_store):
     burn_seq = mcmc_store.root.burn_seq
     train_chain_stat = mcmc_store.root.train_chain_stat
 
-    train_chain, train_chain_flat, train_chain_transform, train_chain_flat_transform = process_chain(train_chain, cache, len(burn_seq) - 1)
+    (
+        train_chain,
+        train_chain_flat,
+        train_chain_transform,
+        train_chain_flat_transform,
+    ) = process_chain(train_chain, cache, len(burn_seq) - 1)
 
     mcmc_store.root.train_full_chain_transform = train_chain_transform
     mcmc_store.root.train_flat_chain = train_chain_flat
     mcmc_store.root.train_flat_chain_transform = train_chain_flat_transform
 
-    train_chain_stat, _, train_chain_stat_transform, _ = process_chain(train_chain_stat, cache, len(burn_seq) - 1)
+    train_chain_stat, _, train_chain_stat_transform, _ = process_chain(
+        train_chain_stat, cache, len(burn_seq) - 1
+    )
 
     mcmc_store.root.train_chain_stat_transform = train_chain_stat_transform
 
@@ -571,7 +700,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     burn_seq = checkpoint.get("burn_seq", [])
 
     train_chain = checkpoint.get("train_chain", None)
-    train_probability = checkpoint.get('train_probability', None)
+    train_probability = checkpoint.get("train_probability", None)
 
     train_chain_stat = checkpoint.get("train_chain_stat", None)
 
@@ -592,7 +721,9 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     sampler.naccepted = checkpoint["sampler_naccepted"]
     sampler._moves[1].n = checkpoint["sampler_n"]
 
-    auto_chain, auto_probability = auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5)
+    auto_chain, auto_probability = auto_high_probability(
+        cache, checkpoint, sampler, iterations=100, steps=5
+    )
 
     mcmc_store.root.burn.auto_chain = auto_chain
     mcmc_store.root.burn.auto_probability = auto_probability
@@ -602,7 +733,11 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     while not finished:
         state = next(
             sampler.sample(
-                checkpoint["p_burn"], log_prob0=checkpoint["ln_prob_burn"], rstate0=checkpoint["rstate_burn"], iterations=1, tune=False
+                checkpoint["p_burn"],
+                log_prob0=checkpoint["ln_prob_burn"],
+                rstate0=checkpoint["rstate_burn"],
+                iterations=1,
+                tune=False,
             )
         )
 
@@ -618,7 +753,10 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         train_chain = addChain(train_chain, p[:, numpy.newaxis, :])
         train_probability = addChain(train_probability, ln_prob[:, numpy.newaxis])
 
-        train_chain_stat = addChain(train_chain_stat, numpy.percentile(flatten(train_chain), [5, 50, 95], 0)[:, numpy.newaxis, :])
+        train_chain_stat = addChain(
+            train_chain_stat,
+            numpy.percentile(flatten(train_chain), [5, 50, 95], 0)[:, numpy.newaxis, :],
+        )
 
         converge_real = converge[~numpy.isnan(converge)]
         multiprocessing.get_logger().info(
@@ -637,7 +775,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         checkpoint["rstate_burn"] = random_state
         checkpoint["idx_burn"] = generation
         checkpoint["train_chain"] = train_chain
-        checkpoint['train_probability'] = train_probability
+        checkpoint["train_probability"] = train_probability
         checkpoint["burn_seq"] = burn_seq
         checkpoint["converge"] = converge
         checkpoint["sampler_iterations"] = sampler.iterations
@@ -651,17 +789,29 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         mcmc_store.root.train_probability = train_probability
         mcmc_store.root.train_probability_flat = train_probability.reshape(-1, 1)
 
-        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_burn_write)
+        write_interval(
+            cache.checkpointInterval,
+            cache,
+            checkpoint,
+            checkpointFile,
+            mcmc_store,
+            process_sampler_burn_write,
+        )
         sub.graph_corner_process(cache, last=False)
 
         if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
             average_converge = numpy.mean(converge)
             if average_converge > min_acceptance:
-                multiprocessing.get_logger().info("burn in completed at iteration %s", generation)
+                multiprocessing.get_logger().info(
+                    "burn in completed at iteration %s", generation
+                )
                 finished = True
 
             if stop_next is True:
-                multiprocessing.get_logger().info("burn in completed at iteration %s based on minimum distances", generation)
+                multiprocessing.get_logger().info(
+                    "burn in completed at iteration %s based on minimum distances",
+                    generation,
+                )
                 finished = True
 
             if not finished:
@@ -691,7 +841,9 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
                     sampler.reset()
                     checkpoint["p_burn"] = checkpoint["starting_population"]
                     checkpoint["ln_prob_burn"] = None
-                    multiprocessing.get_logger().info("previous n: %s    new n: %s", prev_n, new_n)
+                    multiprocessing.get_logger().info(
+                        "previous n: %s    new n: %s", prev_n, new_n
+                    )
                 else:
                     sampler._moves[1].n = distance_n
 
@@ -712,7 +864,9 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     checkpoint["rstate_chain"] = random_state
     checkpoint["sampler_a"] = sampler._moves[1].n
 
-    write_interval(-1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_burn_write)
+    write_interval(
+        -1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_burn_write
+    )
 
 
 def process_sampler_run_write(cache, mcmc_store):
@@ -720,13 +874,17 @@ def process_sampler_run_write(cache, mcmc_store):
     chain_seq = mcmc_store.root.mcmc_acceptance
     run_chain_stat = mcmc_store.root.run_chain_stat
 
-    chain, chain_flat, chain_transform, chain_flat_transform = process_chain(chain, cache, len(chain_seq) - 1)
+    chain, chain_flat, chain_transform, chain_flat_transform = process_chain(
+        chain, cache, len(chain_seq) - 1
+    )
 
     mcmc_store.root.full_chain_transform = chain_transform
     mcmc_store.root.flat_chain = chain_flat
     mcmc_store.root.flat_chain_transform = chain_flat_transform
 
-    run_chain_stat, _, run_chain_stat_transform, _ = process_chain(run_chain_stat, cache, len(chain_seq) - 1)
+    run_chain_stat, _, run_chain_stat_transform, _ = process_chain(
+        run_chain_stat, cache, len(chain_seq) - 1
+    )
 
     mcmc_store.root.run_chain_stat_transform = run_chain_stat_transform
 
@@ -739,7 +897,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     chain_seq = checkpoint.get("chain_seq", [])
 
     run_chain = checkpoint.get("run_chain", None)
-    run_probability = checkpoint.get('run_probability', None)
+    run_probability = checkpoint.get("run_probability", None)
 
     run_chain_stat = checkpoint.get("run_chain_stat", None)
 
@@ -760,7 +918,12 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
     while not finished:
         state = next(
-            sampler.sample(checkpoint["p_chain"], log_prob0=checkpoint["ln_prob_chain"], rstate0=checkpoint["rstate_chain"], iterations=1)
+            sampler.sample(
+                checkpoint["p_chain"],
+                log_prob0=checkpoint["ln_prob_chain"],
+                rstate0=checkpoint["rstate_chain"],
+                iterations=1,
+            )
         )
 
         p = state.coords
@@ -773,9 +936,14 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         run_chain = addChain(run_chain, p[:, numpy.newaxis, :])
         run_probability = addChain(run_probability, ln_prob[:, numpy.newaxis])
 
-        run_chain_stat = addChain(run_chain_stat, numpy.percentile(flatten(run_chain), [5, 50, 95], 0)[:, numpy.newaxis, :])
+        run_chain_stat = addChain(
+            run_chain_stat,
+            numpy.percentile(flatten(run_chain), [5, 50, 95], 0)[:, numpy.newaxis, :],
+        )
 
-        multiprocessing.get_logger().info("run:  idx: %s accept: %.3f", generation, accept)
+        multiprocessing.get_logger().info(
+            "run:  idx: %s accept: %.3f", generation, accept
+        )
 
         generation += 1
 
@@ -784,7 +952,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         checkpoint["rstate_chain"] = random_state
         checkpoint["idx_chain"] = generation
         checkpoint["run_chain"] = run_chain
-        checkpoint['run_probability'] = run_probability
+        checkpoint["run_probability"] = run_probability
         checkpoint["chain_seq"] = chain_seq
         checkpoint["sampler_iterations"] = sampler.iterations
         checkpoint["sampler_naccepted"] = sampler.naccepted
@@ -798,19 +966,31 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
         if generation % checkInterval == 0:
             try:
-                tau = autocorr.integrated_time(numpy.swapaxes(run_chain, 0, 1), tol=cache.MCMCTauMult)
+                tau = autocorr.integrated_time(
+                    numpy.swapaxes(run_chain, 0, 1), tol=cache.MCMCTauMult
+                )
                 multiprocessing.get_logger().info(
-                    "Mean acceptance fraction: %s %0.3f tau: %s with shape: %s", generation, accept, tau, run_chain.shape
+                    "Mean acceptance fraction: %s %0.3f tau: %s with shape: %s",
+                    generation,
+                    accept,
+                    tau,
+                    run_chain.shape,
                 )
                 if numpy.any(numpy.isnan(tau)):
-                    multiprocessing.get_logger().info("tau is NaN and clearly not complete %s", generation)
+                    multiprocessing.get_logger().info(
+                        "tau is NaN and clearly not complete %s", generation
+                    )
                 else:
-                    multiprocessing.get_logger().info("we have run long enough and can quit %s", generation)
+                    multiprocessing.get_logger().info(
+                        "we have run long enough and can quit %s", generation
+                    )
                     finished = True
             except autocorr.AutocorrError as err:
                 multiprocessing.get_logger().info(str(err))
                 tau = err.tau
-            multiprocessing.get_logger().info("Mean acceptance fraction: %s %0.3f tau: %s", generation, accept, tau)
+            multiprocessing.get_logger().info(
+                "Mean acceptance fraction: %s %0.3f tau: %s", generation, accept, tau
+            )
 
             temp_iat = [generation]
             temp_iat.extend(tau)
@@ -824,7 +1004,14 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
             mcmc_store.root.tau_percent = tau_percent.reshape(-1, 1)
 
-        write_interval(cache.checkpointInterval, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_run_write)
+        write_interval(
+            cache.checkpointInterval,
+            cache,
+            checkpoint,
+            checkpointFile,
+            mcmc_store,
+            process_sampler_run_write,
+        )
         sub.mle_process(cache, last=False)
         sub.graph_corner_process(cache, last=False)
 
@@ -833,11 +1020,13 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     checkpoint["rstate_chain"] = random_state
     checkpoint["idx_chain"] = generation
     checkpoint["run_chain"] = run_chain
-    checkpoint['run_probability'] = run_probability
+    checkpoint["run_probability"] = run_probability
     checkpoint["chain_seq"] = chain_seq
     checkpoint["state"] = "complete"
 
-    write_interval(-1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_run_write)
+    write_interval(
+        -1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_run_write
+    )
 
 
 def write_checkpoint(interval, checkpoint, checkpointFile):
@@ -851,7 +1040,10 @@ def write_checkpoint(interval, checkpoint, checkpointFile):
 
         write_checkpoint.last_time = time.time()
 
-def write_interval(interval, cache, checkpoint, checkpointFile, mcmc_store, process_mcmc_store):
+
+def write_interval(
+    interval, cache, checkpoint, checkpointFile, mcmc_store, process_mcmc_store
+):
     "write the checkpoint and mcmc data at most every n seconds"
     if "last_time" not in write_interval.__dict__:
         write_interval.last_time = time.time()
@@ -867,7 +1059,9 @@ def write_interval(interval, cache, checkpoint, checkpointFile, mcmc_store, proc
 def run(cache, tools, creator):
     "run the parameter estimation"
     random.seed()
-    checkpointFile = Path(cache.settings["resultsDirMisc"], cache.settings.get("checkpointFile", "check"))
+    checkpointFile = Path(
+        cache.settings["resultsDirMisc"], cache.settings.get("checkpointFile", "check")
+    )
     checkpoint = getCheckPoint(checkpointFile, cache)
 
     mcmcDir = Path(cache.settings["resultsDirMCMC"])
@@ -921,7 +1115,11 @@ def run(cache, tools, creator):
             "mcmc_score": [],
         }
         halloffame = pareto.DummyFront()
-        meta_hof = pareto.ParetoFrontMeta(similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache), slice_object=cache.meta_slice)
+        meta_hof = pareto.ParetoFrontMeta(
+            similar=pareto.similar,
+            similar_fit=pareto.similar_fit_meta(cache),
+            slice_object=cache.meta_slice,
+        )
         grad_hof = pareto.DummyFront()
         progress_hof = None
 
@@ -929,8 +1127,22 @@ def run(cache, tools, creator):
             populationSize,
             parameters,
             log_posterior_vectorize,
-            args=[cache.json_path, cache, halloffame, meta_hof, grad_hof, progress_hof, result_data, writer, csvfile],
-            moves=[(de_snooker.DESnookerMove(), 0.1), (de.DEMove(), 0.9 * 0.9), (de.DEMove(gamma0=1.0), 0.9 * 0.1),],
+            args=[
+                cache.json_path,
+                cache,
+                halloffame,
+                meta_hof,
+                grad_hof,
+                progress_hof,
+                result_data,
+                writer,
+                csvfile,
+            ],
+            moves=[
+                (de_snooker.DESnookerMove(), 0.1),
+                (de.DEMove(), 0.9 * 0.9),
+                (de.DEMove(gamma0=1.0), 0.9 * 0.1),
+            ],
             vectorize=True,
         )
 
@@ -952,15 +1164,26 @@ def run(cache, tools, creator):
                 multiprocessing.get_logger().info("complete shape %s", temp.shape)
 
                 try:
-                    tau = autocorr.integrated_time(numpy.swapaxes(run_chain[:, : checkpoint["idx_chain"], :], 0, 1), tol=cache.MCMCTauMult)
-                    multiprocessing.get_logger().info("we have previously run long enough and can quit %s", checkpoint["idx_chain"])
+                    tau = autocorr.integrated_time(
+                        numpy.swapaxes(
+                            run_chain[:, : checkpoint["idx_chain"], :], 0, 1
+                        ),
+                        tol=cache.MCMCTauMult,
+                    )
+                    multiprocessing.get_logger().info(
+                        "we have previously run long enough and can quit %s",
+                        checkpoint["idx_chain"],
+                    )
                     checkpoint["state"] = "complete"
                 except autocorr.AutocorrError as err:
                     multiprocessing.get_logger().info(str(err))
                     tau = err.tau
 
                 multiprocessing.get_logger().info(
-                    "Mean acceptance fraction: %s %0.3f tau: %s", checkpoint["idx_chain"], checkpoint["chain_seq"][-1], tau
+                    "Mean acceptance fraction: %s %0.3f tau: %s",
+                    checkpoint["idx_chain"],
+                    checkpoint["chain_seq"][-1],
+                    tau,
                 )
 
         if checkpoint["state"] == "chain":
@@ -1018,7 +1241,9 @@ def resetPopulation(checkpoint, cache):
         previousResults = results_h5.root.meta_population_transform
 
         row, col = previousResults.shape
-        multiprocessing.get_logger().info("row: %s col: %s  parameters: %s", row, col, parameters)
+        multiprocessing.get_logger().info(
+            "row: %s col: %s  parameters: %s", row, col, parameters
+        )
         if col < parameters:
             mcmc_h5 = Path(cache.settings.get("mcmc_h5", None))
             mcmcDir = mcmc_h5.parent
@@ -1029,16 +1254,26 @@ def resetPopulation(checkpoint, cache):
             data.load()
             multiprocessing.get_logger().info("%s", list(data.root.keys()))
             stat_MLE = data.root.stat_MLE.reshape(1, -1)
-            previousResults = numpy.hstack([previousResults, numpy.repeat(stat_MLE, row, 0)])
-            multiprocessing.get_logger().info("row: %s  col:%s   shape: %s", row, col, previousResults.shape)
+            previousResults = numpy.hstack(
+                [previousResults, numpy.repeat(stat_MLE, row, 0)]
+            )
+            multiprocessing.get_logger().info(
+                "row: %s  col:%s   shape: %s", row, col, previousResults.shape
+            )
 
         population = get_population(previousResults, populationSize, diff=0.02)
         checkpoint["starting_population"] = population
-        checkpoint["starting_population"] = [util.convert_individual_inverse(i, cache) for i in population]
+        checkpoint["starting_population"] = [
+            util.convert_individual_inverse(i, cache) for i in population
+        ]
         multiprocessing.get_logger().info("p_burn startup population: %s", population)
-        multiprocessing.get_logger().info("p_burn startup: %s", checkpoint["starting_population"])
+        multiprocessing.get_logger().info(
+            "p_burn startup: %s", checkpoint["starting_population"]
+        )
     else:
-        checkpoint["starting_population"] = SALib.sample.sobol_sequence.sample(populationSize, parameters)
+        checkpoint["starting_population"] = SALib.sample.sobol_sequence.sample(
+            populationSize, parameters
+        )
     checkpoint["p_bounds"] = checkpoint["starting_population"]
 
 
@@ -1082,32 +1317,81 @@ def getCheckPoint(checkpointFile, cache):
         checkpoint["sampler_iterations"] = 0
         checkpoint["sampler_naccepted"] = numpy.zeros(populationSize)
 
-        checkpoint["converge"] = numpy.ones(cache.settings.get("burnStable", 50)) * numpy.nan
+        checkpoint["converge"] = (
+            numpy.ones(cache.settings.get("burnStable", 50)) * numpy.nan
+        )
 
     checkpoint["length_chain"] = cache.settings.get("chainLength", 50000)
     checkpoint["length_burn"] = cache.settings.get("burnIn", 50000)
     return checkpoint
 
 
-def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_search_fine, map_function, creator, base, tools):
+def setupDEAP(
+    cache,
+    fitness,
+    fitness_final,
+    grad_fitness,
+    grad_search,
+    grad_search_fine,
+    map_function,
+    creator,
+    base,
+    tools,
+):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
-    creator.create("Individual", array.array, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None)
-
-    creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0, 1.0, 1.0, -1.0, -1.0])
-    creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None, best=None)
-    cache.toolbox.register("individualMeta", util.initIndividual, creator.IndividualMeta, cache)
-
-    cache.toolbox.register(
-        "individual", util.generateIndividual, creator.Individual, len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, cache
+    creator.create(
+        "Individual",
+        array.array,
+        typecode="d",
+        fitness=creator.FitnessMax,
+        strategy=None,
+        mean=None,
+        confidence=None,
     )
 
-    cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
+    creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0, 1.0, 1.0, -1.0, -1.0])
+    creator.create(
+        "IndividualMeta",
+        array.array,
+        typecode="d",
+        fitness=creator.FitnessMaxMeta,
+        strategy=None,
+        best=None,
+    )
+    cache.toolbox.register(
+        "individualMeta", util.initIndividual, creator.IndividualMeta, cache
+    )
+
+    cache.toolbox.register(
+        "individual",
+        util.generateIndividual,
+        creator.Individual,
+        len(cache.MIN_VALUE),
+        cache.MIN_VALUE,
+        cache.MAX_VALUE,
+        cache,
+    )
+
+    cache.toolbox.register(
+        "individual_guess", util.initIndividual, creator.Individual, cache
+    )
 
     cache.toolbox.register("map", map_function)
 
 
-def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_hof, result_data, results, writer, csv_file):
+def process(
+    population_order,
+    cache,
+    halloffame,
+    meta_hof,
+    grad_hof,
+    progress_hof,
+    result_data,
+    results,
+    writer,
+    csv_file,
+):
     if "gen" not in process.__dict__:
         process.gen = 0
 
@@ -1127,24 +1411,50 @@ def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_ho
     for ll, theta, fit, csv_line, meta_score, result, individual in results:
         log_likelihoods_lookup[tuple(individual)] = float(ll)
         if len(csv_line):
-            #if csv_line is blank it means a simulation failed or is out of bounds, if this is handed on for
-            #processing it will cause problems, failed simulations are arleady recorded and we don't want their
-            #failure data in the recorers where other stuff picks it up
-            keep.add(tuple(individual))            
+            # if csv_line is blank it means a simulation failed or is out of bounds, if this is handed on for
+            # processing it will cause problems, failed simulations are arleady recorded and we don't want their
+            # failure data in the recorers where other stuff picks it up
+            keep.add(tuple(individual))
 
-            fitnesses_lookup[tuple(individual)] = (fit, csv_line, meta_score, result, tuple(individual))
+            fitnesses_lookup[tuple(individual)] = (
+                fit,
+                csv_line,
+                meta_score,
+                result,
+                tuple(individual),
+            )
 
             ind = cache.toolbox.individual_guess(individual)
             population_lookup[tuple(individual)] = ind
 
     # everything above is async (unordered) and needs to be reordered based on the population_order
-    population = [population_lookup[tuple(row)] for row in population_order if tuple(row) in keep]
-    fitnesses = [fitnesses_lookup[tuple(row)] for row in population_order if tuple(row) in keep]
-    log_likelihoods = [log_likelihoods_lookup[tuple(row)] for row in population_order if tuple(row) in keep]
-    log_likelihoods_all = [log_likelihoods_lookup[tuple(row)] for row in population_order]
+    population = [
+        population_lookup[tuple(row)] for row in population_order if tuple(row) in keep
+    ]
+    fitnesses = [
+        fitnesses_lookup[tuple(row)] for row in population_order if tuple(row) in keep
+    ]
+    log_likelihoods = [
+        log_likelihoods_lookup[tuple(row)]
+        for row in population_order
+        if tuple(row) in keep
+    ]
+    log_likelihoods_all = [
+        log_likelihoods_lookup[tuple(row)] for row in population_order
+    ]
 
     stalled, stallWarn, progressWarn = util.process_population(
-        cache.toolbox, cache, population, fitnesses, writer, csv_file, halloffame, meta_hof, progress_hof, process.gen, result_data
+        cache.toolbox,
+        cache,
+        population,
+        fitnesses,
+        writer,
+        csv_file,
+        halloffame,
+        meta_hof,
+        progress_hof,
+        process.gen,
+        result_data,
     )
 
     progress.writeProgress(
@@ -1159,7 +1469,7 @@ def process(population_order, cache, halloffame, meta_hof, grad_hof, progress_ho
         process.generation_start,
         result_data,
         line_log=False,
-        probability=numpy.exp(log_likelihoods)
+        probability=numpy.exp(log_likelihoods),
     )
 
     sub.graph_process(cache, process.gen)

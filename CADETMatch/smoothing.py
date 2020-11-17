@@ -1,13 +1,13 @@
+import multiprocessing
+import warnings
+
 import numpy
 import numpy.linalg
 import scipy
 import scipy.signal
-import CADETMatch.util as util
-import warnings
-
-import multiprocessing
-
 from cadet import H5
+
+import CADETMatch.util as util
 
 butter_order = 3
 
@@ -39,7 +39,14 @@ def refine_butter(times, values, x, y, fs, start):
     def goal(crit_fs):
         crit_fs = 10.0 ** crit_fs[0]
         try:
-            sos = scipy.signal.butter(butter_order, crit_fs, btype="lowpass", analog=False, fs=fs, output="sos")
+            sos = scipy.signal.butter(
+                butter_order,
+                crit_fs,
+                btype="lowpass",
+                analog=False,
+                fs=fs,
+                output="sos",
+            )
         except ValueError:
             return 1e6
         low_passed = scipy.signal.sosfiltfilt(sos, values)
@@ -54,13 +61,20 @@ def refine_butter(times, values, x, y, fs, start):
 
     lb = numpy.log10(x[0])
     ub = numpy.log10(x[-1])
-    
+
     crit_fs_sample = numpy.linspace(lb, ub, 50)
     errors = numpy.array([goal([i]) for i in crit_fs_sample])
-    
+
     root, fs_x, fs_y = util.find_opt_poly(crit_fs_sample, errors, numpy.argmin(errors))
-    
-    result = scipy.optimize.minimize(goal, root, method="powell", bounds=[(fs_x[0], fs_x[-1]),])
+
+    result = scipy.optimize.minimize(
+        goal,
+        root,
+        method="powell",
+        bounds=[
+            (fs_x[0], fs_x[-1]),
+        ],
+    )
     crit_fs = 10 ** result.x[0]
 
     return crit_fs
@@ -77,7 +91,9 @@ def refine_smooth(times, values, x, y, start, name):
             warnings.filterwarnings("error")
 
             try:
-                spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=5, ext=3)
+                spline = scipy.interpolate.UnivariateSpline(
+                    times, values, s=s, k=5, ext=3
+                )
             except Warning:
                 multiprocessing.get_logger().info("caught a warning for %s %s", name, s)
                 return 1e6
@@ -89,13 +105,22 @@ def refine_smooth(times, values, x, y, start, name):
 
     lb = numpy.log10(x[0])
     ub = numpy.log10(x[-1])
-    
+
     smoothing_sample = numpy.linspace(lb, ub, 50)
     errors = numpy.array([goal([i]) for i in smoothing_sample])
-    
-    root, fs_x, fs_y = util.find_opt_poly(smoothing_sample, errors, numpy.argmin(errors))
-    
-    result = scipy.optimize.minimize(goal, root, method="powell", bounds=[(fs_x[0], fs_x[-1]),])
+
+    root, fs_x, fs_y = util.find_opt_poly(
+        smoothing_sample, errors, numpy.argmin(errors)
+    )
+
+    result = scipy.optimize.minimize(
+        goal,
+        root,
+        method="powell",
+        bounds=[
+            (fs_x[0], fs_x[-1]),
+        ],
+    )
     s = 10 ** result.x[0]
 
     spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=5, ext=3)
@@ -131,7 +156,9 @@ def find_butter(times, values):
 
     for i in numpy.logspace(-6, ub_l, 50):
         try:
-            sos = scipy.signal.butter(butter_order, i, btype="lowpass", analog=False, fs=fs, output="sos")
+            sos = scipy.signal.butter(
+                butter_order, i, btype="lowpass", analog=False, fs=fs, output="sos"
+            )
             low_passed = scipy.signal.sosfiltfilt(sos, values)
 
             filters.append(i)
@@ -152,7 +179,9 @@ def smoothing_filter_butter(times, values, crit_fs):
         return values
     fs = 1.0 / (times[1] - times[0])
 
-    sos = scipy.signal.butter(butter_order, crit_fs, btype="lowpass", analog=False, fs=fs, output="sos")
+    sos = scipy.signal.butter(
+        butter_order, crit_fs, btype="lowpass", analog=False, fs=fs, output="sos"
+    )
     low_passed = scipy.signal.sosfiltfilt(sos, values)
     return low_passed
 
@@ -198,7 +227,14 @@ def load_data(name, cache):
     if crit_fs_der is not None:
         crit_fs_der_message = "critical frequency der %.3e" % crit_fs_der
 
-    multiprocessing.get_logger().info("smoothing_factor %s  %.3e  %s  %s knots %d", name, s, crit_fs_message, crit_fs_der_message, s_knots)
+    multiprocessing.get_logger().info(
+        "smoothing_factor %s  %.3e  %s  %s knots %d",
+        name,
+        s,
+        crit_fs_message,
+        crit_fs_der_message,
+        s_knots,
+    )
 
     return s, crit_fs, crit_fs_der
 
@@ -218,7 +254,9 @@ def find_smoothing_factors(times, values, name, cache):
     crit_fs = find_butter(times, values)
 
     if crit_fs is None:
-        multiprocessing.get_logger().info("%s butter filter disabled, no viable L point found", name)
+        multiprocessing.get_logger().info(
+            "%s butter filter disabled, no viable L point found", name
+        )
 
     values_filter = smoothing_filter_butter(times, values, crit_fs)
 
@@ -236,7 +274,9 @@ def find_smoothing_factors(times, values, name, cache):
             warnings.filterwarnings("error")
 
             try:
-                spline = scipy.interpolate.UnivariateSpline(times, values_filter, s=s, k=5, ext=3)
+                spline = scipy.interpolate.UnivariateSpline(
+                    times, values_filter, s=s, k=5, ext=3
+                )
                 knots.append(len(spline.get_knots()))
                 all_s.append(s)
 
@@ -266,7 +306,9 @@ def find_smoothing_factors(times, values, name, cache):
     return s, crit_fs, crit_fs_der
 
 
-def record_smoothing(s, s_knots, crit_fs, crit_fs_der, knots, all_s, name=None, cache=None):
+def record_smoothing(
+    s, s_knots, crit_fs, crit_fs_der, knots, all_s, name=None, cache=None
+):
     if name is None or cache is None:
         return
     factor_file = cache.settings["resultsDirMisc"] / "find_smoothing_factor.h5"
@@ -300,7 +342,14 @@ def record_smoothing(s, s_knots, crit_fs, crit_fs_der, knots, all_s, name=None, 
     if crit_fs_der is not None:
         crit_fs_der_message = "critical frequency der %.3e" % crit_fs_der
 
-    multiprocessing.get_logger().info("smoothing_factor %s  %.3e  %s  %s knots %d", name, s, crit_fs_message, crit_fs_der_message, s_knots)
+    multiprocessing.get_logger().info(
+        "smoothing_factor %s  %.3e  %s  %s knots %d",
+        name,
+        s,
+        crit_fs_message,
+        crit_fs_der_message,
+        s_knots,
+    )
 
 
 def create_spline(times, values, crit_fs, s):
@@ -309,7 +358,10 @@ def create_spline(times, values, crit_fs, s):
     values = values * factor
     values_filter = smoothing_filter_butter(times, values, crit_fs)
 
-    return scipy.interpolate.UnivariateSpline(times, values_filter, s=s, k=5, ext=3), factor
+    return (
+        scipy.interpolate.UnivariateSpline(times, values_filter, s=s, k=5, ext=3),
+        factor,
+    )
 
 
 def smooth_data(times, values, crit_fs, s):
@@ -325,8 +377,13 @@ def smooth_data_derivative(times, values, crit_fs, s, crit_fs_der, smooth=True):
     if smooth:
         values_filter_der = spline.derivative()(times_resample) / factor
         factor_der = numpy.max(values_filter_der)
-        values_filter_der = butter(times_resample, values_filter_der / factor_der, crit_fs_der) * factor_der
-        spline_der = scipy.interpolate.InterpolatedUnivariateSpline(times_resample, values_filter_der, k=5, ext=3)
+        values_filter_der = (
+            butter(times_resample, values_filter_der / factor_der, crit_fs_der)
+            * factor_der
+        )
+        spline_der = scipy.interpolate.InterpolatedUnivariateSpline(
+            times_resample, values_filter_der, k=5, ext=3
+        )
         values_filter_der = spline_der(times)
     else:
         values_filter_der = spline.derivative()(times) / factor
@@ -345,8 +402,13 @@ def full_smooth(times, values, crit_fs, s, crit_fs_der, smooth=True):
     if smooth:
         values_filter_der = spline.derivative()(times_resample) / factor
         factor_der = numpy.max(values_filter_der)
-        values_filter_der = butter(times_resample, values_filter_der / factor_der, crit_fs_der) * factor_der
-        spline_der = scipy.interpolate.InterpolatedUnivariateSpline(times_resample, values_filter_der, k=5, ext=3)
+        values_filter_der = (
+            butter(times_resample, values_filter_der / factor_der, crit_fs_der)
+            * factor_der
+        )
+        spline_der = scipy.interpolate.InterpolatedUnivariateSpline(
+            times_resample, values_filter_der, k=5, ext=3
+        )
         values_filter_der = spline_der(times)
     else:
         values_filter_der = spline.derivative()(times) / factor
@@ -377,7 +439,9 @@ def resample(times, values):
         min_time = numpy.min(diff_times)
         per = (max_time - min_time) / min_time
 
-        spline_resample = scipy.interpolate.InterpolatedUnivariateSpline(times, values, k=5, ext=3)
+        spline_resample = scipy.interpolate.InterpolatedUnivariateSpline(
+            times, values, k=5, ext=3
+        )
         values_resample = spline_resample(times_resample)
 
         return times_resample, values_resample

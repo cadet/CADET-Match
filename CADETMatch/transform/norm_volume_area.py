@@ -1,5 +1,6 @@
-import CADETMatch.util as util
 import numpy
+
+import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
 
 
@@ -30,13 +31,13 @@ class VolumeAreaTransform(AbstractTransform):
     def untransform_inputorder(self, seq):
         volume = seq[0]
         area = seq[1]
-        return [volume,area]
+        return [volume, area]
 
     def untransform(self, seq):
         volume, area = self.untransform_inputorder(seq)
-        length = volume/area
+        length = volume / area
         values = [area, length]
-        headerValues = [area,length,volume]
+        headerValues = [area, length, volume]
         return values, headerValues
 
     def grad_untransform(self, seq):
@@ -58,7 +59,10 @@ class VolumeAreaTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             area_location = self.parameter["area_location"]
             length_location = self.parameter["length_location"]
 
@@ -170,7 +174,12 @@ class NormVolumeAreaTransform(VolumeAreaTransform):
         return [0.0, 0.0], [1.0, 1.0]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
 
-plugins = {"norm_volume_area": NormVolumeAreaTransform, "volume_area": VolumeAreaTransform}
+plugins = {
+    "norm_volume_area": NormVolumeAreaTransform,
+    "volume_area": VolumeAreaTransform,
+}

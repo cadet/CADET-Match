@@ -1,7 +1,9 @@
-import CADETMatch.util as util
 import sys
+
 import numpy
 from addict import Dict
+
+import CADETMatch.util as util
 
 name = "LogSSE"
 
@@ -17,7 +19,9 @@ def get_settings(feature):
 
 def run(sim_data, feature):
     "log of SSE score, not composable, negative so score is maximized"
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature
+    )
     selected = feature["selected"]
 
     exp_time_values = feature["time"][selected]

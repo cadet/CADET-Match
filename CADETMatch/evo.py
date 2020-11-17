@@ -1,28 +1,35 @@
-import numpy
-import CADETMatch.util as util
-
+import multiprocessing
 from pathlib import Path
 
-from deap import creator
-from deap import tools
-
+import numpy
 from cadet import Cadet
+from deap import creator, tools
 
 import CADETMatch.cache as cache
-import CADETMatch.score_calc as score_calc
 import CADETMatch.progress as progress
+import CADETMatch.score_calc as score_calc
+import CADETMatch.util as util
 
-import multiprocessing
-
-ERROR = {"scores": None, "path": None, "simulation": None, "error": None, "cadetValues": None, "cadetValuesKEQ": None}
+ERROR = {
+    "scores": None,
+    "path": None,
+    "simulation": None,
+    "error": None,
+    "cadetValues": None,
+    "cadetValuesKEQ": None,
+}
 
 
 def fitness_final(individual, json_path, run_experiment=None):
-    return fitness_base(runExperimentFinal, "simulation_final", individual, json_path, run_experiment)
+    return fitness_base(
+        runExperimentFinal, "simulation_final", individual, json_path, run_experiment
+    )
 
 
 def fitness(individual, json_path, run_experiment=None):
-    return fitness_base(runExperiment, "simulation", individual, json_path, run_experiment)
+    return fitness_base(
+        runExperiment, "simulation", individual, json_path, run_experiment
+    )
 
 
 def meta_score_trans(cache, score):
@@ -52,7 +59,14 @@ def fitness_base(runner, template_name, individual, json_path, run_experiment):
 
     results = {}
     for experiment in cache.cache.settings["experiments"]:
-        result = runner(individual, template_name, experiment, cache.cache.settings, cache.cache.target, cache.cache)
+        result = runner(
+            individual,
+            template_name,
+            experiment,
+            cache.cache.settings,
+            cache.cache.target,
+            cache.cache,
+        )
         if result is not None:
             results[experiment["name"]] = result
             scores.extend(results[experiment["name"]]["scores"])
@@ -69,7 +83,9 @@ def fitness_base(runner, template_name, individual, json_path, run_experiment):
         multiprocessing.get_logger().info("NaN found for %s %s", individual, scores)
 
     # human scores
-    meta_score = numpy.concatenate([util.calcMetaScores(scores, cache.cache), [error, rmse]])
+    meta_score = numpy.concatenate(
+        [util.calcMetaScores(scores, cache.cache), [error, rmse]]
+    )
 
     for result in results.values():
         if result["cadetValuesKEQ"]:
@@ -87,24 +103,44 @@ def fitness_base(runner, template_name, individual, json_path, run_experiment):
 
 
 def saveExperiments(save_name_base, settings, target, results):
-    return util.saveExperiments(save_name_base, settings, target, results, settings["resultsDirEvo"], "%s_%s_EVO.h5")
+    return util.saveExperiments(
+        save_name_base,
+        settings,
+        target,
+        results,
+        settings["resultsDirEvo"],
+        "%s_%s_EVO.h5",
+    )
 
 
 def plotExperiments(save_name_base, settings, target, results):
-    util.plotExperiments(save_name_base, settings, target, results, settings["resultsDirEvo"], "%s_%s_EVO.png")
+    util.plotExperiments(
+        save_name_base,
+        settings,
+        target,
+        results,
+        settings["resultsDirEvo"],
+        "%s_%s_EVO.png",
+    )
 
 
 def runExperimentFinal(individual, template_name, experiment, settings, target, cache):
     sim_name = "template_%s_final.h5" % experiment["name"]
-    return runExperimentBase(sim_name, template_name, individual, experiment, settings, target, cache)
+    return runExperimentBase(
+        sim_name, template_name, individual, experiment, settings, target, cache
+    )
 
 
 def runExperiment(individual, template_name, experiment, settings, target, cache):
     sim_name = "template_%s.h5" % experiment["name"]
-    return runExperimentBase(sim_name, template_name, individual, experiment, settings, target, cache)
+    return runExperimentBase(
+        sim_name, template_name, individual, experiment, settings, target, cache
+    )
 
 
-def runExperimentBase(sim_name, template_name, individual, experiment, settings, target, cache):
+def runExperimentBase(
+    sim_name, template_name, individual, experiment, settings, target, cache
+):
     if template_name not in experiment:
         templatePath = Path(settings["resultsDirMisc"], sim_name)
         templateSim = Cadet()
@@ -113,7 +149,13 @@ def runExperimentBase(sim_name, template_name, individual, experiment, settings,
         experiment[template_name] = templateSim
 
     return util.runExperiment(
-        individual, experiment, settings, target, experiment[template_name], experiment[template_name].root.timeout, cache
+        individual,
+        experiment,
+        settings,
+        target,
+        experiment[template_name],
+        experiment[template_name].root.timeout,
+        cache,
     )
 
 

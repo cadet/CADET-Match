@@ -1,5 +1,6 @@
-import CADETMatch.util as util
 import numpy
+
+import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
 
 
@@ -33,8 +34,8 @@ class VolumeLengthTransform(AbstractTransform):
         return [volume, length]
 
     def untransform(self, seq):
-        volume,length = self.untransform_inputorder(seq)
-        area = volume/length
+        volume, length = self.untransform_inputorder(seq)
+        area = volume / length
         values = [area, length]
         headerValues = [area, length, volume]
         return values, headerValues
@@ -56,7 +57,10 @@ class VolumeLengthTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             area_location = self.parameter["area_location"]
             length_location = self.parameter["length_location"]
 
@@ -159,7 +163,12 @@ class NormVolumeLengthTransform(VolumeLengthTransform):
         return [0.0, 0.0], [1.0, 1.0]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
 
-plugins = {"norm_volume_length": NormVolumeLengthTransform, "volume_length": VolumeLengthTransform}
+plugins = {
+    "norm_volume_length": NormVolumeLengthTransform,
+    "volume_length": VolumeLengthTransform,
+}

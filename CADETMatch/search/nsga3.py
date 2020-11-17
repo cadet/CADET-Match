@@ -1,15 +1,14 @@
-import CADETMatch.util as util
-import CADETMatch.checkpoint_algorithms as checkpoint_algorithms
+import array
+import multiprocessing
 import random
 
-import CADETMatch.pareto as pareto
-import array
-
+import numpy
 import scipy.special
 from deap import tools
-import numpy
 
-import multiprocessing
+import CADETMatch.checkpoint_algorithms as checkpoint_algorithms
+import CADETMatch.pareto as pareto
+import CADETMatch.util as util
 
 name = "NSGA3"
 
@@ -29,7 +28,9 @@ def run(cache, tools, creator):
 
     if "seeds" in cache.settings:
         seed_pop = [
-            cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings["transform"], sublist)])
+            cache.toolbox.individual_guess(
+                [f(v) for f, v in zip(cache.settings["transform"], sublist)]
+            )
             for sublist in cache.settings["seeds"]
         ]
         pop.extend(seed_pop)
@@ -47,36 +48,94 @@ def run(cache, tools, creator):
     )
 
 
-def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_search_fine, map_function, creator, base, tools):
+def setupDEAP(
+    cache,
+    fitness,
+    fitness_final,
+    grad_fitness,
+    grad_search,
+    grad_search_fine,
+    map_function,
+    creator,
+    base,
+    tools,
+):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
     creator.create(
-        "Individual", array.array, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None, csv_line=None
+        "Individual",
+        array.array,
+        typecode="d",
+        fitness=creator.FitnessMax,
+        strategy=None,
+        mean=None,
+        confidence=None,
+        csv_line=None,
     )
 
     creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0, 1.0, 1.0, -1.0, -1.0])
-    creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None, csv_line=None, best=None)
-    cache.toolbox.register("individualMeta", util.initIndividual, creator.IndividualMeta, cache)
+    creator.create(
+        "IndividualMeta",
+        array.array,
+        typecode="d",
+        fitness=creator.FitnessMaxMeta,
+        strategy=None,
+        csv_line=None,
+        best=None,
+    )
+    cache.toolbox.register(
+        "individualMeta", util.initIndividual, creator.IndividualMeta, cache
+    )
 
     cache.toolbox.register(
-        "individual", util.generateIndividual, creator.Individual, len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, cache
+        "individual",
+        util.generateIndividual,
+        creator.Individual,
+        len(cache.MIN_VALUE),
+        cache.MIN_VALUE,
+        cache.MAX_VALUE,
+        cache,
     )
 
     if cache.sobolGeneration:
-        cache.toolbox.register("population", util.sobolGenerator, creator.Individual, cache)
+        cache.toolbox.register(
+            "population", util.sobolGenerator, creator.Individual, cache
+        )
     else:
-        cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)
-    cache.toolbox.register("randomPopulation", tools.initRepeat, list, cache.toolbox.individual)
-
-    cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
-
-    cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=30.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
+        cache.toolbox.register(
+            "population", tools.initRepeat, list, cache.toolbox.individual
+        )
+    cache.toolbox.register(
+        "randomPopulation", tools.initRepeat, list, cache.toolbox.individual
+    )
 
     cache.toolbox.register(
-        "mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0 / len(cache.MIN_VALUE)
+        "individual_guess", util.initIndividual, creator.Individual, cache
+    )
+
+    cache.toolbox.register(
+        "mate",
+        tools.cxSimulatedBinaryBounded,
+        eta=30.0,
+        low=cache.MIN_VALUE,
+        up=cache.MAX_VALUE,
+    )
+
+    cache.toolbox.register(
+        "mutate",
+        tools.mutPolynomialBounded,
+        eta=20.0,
+        low=cache.MIN_VALUE,
+        up=cache.MAX_VALUE,
+        indpb=1.0 / len(cache.MIN_VALUE),
     )
     cache.toolbox.register(
-        "force_mutate", tools.mutPolynomialBounded, eta=20.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0 / len(cache.MIN_VALUE)
+        "force_mutate",
+        tools.mutPolynomialBounded,
+        eta=20.0,
+        low=cache.MIN_VALUE,
+        up=cache.MAX_VALUE,
+        indpb=1.0 / len(cache.MIN_VALUE),
     )
 
     if cache.numGoals == 1:
@@ -89,7 +148,9 @@ def setupDEAP(cache, fitness, fitness_final, grad_fitness, grad_search, grad_sea
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
     cache.toolbox.register("evaluate_final", fitness_final, json_path=cache.json_path)
     cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
-    cache.toolbox.register("evaluate_grad_fine", grad_search_fine, json_path=cache.json_path)
+    cache.toolbox.register(
+        "evaluate_grad_fine", grad_search_fine, json_path=cache.json_path
+    )
     cache.toolbox.register("grad_search", grad_search)
 
     cache.toolbox.register("map", map_function)
@@ -124,5 +185,7 @@ def generate_reference_points(ndim, max_size=1000):
     ref_points = numpy.concatenate(ref_points, axis=0)
     _, uniques = numpy.unique(ref_points, axis=0, return_index=True)
     ref_points = ref_points[uniques]
-    multiprocessing.get_logger().info("Reference points chosen P = %s  with shape %s", P, ref_points.shape)
+    multiprocessing.get_logger().info(
+        "Reference points chosen P = %s  with shape %s", P, ref_points.shape
+    )
     return ref_points

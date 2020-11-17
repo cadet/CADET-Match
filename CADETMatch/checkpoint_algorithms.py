@@ -1,18 +1,21 @@
-from pathlib import Path
+import csv
+import multiprocessing
 import pickle
 import random
-import numpy
-import CADETMatch.util as util
-import CADETMatch.sub as sub
-import CADETMatch.progress as progress
-from deap import algorithms
 import time
-import csv
+from pathlib import Path
+
+import numpy
+from deap import algorithms
+
 import CADETMatch.pareto as pareto
-import multiprocessing
+import CADETMatch.progress as progress
+import CADETMatch.sub as sub
+import CADETMatch.util as util
 
 stallRate = 1.25
 progressRate = 0.75
+
 
 def stop_iteration(best, stalled, cache):
     best = util.translate_meta_min(best, cache)
@@ -24,11 +27,27 @@ def stop_iteration(best, stalled, cache):
     else:
         return False
 
-def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings, stats=None, verbose=__debug__, tools=None, cache=None):
+
+def eaMuPlusLambda(
+    population,
+    toolbox,
+    mu,
+    lambda_,
+    cxpb,
+    mutpb,
+    ngen,
+    settings,
+    stats=None,
+    verbose=__debug__,
+    tools=None,
+    cache=None,
+):
     """from DEAP function but with checkpoiting"""
     assert lambda_ >= mu, "lambda must be greater or equal to mu."
 
-    checkpointFile = Path(settings["resultsDirMisc"], settings.get("checkpointFile", "check"))
+    checkpointFile = Path(
+        settings["resultsDirMisc"], settings.get("checkpointFile", "check")
+    )
 
     sim_start = generation_start = time.time()
 
@@ -75,24 +94,50 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             if cache.metaResultsOnly:
                 halloffame = pareto.DummyFront()
             else:
-                halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+                halloffame = pareto.ParetoFront(
+                    similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
+                )
             meta_hof = pareto.ParetoFrontMeta(
-                similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache), slice_object=cache.meta_slice
+                similar=pareto.similar,
+                similar_fit=pareto.similar_fit_meta(cache),
+                slice_object=cache.meta_slice,
             )
-            grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+            grad_hof = pareto.ParetoFront(
+                similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
+            )
             progress_hof = pareto.ParetoFrontMeta(
-                similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache), slice_object=cache.meta_slice
+                similar=pareto.similar,
+                similar_fit=pareto.similar_fit_meta(cache),
+                slice_object=cache.meta_slice,
             )
 
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
             if invalid_ind:
                 stalled, stallWarn, progressWarn = util.eval_population(
-                    toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, -1, result_data
+                    toolbox,
+                    cache,
+                    invalid_ind,
+                    writer,
+                    csvfile,
+                    halloffame,
+                    meta_hof,
+                    progress_hof,
+                    -1,
+                    result_data,
                 )
 
                 progress.writeProgress(
-                    cache, -1, population, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data
+                    cache,
+                    -1,
+                    population,
+                    halloffame,
+                    meta_hof,
+                    grad_hof,
+                    progress_hof,
+                    sim_start,
+                    generation_start,
+                    result_data,
                 )
                 sub.graph_process(cache, "First")
                 sub.graph_corner_process(cache, last=False)
@@ -123,17 +168,37 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             stalled, stallWarn, progressWarn = util.eval_population(
-                toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, gen, result_data
+                toolbox,
+                cache,
+                invalid_ind,
+                writer,
+                csvfile,
+                halloffame,
+                meta_hof,
+                progress_hof,
+                gen,
+                result_data,
             )
 
-            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
+            gradCheck, newChildren = cache.toolbox.grad_search(
+                gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
+            )
             offspring.extend(newChildren)
 
             # Select the next generation population
             population[:] = toolbox.select(offspring + population, mu)
 
             progress.writeProgress(
-                cache, gen, offspring, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data
+                cache,
+                gen,
+                offspring,
+                halloffame,
+                meta_hof,
+                grad_hof,
+                progress_hof,
+                sim_start,
+                generation_start,
+                result_data,
             )
             sub.graph_process(cache, gen)
             sub.graph_corner_process(cache, last=False)
@@ -173,19 +238,55 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
             gen = gen + 1
             best_individuals = [cache.toolbox.individual_guess(i) for i in meta_hof]
             gradCheck, newChildren = cache.toolbox.grad_search(
-                gradCheck, best_individuals, cache, writer, csvfile, grad_hof, meta_hof, gen, check_all=True, result_data=result_data
+                gradCheck,
+                best_individuals,
+                cache,
+                writer,
+                csvfile,
+                grad_hof,
+                meta_hof,
+                gen,
+                check_all=True,
+                result_data=result_data,
             )
             if newChildren:
                 progress.writeProgress(
-                    cache, gen, newChildren, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data
+                    cache,
+                    gen,
+                    newChildren,
+                    halloffame,
+                    meta_hof,
+                    grad_hof,
+                    progress_hof,
+                    sim_start,
+                    generation_start,
+                    result_data,
                 )
 
         population = [cache.toolbox.individual_guess(i) for i in meta_hof]
         stalled, stallWarn, progressWarn = util.eval_population_final(
-            cache.toolbox, cache, population, writer, csvfile, halloffame, meta_hof, progress_hof, gen + 1, result_data
+            cache.toolbox,
+            cache,
+            population,
+            writer,
+            csvfile,
+            halloffame,
+            meta_hof,
+            progress_hof,
+            gen + 1,
+            result_data,
         )
         progress.writeProgress(
-            cache, gen + 1, population, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data
+            cache,
+            gen + 1,
+            population,
+            halloffame,
+            meta_hof,
+            grad_hof,
+            progress_hof,
+            sim_start,
+            generation_start,
+            result_data,
         )
 
         util.finish(cache)
@@ -196,10 +297,14 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, settings
 def nsga2(populationSize, ngen, cache, tools):
     """NSGA2 with checkpointing"""
     # fix max population to be a multiple of 4
-    cache.settings["maxPopulation"] = cache.settings["maxPopulation"] + (-cache.settings["maxPopulation"] % 4)
+    cache.settings["maxPopulation"] = cache.settings["maxPopulation"] + (
+        -cache.settings["maxPopulation"] % 4
+    )
 
     cxpb = cache.settings["crossoverRate"]
-    checkpointFile = Path(cache.settings["resultsDirMisc"], cache.settings.get("checkpointFile", "check"))
+    checkpointFile = Path(
+        cache.settings["resultsDirMisc"], cache.settings.get("checkpointFile", "check")
+    )
 
     path = Path(cache.settings["resultsDirBase"], cache.settings["csv"])
     result_data = {
@@ -243,7 +348,9 @@ def nsga2(populationSize, ngen, cache, tools):
 
             if "seeds" in cache.settings:
                 seed_pop = [
-                    cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings["transform"], sublist)])
+                    cache.toolbox.individual_guess(
+                        [f(v) for f, v in zip(cache.settings["transform"], sublist)]
+                    )
                     for sublist in cache.settings["seeds"]
                 ]
                 population.extend(seed_pop)
@@ -253,13 +360,21 @@ def nsga2(populationSize, ngen, cache, tools):
             if cache.metaResultsOnly:
                 halloffame = pareto.DummyFront()
             else:
-                halloffame = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+                halloffame = pareto.ParetoFront(
+                    similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
+                )
             meta_hof = pareto.ParetoFrontMeta(
-                similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache), slice_object=cache.meta_slice
+                similar=pareto.similar,
+                similar_fit=pareto.similar_fit_meta(cache),
+                slice_object=cache.meta_slice,
             )
-            grad_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
+            grad_hof = pareto.ParetoFront(
+                similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
+            )
             progress_hof = pareto.ParetoFrontMeta(
-                similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache), slice_object=cache.meta_slice
+                similar=pareto.similar,
+                similar_fit=pareto.similar_fit_meta(cache),
+                slice_object=cache.meta_slice,
             )
             gradCheck = cache.settings.get("gradCheck", 0.0)
 
@@ -269,11 +384,29 @@ def nsga2(populationSize, ngen, cache, tools):
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
         if invalid_ind:
             stalled, stallWarn, progressWarn = util.eval_population(
-                cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, -1, result_data
+                cache.toolbox,
+                cache,
+                invalid_ind,
+                writer,
+                csvfile,
+                halloffame,
+                meta_hof,
+                progress_hof,
+                -1,
+                result_data,
             )
 
             progress.writeProgress(
-                cache, -1, population, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data
+                cache,
+                -1,
+                population,
+                halloffame,
+                meta_hof,
+                grad_hof,
+                progress_hof,
+                sim_start,
+                generation_start,
+                result_data,
             )
             sub.graph_process(cache, "First")
             sub.graph_corner_process(cache, last=False)
@@ -316,14 +449,34 @@ def nsga2(populationSize, ngen, cache, tools):
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             stalled, stallWarn, progressWarn = util.eval_population(
-                cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, gen, result_data
+                cache.toolbox,
+                cache,
+                invalid_ind,
+                writer,
+                csvfile,
+                halloffame,
+                meta_hof,
+                progress_hof,
+                gen,
+                result_data,
             )
 
-            gradCheck, newChildren = cache.toolbox.grad_search(gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen)
+            gradCheck, newChildren = cache.toolbox.grad_search(
+                gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
+            )
             offspring.extend(newChildren)
 
             progress.writeProgress(
-                cache, gen, offspring, halloffame, meta_hof, grad_hof, progress_hof, sim_start, generation_start, result_data
+                cache,
+                gen,
+                offspring,
+                halloffame,
+                meta_hof,
+                grad_hof,
+                progress_hof,
+                sim_start,
+                generation_start,
+                result_data,
             )
             sub.graph_process(cache, gen)
             sub.graph_corner_process(cache, last=False)
@@ -343,7 +496,16 @@ def nsga2(populationSize, ngen, cache, tools):
 
                 invalid_ind = [ind for ind in newPopulation if not ind.fitness.valid]
                 util.eval_population(
-                    cache.toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, gen, result_data
+                    cache.toolbox,
+                    cache,
+                    invalid_ind,
+                    writer,
+                    csvfile,
+                    halloffame,
+                    meta_hof,
+                    progress_hof,
+                    gen,
+                    result_data,
                 )
 
                 # This is just to assign the crowding distance to the individuals
@@ -390,7 +552,7 @@ def nsga2(populationSize, ngen, cache, tools):
                 util.finish(cache)
                 sub.graph_corner_process(cache, last=True)
                 return halloffame
-                
+
         util.finish(cache)
         sub.graph_corner_process(cache, last=True)
         return halloffame

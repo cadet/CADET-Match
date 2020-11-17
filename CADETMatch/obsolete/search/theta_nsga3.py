@@ -1,9 +1,10 @@
-import CADETMatch.util as util
-import CADETMatch.checkpoint_algorithms as checkpoint_algorithms
 import random
 
 import numpy
 from deap import tools
+
+import CADETMatch.checkpoint_algorithms as checkpoint_algorithms
+import CADETMatch.util as util
 
 name = "ThetaNSGA3"
 
@@ -22,7 +23,9 @@ def run(cache, tools, creator):
 
     if "seeds" in cache.settings:
         seed_pop = [
-            cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings["transform"], sublist)])
+            cache.toolbox.individual_guess(
+                [f(v) for f, v in zip(cache.settings["transform"], sublist)]
+            )
             for sublist in cache.settings["seeds"]
         ]
         pop.extend(seed_pop)
@@ -41,27 +44,57 @@ def run(cache, tools, creator):
     )
 
 
-def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
+def setupDEAP(
+    cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools
+):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
-    creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
+    creator.create(
+        "Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None
+    )
 
     cache.toolbox.register(
-        "individual", util.generateIndividual, creator.Individual, len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, cache
+        "individual",
+        util.generateIndividual,
+        creator.Individual,
+        len(cache.MIN_VALUE),
+        cache.MIN_VALUE,
+        cache.MAX_VALUE,
+        cache,
     )
-    cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)
+    cache.toolbox.register(
+        "population", tools.initRepeat, list, cache.toolbox.individual
+    )
 
-    cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
+    cache.toolbox.register(
+        "individual_guess", util.initIndividual, creator.Individual, cache
+    )
 
-    cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=5.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
+    cache.toolbox.register(
+        "mate",
+        tools.cxSimulatedBinaryBounded,
+        eta=5.0,
+        low=cache.MIN_VALUE,
+        up=cache.MAX_VALUE,
+    )
 
     if cache.adaptive:
         cache.toolbox.register(
-            "mutate", util.mutPolynomialBoundedAdaptive, eta=10.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0 / len(cache.MIN_VALUE)
+            "mutate",
+            util.mutPolynomialBoundedAdaptive,
+            eta=10.0,
+            low=cache.MIN_VALUE,
+            up=cache.MAX_VALUE,
+            indpb=1.0 / len(cache.MIN_VALUE),
         )
     else:
         cache.toolbox.register(
-            "mutate", tools.mutPolynomialBounded, eta=2.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0 / len(cache.MIN_VALUE)
+            "mutate",
+            tools.mutPolynomialBounded,
+            eta=2.0,
+            low=cache.MIN_VALUE,
+            up=cache.MAX_VALUE,
+            indpb=1.0 / len(cache.MIN_VALUE),
         )
 
     cache.toolbox.register("select", sel_nsga_iii)
@@ -108,13 +141,18 @@ def find_ideal_point(individuals):
     current_ideal = [numpy.infty] * len(individuals[0].fitness.values)
     for ind in individuals:
         # Use wvalues to accomodate for maximization and minimization problems.
-        current_ideal = numpy.minimum(current_ideal, numpy.multiply(ind.fitness.wvalues, -1))
+        current_ideal = numpy.minimum(
+            current_ideal, numpy.multiply(ind.fitness.wvalues, -1)
+        )
     return current_ideal
 
 
 def find_extreme_points(individuals):
     "Finds the individuals with extreme values for each objective function."
-    return [sorted(individuals, key=lambda ind: ind.fitness.wvalues[o] * -1)[-1] for o in range(len(individuals[0].fitness.values))]
+    return [
+        sorted(individuals, key=lambda ind: ind.fitness.wvalues[o] * -1)[-1]
+        for o in range(len(individuals[0].fitness.values))
+    ]
 
 
 def construct_hyperplane(individuals, extreme_points):
@@ -154,13 +192,22 @@ def normalize_objectives(individuals, intercepts, ideal_point):
     num_objs = len(individuals[0].fitness.values)
 
     for ind in individuals:
-        ind.fitness.normalized_values = list([normalize_objective(ind, m, intercepts, ideal_point) for m in range(num_objs)])
+        ind.fitness.normalized_values = list(
+            [
+                normalize_objective(ind, m, intercepts, ideal_point)
+                for m in range(num_objs)
+            ]
+        )
     return individuals
 
 
 def perpendicular_distance(direction, point):
     k = numpy.dot(direction, point) / numpy.sum(numpy.power(direction, 2))
-    d = numpy.sum(numpy.power(numpy.subtract(numpy.multiply(direction, [k] * len(direction)), point), 2))
+    d = numpy.sum(
+        numpy.power(
+            numpy.subtract(numpy.multiply(direction, [k] * len(direction)), point), 2
+        )
+    )
     return numpy.sqrt(d)
 
 
@@ -216,9 +263,15 @@ def niching_select(individuals, k):
         # unless it takes more time in higher dimensions or larger problems there is no point in further
         # optimization here
 
-        rp_associations_count = numpy.fromiter((rp.associations_count for rp in reference_points), int, len(reference_points))
+        rp_associations_count = numpy.fromiter(
+            (rp.associations_count for rp in reference_points),
+            int,
+            len(reference_points),
+        )
 
-        min_assoc_rp = numpy.min(rp_associations_count[numpy.nonzero(rp_associations_count)])
+        min_assoc_rp = numpy.min(
+            rp_associations_count[numpy.nonzero(rp_associations_count)]
+        )
 
         idxs = numpy.where(rp_associations_count == min_assoc_rp)
 
@@ -227,9 +280,13 @@ def niching_select(individuals, k):
         associated_inds = chosen_rp.associations
         if chosen_rp.associations:
             if chosen_rp.associations_count == 0:
-                sel = min(chosen_rp.associations, key=lambda ind: ind.ref_point_distance)
+                sel = min(
+                    chosen_rp.associations, key=lambda ind: ind.ref_point_distance
+                )
             else:
-                sel = chosen_rp.associations[random.randint(0, len(chosen_rp.associations) - 1)]
+                sel = chosen_rp.associations[
+                    random.randint(0, len(chosen_rp.associations) - 1)
+                ]
             res += [sel]
             chosen_rp.associations.remove(sel)
             chosen_rp.associations_count += 1

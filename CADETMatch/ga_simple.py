@@ -1,17 +1,14 @@
 # This is a simple implemtnation of NSGA2 that runs on a single thread and has the same kind of interface as the scipy optimize tools
 # The reason for this is that finding the maximum likelihood and bandwidth works better with NSGA2 and the optimizers built into scipy
 
-from deap import algorithms
-from deap import base
-from deap import creator
-from deap import tools
-import SALib.sample.sobol_sequence
-import numpy
-import random
 import array
 import multiprocessing
+import random
 
+import numpy
+import SALib.sample.sobol_sequence
 from addict import Dict
+from deap import algorithms, base, creator, tools
 
 
 def sobolGenerator(icls, dimension, lb, ub, n):
@@ -29,7 +26,13 @@ def sobolGenerator(icls, dimension, lb, ub, n):
 
 
 def ga_min(func, lb, ub, ngen=500, mu=200, args=None, stop=40):
-    FitnessMin = create("FitnessMin", base.Fitness, weights=[-1.0,])
+    FitnessMin = create(
+        "FitnessMin",
+        base.Fitness,
+        weights=[
+            -1.0,
+        ],
+    )
     Individual = create("Individual", list, fitness=FitnessMin)
 
     toolbox = base.Toolbox()
@@ -40,7 +43,14 @@ def ga_min(func, lb, ub, ngen=500, mu=200, args=None, stop=40):
         toolbox.register("evaluate", func)
     toolbox.register("population", sobolGenerator, Individual, len(lb), lb, ub)
     toolbox.register("mate", tools.cxSimulatedBinaryBounded, low=lb, up=ub, eta=30.0)
-    toolbox.register("mutate", tools.mutPolynomialBounded, low=lb, up=ub, eta=20.0, indpb=1.0 / len(lb))
+    toolbox.register(
+        "mutate",
+        tools.mutPolynomialBounded,
+        low=lb,
+        up=ub,
+        eta=20.0,
+        indpb=1.0 / len(lb),
+    )
 
     ref_points = tools.uniform_reference_points(1, 16)
     toolbox.register("select", tools.selSPEA2)

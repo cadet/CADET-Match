@@ -1,10 +1,11 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
-import scipy.stats
-import scipy.interpolate
 import numpy
+import scipy.interpolate
+import scipy.stats
 from addict import Dict
+
+import CADETMatch.score as score
 import CADETMatch.smoothing as smoothing
+import CADETMatch.util as util
 
 name = "ShapeNoDer"
 
@@ -20,7 +21,9 @@ def get_settings(feature):
 
 def run(sim_data, feature):
     "similarity, value, start stop"
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature
+    )
     selected = feature["selected"]
 
     exp_data_values = feature["value"][selected]
@@ -30,7 +33,9 @@ def run(sim_data, feature):
 
     time_high, value_high = high
 
-    pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_values, feature["smooth_value"])
+    pearson, diff_time = score.pearson_spline(
+        exp_time_values, sim_data_values, feature["smooth_value"]
+    )
 
     temp = [
         pearson,
@@ -50,7 +55,9 @@ def run(sim_data, feature):
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     name = "%s_%s" % (sim.root.experiment_name, feature["name"])
-    s, crit_fs, crit_fs_der = smoothing.find_smoothing_factors(selectedTimes, selectedValues, name, cache)
+    s, crit_fs, crit_fs_der = smoothing.find_smoothing_factors(
+        selectedTimes, selectedValues, name, cache
+    )
 
     temp = {}
     temp["peak"] = util.find_peak(selectedTimes, selectedValues)[0]
@@ -60,7 +67,9 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp["smoothing_factor"] = s
     temp["critical_frequency"] = crit_fs
     temp["critical_frequency_der"] = crit_fs_der
-    temp["smooth_value"] = smoothing.smooth_data(selectedTimes, selectedValues, crit_fs, s)
+    temp["smooth_value"] = smoothing.smooth_data(
+        selectedTimes, selectedValues, crit_fs, s
+    )
     return temp
 
 

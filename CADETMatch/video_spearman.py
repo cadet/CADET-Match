@@ -1,15 +1,17 @@
 import sys
-from CADETMatch.cache import cache
 from pathlib import Path
 
 import matplotlib
 import matplotlib.style as mplstyle
-mplstyle.use('fast')
+
+from CADETMatch.cache import cache
+
+mplstyle.use("fast")
 
 matplotlib.use("Agg")
 
-import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 
 
 def main():

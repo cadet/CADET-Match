@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-
 from emcee.moves.red_blue import RedBlueMove
 
 __all__ = ["StretchMove"]

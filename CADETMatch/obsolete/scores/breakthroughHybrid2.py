@@ -1,8 +1,9 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
-import scipy.stats
 import scipy.interpolate
+import scipy.stats
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "breakthroughHybrid2"
 settings = Dict()
@@ -15,7 +16,9 @@ settings.failure = [0.0] * settings.count, 1e6, 1, [], [1.0] * settings.count
 
 def run(sim_data, feature):
     "similarity, value, start stop"
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature
+    )
 
     selected = feature["selected"]
 
@@ -24,7 +27,9 @@ def run(sim_data, feature):
 
     [start, stop] = util.find_breakthrough(exp_time_values, sim_data_values)
 
-    pearson, diff_time = score.pearson(exp_time_values, sim_data_values, exp_data_values)
+    pearson, diff_time = score.pearson(
+        exp_time_values, sim_data_values, exp_data_values
+    )
 
     sim_spline = util.create_spline(exp_time_values, sim_data_values).derivative(1)
     exp_spline = util.create_spline(exp_time_values, exp_data_values).derivative(1)
@@ -32,7 +37,9 @@ def run(sim_data, feature):
     exp_data_values_der = exp_spline(exp_time_values)
     sim_data_values_der = sim_spline(exp_time_values)
 
-    pearson_der, diff_time_der = score.pearson(exp_time_values, sim_data_values_der, exp_data_values_der)
+    pearson_der, diff_time_der = score.pearson(
+        exp_time_values, sim_data_values_der, exp_data_values_der
+    )
 
     [highs, lows] = util.find_peak(exp_time_values, sim_data_values_der)
 
@@ -66,7 +73,9 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp["break"] = util.find_breakthrough(selectedTimes, selectedValues)
     temp["time_function"] = score.time_function(CV_time, None, diff_input=True)
     temp["value_function"] = score.value_function(temp["break"][0][1], abstol)
-    temp["offsetDerTimeFunction"] = score.time_function_decay(CV_time, None, diff_input=True)
+    temp["offsetDerTimeFunction"] = score.time_function_decay(
+        CV_time, None, diff_input=True
+    )
     temp["value_function_high"] = score.value_function(high[1], abstol, 0.1)
     temp["value_function_low"] = score.value_function(low[1], abstol, 0.1)
     return temp

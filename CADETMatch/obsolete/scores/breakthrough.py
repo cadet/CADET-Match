@@ -1,7 +1,8 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
 import scipy.stats
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "breakthrough"
 settings = Dict()
@@ -13,7 +14,9 @@ settings.count = 4
 
 def run(sim_data, feature):
     "similarity, value, start stop"
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature
+    )
 
     selected = feature["selected"]
 
@@ -50,5 +53,10 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
 
 def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature["name"])
-    temp = ["%s_Similarity" % name, "%s_Value" % name, "%s_Time_Start" % name, "%s_Time_Stop" % name]
+    temp = [
+        "%s_Similarity" % name,
+        "%s_Value" % name,
+        "%s_Time_Start" % name,
+        "%s_Time_Stop" % name,
+    ]
     return temp

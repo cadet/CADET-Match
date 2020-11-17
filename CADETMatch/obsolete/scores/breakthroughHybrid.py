@@ -1,7 +1,8 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
 import scipy.stats
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "breakthroughHybrid"
 settings = Dict()
@@ -13,7 +14,9 @@ settings.count = 3
 
 def run(sim_data, feature):
     "similarity, value, start stop"
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature
+    )
 
     selected = feature["selected"]
 
@@ -22,7 +25,9 @@ def run(sim_data, feature):
 
     [start, stop] = util.find_breakthrough(exp_time_values, sim_data_values)
 
-    score_corr, diff_time = score.cross_correlate(exp_time_values, sim_data_values, exp_data_values)
+    score_corr, diff_time = score.cross_correlate(
+        exp_time_values, sim_data_values, exp_data_values
+    )
 
     temp = [
         score.pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]),
@@ -43,7 +48,9 @@ def run(sim_data, feature):
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     temp["break"] = util.find_breakthrough(selectedTimes, selectedValues)
-    temp["time_function"] = score.time_function(CV_time, temp["break"][0][0], diff_input=True)
+    temp["time_function"] = score.time_function(
+        CV_time, temp["break"][0][0], diff_input=True
+    )
     temp["value_function"] = score.value_function(temp["break"][0][1], abstol)
     return temp
 

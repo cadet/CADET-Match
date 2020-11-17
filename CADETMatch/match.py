@@ -1,28 +1,24 @@
-import sys
-
-import CADETMatch.evo as evo
-import CADETMatch.gradFD as gradFD
-import CADETMatch.util as util
-import CADETMatch.version as version
-import time
-import numpy
-import shutil
 import csv
-from cadet import Cadet, H5
-from pathlib import Path
-
-from deap import creator
-from deap import tools
-from deap import base
+import logging
 
 # parallelization
 import multiprocessing
+import shutil
+import sys
+import time
+from pathlib import Path
 
-import logging
-
-from CADETMatch.cache import cache
-import CADETMatch.loggerwriter as loggerwriter
 import h5py
+import numpy
+from cadet import H5, Cadet
+from deap import base, creator, tools
+
+import CADETMatch.evo as evo
+import CADETMatch.gradFD as gradFD
+import CADETMatch.loggerwriter as loggerwriter
+import CADETMatch.util as util
+import CADETMatch.version as version
+from CADETMatch.cache import cache
 
 
 def main(map_function):
@@ -84,11 +80,18 @@ def main(map_function):
 
                 numpy_temp = numpy.array(temp)
                 cov = numpy.cov(numpy_temp.transpose())
-                multiprocessing.get_logger().info("in progress cov %s data %s det %s", cov, numpy_temp, numpy.linalg.det(cov))
+                multiprocessing.get_logger().info(
+                    "in progress cov %s data %s det %s",
+                    cov,
+                    numpy_temp,
+                    numpy.linalg.det(cov),
+                )
 
             numpy_temp = numpy.array(temp)
             cov = numpy.cov(numpy_temp.transpose())
-            multiprocessing.get_logger().info("final cov %s data %s det %s", cov, numpy_temp, numpy.linalg.det(cov))
+            multiprocessing.get_logger().info(
+                "final cov %s data %s det %s", cov, numpy_temp, numpy.linalg.det(cov)
+            )
 
 
 def setup(cache, json_path, map_function):
@@ -110,7 +113,9 @@ def setup(cache, json_path, map_function):
 
 
 def print_version():
-    multiprocessing.get_logger().info("CADETMatch starting up version: %s", version.__version__)
+    multiprocessing.get_logger().info(
+        "CADETMatch starting up version: %s", version.__version__
+    )
 
     import importlib_metadata
 
@@ -131,11 +136,16 @@ def print_version():
         ("cadet", "0.6"),
         ("seaborn", "0.10.1"),
         ("scikit-learn", "0.23.1"),
-        ("jstyleson", "0.0.2")
+        ("jstyleson", "0.0.2"),
     ]
 
     for module, version_tested in modules:
-        multiprocessing.get_logger().info("%s version: %s tested with %s", module, importlib_metadata.version(module), version_tested)
+        multiprocessing.get_logger().info(
+            "%s version: %s tested with %s",
+            module,
+            importlib_metadata.version(module),
+            version_tested,
+        )
 
 
 def createDirectories(cache, json_path):
@@ -185,7 +195,9 @@ def createErrorCSV(cache):
     if not path.exists():
         with path.open("w", newline="") as csvfile:
             writer = csv.writer(csvfile, delimiter=",", quoting=csv.QUOTE_ALL)
-            writer.writerow(cache.parameter_headers + ["Return Code", "STDOUT", "STDERR"])
+            writer.writerow(
+                cache.parameter_headers + ["Return Code", "STDOUT", "STDERR"]
+            )
 
 
 def setTemplateValues(simulation, set_values):
@@ -198,7 +210,9 @@ def setTemplateValues(simulation, set_values):
 
 def setTemplateValuesAuto(simulation, set_values_auto, cache):
     if "mcmc_h5" not in cache.settings:
-        multiprocessing.get_logger().error("set_values_auto can't be used without mcmc_h5 as a prior")
+        multiprocessing.get_logger().error(
+            "set_values_auto can't be used without mcmc_h5 as a prior"
+        )
 
     mcmc_h5 = Path(cache.settings["mcmc_h5"])
     mle_h5 = mcmc_h5.parent / "mle.h5"
@@ -220,7 +234,9 @@ def setTemplateValuesAuto(simulation, set_values_auto, cache):
             simulation[path] = value
 
     if len(used) != len(stat_MLE):
-        multiprocessing.get_logger().warn("not all values from the prior where used, proceed with caution")
+        multiprocessing.get_logger().warn(
+            "not all values from the prior where used, proceed with caution"
+        )
 
 
 def setupTemplates(cache):
@@ -247,7 +263,15 @@ def setupTemplates(cache):
         util.setupSimulation(template, cache.target[name]["time"], name, cache)
 
         start = time.time()
-        util.runExperiment(None, experiment, cache.settings, cache.target, template, experiment.get("timeout", 1800), cache)
+        util.runExperiment(
+            None,
+            experiment,
+            cache.settings,
+            cache.target,
+            template,
+            experiment.get("timeout", 1800),
+            cache,
+        )
         elapsed = time.time() - start
 
         multiprocessing.get_logger().info("simulation took %s", elapsed)
@@ -255,15 +279,24 @@ def setupTemplates(cache):
         # timeout needs to be stored in the template so all processes have it without calculating it
         template.root.timeout = max(10, elapsed * 10)
 
-        if cache.settings["searchMethod"] != "MCMC" and "kde_synthetic" in cache.settings:
+        if (
+            cache.settings["searchMethod"] != "MCMC"
+            and "kde_synthetic" in cache.settings
+        ):
             # the base case needs to be saved since the normal template file is what the rest of the code will look for
-            template_base_path = Path(cache.settings["resultsDirMisc"], "template_%s_base.h5" % name)
+            template_base_path = Path(
+                cache.settings["resultsDirMisc"], "template_%s_base.h5" % name
+            )
             template.filename = template_base_path.as_posix()
             template.save()
 
-            multiprocessing.get_logger().info("create bias template for experiment %s", name)
+            multiprocessing.get_logger().info(
+                "create bias template for experiment %s", name
+            )
             template_bias = util.biasSimulation(template, experiment, cache)
-            template_bias_path = Path(cache.settings["resultsDirMisc"], "template_%s_bias.h5" % name)
+            template_bias_path = Path(
+                cache.settings["resultsDirMisc"], "template_%s_bias.h5" % name
+            )
             template_bias.filename = template_bias_path.as_posix()
             template_bias.save()
             template = template_bias
@@ -275,15 +308,27 @@ def setupTemplates(cache):
 
         experiment["simulation"] = template
 
-        template_path = Path(cache.settings["resultsDirMisc"], "template_%s_final.h5" % name)
+        template_path = Path(
+            cache.settings["resultsDirMisc"], "template_%s_final.h5" % name
+        )
         template_final = Cadet(template.root.copy())
         template_final.filename = template_path.as_posix()
         if cache.dynamicTolerance:
-            template_final.root.input.solver.time_integrator.abstol = util.get_grad_tolerance(cache, name)
+            template_final.root.input.solver.time_integrator.abstol = (
+                util.get_grad_tolerance(cache, name)
+            )
             template_final.root.input.solver.time_integrator.reltol = 0.0
 
         start = time.time()
-        util.runExperiment(None, experiment, cache.settings, cache.target, template_final, experiment.get("timeout", 1800), cache)
+        util.runExperiment(
+            None,
+            experiment,
+            cache.settings,
+            cache.target,
+            template_final,
+            experiment.get("timeout", 1800),
+            cache,
+        )
         elapsed = time.time() - start
 
         multiprocessing.get_logger().info("simulation final took %s", elapsed)
@@ -300,7 +345,16 @@ def setupDeap(cache, map_function):
     searchMethod = cache.settings.get("searchMethod", "NSGA3")
     cache.toolbox = base.Toolbox()
     cache.search[searchMethod].setupDEAP(
-        cache, evo.fitness, evo.fitness_final, gradFD.gradSearch, gradFD.search, gradFD.gradSearchFine, map_function, creator, base, tools
+        cache,
+        evo.fitness,
+        evo.fitness_final,
+        gradFD.gradSearch,
+        gradFD.search,
+        gradFD.gradSearchFine,
+        map_function,
+        creator,
+        base,
+        tools,
     )
 
 
@@ -317,9 +371,11 @@ def continue_mcmc(cache, map_function):
 if __name__ == "__main__":
     start = time.time()
     map_function = util.getMapFunction()
-    #import cProfile
-    #cProfile.run('main(map_function=map_function)', 'restats')
+    # import cProfile
+    # cProfile.run('main(map_function=map_function)', 'restats')
     main(map_function=map_function)
     multiprocessing.get_logger().info("System has finished")
-    multiprocessing.get_logger().info("The total runtime was %s seconds" % (time.time() - start))
+    multiprocessing.get_logger().info(
+        "The total runtime was %s seconds" % (time.time() - start)
+    )
     sys.exit()

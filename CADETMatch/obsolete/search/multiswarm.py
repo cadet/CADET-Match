@@ -1,9 +1,9 @@
+import itertools
 import math
+import operator
 import random
 
 import numpy
-import itertools
-import operator
 
 name = "Multiswarm"
 
@@ -62,9 +62,14 @@ def run(cache, tools, creator):
         # Update and evaluate the swarm
         for swarm in population:
             # Check for change
-            if swarm.best and cache.toolbox.evaluate(swarm.best)[0] != swarm.bestfit.values:
+            if (
+                swarm.best
+                and cache.toolbox.evaluate(swarm.best)[0] != swarm.bestfit.values
+            ):
                 # Convert particles to quantum particles
-                swarm[:] = cache.toolbox.convert(swarm, rcloud=RCLOUD, centre=swarm.best)
+                swarm[:] = cache.toolbox.convert(
+                    swarm, rcloud=RCLOUD, centre=swarm.best
+                )
                 swarm.best = None
                 del swarm.bestfit.values
 
@@ -88,7 +93,11 @@ def run(cache, tools, creator):
         reinit_swarms = set()
         for s1, s2 in itertools.combinations(range(len(population)), 2):
             # Swarms must have a best and not already be set to reinitialize
-            if population[s1].best and population[s2].best and not (s1 in reinit_swarms or s2 in reinit_swarms):
+            if (
+                population[s1].best
+                and population[s2].best
+                and not (s1 in reinit_swarms or s2 in reinit_swarms)
+            ):
                 dist = 0
                 for x1, x2 in zip(population[s1].best, population[s2].best):
                     dist += (x1 - x2) ** 2.0
@@ -130,15 +139,23 @@ def convertQuantum(swarm, rcloud, centre, dist):
 
         if dist == "gaussian":
             u = abs(random.gauss(0, 1.0 / 3.0))
-            part[:] = [(rcloud * x * u ** (1.0 / dim) / distance) + c for x, c in zip(position, centre)]
+            part[:] = [
+                (rcloud * x * u ** (1.0 / dim) / distance) + c
+                for x, c in zip(position, centre)
+            ]
 
         elif dist == "uvd":
             u = random.random()
-            part[:] = [(rcloud * x * u ** (1.0 / dim) / distance) + c for x, c in zip(position, centre)]
+            part[:] = [
+                (rcloud * x * u ** (1.0 / dim) / distance) + c
+                for x, c in zip(position, centre)
+            ]
 
         elif dist == "nuvd":
             u = abs(random.gauss(0, 1.0 / 3.0))
-            part[:] = [(rcloud * x * u / distance) + c for x, c in zip(position, centre)]
+            part[:] = [
+                (rcloud * x * u / distance) + c for x, c in zip(position, centre)
+            ]
 
         del part.fitness.values
         del part.bestfit.values
@@ -161,20 +178,38 @@ def updateParticle(part, best, chi, c):
     part[:] = list(map(operator.add, part, part.speed))
 
 
-def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
+def setupDEAP(
+    cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools
+):
     "setup the DEAP variables"
     speed_min = -(numpy.array(cache.MAX_VALUE) - numpy.array(cache.MIN_VALUE)) / 2.0
     speed_max = (numpy.array(cache.MAX_VALUE) - numpy.array(cache.MIN_VALUE)) / 2.0
 
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
-    creator.create("Particle", list, fitness=creator.FitnessMax, speed=list, best=None, bestfit=creator.FitnessMax)
+    creator.create(
+        "Particle",
+        list,
+        fitness=creator.FitnessMax,
+        speed=list,
+        best=None,
+        bestfit=creator.FitnessMax,
+    )
     creator.create("Swarm", list, best=None, bestfit=creator.FitnessMax)
 
     cache.toolbox.register(
-        "particle", generate, creator.Particle, pmin=cache.MIN_VALUE, pmax=cache.MAX_VALUE, smin=speed_min, smax=speed_max, cache=cache
+        "particle",
+        generate,
+        creator.Particle,
+        pmin=cache.MIN_VALUE,
+        pmax=cache.MAX_VALUE,
+        smin=speed_min,
+        smax=speed_max,
+        cache=cache,
     )
 
-    cache.toolbox.register("swarm", tools.initRepeat, creator.Swarm, cache.toolbox.particle)
+    cache.toolbox.register(
+        "swarm", tools.initRepeat, creator.Swarm, cache.toolbox.particle
+    )
 
     cache.toolbox.register("update", updateParticle, chi=0.729843788, c=2.05)
     cache.toolbox.register("convert", convertQuantum, dist="nuvd")

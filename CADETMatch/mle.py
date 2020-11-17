@@ -1,42 +1,41 @@
-import numpy
-from sklearn import preprocessing
-from sklearn.neighbors import KernelDensity
-import scipy
 import multiprocessing
 import sys
-import filelock
-
-from cadet import Cadet, H5
-import CADETMatch.util as util
-import CADETMatch.evo as evo
-import pandas
-from addict import Dict
-from CADETMatch.cache import cache
-import CADETMatch.smoothing as smoothing
-import CADETMatch.kde_util as kde_util
-from pathlib import Path
 import warnings
-import joblib
+from pathlib import Path
 
+import filelock
+import joblib
 import matplotlib
 import matplotlib.style as mplstyle
-mplstyle.use('fast')
+import numpy
+import pandas
+import scipy
+from addict import Dict
+from cadet import H5, Cadet
+from sklearn import preprocessing
+from sklearn.neighbors import KernelDensity
+
+import CADETMatch.evo as evo
+import CADETMatch.kde_util as kde_util
+import CADETMatch.smoothing as smoothing
+import CADETMatch.util as util
+from CADETMatch.cache import cache
+
+mplstyle.use("fast")
 
 matplotlib.use("Agg")
 
+import matplotlib.cm
+import matplotlib.pyplot as plt
 from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
-import matplotlib.pyplot as plt
-
-import matplotlib.cm
-
 cm_plot = matplotlib.cm.gist_rainbow
 
-import logging
-import CADETMatch.loggerwriter as loggerwriter
-
 import itertools
+import logging
+
+import CADETMatch.loggerwriter as loggerwriter
 
 
 def get_color(idx, max_colors, cmap):
@@ -62,14 +61,15 @@ plt.rc("legend", fontsize=size)  # legend fontsize
 plt.rc("figure", titlesize=size)  # fontsize of the figure title
 plt.rc("figure", autolayout=True)
 
+
 def reduce_data(data, size, bw_size):
     # size reduces data for normal usage, bw_size reduces the size just for bandwidth estimation
-    #lb, ub = numpy.percentile(data, [5, 95], 0)
-    #selected = (data >= lb) & (data <= ub)
+    # lb, ub = numpy.percentile(data, [5, 95], 0)
+    # selected = (data >= lb) & (data <= ub)
 
-    #selected = numpy.all(selected, 1)
+    # selected = numpy.all(selected, 1)
 
-    #data = data[selected, :]
+    # data = data[selected, :]
 
     scaler = preprocessing.RobustScaler().fit(data)
 
@@ -98,11 +98,14 @@ def goal_kde(x, kde):
     score_exp = numpy.exp(score)
     return -score[0]
 
+
 def get_mle(data):
     popsize = 100
-    
+
     multiprocessing.get_logger().info("setting up scaler and reducing data")
-    data_transform, data_reduced, data_reduced_bw, scaler = reduce_data(data, 32000, 10000)
+    data_transform, data_reduced, data_reduced_bw, scaler = reduce_data(
+        data, 32000, 10000
+    )
     multiprocessing.get_logger().info("finished setting up scaler and reducing data")
     multiprocessing.get_logger().info("data_reduced shape %s", data_reduced.shape)
 
@@ -128,15 +131,21 @@ def get_mle(data):
     prob_best_ln = probability_ln[idx_max_ln]
     best_point = data_transform[idx_max_ln].reshape(1, -1)
 
-    multiprocessing.get_logger().info("starting point %s=%s", data_transform[idx_max_ln], prob_best_ln)
+    multiprocessing.get_logger().info(
+        "starting point %s=%s", data_transform[idx_max_ln], prob_best_ln
+    )
 
-    individuals_mle = kde_ga.sample(popsize-1)
+    individuals_mle = kde_ga.sample(popsize - 1)
 
     init = numpy.concatenate([best_point, individuals_mle])
 
     result_kde = scipy.optimize.differential_evolution(
-        goal_kde, bounds=list(zip(BOUND_LOW_trans, BOUND_UP_trans)), args=(kde_ga,), disp=True, popsize=popsize,
-        init=init
+        goal_kde,
+        bounds=list(zip(BOUND_LOW_trans, BOUND_UP_trans)),
+        args=(kde_ga,),
+        disp=True,
+        popsize=popsize,
+        init=init,
     )
 
     multiprocessing.get_logger().info("finished mle search")
@@ -171,15 +180,18 @@ def process_mle(chain, gen, cache):
     if mle_h5.exists():
         h5.load()
 
-        if 0: #h5.root.generations[-1] == gen:
-            multiprocessing.get_logger().info("new information is not yet available and mle will quit")
+        if 0:  # h5.root.generations[-1] == gen:
+            multiprocessing.get_logger().info(
+                "new information is not yet available and mle will quit"
+            )
             return
 
     multiprocessing.get_logger().info("process mle chain shape before %s", chain.shape)
     # This step cleans up bad entries
     chain = chain[~numpy.all(chain == 0, axis=1)]
-    multiprocessing.get_logger().info("process mle chain shape after cleaning 0 entries %s", chain.shape)
-
+    multiprocessing.get_logger().info(
+        "process mle chain shape after cleaning 0 entries %s", chain.shape
+    )
 
     mle_x, kde, scaler = get_mle(chain)
 
@@ -211,7 +223,9 @@ def process_mle(chain, gen, cache):
     cadetValues = [util.convert_individual_inputorder(i, cache) for i in temp]
     cadetValues = numpy.array(cadetValues)
 
-    multiprocessing.get_logger().info("cadetValues: %s %s", cadetValues.shape, cadetValues)
+    multiprocessing.get_logger().info(
+        "cadetValues: %s %s", cadetValues.shape, cadetValues
+    )
 
     map_function = util.getMapFunction()
 
@@ -225,7 +239,9 @@ def process_mle(chain, gen, cache):
 
             simulations[name] = sims
 
-    multiprocessing.get_logger().info("type %s  value %s", type(cadetValues), cadetValues)
+    multiprocessing.get_logger().info(
+        "type %s  value %s", type(cadetValues), cadetValues
+    )
 
     pd = pandas.DataFrame(cadetValues, columns=cache.parameter_headers_actual)
     labels = ["MLE", "5", "10", "50", "90", "95"]
@@ -239,7 +255,13 @@ def process_mle(chain, gen, cache):
 
     h5.root.mles = addChain(1, h5.root.mles, mle_x[:, numpy.newaxis])
     h5.root.stats = addChain(2, h5.root.stats, percentile[:, :, numpy.newaxis])
-    h5.root.generations = addChain(0, h5.root.generations, [gen,])
+    h5.root.generations = addChain(
+        0,
+        h5.root.generations,
+        [
+            gen,
+        ],
+    )
     h5.root.stat_MLE = mle_ind
 
     h5.save()
@@ -278,7 +300,12 @@ def plot_mle(simulations, cache, labels):
         canvas = FigureCanvas(fig)
 
         for idx, unit in enumerate(units_used):
-            graph_simulations(simulations[experimentName], labels, unit, fig.add_subplot(numPlots, 1, idx + 1))
+            graph_simulations(
+                simulations[experimentName],
+                labels,
+                unit,
+                fig.add_subplot(numPlots, 1, idx + 1),
+            )
 
         graphIdx = 2
         for idx, feature in enumerate(experiment["features"]):
@@ -322,10 +349,16 @@ def plot_mle(simulations, cache, labels):
                 "ShapeBack",
             ):
 
-                graph = fig.add_subplot(numPlots, 1, graphIdx)  # additional +1 added due to the overview plot
+                graph = fig.add_subplot(
+                    numPlots, 1, graphIdx
+                )  # additional +1 added due to the overview plot
 
-                for idx, (sim, label) in enumerate(zip(simulations[experimentName], labels)):
-                    sim_time, sim_value = util.get_times_values(sim, target[experimentName][featureName])
+                for idx, (sim, label) in enumerate(
+                    zip(simulations[experimentName], labels)
+                ):
+                    sim_time, sim_value = util.get_times_values(
+                        sim, target[experimentName][featureName]
+                    )
 
                     if idx == 0:
                         linewidth = 2
@@ -337,7 +370,9 @@ def plot_mle(simulations, cache, labels):
                         sim_value,
                         "--",
                         label=label,
-                        color=get_color(idx, len(simulations[experimentName]) + 1, cm_plot),
+                        color=get_color(
+                            idx, len(simulations[experimentName]) + 1, cm_plot
+                        ),
                         linewidth=linewidth,
                     )
 
@@ -346,7 +381,11 @@ def plot_mle(simulations, cache, labels):
                     exp_value,
                     "-",
                     label="Experiment",
-                    color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot),
+                    color=get_color(
+                        len(simulations[experimentName]),
+                        len(simulations[experimentName]) + 1,
+                        cm_plot,
+                    ),
                     linewidth=2,
                 )
                 graphIdx += 1
@@ -384,11 +423,21 @@ def plot_mle(simulations, cache, labels):
                 "ShapeBack",
             ):
 
-                graph = fig.add_subplot(numPlots, 1, graphIdx)  # additional +1 added due to the overview plot
-                for idx, (sim, label) in enumerate(zip(simulations[experimentName], labels)):
-                    sim_time, sim_value = util.get_times_values(sim, target[experimentName][featureName])
+                graph = fig.add_subplot(
+                    numPlots, 1, graphIdx
+                )  # additional +1 added due to the overview plot
+                for idx, (sim, label) in enumerate(
+                    zip(simulations[experimentName], labels)
+                ):
+                    sim_time, sim_value = util.get_times_values(
+                        sim, target[experimentName][featureName]
+                    )
                     sim_spline = smoothing.smooth_data_derivative(
-                        sim_time, sim_value, feat["critical_frequency"], feat["smoothing_factor"], feat["critical_frequency_der"]
+                        sim_time,
+                        sim_value,
+                        feat["critical_frequency"],
+                        feat["smoothing_factor"],
+                        feat["critical_frequency_der"],
                     )
 
                     if idx == 0:
@@ -401,19 +450,29 @@ def plot_mle(simulations, cache, labels):
                         sim_spline,
                         "--",
                         label=label,
-                        color=get_color(idx, len(simulations[experimentName]) + 1, cm_plot),
+                        color=get_color(
+                            idx, len(simulations[experimentName]) + 1, cm_plot
+                        ),
                         linewidth=linewidth,
                     )
 
                 exp_spline = smoothing.smooth_data_derivative(
-                    exp_time, exp_value, feat["critical_frequency"], feat["smoothing_factor"], feat["critical_frequency_der"]
+                    exp_time,
+                    exp_value,
+                    feat["critical_frequency"],
+                    feat["smoothing_factor"],
+                    feat["critical_frequency_der"],
                 )
                 graph.plot(
                     exp_time,
                     exp_spline,
                     "-",
                     label="Experiment",
-                    color=get_color(len(simulations[experimentName]), len(simulations[experimentName]) + 1, cm_plot),
+                    color=get_color(
+                        len(simulations[experimentName]),
+                        len(simulations[experimentName]) + 1,
+                        cm_plot,
+                    ),
                     linewidth=2,
                 )
                 graphIdx += 1
@@ -425,7 +484,9 @@ def plot_mle(simulations, cache, labels):
 
 def graph_simulations(simulations, simulation_labels, unit, graph):
     linestyles = ["-", "--", "-.", ":"]
-    for idx_sim, (simulation, label_sim) in enumerate(zip(simulations, simulation_labels)):
+    for idx_sim, (simulation, label_sim) in enumerate(
+        zip(simulations, simulation_labels)
+    ):
 
         comps = []
 
@@ -436,18 +497,32 @@ def graph_simulations(simulations, simulation_labels, unit, graph):
 
         solution_times = simulation.root.output.solution.solution_times
 
-        hasColumn = any("column" in i for i in simulation.root.output.solution[unit].keys())
+        hasColumn = any(
+            "column" in i for i in simulation.root.output.solution[unit].keys()
+        )
         hasPort = any("port" in i for i in simulation.root.output.solution[unit].keys())
 
         if hasColumn:
             for i in range(ncomp):
-                comps.append(simulation.root.output.solution[unit]["solution_column_outlet_comp_%03d" % i])
+                comps.append(
+                    simulation.root.output.solution[unit][
+                        "solution_column_outlet_comp_%03d" % i
+                    ]
+                )
         elif hasPort:
             for i in range(ncomp):
-                comps.append(simulation.root.output.solution[unit]["solution_outlet_port_000_comp_%03d" % i])
+                comps.append(
+                    simulation.root.output.solution[unit][
+                        "solution_outlet_port_000_comp_%03d" % i
+                    ]
+                )
         else:
             for i in range(ncomp):
-                comps.append(simulation.root.output.solution[unit]["solution_outlet_comp_%03d" % i])
+                comps.append(
+                    simulation.root.output.solution[unit][
+                        "solution_outlet_comp_%03d" % i
+                    ]
+                )
 
         if hasSalt:
             graph.set_title("Output")

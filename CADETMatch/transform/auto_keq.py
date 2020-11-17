@@ -1,7 +1,10 @@
-import CADETMatch.util as util
-import numpy
-from CADETMatch.abstract.transform import AbstractTransform
 import multiprocessing
+
+import numpy
+
+import CADETMatch.util as util
+from CADETMatch.abstract.transform import AbstractTransform
+
 
 class AutoKeqTransform(AbstractTransform):
     @property
@@ -20,9 +23,9 @@ class AutoKeqTransform(AbstractTransform):
     def okay_linear_ka(self):
         minValue = self.parameter["minKA"]
         maxValue = self.parameter["maxKA"]
-        maxFactor = self.parameter.get('maxFactor', 1000)
+        maxFactor = self.parameter.get("maxFactor", 1000)
 
-        return maxValue/minValue < maxFactor
+        return maxValue / minValue < maxFactor
 
     @property
     def okay_log_ka(self):
@@ -32,9 +35,9 @@ class AutoKeqTransform(AbstractTransform):
     def okay_linear_keq(self):
         minValue = self.parameter["minKEQ"]
         maxValue = self.parameter["maxKEQ"]
-        maxFactor = self.parameter.get('maxFactor', 1000)
+        maxFactor = self.parameter.get("maxFactor", 1000)
 
-        return maxValue/minValue < maxFactor
+        return maxValue / minValue < maxFactor
 
     @property
     def okay_log_keq(self):
@@ -47,16 +50,26 @@ class AutoKeqTransform(AbstractTransform):
         maxKEQ = self.parameter["maxKEQ"]
 
         if self.okay_log_ka:
+
             def trans_a(i):
-                return (numpy.log(i) - numpy.log(minKA)) / (numpy.log(maxKA) - numpy.log(minKA))
+                return (numpy.log(i) - numpy.log(minKA)) / (
+                    numpy.log(maxKA) - numpy.log(minKA)
+                )
+
         else:
+
             def trans_a(i):
                 return (i - minKA) / (maxKA - minKA)
 
         if self.okay_log_keq:
+
             def trans_b(i):
-                return (numpy.log(i) - numpy.log(minKEQ)) / (numpy.log(maxKEQ) - numpy.log(minKEQ))
+                return (numpy.log(i) - numpy.log(minKEQ)) / (
+                    numpy.log(maxKEQ) - numpy.log(minKEQ)
+                )
+
         else:
+
             def trans_b(i):
                 return (i - minKEQ) / (maxKEQ - minKEQ)
 
@@ -86,7 +99,7 @@ class AutoKeqTransform(AbstractTransform):
 
     def untransform(self, seq):
         ka, keq = self.untransform_inputorder(seq)
-        kd = ka/keq
+        kd = ka / keq
 
         values = [ka, kd]
         headerValues = [ka, kd, keq]
@@ -122,16 +135,19 @@ class AutoKeqTransform(AbstractTransform):
         if self.okay_log_ka and self.okay_log_keq:
             values = numpy.exp(values)
         elif self.okay_log_ka and self.okay_linear_keq:
-            values[:,0] = numpy.exp(values[:,0])
+            values[:, 0] = numpy.exp(values[:, 0])
         elif self.okay_linear_ka and self.okay_log_keq:
-            values[:,1] = numpy.exp(values[:,1])
+            values[:, 1] = numpy.exp(values[:, 1])
 
         return values
 
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             location = self.parameter["location"]
 
             comp = self.parameter["component"]
@@ -150,7 +166,9 @@ class AutoKeqTransform(AbstractTransform):
         return [0.0, 0.0], [1.0, 1.0]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
     def getHeaders(self):
         if self.okay_log_ka:
@@ -163,7 +181,9 @@ class AutoKeqTransform(AbstractTransform):
         else:
             message_keq = "linear keq"
 
-        multiprocessing.get_logger().info("parameter %s %s %s", self.parameter['location'], message_ka, message_keq)
+        multiprocessing.get_logger().info(
+            "parameter %s %s %s", self.parameter["location"], message_ka, message_keq
+        )
 
         location = self.parameter["location"]
         nameKA = location[0].rsplit("/", 1)[-1]
@@ -197,4 +217,3 @@ class AutoKeqTransform(AbstractTransform):
 
 
 plugins = {"auto_keq": AutoKeqTransform}
-

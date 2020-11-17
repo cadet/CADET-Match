@@ -1,5 +1,5 @@
-from deap import base
 import numpy
+from deap import base
 
 
 class Fitness2(base.Fitness):

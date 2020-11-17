@@ -11,7 +11,9 @@ __all__ = [
 
 
 __title__ = "CADETMatch"
-__summary__ = "CADETMatch is a parameter estimation and error modeling library for CADET"
+__summary__ = (
+    "CADETMatch is a parameter estimation and error modeling library for CADET"
+)
 __author__ = "William Heymann"
 __email__ = "w.heymann@fz-juelich.de"
 __license__ = "GNU General Public License v3 (GPLv3)"

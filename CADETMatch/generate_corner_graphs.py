@@ -1,9 +1,10 @@
 import sys
-import filelock
 
+import filelock
 import matplotlib
 import matplotlib.style as mplstyle
-mplstyle.use('fast')
+
+mplstyle.use("fast")
 
 matplotlib.use("Agg")
 
@@ -18,41 +19,43 @@ matplotlib.rc("legend", fontsize=size)  # legend fontsize
 matplotlib.rc("figure", titlesize=size)  # fontsize of the figure title
 matplotlib.rc("figure", autolayout=True)
 
+import itertools
+import logging
+
+# parallelization
+import multiprocessing
+import os
+import warnings
+from pathlib import Path
+
+import corner
+import numpy
+import pandas
+import scipy.interpolate
+import seaborn as sns
+from addict import Dict
+from cadet import H5
 from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D
 
+import CADETMatch.loggerwriter as loggerwriter
+import CADETMatch.util as util
 from CADETMatch.cache import cache
 
-from pathlib import Path
-import pandas
-import numpy
-import scipy.interpolate
-import itertools
-
-from cadet import H5
-from addict import Dict
-
-# parallelization
-import multiprocessing
-
-import os
-import warnings
-import corner
-import seaborn as sns
-import CADETMatch.util as util
-import logging
-import CADETMatch.loggerwriter as loggerwriter
 
 def new_range(flat_chain):
     lb_data, mid_data, ub_data = numpy.percentile(flat_chain, [5, 50, 95], 0)
 
-    distance = numpy.max(numpy.abs(numpy.array([lb_data - mid_data, ub_data - mid_data])), axis=0)
+    distance = numpy.max(
+        numpy.abs(numpy.array([lb_data - mid_data, ub_data - mid_data])), axis=0
+    )
 
     lb_range = mid_data - 2 * distance
     ub_range = mid_data + 2 * distance
 
     return numpy.array([lb_range, ub_range])
+
 
 def main():
     cache.setup_dir(sys.argv[1])
@@ -146,23 +149,45 @@ def plotMCMCParam(out_dir, param, chain, header):
     graph.plot(x, chain[0, :, param], "r", label="5")
     graph.plot(x, chain[1, :, param], "k", label="mean")
     graph.plot(x, chain[2, :, param], "r", label="95")
-    graph.fill_between(x, chain[0, :, param], chain[2, :, param], facecolor="r", alpha=0.5)
+    graph.fill_between(
+        x, chain[0, :, param], chain[2, :, param], facecolor="r", alpha=0.5
+    )
     graph.legend()
     graph.set_title(header)
     fig.set_size_inches((12, 12))
-    print(header, header.replace('/', '_'))
-    fig.savefig(str(out_dir / ("%s.png" % header.replace('/', '_'))))
+    print(header, header.replace("/", "_"))
+    fig.savefig(str(out_dir / ("%s.png" % header.replace("/", "_"))))
 
 
 def plotMCMCVars(out_dir, headers, data):
     for param_idx, header in enumerate(headers):
         if "train_chain_stat" in data.root:
-            plotMCMCParam(out_dir, param_idx, data.root.train_chain_stat, "Train " + header + str(param_idx))
-            plotMCMCParam(out_dir, param_idx, data.root.train_chain_stat_transform, "Train " + header + " Transform" + str(param_idx))
+            plotMCMCParam(
+                out_dir,
+                param_idx,
+                data.root.train_chain_stat,
+                "Train " + header + str(param_idx),
+            )
+            plotMCMCParam(
+                out_dir,
+                param_idx,
+                data.root.train_chain_stat_transform,
+                "Train " + header + " Transform" + str(param_idx),
+            )
 
         if "run_chain_stat" in data.root:
-            plotMCMCParam(out_dir, param_idx, data.root.run_chain_stat, "Run " + header + str(param_idx))
-            plotMCMCParam(out_dir, param_idx, data.root.run_chain_stat_transform, "Run " + header + " Transform" + str(param_idx))
+            plotMCMCParam(
+                out_dir,
+                param_idx,
+                data.root.run_chain_stat,
+                "Run " + header + str(param_idx),
+            )
+            plotMCMCParam(
+                out_dir,
+                param_idx,
+                data.root.run_chain_stat_transform,
+                "Run " + header + " Transform" + str(param_idx),
+            )
 
 
 def keep_header(char):
@@ -204,7 +229,13 @@ def graphCorner(cache, data_mcmc=None, data_results=None):
 
         if "flat_chain" in data.root:
             multiprocessing.get_logger().info("plot flat chain")
-            plotChain(data.root.flat_chain, data.root.flat_chain_transform, headers, out_dir, "full")
+            plotChain(
+                data.root.flat_chain,
+                data.root.flat_chain_transform,
+                headers,
+                out_dir,
+                "full",
+            )
 
         if "burn_in_acceptance" in data.root:
             multiprocessing.get_logger().info("plot burn in acceptance")
@@ -262,14 +293,22 @@ def graphCorner(cache, data_mcmc=None, data_results=None):
             fig.set_size_inches((12, 12))
             fig.savefig(str(out_dir / "mcmc_acceptance.png"))
 
-        plotChain(data.root.train_flat_chain, data.root.train_flat_chain_transform, headers, out_dir, "train")
+        plotChain(
+            data.root.train_flat_chain,
+            data.root.train_flat_chain_transform,
+            headers,
+            out_dir,
+            "train",
+        )
         plotMCMCVars(out_dir, headers, data)
 
     else:
         data = data_results
 
         if len(data.root.input) > 1e5:
-            indexes = numpy.random.choice(data.root.input.shape[0], int(1e5), replace=False)
+            indexes = numpy.random.choice(
+                data.root.input.shape[0], int(1e5), replace=False
+            )
             data_input = data.root.input[indexes]
             data_input_transform = data.root.input_transform[indexes]
             weight_min = data.root.output_meta[indexes, 1]
@@ -286,7 +325,9 @@ def graphCorner(cache, data_mcmc=None, data_results=None):
         acceptable = max_scores > 0.01
 
         if numpy.any(acceptable):
-            multiprocessing.get_logger().info("graphing remove %s points", len(max_scores) - numpy.sum(acceptable))
+            multiprocessing.get_logger().info(
+                "graphing remove %s points", len(max_scores) - numpy.sum(acceptable)
+            )
 
             data_input = data_input[acceptable]
             data_input_transform = data_input_transform[acceptable]
@@ -296,18 +337,38 @@ def graphCorner(cache, data_mcmc=None, data_results=None):
         out_dir = cache.settings["resultsDirProgress"]
 
         create_corner(out_dir, "corner.png", headers, data_input, weights=None)
-        create_corner(out_dir, "corner_min.png", headers, data_input, weights=weight_min)
-        create_corner(out_dir, "corner_prod.png", headers, data_input, weights=weight_prod)
+        create_corner(
+            out_dir, "corner_min.png", headers, data_input, weights=weight_min
+        )
+        create_corner(
+            out_dir, "corner_prod.png", headers, data_input, weights=weight_prod
+        )
 
         # transformed entries
-        create_corner(out_dir, "corner_transform.png", headers, data_input_transform, weights=None)
-        create_corner(out_dir, "corner_min_transform.png", headers, data_input_transform, weights=weight_min)
-        create_corner(out_dir, "corner_prod_transform.png", headers, data_input_transform, weights=weight_prod)
+        create_corner(
+            out_dir, "corner_transform.png", headers, data_input_transform, weights=None
+        )
+        create_corner(
+            out_dir,
+            "corner_min_transform.png",
+            headers,
+            data_input_transform,
+            weights=weight_min,
+        )
+        create_corner(
+            out_dir,
+            "corner_prod_transform.png",
+            headers,
+            data_input_transform,
+            weights=weight_prod,
+        )
 
 
 def create_corner(dir, filename, headers, data, weights=None):
     if len(data) <= len(headers):
-        multiprocessing.get_logger().info("There is not enough data to generate corner plots")
+        multiprocessing.get_logger().info(
+            "There is not enough data to generate corner plots"
+        )
         return
     if numpy.all(numpy.min(data, 0) < numpy.max(data, 0)):
         if weights is None or numpy.max(weights) > numpy.min(weights):

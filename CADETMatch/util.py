@@ -1,48 +1,44 @@
-import numpy
-import pandas
-
+import copy
+import csv
+import decimal as decim
 import hashlib
-
-from deap import tools
-import scipy.signal
-from pathlib import Path
-
-from addict import Dict
-
-import tempfile
+import multiprocessing
 import os
-from cadet import Cadet, H5
+import random
 import subprocess
 import sys
-import jstyleson
+import tempfile
 import time
-import csv
-import psutil
+import warnings
+from pathlib import Path
 
-import random
+import jstyleson
+import numpy
+import pandas
+import psutil
+import scipy.signal
+from addict import Dict
+from cadet import H5, Cadet
+from deap import tools
+
 import CADETMatch.calc_coeff as calc_coeff
 import CADETMatch.sub as sub
-import warnings
-
-import multiprocessing
-import copy
-
-import decimal as decim
 
 decim.getcontext().prec = 64
 __logBase10of2_decim = decim.Decimal(2).log10()
 __logBase10of2 = float(__logBase10of2_decim)
 
-import SALib.sample.sobol_sequence
-import CADETMatch.loggerwriter as loggerwriter
-import CADETMatch.synthetic_error as synthetic_error
-import CADETMatch.pareto as pareto
-
 import logging
 import os
+
+import SALib.sample.sobol_sequence
 import scipy.interpolate
 
-#numpy.warnings.filterwarnings('error', category=numpy.VisibleDeprecationWarning)
+import CADETMatch.loggerwriter as loggerwriter
+import CADETMatch.pareto as pareto
+import CADETMatch.synthetic_error as synthetic_error
+
+# numpy.warnings.filterwarnings('error', category=numpy.VisibleDeprecationWarning)
 
 
 def get_times_values(simulation, target, selected=None):
@@ -64,6 +60,7 @@ def get_times_values(simulation, target, selected=None):
         selected = target["selected"]
 
     return times[selected], values[selected] * target["factor"]
+
 
 def sse(data1, data2):
     return numpy.sum((data1 - data2) ** 2)
@@ -144,10 +141,14 @@ def saveExperiments(save_name_base, settings, target, results, directory, file_p
 
         same = False
         if dst.is_file():
-            #load tolerance to see if the files are actually the same
+            # load tolerance to see if the files are actually the same
             sim_dst = Cadet()
             sim_dst.filename = dst.as_posix()
-            sim_dst.load(paths=['/input/solver/time_integrator',])
+            sim_dst.load(
+                paths=[
+                    "/input/solver/time_integrator",
+                ]
+            )
 
             dst_tol = sim_dst.root.input.solver.time_integrator.abstol
             sim_tol = simulation.root.input.solver.time_integrator.abstol
@@ -158,7 +159,9 @@ def saveExperiments(save_name_base, settings, target, results, directory, file_p
         else:
             simulation.filename = dst.as_posix()
 
-            for (header, score) in zip(experiment["headers"], results[experimentName]["scores"]):
+            for (header, score) in zip(
+                experiment["headers"], results[experimentName]["scores"]
+            ):
                 simulation.root.score[header] = score
             simulation.save()
 
@@ -250,7 +253,9 @@ def convert_individual_inverse(individual, cache):
 
 
 def convert_individual_inverse_grad(individual, cache):
-    return numpy.array([f(v) for f, v in zip(cache.settings["grad_transform"], individual)])
+    return numpy.array(
+        [f(v) for f, v in zip(cache.settings["grad_transform"], individual)]
+    )
 
 
 def set_simulation(individual, simulation, settings, cache, experiment):
@@ -283,11 +288,29 @@ def getBoundOffset(unit):
         "If NBOUND is empty it is all zero"
         NBOUND = [0.0] * unit.ncomp
 
-    boundOffset = numpy.cumsum(numpy.concatenate([[0,], NBOUND]))
+    boundOffset = numpy.cumsum(
+        numpy.concatenate(
+            [
+                [
+                    0,
+                ],
+                NBOUND,
+            ]
+        )
+    )
     return boundOffset
 
 
-def runExperiment(individual, experiment, settings, target, template_sim, timeout, cache, post_function=None):
+def runExperiment(
+    individual,
+    experiment,
+    settings,
+    target,
+    template_sim,
+    timeout,
+    cache,
+    post_function=None,
+):
     handle, path = tempfile.mkstemp(suffix=".h5", dir=cache.tempDir)
     os.close(handle)
 
@@ -297,7 +320,9 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
     simulation.root.input.solver.nthreads = int(settings.get("nThreads", 1))
 
     if individual is not None:
-        cadetValues, cadetValuesKEQ = set_simulation(individual, simulation, settings, cache, experiment)
+        cadetValues, cadetValuesKEQ = set_simulation(
+            individual, simulation, settings, cache, experiment
+        )
     else:
         cadetValues = []
         cadetValuesKEQ = []
@@ -322,7 +347,9 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
 
     simulationFailed = isinstance(simulation.root.output.solution.solution_times, Dict)
     if simulationFailed:
-        multiprocessing.get_logger().error("%s sim must have failed %s", individual, path)
+        multiprocessing.get_logger().error(
+            "%s sim must have failed %s", individual, path
+        )
         return None
     multiprocessing.get_logger().debug("Everything ran fine")
 
@@ -352,7 +379,15 @@ def runExperiment(individual, experiment, settings, target, template_sim, timeou
 
         if featureType in cache.scores:
             try:
-                scores, sse, sse_count, sim_time, sim_value, exp_value, minimize = cache.scores[featureType].run(
+                (
+                    scores,
+                    sse,
+                    sse_count,
+                    sim_time,
+                    sim_value,
+                    exp_value,
+                    minimize,
+                ) = cache.scores[featureType].run(
                     temp, target[experiment["name"]][featureName]
                 )
             except TypeError:
@@ -449,9 +484,13 @@ def setupMCMC(cache):
                 if feature["type"] == "AbsoluteHeight":
                     foundAbsoluteHeight = True
             if foundAbsoluteTime is False:
-                experiment["features"].append({"name": "AbsoluteTime", "type": "AbsoluteTime"})
+                experiment["features"].append(
+                    {"name": "AbsoluteTime", "type": "AbsoluteTime"}
+                )
             if foundAbsoluteHeight is False:
-                experiment["features"].append({"name": "AbsoluteHeight", "type": "AbsoluteHeight"})
+                experiment["features"].append(
+                    {"name": "AbsoluteHeight", "type": "AbsoluteHeight"}
+                )
 
         if "kde_synthetic" in settings:
             individual = getBestIndividual(cache)
@@ -469,13 +508,16 @@ def update_json_mcmc(settings):
     data = H5()
     data.filename = settings["mcmc_h5"]
     data.load(paths=["/bounds_change/json"])
-    json_data = jstyleson.loads(str(data.root.bounds_change.json, 'ascii'))
+    json_data = jstyleson.loads(str(data.root.bounds_change.json, "ascii"))
 
     if "parameters_mcmc" in settings:
         new_parameters = settings["parameters_mcmc"]
 
         for a, b in zip(new_parameters, json_data):
-            if a["transform"] == b["transform"] and a["location"].split("/")[-1] == b["location"].split("/")[-1]:
+            if (
+                a["transform"] == b["transform"]
+                and a["location"].split("/")[-1] == b["location"].split("/")[-1]
+            ):
                 a["min"] = b["min"]
                 a["max"] = b["max"]
             else:
@@ -530,12 +572,16 @@ def createSimulationBestIndividual(individual, cache):
     temp = {}
     for experiment in cache.settings["experiments"]:
         name = experiment["name"]
-        templatePath = Path(cache.settings["resultsDirMisc"], "template_%s_base.h5" % name)
+        templatePath = Path(
+            cache.settings["resultsDirMisc"], "template_%s_base.h5" % name
+        )
         templateSim = Cadet()
         templateSim.filename = templatePath.as_posix()
         templateSim.load()
 
-        cadetValues, cadetValuesKEQ = set_simulation(individual, templateSim, cache.settings, cache, experiment)
+        cadetValues, cadetValuesKEQ = set_simulation(
+            individual, templateSim, cache.settings, cache, experiment
+        )
 
         bestPath = Path(cache.settings["resultsDirMisc"], "best_%s_base.h5" % name)
         templateSim.filename = bestPath.as_posix()
@@ -612,8 +658,12 @@ def fracStat(time_center, value):
     skew_time = numpy.sum((time_center - mean_time) ** 3 * value) / numpy.sum(value)
 
     mean_value = numpy.sum(time_center * value) / numpy.sum(time_center)
-    variance_value = numpy.sum((value - mean_value) ** 2 * time_center) / numpy.sum(time_center)
-    skew_value = numpy.sum((value - mean_value) ** 3 * time_center) / numpy.sum(time_center)
+    variance_value = numpy.sum((value - mean_value) ** 2 * time_center) / numpy.sum(
+        time_center
+    )
+    skew_value = numpy.sum((value - mean_value) ** 3 * time_center) / numpy.sum(
+        time_center
+    )
 
     return mean_time, variance_time, skew_time, mean_value, variance_value, skew_value
 
@@ -625,29 +675,30 @@ def fractionate_spline(start_seq, stop_seq, spline):
     return numpy.array(temp)
 
 
-def find_opt_poly(x,y, index):
+def find_opt_poly(x, y, index):
     if index == 0:
-        indexes = numpy.array([index, index+1, index+2])
-    elif index == (len(x)-1):
-        indexes = numpy.array([index-2, index-1, index])
+        indexes = numpy.array([index, index + 1, index + 2])
+    elif index == (len(x) - 1):
+        indexes = numpy.array([index - 2, index - 1, index])
     else:
-        indexes = numpy.array([index-1, index, index+1])
+        indexes = numpy.array([index - 1, index, index + 1])
 
     x = x[indexes]
     y = y[indexes]
 
-    if x[0] > x[-1]:  #need to invert order
+    if x[0] > x[-1]:  # need to invert order
         x = x[::-1]
         y = y[::-1]
 
-    poly, res = numpy.polynomial.Polynomial.fit(x, y,2, full=True)
+    poly, res = numpy.polynomial.Polynomial.fit(x, y, 2, full=True)
     try:
         root = poly.deriv().roots()[0]
     except IndexError:
-        #this happens if all y values are the same in which case just take the center value
+        # this happens if all y values are the same in which case just take the center value
         root = x[indexes[1]]
     root = numpy.clip(root, x[0], x[1])
     return root, x, y
+
 
 def fractionate(start_seq, stop_seq, times, values):
     temp = []
@@ -795,7 +846,9 @@ def update_result_data(cache, ind, fit, result_data, results, meta_scores):
 
         for result in results.values():
             result_data["input_transform"].append(tuple(result["cadetValues"]))
-            result_data["input_transform_extended"].append(tuple(result["cadetValuesKEQ"]))
+            result_data["input_transform_extended"].append(
+                tuple(result["cadetValuesKEQ"])
+            )
 
             # All results have the same parameter set so we only need the first one
             break
@@ -840,7 +893,17 @@ def calcFitness(scores_orig, cache):
 
 
 def process_population(
-    toolbox, cache, population, fitnesses, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data=None
+    toolbox,
+    cache,
+    population,
+    fitnesses,
+    writer,
+    csvfile,
+    halloffame,
+    meta_hof,
+    progress_hof,
+    generation,
+    result_data=None,
 ):
     csv_lines = []
     meta_csv_lines = []
@@ -863,7 +926,11 @@ def process_population(
         if (time.time() - last_time) > elapsed:
             percent = idx / len(population)
             multiprocessing.get_logger().info(
-                "Generation %s approximately %.1f %% complete with %s/%s done", generation, percent * 100, idx, len(population)
+                "Generation %s approximately %.1f %% complete with %s/%s done",
+                generation,
+                percent * 100,
+                idx,
+                len(population),
             )
             last_time = time.time()
 
@@ -871,7 +938,9 @@ def process_population(
 
         ind = pop_lookup(lookup, individual)
 
-        save_name_base = hashlib.md5(str(list(ind)).encode("utf-8", "ignore")).hexdigest()
+        save_name_base = hashlib.md5(
+            str(list(ind)).encode("utf-8", "ignore")
+        ).hexdigest()
 
         ind.fitness.values = calcFitness(fit, cache)
         ind.csv_line = [time.ctime(), save_name_base] + csv_line
@@ -891,7 +960,9 @@ def process_population(
                 if onFront and not cache.metaResultsOnly:
                     processResults(save_name_base, ind, cache, results)
 
-            onFrontMeta, significant_meta = pareto.updateParetoFront(meta_hof, ind_meta, cache)
+            onFrontMeta, significant_meta = pareto.updateParetoFront(
+                meta_hof, ind_meta, cache
+            )
             if onFrontMeta:
                 meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                 processResultsMeta(save_name_base, ind, cache, results)
@@ -899,7 +970,9 @@ def process_population(
             # If this is None progress can never be made and the algorithm will terminate, it should only be
             # None if used with algorithms like multistart or scoretest which don't need progress
             if progress_hof is not None:
-                onFrontProgress, significant_progress = pareto.updateParetoFront(copy.deepcopy(progress_hof), ind_meta, cache)
+                onFrontProgress, significant_progress = pareto.updateParetoFront(
+                    copy.deepcopy(progress_hof), ind_meta, cache
+                )
                 if significant_progress:
                     made_progress = True
                     pareto.updateParetoFront(progress_hof, ind_meta, cache)
@@ -941,40 +1014,103 @@ def process_population(
     return stalled, stallWarn, progressWarn
 
 
-def eval_population(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data=None):
+def eval_population(
+    toolbox,
+    cache,
+    invalid_ind,
+    writer,
+    csvfile,
+    halloffame,
+    meta_hof,
+    progress_hof,
+    generation,
+    result_data=None,
+):
     return eval_population_base(
-        toolbox.evaluate, toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data
+        toolbox.evaluate,
+        toolbox,
+        cache,
+        invalid_ind,
+        writer,
+        csvfile,
+        halloffame,
+        meta_hof,
+        progress_hof,
+        generation,
+        result_data,
     )
 
 
-def eval_population_final(toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data=None):
+def eval_population_final(
+    toolbox,
+    cache,
+    invalid_ind,
+    writer,
+    csvfile,
+    halloffame,
+    meta_hof,
+    progress_hof,
+    generation,
+    result_data=None,
+):
     return eval_population_base(
-        toolbox.evaluate_final, toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data
+        toolbox.evaluate_final,
+        toolbox,
+        cache,
+        invalid_ind,
+        writer,
+        csvfile,
+        halloffame,
+        meta_hof,
+        progress_hof,
+        generation,
+        result_data,
     )
 
 
 def eval_population_base(
-    evaluate, toolbox, cache, invalid_ind, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data=None
+    evaluate,
+    toolbox,
+    cache,
+    invalid_ind,
+    writer,
+    csvfile,
+    halloffame,
+    meta_hof,
+    progress_hof,
+    generation,
+    result_data=None,
 ):
     fitnesses = toolbox.map(evaluate, map(list, invalid_ind))
 
     return process_population(
-        toolbox, cache, invalid_ind, fitnesses, writer, csvfile, halloffame, meta_hof, progress_hof, generation, result_data
+        toolbox,
+        cache,
+        invalid_ind,
+        fitnesses,
+        writer,
+        csvfile,
+        halloffame,
+        meta_hof,
+        progress_hof,
+        generation,
+        result_data,
     )
 
 
 def get_grad_tolerance(cache, name):
-    smallest_peak = cache.target[name]['smallest_peak']
-    largest_peak = cache.target[name]['largest_peak']
+    smallest_peak = cache.target[name]["smallest_peak"]
+    largest_peak = cache.target[name]["largest_peak"]
 
     grad_tol = cache.abstolFactorGrad * smallest_peak
     grad_tol_min = cache.abstolFactorGradMax * largest_peak
 
     return max([grad_tol, grad_tol_min])
 
+
 def get_evo_tolerance(cache, name):
-    smallest_peak = cache.target[name]['smallest_peak']
-    largest_peak = cache.target[name]['largest_peak']
+    smallest_peak = cache.target[name]["smallest_peak"]
+    largest_peak = cache.target[name]["largest_peak"]
 
     evo_tol = cache.abstolFactor * smallest_peak
     evo_tol_min = cache.abstolFactorGradMax * largest_peak
@@ -991,15 +1127,36 @@ def writeMetaFront(cache, meta_hof, path_meta_csv):
 
 
 def processResultsGrad(save_name_base, individual, cache, results):
-    saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings["resultsDirGrad"], "%s_%s_GRAD.h5")
+    saveExperiments(
+        save_name_base,
+        cache.settings,
+        cache.target,
+        results,
+        cache.settings["resultsDirGrad"],
+        "%s_%s_GRAD.h5",
+    )
 
 
 def processResults(save_name_base, individual, cache, results):
-    saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings["resultsDirEvo"], "%s_%s_EVO.h5")
+    saveExperiments(
+        save_name_base,
+        cache.settings,
+        cache.target,
+        results,
+        cache.settings["resultsDirEvo"],
+        "%s_%s_EVO.h5",
+    )
 
 
 def processResultsMeta(save_name_base, individual, cache, results):
-    saveExperiments(save_name_base, cache.settings, cache.target, results, cache.settings["resultsDirMeta"], "%s_%s_meta.h5")
+    saveExperiments(
+        save_name_base,
+        cache.settings,
+        cache.target,
+        results,
+        cache.settings["resultsDirMeta"],
+        "%s_%s_meta.h5",
+    )
 
 
 def cleanupFront(cache, halloffame=None, meta_hof=None, grad_hof=None):
@@ -1021,7 +1178,10 @@ def cleanDir(dir, hof):
     exists = {str(path.name).split("_", 1)[0] for path in paths}
 
     # make set of allowed keys based on hall of hame
-    allowed = {hashlib.md5(str(list(individual)).encode("utf-8", "ignore")).hexdigest() for individual in hof.items}
+    allowed = {
+        hashlib.md5(str(list(individual)).encode("utf-8", "ignore")).hexdigest()
+        for individual in hof.items
+    }
 
     # remove everything not in hall of fame
     remove = exists - allowed
@@ -1066,11 +1226,15 @@ def test_eta(eta, xl, xu, size):
     delta_q = numpy.zeros(size)
 
     xy[rand < 0.5] = 1.0 - delta_1
-    val[rand < 0.5] = 2.0 * rand[rand < 0.5] + (1.0 - 2.0 * rand[rand < 0.5]) * xy[rand < 0.5] ** (eta + 1)
+    val[rand < 0.5] = 2.0 * rand[rand < 0.5] + (1.0 - 2.0 * rand[rand < 0.5]) * xy[
+        rand < 0.5
+    ] ** (eta + 1)
     delta_q[rand < 0.5] = val[rand < 0.5] ** mut_pow - 1.0
 
     xy[rand >= 0.5] = 1.0 - delta_2
-    val[rand >= 0.5] = 2.0 * (1.0 - rand[rand >= 0.5]) + 2.0 * (rand[rand >= 0.5] - 0.5) * xy[rand >= 0.5] ** (eta + 1)
+    val[rand >= 0.5] = 2.0 * (1.0 - rand[rand >= 0.5]) + 2.0 * (
+        rand[rand >= 0.5] - 0.5
+    ) * xy[rand >= 0.5] ** (eta + 1)
     delta_q[rand >= 0.5] = 1.0 - val[rand >= 0.5] ** mut_pow
 
     delta_q = delta_q * (xu - xl)
@@ -1150,6 +1314,7 @@ def setupSimulation(sim, times, name, cache):
                 sim.root.input["return"][unit].write_sens_outlet = 0
     sim.root.input.solver.nthreads = 1
 
+
 def biasSimulation(simulation, experiment, cache):
 
     bias_simulation = Cadet(simulation.root)
@@ -1189,7 +1354,9 @@ def setupLog(log_directory, log_name):
     logger.propagate = False
     logger.setLevel(logging.INFO)
 
-    logFormatter = logging.Formatter("%(asctime)s %(filename)s %(funcName)s %(lineno)d %(message)s")
+    logFormatter = logging.Formatter(
+        "%(asctime)s %(filename)s %(funcName)s %(lineno)d %(message)s"
+    )
 
     if not logger.handlers:
         stream = logging.StreamHandler(sys.stdout)
@@ -1214,7 +1381,7 @@ def getCoreCounts():
     try:
         cpus = int(sys.argv[-1])
     except ValueError:
-        #This happens when running in jupyter notebook or if the number can't be found, in either way default to just use availab cpu
+        # This happens when running in jupyter notebook or if the number can't be found, in either way default to just use availab cpu
         cpus = None
     if cpus:
         return cpus
@@ -1233,7 +1400,9 @@ def getMapFunction():
         if "pool" not in getMapFunction.__dict__:
             pool = multiprocessing.Pool(cores)
             getMapFunction.pool = pool
-            multiprocessing.get_logger().info("CADETMatch startup: created a parallel pool of %s workers", cores)
+            multiprocessing.get_logger().info(
+                "CADETMatch startup: created a parallel pool of %s workers", cores
+            )
 
         return getMapFunction.pool.imap_unordered
 
@@ -1278,12 +1447,15 @@ def fractionate_sim(start_times, stop_times, components, simulation, unit):
 
     fracs = {}
     for component in components:
-        sim_value = simulation.root.output.solution[unit]["solution_outlet_comp_%03d" % component]
+        sim_value = simulation.root.output.solution[unit][
+            "solution_outlet_comp_%03d" % component
+        ]
         spline = scipy.interpolate.InterpolatedUnivariateSpline(times, sim_value, ext=1)
 
         fracs[component] = fractionate_spline(start_times, stop_times, spline)
 
     return fracs
+
 
 def translate_meta_min(score, cache):
     temp = numpy.array(score)

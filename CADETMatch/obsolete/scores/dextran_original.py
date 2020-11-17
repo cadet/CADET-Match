@@ -1,8 +1,9 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
-import scipy.stats
 import numpy
+import scipy.stats
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "dextran_original"
 settings = Dict()
@@ -10,7 +11,15 @@ settings.adaptive = True
 settings.badScore = 0
 settings.meta_mask = True
 settings.count = 3
-settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
+settings.failure = (
+    [0.0] * settings.count,
+    1e6,
+    1,
+    numpy.array([0.0]),
+    numpy.array([0.0]),
+    numpy.array([1e6]),
+    [1.0] * settings.count,
+)
 
 
 def run(sim_data, feature):
@@ -18,7 +27,9 @@ def run(sim_data, feature):
     selected = feature["origSelected"]
     max_time = feature["max_time"]
 
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature, selected)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature, selected
+    )
 
     exp_time_values = feature["time"][selected]
     exp_data_values = feature["value"][selected]
@@ -37,12 +48,16 @@ def run(sim_data, feature):
 
     simSelected = selected & (feature["time"] <= max_time)
 
-    simTime, simValues = util.get_times_values(sim_data["simulation"], feature, simSelected)
+    simTime, simValues = util.get_times_values(
+        sim_data["simulation"], feature, simSelected
+    )
 
     simDerivValues = sim_spline_derivative(simSelected)
 
     score_cross, diff_time = score.cross_correlate(expTime, simValues, expValues)
-    scoreDeriv, diff_time_deriv = score.cross_correlate(expTime, simDerivValues, expDerivValues)
+    scoreDeriv, diff_time_deriv = score.cross_correlate(
+        expTime, simDerivValues, expDerivValues
+    )
 
     if score_cross < 0:
         score_cross = 0
@@ -75,11 +90,17 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp["origSelected"] = temp["selected"]
     temp["selected"] = temp["selected"] & (temp["time"] <= max_time)
     temp["max_time"] = max_time
-    temp["maxTimeFunction"] = score.time_function_decay(CV_time / 10.0, max_time, diff_input=True)
+    temp["maxTimeFunction"] = score.time_function_decay(
+        CV_time / 10.0, max_time, diff_input=True
+    )
     return temp
 
 
 def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature["name"])
-    temp = ["%s_Front_Similarity" % name, "%s_Derivative_Similarity" % name, "%s_Time" % name]
+    temp = [
+        "%s_Front_Similarity" % name,
+        "%s_Derivative_Similarity" % name,
+        "%s_Time" % name,
+    ]
     return temp

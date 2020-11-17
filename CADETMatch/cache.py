@@ -1,18 +1,17 @@
 "Cache module. Used to store per worker information so it does not need to be recalculated"
 
-from pathlib import Path
-import jstyleson
-from cadet import Cadet
-
-import numpy
-
-import CADETMatch.plugins as plugins
+import multiprocessing
 import os
+import sys
+from pathlib import Path
+
+import jstyleson
+import numpy
+from cadet import Cadet
 from deap import tools
 from sklearn import preprocessing
 
-import multiprocessing
-import sys
+import CADETMatch.plugins as plugins
 
 
 class Cache:
@@ -82,7 +81,9 @@ class Cache:
         self.settings["resultsDirGrad"] = Path(self.settings["resultsDir"]) / "grad"
         self.settings["resultsDirMisc"] = Path(self.settings["resultsDir"]) / "misc"
         self.settings["resultsDirSpace"] = Path(self.settings["resultsDir"]) / "space"
-        self.settings["resultsDirProgress"] = Path(self.settings["resultsDir"]) / "progress"
+        self.settings["resultsDirProgress"] = (
+            Path(self.settings["resultsDir"]) / "progress"
+        )
         self.settings["resultsDirLog"] = Path(self.settings["resultsDir"]) / "log"
         self.settings["resultsDirMCMC"] = Path(self.settings["resultsDir"]) / "mcmc"
         self.settings["resultsDirBase"] = Path(self.settings["resultsDir"])
@@ -101,14 +102,20 @@ class Cache:
             baseDir = self.settings.get("baseDir", None)
             if baseDir is not None:
                 os.chdir(baseDir)
-                self.settings["resultsDir"] = Path(baseDir) / self.settings["resultsDir"]
+                self.settings["resultsDir"] = (
+                    Path(baseDir) / self.settings["resultsDir"]
+                )
 
             self.settings["resultsDirEvo"] = Path(self.settings["resultsDir"]) / "evo"
             self.settings["resultsDirMeta"] = Path(self.settings["resultsDir"]) / "meta"
             self.settings["resultsDirGrad"] = Path(self.settings["resultsDir"]) / "grad"
             self.settings["resultsDirMisc"] = Path(self.settings["resultsDir"]) / "misc"
-            self.settings["resultsDirSpace"] = Path(self.settings["resultsDir"]) / "space"
-            self.settings["resultsDirProgress"] = Path(self.settings["resultsDir"]) / "progress"
+            self.settings["resultsDirSpace"] = (
+                Path(self.settings["resultsDir"]) / "space"
+            )
+            self.settings["resultsDirProgress"] = (
+                Path(self.settings["resultsDir"]) / "progress"
+            )
             self.settings["resultsDirLog"] = Path(self.settings["resultsDir"]) / "log"
             self.settings["resultsDirMCMC"] = Path(self.settings["resultsDir"]) / "mcmc"
             self.settings["resultsDirBase"] = Path(self.settings["resultsDir"])
@@ -127,9 +134,14 @@ class Cache:
         Cadet.cadet_path = self.settings["CADETPath"]
 
         self.normalizeOutput = bool(self.settings.get("normalizeOutput", False))
-        self.connectionNumberEntries = int(self.settings.get("connectionNumberEntries", 5))
+        self.connectionNumberEntries = int(
+            self.settings.get("connectionNumberEntries", 5)
+        )
 
-        self.parameters = [self.transforms[parameter["transform"]](parameter, self) for parameter in self.settings["parameters"]]
+        self.parameters = [
+            self.transforms[parameter["transform"]](parameter, self)
+            for parameter in self.settings["parameters"]
+        ]
         self.setupHeaders()
         self.setupTarget()
         self.setupMinMax()
@@ -142,7 +154,14 @@ class Cache:
         self.correct = None
         if "correct" in self.settings:
             self.correct_transform = numpy.array(self.settings["correct"])
-            self.correct = numpy.array([f(v) for f, v in zip(self.settings["transform"], self.settings["correct"])])
+            self.correct = numpy.array(
+                [
+                    f(v)
+                    for f, v in zip(
+                        self.settings["transform"], self.settings["correct"]
+                    )
+                ]
+            )
 
         self.error_path = Path(self.settings["resultsDirBase"], "error.csv")
 
@@ -153,11 +172,15 @@ class Cache:
         self.stallGenerations = int(self.settings.get("stallGenerations", 10))
         self.stallCorrect = int(self.settings.get("stallCorrect", 5))
         self.progressCorrect = int(self.settings.get("progressCorrect", 5))
-        self.progress_elapsed_time = int(self.settings.get("progress_elapsed_time", 300))
+        self.progress_elapsed_time = int(
+            self.settings.get("progress_elapsed_time", 300)
+        )
 
         self.fullTrainingData = int(self.settings.get("fullTrainingData", 0))
 
-        self.sobolGeneration = bool(self.settings.get("soboloGeneration", True)) or bool(self.settings.get("sobolGeneration", True))
+        self.sobolGeneration = bool(
+            self.settings.get("soboloGeneration", True)
+        ) or bool(self.settings.get("sobolGeneration", True))
         self.graphSpearman = bool(self.settings.get("graphSpearman", False))
         self.scoreMCMC = self.settings.get("scoreMCMC", "sse")
 
@@ -194,7 +217,10 @@ class Cache:
 
                 self.settings["parameters"] = settings["parameters"]
 
-                self.parameters = [self.transforms[parameter["transform"]](parameter, self) for parameter in self.settings["parameters"]]
+                self.parameters = [
+                    self.transforms[parameter["transform"]](parameter, self)
+                    for parameter in self.settings["parameters"]
+                ]
                 self.setupHeaders()
                 self.setupTarget()
                 self.setupMinMax()
@@ -205,7 +231,14 @@ class Cache:
 
                 self.correct = None
                 if "correct" in self.settings:
-                    self.correct = numpy.array([f(v) for f, v in zip(self.settings["transform"], self.settings["correct"])])
+                    self.correct = numpy.array(
+                        [
+                            f(v)
+                            for f, v in zip(
+                                self.settings["transform"], self.settings["correct"]
+                            )
+                        ]
+                    )
 
     def setupMetaMask(self):
         meta_mask_seq = []
@@ -218,7 +251,12 @@ class Cache:
                     count = settings.count
                     # multiprocessing.get_logger().info('%s %s %s %s', idx, feature, meta_mask, count)
 
-                    meta_mask_seq.extend([meta_mask,] * count)
+                    meta_mask_seq.extend(
+                        [
+                            meta_mask,
+                        ]
+                        * count
+                    )
         # multiprocessing.get_logger().info("%s", meta_mask_seq)
         self.meta_mask = numpy.array(meta_mask_seq)
 
@@ -237,11 +275,17 @@ class Cache:
             else:
                 self.settings["population"] = int(self.settings["population"])
 
-            self.settings["maxPopulation"] = int(self.settings.get("maxPopulation", self.settings["population"]))
-            self.settings["minPopulation"] = int(self.settings.get("minPopulation", self.settings["population"]))
+            self.settings["maxPopulation"] = int(
+                self.settings.get("maxPopulation", self.settings["population"])
+            )
+            self.settings["minPopulation"] = int(
+                self.settings.get("minPopulation", self.settings["population"])
+            )
 
             if "bootstrap" in self.settings:
-                self.settings["bootstrap"]["samples"] = int(self.settings["bootstrap"]["samples"])
+                self.settings["bootstrap"]["samples"] = int(
+                    self.settings["bootstrap"]["samples"]
+                )
 
     def setupHeaders(self):
         self.headers = [
@@ -284,7 +328,7 @@ class Cache:
 
                     settings = self.scores[feature["type"]].get_settings(feature)
 
-                    #if settings.meta_mask:
+                    # if settings.meta_mask:
                     self.numGoals += len(temp)
                     badScore.append(settings.badScore)
 
@@ -313,7 +357,13 @@ class Cache:
 
         self.headers.extend(self.score_headers)
 
-        self.meta_headers = ["Product Root Score", "Min Score", "Mean Score", "SSE", "RMSE"]
+        self.meta_headers = [
+            "Product Root Score",
+            "Min Score",
+            "Mean Score",
+            "SSE",
+            "RMSE",
+        ]
 
         self.headers.extend(self.meta_headers)
 
@@ -414,7 +464,9 @@ class Cache:
             experiment["csv"] = experiment["CSV"]
 
         if dataFromSim:
-            temp["time"], temp["value"] = get_times_values(sim, {"isotherm": experiment["isotherm"]})
+            temp["time"], temp["value"] = get_times_values(
+                sim, {"isotherm": experiment["isotherm"]}
+            )
 
         elif "csv" in experiment:
             data = numpy.loadtxt(experiment["csv"], delimiter=",")
@@ -430,7 +482,9 @@ class Cache:
 
         if "featuresAlt" in experiment:
             self.altFeatures = True
-            self.altFeatureNames = [altFeature["name"] for altFeature in experiment["featuresAlt"]]
+            self.altFeatureNames = [
+                altFeature["name"] for altFeature in experiment["featuresAlt"]
+            ]
 
             self.add_units_features_alt(units_used, experiment["featuresAlt"])
 
@@ -447,7 +501,10 @@ class Cache:
 
             if "csv" in feature:
                 if dataFromSim:
-                    temp[featureName]["time"], temp[featureName]["value"] = get_times_values(sim, {"isotherm": feature["isotherm"]})
+                    (
+                        temp[featureName]["time"],
+                        temp[featureName]["value"],
+                    ) = get_times_values(sim, {"isotherm": feature["isotherm"]})
                 else:
                     dataLocal = numpy.loadtxt(feature["csv"], delimiter=",")
                     temp[featureName]["time"] = dataLocal[:, 0]
@@ -457,8 +514,12 @@ class Cache:
                 temp[featureName]["value"] = temp["value"]
 
             if self.normalizeOutput:
-                temp[featureName]["factor"] = 1.0 / numpy.max(temp[featureName]["value"])
-                temp[featureName]["value"] = temp[featureName]["value"] * temp[featureName]["factor"]
+                temp[featureName]["factor"] = 1.0 / numpy.max(
+                    temp[featureName]["value"]
+                )
+                temp[featureName]["value"] = (
+                    temp[featureName]["value"] * temp[featureName]["factor"]
+                )
             else:
                 temp[featureName]["factor"] = 1.0
 
@@ -476,7 +537,9 @@ class Cache:
 
             self.add_units_isotherm(units_used, temp[featureName]["isotherm"])
 
-            temp[featureName]["selected"] = (temp[featureName]["time"] >= featureStart) & (temp[featureName]["time"] <= featureStop)
+            temp[featureName]["selected"] = (
+                temp[featureName]["time"] >= featureStart
+            ) & (temp[featureName]["time"] <= featureStop)
 
             selectedTimes = temp[featureName]["time"][temp[featureName]["selected"]]
             selectedValues = temp[featureName]["value"][temp[featureName]["selected"]]
@@ -485,11 +548,23 @@ class Cache:
                 self.add_units_isotherm(units_used, feature["unit_name"])
 
             if featureType in self.scores:
-                temp[featureName].update(self.scores[featureType].setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, self))
+                temp[featureName].update(
+                    self.scores[featureType].setup(
+                        sim,
+                        feature,
+                        selectedTimes,
+                        selectedValues,
+                        CV_time,
+                        abstol,
+                        self,
+                    )
+                )
                 settings = self.scores[featureType].get_settings(feature)
                 self.adaptive = settings.adaptive
                 if "peak_max" in temp[featureName]:
-                    peak_maxes.append(temp[featureName]["peak_max"] / temp[featureName]["factor"])
+                    peak_maxes.append(
+                        temp[featureName]["peak_max"] / temp[featureName]["factor"]
+                    )
 
         temp["smallest_peak"] = min(peak_maxes)
         temp["largest_peak"] = max(peak_maxes)

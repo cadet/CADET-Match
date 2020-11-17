@@ -1,5 +1,6 @@
-import numpy
 import copy
+
+import numpy
 
 
 def all_steps(simulation):
@@ -50,7 +51,9 @@ def get_inlets(simulation):
 
 def get_section_times(simulation):
     section_times = numpy.diff(simulation.root.input.solver.sections.section_times)
-    section_times = [0.0,] + list(section_times)
+    section_times = [
+        0.0,
+    ] + list(section_times)
     return section_times
 
 

@@ -1,8 +1,9 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
-import scipy.stats
 import numpy
+import scipy.stats
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "dextranHybrid"
 settings = Dict()
@@ -10,7 +11,15 @@ settings.adaptive = True
 settings.badScore = 0
 settings.meta_mask = True
 settings.count = 6
-settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
+settings.failure = (
+    [0.0] * settings.count,
+    1e6,
+    1,
+    numpy.array([0.0]),
+    numpy.array([0.0]),
+    numpy.array([1e6]),
+    [1.0] * settings.count,
+)
 
 
 def run(sim_data, feature):
@@ -23,7 +32,9 @@ def run(sim_data, feature):
 
     selected = (exp_time_values >= start) & (exp_time_values <= stop)
 
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature, selected=selected)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature, selected=selected
+    )
 
     lower_index = numpy.argmax(sim_data_values >= 0.05 * max(sim_data_values))
     lower_time = sim_time_values[lower_index]
@@ -32,7 +43,9 @@ def run(sim_data, feature):
     exp_time_values = exp_time_values[selected]
     exp_data_values = exp_data_values[selected]
 
-    score_corr, diff_time = score.cross_correlate(exp_time_values, sim_data_values, exp_data_values)
+    score_corr, diff_time = score.cross_correlate(
+        exp_time_values, sim_data_values, exp_data_values
+    )
 
     sim_spline = util.create_spline(exp_time_values, sim_data_values).derivative(1)
     exp_spline = util.create_spline(exp_time_values, exp_data_values).derivative(1)
@@ -42,7 +55,9 @@ def run(sim_data, feature):
 
     temp = [
         score.pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]),
-        score.pear_corr(scipy.stats.pearsonr(sim_der_data_values, exp_der_data_values)[0]),
+        score.pear_corr(
+            scipy.stats.pearsonr(sim_der_data_values, exp_der_data_values)[0]
+        ),
         feature["offsetTimeFunction"](diff_time),
         feature["valueFunction"](sim_data_values[-1]),
         feature["offsetTimeLowerFunction"](lower_time),
@@ -77,9 +92,13 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp["min_time"] = feature["start"]
     temp["max_time"] = max_time
     temp["max_value"] = max_value
-    temp["offsetTimeFunction"] = score.time_function_decay(CV_time / 10.0, max_time, diff_input=True)
+    temp["offsetTimeFunction"] = score.time_function_decay(
+        CV_time / 10.0, max_time, diff_input=True
+    )
     temp["valueFunction"] = score.value_function(max_value, abstol)
-    temp["offsetTimeLowerFunction"] = score.time_function_decay(CV_time / 10.0, lower_time, diff_input=False)
+    temp["offsetTimeLowerFunction"] = score.time_function_decay(
+        CV_time / 10.0, lower_time, diff_input=False
+    )
     temp["valueLowerFunction"] = score.value_function(lower_value, abstol)
     return temp
 

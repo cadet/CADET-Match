@@ -1,7 +1,9 @@
+import multiprocessing
+
+import numpy
+
 import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
-import multiprocessing
-import numpy
 
 
 class AutoTransform(AbstractTransform):
@@ -21,9 +23,9 @@ class AutoTransform(AbstractTransform):
     def okay_linear(self):
         minValue = self.parameter["min"]
         maxValue = self.parameter["max"]
-        maxFactor = self.parameter.get('maxFactor', 1000)
+        maxFactor = self.parameter.get("maxFactor", 1000)
 
-        return maxValue/minValue < maxFactor
+        return maxValue / minValue < maxFactor
 
     @property
     def okay_log(self):
@@ -89,7 +91,6 @@ class AutoTransform(AbstractTransform):
         headerValues = values
         return values, headerValues
 
-
     def untransform_linear_inputorder(self, seq):
         minValue = self.parameter["min"]
         maxValue = self.parameter["max"]
@@ -135,7 +136,10 @@ class AutoTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             location = self.parameter["location"]
 
             try:
@@ -162,16 +166,24 @@ class AutoTransform(AbstractTransform):
             return values, headerValues
 
     def getBounds(self):
-        return [0.0,], [1.0,]
+        return [0.0,], [
+            1.0,
+        ]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
     def getHeaders(self):
         if self.okay_log:
-            multiprocessing.get_logger().info("parameter %s log", self.parameter['location'])
+            multiprocessing.get_logger().info(
+                "parameter %s log", self.parameter["location"]
+            )
         else:
-            multiprocessing.get_logger().info("parameter %s linear", self.parameter['location'])
+            multiprocessing.get_logger().info(
+                "parameter %s linear", self.parameter["location"]
+            )
 
         location = self.parameter["location"]
 
@@ -200,4 +212,3 @@ class AutoTransform(AbstractTransform):
 
 
 plugins = {"auto": AutoTransform}
-

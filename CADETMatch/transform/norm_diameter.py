@@ -1,5 +1,6 @@
-import CADETMatch.util as util
 import math
+
+import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
 
 
@@ -28,7 +29,9 @@ class DiameterTransform(AbstractTransform):
 
     def untransform_inputorder(self, seq):
         diameter = seq[0]
-        return [diameter,]
+        return [
+            diameter,
+        ]
 
     def untransform(self, seq):
         diameter = self.untransform_inputorder(seq)
@@ -51,7 +54,10 @@ class DiameterTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             location = self.parameter["location"]
             sim[location.lower()] = values[0]
         return values, headerValues
@@ -60,10 +66,14 @@ class DiameterTransform(AbstractTransform):
         minValue = self.parameter["min"]
         maxValue = self.parameter["max"]
 
-        return [minValue,], [maxValue,]
+        return [minValue,], [
+            maxValue,
+        ]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
     def getHeaders(self):
         headers = []
@@ -129,10 +139,14 @@ class NormDiameterTransform(DiameterTransform):
         return values
 
     def getBounds(self):
-        return [0.0,], [1.0,]
+        return [0.0,], [
+            1.0,
+        ]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
 
 plugins = {"norm_diameter": NormDiameterTransform, "diameter": DiameterTransform}

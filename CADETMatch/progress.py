@@ -1,14 +1,14 @@
-import psutil
-from pathlib import Path
-import time
-import numpy
 import csv
 import multiprocessing
+import time
+import warnings
+from pathlib import Path
 
-import CADETMatch.util as util
+import numpy
+import psutil
 from cadet import H5
 
-import warnings
+import CADETMatch.util as util
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -44,22 +44,47 @@ def get_population_information(cache, population, generation):
         return None, None
 
 
-def print_progress(cache, line_log, best_product, best_min, best_mean, best_sse, best_rmse, generation, population):
+def print_progress(
+    cache,
+    line_log,
+    best_product,
+    best_min,
+    best_mean,
+    best_sse,
+    best_rmse,
+    generation,
+    population,
+):
     if best_product is not None:
         alt_line_format = "Generation: %s \tPopulation: %s \tAverage Best: %.1e \tMinimum Best: %.1e \tProduct Best: %.1e\tSSE Best: %.3e \tRMSE Best: %.3e"
 
-        sse_line_format = "Generation: %s \tPopulation: %s \tSSE Best: %.3e \tRMSE Best: %.3e"
+        sse_line_format = (
+            "Generation: %s \tPopulation: %s \tSSE Best: %.3e \tRMSE Best: %.3e"
+        )
 
         if line_log:
             if cache.allScoreSSE and not cache.MultiObjectiveSSE:
-                multiprocessing.get_logger().info(sse_line_format, generation, len(population), best_sse, best_rmse)
+                multiprocessing.get_logger().info(
+                    sse_line_format, generation, len(population), best_sse, best_rmse
+                )
             else:
                 multiprocessing.get_logger().info(
-                    alt_line_format, generation, len(population), best_mean, best_min, best_product, best_sse, best_rmse
+                    alt_line_format,
+                    generation,
+                    len(population),
+                    best_mean,
+                    best_min,
+                    best_product,
+                    best_sse,
+                    best_rmse,
                 )
     else:
         if line_log:
-            multiprocessing.get_logger().info("Generation: %s \tPopulation: %s \t No Stats Avaialable", generation, len(population))
+            multiprocessing.get_logger().info(
+                "Generation: %s \tPopulation: %s \t No Stats Avaialable",
+                generation,
+                len(population),
+            )
 
 
 def get_best(cache, data_meta):
@@ -72,7 +97,13 @@ def get_best(cache, data_meta):
 
         score = (best_product, best_min, best_mean, best_sse, best_rmse)
 
-        (best_product, best_min, best_mean, best_sse, best_rmse) = util.translate_meta_min(score, cache)
+        (
+            best_product,
+            best_min,
+            best_mean,
+            best_sse,
+            best_rmse,
+        ) = util.translate_meta_min(score, cache)
 
         return best_product, best_min, best_mean, best_sse, best_rmse
     else:
@@ -95,13 +126,36 @@ def clear_result_data(result_data):
         result_data["mcmc_score"] = []
 
 
-def write_progress_csv(cache, data_meta, generation, population, now, sim_start, generation_start, cpu_time, line_log, meta_length):
+def write_progress_csv(
+    cache,
+    data_meta,
+    generation,
+    population,
+    now,
+    sim_start,
+    generation_start,
+    cpu_time,
+    line_log,
+    meta_length,
+):
     with cache.progress_path.open("a", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=",", quoting=csv.QUOTE_ALL)
 
-        best_product, best_min, best_mean, best_sse, best_rmse = get_best(cache, data_meta)
+        best_product, best_min, best_mean, best_sse, best_rmse = get_best(
+            cache, data_meta
+        )
 
-        print_progress(cache, line_log, best_product, best_min, best_mean, best_sse, best_rmse, generation, population)
+        print_progress(
+            cache,
+            line_log,
+            best_product,
+            best_min,
+            best_mean,
+            best_sse,
+            best_rmse,
+            generation,
+            population,
+        )
 
         # ['Generation', 'Population', 'Dimension In', 'Dimension Out', 'Search Method',
         #'Meta Front', 'Meta Min', 'Meta Product', 'Meta Mean', 'Meta SSE',
@@ -151,37 +205,81 @@ def write_results(
     probability,
 ):
     with h5py.File(result_h5, "w") as hf:
-        hf.create_dataset("input", data=result_data["input"], maxshape=(None, len(result_data["input"][0])))
+        hf.create_dataset(
+            "input",
+            data=result_data["input"],
+            maxshape=(None, len(result_data["input"][0])),
+        )
 
         if len(result_data["strategy"]):
-            hf.create_dataset("strategy", data=result_data["strategy"], maxshape=(None, len(result_data["strategy"][0])))
+            hf.create_dataset(
+                "strategy",
+                data=result_data["strategy"],
+                maxshape=(None, len(result_data["strategy"][0])),
+            )
 
         if len(result_data["mean"]):
-            hf.create_dataset("mean", data=result_data["mean"], maxshape=(None, len(result_data["mean"][0])))
+            hf.create_dataset(
+                "mean",
+                data=result_data["mean"],
+                maxshape=(None, len(result_data["mean"][0])),
+            )
 
         if len(result_data["confidence"]):
-            hf.create_dataset("confidence", data=result_data["confidence"], maxshape=(None, len(result_data["confidence"][0])))
+            hf.create_dataset(
+                "confidence",
+                data=result_data["confidence"],
+                maxshape=(None, len(result_data["confidence"][0])),
+            )
 
         if cache.correct is not None:
             distance = cache.correct - result_data["input"]
-            hf.create_dataset("distance_correct", data=distance, maxshape=(None, len(result_data["input"][0])))
-
-            distance_transform = cache.correct_transform - result_data["input_transform"]
             hf.create_dataset(
-                "distance_correct_transform", data=distance_transform, maxshape=(None, len(result_data["input_transform"][0]))
+                "distance_correct",
+                data=distance,
+                maxshape=(None, len(result_data["input"][0])),
             )
 
-        hf.create_dataset("output_original", data=result_data["output"], maxshape=(None, len(result_data["output"][0])))
-        hf.create_dataset("output_meta_original", data=result_data["output_meta"], maxshape=(None, len(result_data["output_meta"][0])))
+            distance_transform = (
+                cache.correct_transform - result_data["input_transform"]
+            )
+            hf.create_dataset(
+                "distance_correct_transform",
+                data=distance_transform,
+                maxshape=(None, len(result_data["input_transform"][0])),
+            )
 
-        hf.create_dataset("output", data=score_trans(cache, result_data["output"]), maxshape=(None, len(result_data["output"][0])))
         hf.create_dataset(
-            "output_meta", data=meta_score_trans(cache, result_data["output_meta"]), maxshape=(None, len(result_data["output_meta"][0]))
+            "output_original",
+            data=result_data["output"],
+            maxshape=(None, len(result_data["output"][0])),
+        )
+        hf.create_dataset(
+            "output_meta_original",
+            data=result_data["output_meta"],
+            maxshape=(None, len(result_data["output_meta"][0])),
         )
 
-        hf.create_dataset("input_transform", data=result_data["input_transform"], maxshape=(None, len(result_data["input_transform"][0])))
+        hf.create_dataset(
+            "output",
+            data=score_trans(cache, result_data["output"]),
+            maxshape=(None, len(result_data["output"][0])),
+        )
+        hf.create_dataset(
+            "output_meta",
+            data=meta_score_trans(cache, result_data["output_meta"]),
+            maxshape=(None, len(result_data["output_meta"][0])),
+        )
 
-        if numpy.array_equal(result_data["input_transform"], result_data["input_transform_extended"]):
+        hf.create_dataset(
+            "input_transform",
+            data=result_data["input_transform"],
+            maxshape=(None, len(result_data["input_transform"][0])),
+        )
+
+        if numpy.array_equal(
+            result_data["input_transform"], result_data["input_transform_extended"]
+        ):
             hf.create_dataset("is_extended_input", data=False)
         else:
             hf.create_dataset("is_extended_input", data=True)
@@ -195,10 +293,18 @@ def write_results(
         hf.create_dataset("total_time", data=now - sim_start)
 
         if population_input is not None:
-            hf.create_dataset("population_input", data=population_input, maxshape=(None, population_input.shape[1]))
+            hf.create_dataset(
+                "population_input",
+                data=population_input,
+                maxshape=(None, population_input.shape[1]),
+            )
 
         if population_output is not None:
-            hf.create_dataset("population_output", data=population_output, maxshape=(None, population_output.shape[1]))
+            hf.create_dataset(
+                "population_output",
+                data=population_output,
+                maxshape=(None, population_output.shape[1]),
+            )
 
         if probability is not None:
             hf.create_dataset("probability", data=probability, maxshape=(None, 1))
@@ -206,30 +312,74 @@ def write_results(
         if cache.debugWrite:
             mcmc_score = result_data.get("mcmc_score", None)
             if mcmc_score is not None:
-                hf.create_dataset("mcmc_score", data=mcmc_score, maxshape=(None, len(mcmc_score[0])))
+                hf.create_dataset(
+                    "mcmc_score", data=mcmc_score, maxshape=(None, len(mcmc_score[0]))
+                )
 
         if len(hof_param):
-            hf.create_dataset("hof_population", data=hof_param, maxshape=(None, hof_param.shape[1]))
-            hf.create_dataset("hof_population_transform", data=hof_param_transform, maxshape=(None, hof_param_transform.shape[1]))
-            hf.create_dataset("hof_score_original", data=data, maxshape=(None, data.shape[1]))
-            hf.create_dataset("hof_score", data=score_trans(cache, data), maxshape=(None, data.shape[1]))
+            hf.create_dataset(
+                "hof_population", data=hof_param, maxshape=(None, hof_param.shape[1])
+            )
+            hf.create_dataset(
+                "hof_population_transform",
+                data=hof_param_transform,
+                maxshape=(None, hof_param_transform.shape[1]),
+            )
+            hf.create_dataset(
+                "hof_score_original", data=data, maxshape=(None, data.shape[1])
+            )
+            hf.create_dataset(
+                "hof_score",
+                data=score_trans(cache, data),
+                maxshape=(None, data.shape[1]),
+            )
 
         if len(meta_param):
-            hf.create_dataset("meta_population", data=meta_param, maxshape=(None, meta_param.shape[1]))
-            hf.create_dataset("meta_population_transform", data=meta_param_transform, maxshape=(None, meta_param_transform.shape[1]))
-            hf.create_dataset("meta_score_original", data=data_meta, maxshape=(None, data_meta.shape[1]))
-            hf.create_dataset("meta_score", data=meta_score_trans(cache, data_meta), maxshape=(None, data_meta.shape[1]))
+            hf.create_dataset(
+                "meta_population", data=meta_param, maxshape=(None, meta_param.shape[1])
+            )
+            hf.create_dataset(
+                "meta_population_transform",
+                data=meta_param_transform,
+                maxshape=(None, meta_param_transform.shape[1]),
+            )
+            hf.create_dataset(
+                "meta_score_original",
+                data=data_meta,
+                maxshape=(None, data_meta.shape[1]),
+            )
+            hf.create_dataset(
+                "meta_score",
+                data=meta_score_trans(cache, data_meta),
+                maxshape=(None, data_meta.shape[1]),
+            )
 
         if len(grad_param):
-            hf.create_dataset("grad_population", data=grad_param, maxshape=(None, grad_param.shape[1]))
-            hf.create_dataset("grad_population_transform", data=grad_param_transform, maxshape=(None, grad_param_transform.shape[1]))
-            hf.create_dataset("grad_score_original", data=data_grad, maxshape=(None, data_grad.shape[1]))
-            hf.create_dataset("grad_score", data=score_trans(cache, data_grad), maxshape=(None, data_grad.shape[1]))
+            hf.create_dataset(
+                "grad_population", data=grad_param, maxshape=(None, grad_param.shape[1])
+            )
+            hf.create_dataset(
+                "grad_population_transform",
+                data=grad_param_transform,
+                maxshape=(None, grad_param_transform.shape[1]),
+            )
+            hf.create_dataset(
+                "grad_score_original",
+                data=data_grad,
+                maxshape=(None, data_grad.shape[1]),
+            )
+            hf.create_dataset(
+                "grad_score",
+                data=score_trans(cache, data_grad),
+                maxshape=(None, data_grad.shape[1]),
+            )
 
         if cache.fullTrainingData:
 
             for filename, chroma in result_data["results"].items():
-                hf.create_dataset(filename, data=chroma, maxshape=(None, len(chroma[0])))
+                hf.create_dataset(
+                    filename, data=chroma, maxshape=(None, len(chroma[0]))
+                )
 
             for filename, chroma in result_data["times"].items():
                 hf.create_dataset(filename, data=chroma)
@@ -286,7 +436,9 @@ def update_results(
         hf["generation"][()] = gen_data
 
         if len(result_data["strategy"]):
-            hf["strategy"].resize((hf["strategy"].shape[0] + len(result_data["strategy"])), axis=0)
+            hf["strategy"].resize(
+                (hf["strategy"].shape[0] + len(result_data["strategy"])), axis=0
+            )
             hf["strategy"][-len(result_data["strategy"]) :] = result_data["strategy"]
 
         if len(result_data["mean"]):
@@ -294,64 +446,116 @@ def update_results(
             hf["mean"][-len(result_data["mean"]) :] = result_data["mean"]
 
         if len(result_data["confidence"]):
-            hf["confidence"].resize((hf["confidence"].shape[0] + len(result_data["confidence"])), axis=0)
-            hf["confidence"][-len(result_data["confidence"]) :] = result_data["confidence"]
+            hf["confidence"].resize(
+                (hf["confidence"].shape[0] + len(result_data["confidence"])), axis=0
+            )
+            hf["confidence"][-len(result_data["confidence"]) :] = result_data[
+                "confidence"
+            ]
 
         if cache.correct is not None:
             distance = cache.correct - result_data["input"]
-            hf["distance_correct"].resize((hf["distance_correct"].shape[0] + len(result_data["input"])), axis=0)
+            hf["distance_correct"].resize(
+                (hf["distance_correct"].shape[0] + len(result_data["input"])), axis=0
+            )
             hf["distance_correct"][-len(result_data["input"]) :] = distance
 
-            distance_transform = cache.correct_transform - result_data["input_transform"]
-            hf["distance_correct_transform"].resize(
-                (hf["distance_correct_transform"].shape[0] + len(result_data["input_transform"])), axis=0
+            distance_transform = (
+                cache.correct_transform - result_data["input_transform"]
             )
-            hf["distance_correct_transform"][-len(result_data["input_transform"]) :] = distance_transform
+            hf["distance_correct_transform"].resize(
+                (
+                    hf["distance_correct_transform"].shape[0]
+                    + len(result_data["input_transform"])
+                ),
+                axis=0,
+            )
+            hf["distance_correct_transform"][
+                -len(result_data["input_transform"]) :
+            ] = distance_transform
 
         if population_input is not None:
-            hf["population_input"].resize((hf["population_input"].shape[0] + population_input.shape[0]), axis=0)
+            hf["population_input"].resize(
+                (hf["population_input"].shape[0] + population_input.shape[0]), axis=0
+            )
             hf["population_input"][-population_input.shape[0] :] = population_input
 
         if population_output is not None:
-            hf["population_output"].resize((hf["population_output"].shape[0] + population_output.shape[0]), axis=0)
+            hf["population_output"].resize(
+                (hf["population_output"].shape[0] + population_output.shape[0]), axis=0
+            )
             hf["population_output"][-population_output.shape[0] :] = population_output
 
         if probability is not None:
-            hf["probability"].resize((hf["probability"].shape[0] + probability.shape[0]), axis=0)
+            hf["probability"].resize(
+                (hf["probability"].shape[0] + probability.shape[0]), axis=0
+            )
             hf["probability"][-probability.shape[0] :] = probability
 
         if cache.debugWrite:
             mcmc_score = result_data.get("mcmc_score", None)
             if mcmc_score is not None:
-                hf["mcmc_score"].resize((hf["mcmc_score"].shape[0] + len(mcmc_score)), axis=0)
+                hf["mcmc_score"].resize(
+                    (hf["mcmc_score"].shape[0] + len(mcmc_score)), axis=0
+                )
                 hf["mcmc_score"][-len(mcmc_score) :] = mcmc_score
 
-        hf["output_original"].resize((hf["output_original"].shape[0] + len(result_data["output"])), axis=0)
+        hf["output_original"].resize(
+            (hf["output_original"].shape[0] + len(result_data["output"])), axis=0
+        )
         hf["output_original"][-len(result_data["output"]) :] = result_data["output"]
 
-        hf["output_meta_original"].resize((hf["output_meta_original"].shape[0] + len(result_data["output_meta"])), axis=0)
-        hf["output_meta_original"][-len(result_data["output_meta"]) :] = result_data["output_meta"]
+        hf["output_meta_original"].resize(
+            (hf["output_meta_original"].shape[0] + len(result_data["output_meta"])),
+            axis=0,
+        )
+        hf["output_meta_original"][-len(result_data["output_meta"]) :] = result_data[
+            "output_meta"
+        ]
 
-        hf["output"].resize((hf["output"].shape[0] + len(result_data["output"])), axis=0)
-        hf["output"][-len(result_data["output"]) :] = score_trans(cache, result_data["output"])
+        hf["output"].resize(
+            (hf["output"].shape[0] + len(result_data["output"])), axis=0
+        )
+        hf["output"][-len(result_data["output"]) :] = score_trans(
+            cache, result_data["output"]
+        )
 
-        hf["output_meta"].resize((hf["output_meta"].shape[0] + len(result_data["output_meta"])), axis=0)
-        hf["output_meta"][-len(result_data["output_meta"]) :] = meta_score_trans(cache, result_data["output_meta"])
+        hf["output_meta"].resize(
+            (hf["output_meta"].shape[0] + len(result_data["output_meta"])), axis=0
+        )
+        hf["output_meta"][-len(result_data["output_meta"]) :] = meta_score_trans(
+            cache, result_data["output_meta"]
+        )
 
-        hf["input_transform"].resize((hf["input_transform"].shape[0] + len(result_data["input_transform"])), axis=0)
-        hf["input_transform"][-len(result_data["input_transform"]) :] = result_data["input_transform"]
+        hf["input_transform"].resize(
+            (hf["input_transform"].shape[0] + len(result_data["input_transform"])),
+            axis=0,
+        )
+        hf["input_transform"][-len(result_data["input_transform"]) :] = result_data[
+            "input_transform"
+        ]
 
-        if not numpy.array_equal(result_data["input_transform"], result_data["input_transform_extended"]):
+        if not numpy.array_equal(
+            result_data["input_transform"], result_data["input_transform_extended"]
+        ):
             hf["input_transform_extended"].resize(
-                (hf["input_transform_extended"].shape[0] + len(result_data["input_transform_extended"])), axis=0
+                (
+                    hf["input_transform_extended"].shape[0]
+                    + len(result_data["input_transform_extended"])
+                ),
+                axis=0,
             )
-            hf["input_transform_extended"][-len(result_data["input_transform_extended"]) :] = result_data["input_transform_extended"]
+            hf["input_transform_extended"][
+                -len(result_data["input_transform_extended"]) :
+            ] = result_data["input_transform_extended"]
 
         if len(hof_param):
             hf["hof_population"].resize((hof_param.shape[0]), axis=0)
             hf["hof_population"][:] = hof_param
 
-            hf["hof_population_transform"].resize((hof_param_transform.shape[0]), axis=0)
+            hf["hof_population_transform"].resize(
+                (hof_param_transform.shape[0]), axis=0
+            )
             hf["hof_population_transform"][:] = hof_param_transform
 
             hf["hof_score_original"].resize((data.shape[0]), axis=0)
@@ -364,7 +568,9 @@ def update_results(
             hf["meta_population"].resize((meta_param.shape[0]), axis=0)
             hf["meta_population"][:] = meta_param
 
-            hf["meta_population_transform"].resize((meta_param_transform.shape[0]), axis=0)
+            hf["meta_population_transform"].resize(
+                (meta_param_transform.shape[0]), axis=0
+            )
             hf["meta_population_transform"][:] = meta_param_transform
 
             hf["meta_score_original"].resize((data_meta.shape[0]), axis=0)
@@ -378,7 +584,9 @@ def update_results(
                 hf["grad_population"].resize((grad_param.shape[0]), axis=0)
                 hf["grad_population"][:] = grad_param
 
-                hf["grad_population_transform"].resize((grad_param_transform.shape[0]), axis=0)
+                hf["grad_population_transform"].resize(
+                    (grad_param_transform.shape[0]), axis=0
+                )
                 hf["grad_population_transform"][:] = grad_param_transform
 
                 hf["grad_score_original"].resize((data_grad.shape[0]), axis=0)
@@ -387,11 +595,27 @@ def update_results(
                 hf["grad_score"].resize((data_grad.shape[0]), axis=0)
                 hf["grad_score"][:] = score_trans(cache, data_grad)
             else:
-                hf.create_dataset("grad_population", data=grad_param, maxshape=(None, grad_param.shape[1]))
-                hf.create_dataset("grad_population_transform", data=grad_param_transform, maxshape=(None, grad_param_transform.shape[1]))
-                hf.create_dataset("grad_score_original", data=data_grad, maxshape=(None, data_grad.shape[1]))
+                hf.create_dataset(
+                    "grad_population",
+                    data=grad_param,
+                    maxshape=(None, grad_param.shape[1]),
+                )
+                hf.create_dataset(
+                    "grad_population_transform",
+                    data=grad_param_transform,
+                    maxshape=(None, grad_param_transform.shape[1]),
+                )
+                hf.create_dataset(
+                    "grad_score_original",
+                    data=data_grad,
+                    maxshape=(None, data_grad.shape[1]),
+                )
 
-                hf.create_dataset("grad_score", data=score_trans(cache, data_grad), maxshape=(None, data_grad.shape[1]))
+                hf.create_dataset(
+                    "grad_score",
+                    data=score_trans(cache, data_grad),
+                    maxshape=(None, data_grad.shape[1]),
+                )
 
         if cache.fullTrainingData:
 
@@ -409,7 +633,9 @@ def numpy_result_data(result_data):
     result_data["output"] = numpy.array(result_data["output"])
     result_data["output_meta"] = numpy.array(result_data["output_meta"])
     result_data["input_transform"] = numpy.array(result_data["input_transform"])
-    result_data["input_transform_extended"] = numpy.array(result_data["input_transform_extended"])
+    result_data["input_transform_extended"] = numpy.array(
+        result_data["input_transform_extended"]
+    )
 
     if result_data["results"]:
         for key, value in result_data["results"].items():
@@ -453,7 +679,9 @@ def writeProgress(
     if probability is not None:
         probability = probability.reshape(-1, 1)
 
-    population_input, population_output = get_population_information(cache, population, generation)
+    population_input, population_output = get_population_information(
+        cache, population, generation
+    )
 
     if result_data is not None:
         resultDir = Path(cache.settings["resultsDir"])
@@ -504,4 +732,15 @@ def writeProgress(
 
         clear_result_data(result_data)
 
-    write_progress_csv(cache, data_meta, generation, population, now, sim_start, generation_start, cpu_time, line_log, len(meta_halloffame))
+    write_progress_csv(
+        cache,
+        data_meta,
+        generation,
+        population,
+        now,
+        sim_start,
+        generation_start,
+        cpu_time,
+        line_log,
+        len(meta_halloffame),
+    )

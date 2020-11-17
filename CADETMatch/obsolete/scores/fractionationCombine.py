@@ -1,9 +1,11 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
+import multiprocessing
+
 import numpy
 import pandas
-import multiprocessing
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "fractionationCombine"
 settings = Dict()
@@ -41,7 +43,9 @@ def run(sim_data, feature):
         selected = (times >= start) & (times <= stop)
 
         local_times = times[selected]
-        local_values = simulation.root.output.solution[feature["unit"]]["solution_outlet_comp_%03d" % component][selected]
+        local_values = simulation.root.output.solution[feature["unit"]][
+            "solution_outlet_comp_%03d" % component
+        ][selected]
 
         sim_value = numpy.trapz(local_values, local_times)
 

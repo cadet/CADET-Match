@@ -11,7 +11,6 @@ from CADETMatch.version import (
     __version__,
 )
 
-
 __all__ = [
     "__author__",
     "__copyright__",

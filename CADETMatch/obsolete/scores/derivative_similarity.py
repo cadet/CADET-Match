@@ -1,9 +1,10 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
-import scipy.stats
-import scipy.interpolate
-from addict import Dict
 import numpy
+import scipy.interpolate
+import scipy.stats
+from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "derivative_similarity"
 settings = Dict()
@@ -11,12 +12,22 @@ settings.adaptive = True
 settings.badScore = 0
 settings.meta_mask = True
 settings.count = 5
-settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
+settings.failure = (
+    [0.0] * settings.count,
+    1e6,
+    1,
+    numpy.array([0.0]),
+    numpy.array([0.0]),
+    numpy.array([1e6]),
+    [1.0] * settings.count,
+)
 
 
 def run(sim_data, feature):
     "Order is Pearson, Value High, Time High, Value Low, Time Low"
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature
+    )
     selected = feature["selected"]
 
     exp_data_values = feature["value"][selected]
@@ -31,7 +42,11 @@ def run(sim_data, feature):
     [highs, lows] = util.find_peak(exp_time_values, sim_spline(exp_time_values))
 
     temp = [
-        score.pear_corr(scipy.stats.pearsonr(sim_spline(exp_time_values), exp_spline(exp_time_values))[0]),
+        score.pear_corr(
+            scipy.stats.pearsonr(
+                sim_spline(exp_time_values), exp_spline(exp_time_values)
+            )[0]
+        ),
         feature["value_function_high"](highs[1]),
         feature["time_function_high"](highs[0]),
         feature["value_function_low"](lows[1]),
@@ -67,5 +82,11 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
 
 def headers(experimentName, feature):
     name = "%s_%s" % (experimentName, feature["name"])
-    temp = ["%s_Derivative_Similarity" % name, "%s_High_Value" % name, "%s_High_Time" % name, "%s_Low_Value" % name, "%s_Low_Time" % name]
+    temp = [
+        "%s_Derivative_Similarity" % name,
+        "%s_High_Value" % name,
+        "%s_High_Time" % name,
+        "%s_Low_Value" % name,
+        "%s_Low_Time" % name,
+    ]
     return temp

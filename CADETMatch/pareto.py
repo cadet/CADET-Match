@@ -1,9 +1,10 @@
-from deap import tools
-from operator import eq
-import math
-import numpy
-import multiprocessing
 import copy
+import math
+import multiprocessing
+from operator import eq
+
+import numpy
+from deap import tools
 
 smallest = numpy.finfo(1.0).tiny
 
@@ -24,11 +25,11 @@ class ParetoFront(tools.ParetoFront):
         super().__init__(similar)
 
     def update(self, population, numGoals):
-        """Update the Pareto front hall of fame with the *population* by adding 
+        """Update the Pareto front hall of fame with the *population* by adding
         the individuals from the population that are not dominated by the hall
         of fame. If any individual in the hall of fame is dominated it is
         removed.
-        
+
         :param population: A list of individual with a fitness attribute to
                            update the hall of fame with.
         """
@@ -45,14 +46,20 @@ class ParetoFront(tools.ParetoFront):
             has_twin = False
             to_remove = []
             for i, hofer in enumerate(self):  # hofer = hall of famer
-                if not dominates_one and hofer.fitness.dominates(ind.fitness, obj=slice_object):
+                if not dominates_one and hofer.fitness.dominates(
+                    ind.fitness, obj=slice_object
+                ):
                     is_dominated = True
                     break
                 elif ind.fitness.dominates(hofer.fitness, obj=slice_object):
                     dominates_one = True
                     to_remove.append(i)
-                    significant.append(not self.similar_fit(ind.fitness.values, hofer.fitness.values))
-                elif self.similar_fit(ind.fitness.values, hofer.fitness.values) and self.similar(ind, hofer):
+                    significant.append(
+                        not self.similar_fit(ind.fitness.values, hofer.fitness.values)
+                    )
+                elif self.similar_fit(
+                    ind.fitness.values, hofer.fitness.values
+                ) and self.similar(ind, hofer):
                     has_twin = True
                     break
 
@@ -88,11 +95,11 @@ class ParetoFrontMeta(ParetoFront):
         self.best_rmse_end = None
 
     def update(self, population, numGoals):
-        """Update the Pareto front hall of fame with the *population* by adding 
+        """Update the Pareto front hall of fame with the *population* by adding
         the individuals from the population that are not dominated by the hall
         of fame. If any individual in the hall of fame is dominated it is
         removed.
-        
+
         :param population: A list of individual with a fitness attribute to
                            update the hall of fame with.
         """
@@ -128,14 +135,20 @@ class ParetoFrontMeta(ParetoFront):
                 new_best_rmse_found = True
 
             for i, hofer in enumerate(self):  # hofer = hall of famer
-                if not dominates_one and hofer.fitness.dominates(ind.fitness, obj=slice_object):
+                if not dominates_one and hofer.fitness.dominates(
+                    ind.fitness, obj=slice_object
+                ):
                     is_dominated = True
                     break
                 elif ind.fitness.dominates(hofer.fitness, obj=slice_object):
                     dominates_one = True
                     to_remove.append(i)
-                    significant.append(not self.similar_fit(ind.fitness.values, hofer.fitness.values))
-                elif self.similar_fit(ind.fitness.values, hofer.fitness.values) and self.similar(ind, hofer):
+                    significant.append(
+                        not self.similar_fit(ind.fitness.values, hofer.fitness.values)
+                    )
+                elif self.similar_fit(
+                    ind.fitness.values, hofer.fitness.values
+                ) and self.similar(ind, hofer):
                     has_twin = True
                     break
 
@@ -163,8 +176,14 @@ class ParetoFrontMeta(ParetoFront):
                 to_remove = []
                 for idx, ind in enumerate(self):
                     if ind.best:
-                        removeSSE = new_best_sse_found and ind.fitness.values == self.best_sse_ind.fitness.values
-                        removeRMSE = new_best_rmse_found and ind.fitness.values == self.best_rmse_ind.fitness.values
+                        removeSSE = (
+                            new_best_sse_found
+                            and ind.fitness.values == self.best_sse_ind.fitness.values
+                        )
+                        removeRMSE = (
+                            new_best_rmse_found
+                            and ind.fitness.values == self.best_rmse_ind.fitness.values
+                        )
                         if removeSSE or removeRMSE:
                             to_remove.append(idx)
 
@@ -179,7 +198,9 @@ class ParetoFrontMeta(ParetoFront):
                     self.best_rmse_ind = new_best_rmse_ind
                     self.best_rmse = new_best_rmse
 
-            sameInd = self.best_sse_ind.fitness.values == self.best_rmse_ind.fitness.values
+            sameInd = (
+                self.best_sse_ind.fitness.values == self.best_rmse_ind.fitness.values
+            )
 
             for ind in self:
                 if ind.fitness.values == self.best_sse_ind.fitness.values:
@@ -324,5 +345,10 @@ def similar_fit(cache):
 
 
 def updateParetoFront(halloffame, offspring, cache):
-    new_members, significant = halloffame.update([offspring,], cache.numGoals)
+    new_members, significant = halloffame.update(
+        [
+            offspring,
+        ],
+        cache.numGoals,
+    )
     return bool(new_members), significant

@@ -1,6 +1,7 @@
-import CADETMatch.util as util
-import CADETMatch.calc_coeff as calc_coeff
 from addict import Dict
+
+import CADETMatch.calc_coeff as calc_coeff
+import CADETMatch.util as util
 
 name = "AbsoluteHeight"
 
@@ -20,7 +21,9 @@ def run(sim_data, feature):
     "similarity, value, start stop"
     selected = feature["selected"]
     exp_data_values = feature["value"][selected]
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature
+    )
 
     ys = [0.0, 1.0]
     xs = [0.0, max(exp_data_values) * 0.9]

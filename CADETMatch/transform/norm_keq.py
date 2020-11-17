@@ -1,5 +1,6 @@
-import CADETMatch.util as util
 import numpy
+
+import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
 
 
@@ -34,7 +35,7 @@ class KeqTransform(AbstractTransform):
 
     def untransform(self, seq):
         ka, keq = self.untransform_inputorder(seq)
-        kd = ka/keq
+        kd = ka / keq
         values = [ka, kd]
         headerValues = [ka, kd, keq]
         return values, headerValues
@@ -54,7 +55,10 @@ class KeqTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             location = self.parameter["location"]
 
             comp = self.parameter["component"]
@@ -81,7 +85,9 @@ class KeqTransform(AbstractTransform):
         return minValues, maxValues
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
     def getHeaders(self):
         location = self.parameter["location"]
@@ -136,7 +142,6 @@ class NormKeqTransform(KeqTransform):
 
     grad_transform = transform
 
-
     def untransform_inputorder(self, seq):
         minKA = self.parameter["minKA"]
         maxKA = self.parameter["maxKA"]
@@ -154,7 +159,6 @@ class NormKeqTransform(KeqTransform):
         keq = numpy.exp(values[1])
 
         return [ka, keq]
-
 
     def grad_untransform(self, seq):
         return self.untransform(seq)[0]
@@ -183,7 +187,9 @@ class NormKeqTransform(KeqTransform):
         return [0.0, 0.0], [1.0, 1.0]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
 
 plugins = {"keq": KeqTransform, "norm_keq": NormKeqTransform}

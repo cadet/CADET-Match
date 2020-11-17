@@ -1,10 +1,12 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
+import sys
+
 import numpy
 import pandas
-from addict import Dict
-import sys
 import scipy.interpolate
+from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 """DO NOT USE THIS SCORE. This score only exists for the purpose of a paper to confirm that
 this is not an appropriate method to solve fractionation problems.
@@ -43,7 +45,9 @@ def run(sim_data, feature):
     for component in comps:
         exp_values = numpy.array(data[str(component)])
         selected = numpy.isfinite(exp_values)
-        sim_value = simulation.root.output.solution[feature["unit"]]["solution_outlet_comp_%03d" % component]
+        sim_value = simulation.root.output.solution[feature["unit"]][
+            "solution_outlet_comp_%03d" % component
+        ]
 
         spline = scipy.interpolate.InterpolatedUnivariateSpline(times, sim_value, ext=1)
 
@@ -53,7 +57,9 @@ def run(sim_data, feature):
         sim_values_sse.extend(fractions)
 
         graph_sim[component] = list(zip(start[selected], stop[selected], fractions))
-        graph_exp[component] = list(zip(start[selected], stop[selected], exp_values[selected]))
+        graph_exp[component] = list(
+            zip(start[selected], stop[selected], exp_values[selected])
+        )
 
     # sort lists
     for key, value in graph_sim.items():
@@ -66,7 +72,19 @@ def run(sim_data, feature):
 
     sse = util.sse(numpy.array(sim_values_sse), numpy.array(exp_values_sse))
 
-    return [-sse,], sse, len(sim_values_sse), time_center, numpy.array(sim_values_sse), numpy.array(exp_values_sse), [sse,]
+    return (
+        [
+            -sse,
+        ],
+        sse,
+        len(sim_values_sse),
+        time_center,
+        numpy.array(sim_values_sse),
+        numpy.array(exp_values_sse),
+        [
+            sse,
+        ],
+    )
 
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):

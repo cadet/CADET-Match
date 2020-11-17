@@ -35,7 +35,10 @@ class SumTransform(AbstractTransform):
     untransform_matrix_inputorder = untransform_matrix
 
     def setSimulation(self, sim, seq, experiment):
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             location1 = self.parameter["location1"]
             location2 = self.parameter["location2"]
             locationSum = self.parameter["locationSum"]
@@ -69,7 +72,14 @@ class SumTransform(AbstractTransform):
                 indexSum = self.parameter["indexSum"]
                 boundSum = None
                 compSum = None
-            setValue(sim, value1 + value2, locationSum, bound=boundSum, comp=compSum, index=indexSum)
+            setValue(
+                sim,
+                value1 + value2,
+                locationSum,
+                bound=boundSum,
+                comp=compSum,
+                index=indexSum,
+            )
 
         return [], []
 

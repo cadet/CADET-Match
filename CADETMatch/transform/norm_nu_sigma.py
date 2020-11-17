@@ -1,5 +1,6 @@
-import CADETMatch.util as util
 import numpy
+
+import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
 
 
@@ -33,7 +34,7 @@ class NuSigmaTransform(AbstractTransform):
         return [nu, nu_sigma]
 
     def untransform(self, seq):
-        nu, nu_sigma  = self.untransform_inputorder(seq)
+        nu, nu_sigma = self.untransform_inputorder(seq)
         sigma = nu_sigma - nu
         values = [nu, sigma]
         headerValues = [nu, sigma, nu_sigma]
@@ -56,7 +57,10 @@ class NuSigmaTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             nu_location = self.parameter["nu_location"]
             sigma_location = self.parameter["sigma_location"]
 
@@ -84,7 +88,9 @@ class NuSigmaTransform(AbstractTransform):
         return minValues, maxValues
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
     def getHeaders(self):
         nu_location = self.parameter["nu_location"]
@@ -184,7 +190,9 @@ class NormNuSigmaTransform(NuSigmaTransform):
         return [0.0, 0.0], [1.0, 1.0]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
 
 plugins = {"nu_sigma": NuSigmaTransform, "norm_nu_sigma": NormNuSigmaTransform}

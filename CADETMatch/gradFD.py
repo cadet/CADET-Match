@@ -1,34 +1,45 @@
-import CADETMatch.util as util
-import CADETMatch.evo as evo
-import CADETMatch.pareto as pareto
+import csv
+import hashlib
+import multiprocessing
+import time
 from pathlib import Path
-import scipy.optimize
+
 import numpy
 import numpy.linalg
-import hashlib
-import csv
-import time
+import scipy.optimize
+from cadet import H5, Cadet
 
 import CADETMatch.cache as cache
-import multiprocessing
-from cadet import Cadet, H5
+import CADETMatch.evo as evo
+import CADETMatch.pareto as pareto
+import CADETMatch.util as util
 
 
 class GradientException(Exception):
     pass
 
 
-def create_template(experiment, name, tolerance, cache, settings, template_name, store_name):
+def create_template(
+    experiment, name, tolerance, cache, settings, template_name, store_name
+):
     simulationGrad = Cadet(experiment["simulation"].root)
     template_path_grad = Path(settings["resultsDirMisc"], template_name % name)
     simulationGrad.filename = template_path_grad.as_posix()
-        
+
     if cache.dynamicTolerance:
         simulationGrad.root.input.solver.time_integrator.abstol = tolerance
         simulationGrad.root.input.solver.time_integrator.reltol = 0.0
 
     start = time.time()
-    util.runExperiment(None, experiment, cache.settings, cache.target, simulationGrad, experiment.get("timeout", 1800), cache)
+    util.runExperiment(
+        None,
+        experiment,
+        cache.settings,
+        cache.target,
+        simulationGrad,
+        experiment.get("timeout", 1800),
+        cache,
+    )
     elapsed = time.time() - start
 
     # timeout needs to be stored in the template so all processes have it without calculating it
@@ -46,6 +57,7 @@ def create_template(experiment, name, tolerance, cache, settings, template_name,
 
     experiment[store_name] = simulationGrad
 
+
 def setupTemplates(cache):
     settings = cache.settings
     target = cache.target
@@ -55,7 +67,16 @@ def setupTemplates(cache):
 
         abstolFactorGrad = util.get_grad_tolerance(cache, name)
 
-        create_template(experiment, name, abstolFactorGrad, cache, settings, "template_%s_grad.h5", "simulationSens")
+        create_template(
+            experiment,
+            name,
+            abstolFactorGrad,
+            cache,
+            settings,
+            "template_%s_grad.h5",
+            "simulationSens",
+        )
+
 
 def grad_score(values, cache):
     values = numpy.array(values)
@@ -69,16 +90,33 @@ def grad_score(values, cache):
         prod = 1 - prod
     return prod
 
+
 def search(
-    gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, generation, check_all=False, result_data=None, filterOverlap=True
+    gradCheck,
+    offspring,
+    cache,
+    writer,
+    csvfile,
+    grad_hof,
+    meta_hof,
+    generation,
+    check_all=False,
+    result_data=None,
+    filterOverlap=True,
 ):
     if check_all:
         checkOffspring = offspring
     else:
-        checkOffspring = (ind for ind in offspring if grad_score(ind.fitness.values, cache) <= gradCheck)
+        checkOffspring = (
+            ind
+            for ind in offspring
+            if grad_score(ind.fitness.values, cache) <= gradCheck
+        )
     if filterOverlap:
         checkOffspring = filterOverlapArea(cache, checkOffspring)
-    newOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad, map(tuple, checkOffspring))
+    newOffspring = cache.toolbox.map(
+        cache.toolbox.evaluate_grad, map(tuple, checkOffspring)
+    )
 
     temp = []
     csv_lines = []
@@ -88,15 +126,35 @@ def search(
 
     multiprocessing.get_logger().info("starting coarse refine")
     new_results = processOffspring(
-        newOffspring, temp, csv_lines, meta_csv_lines, gradient_results, grad_hof, meta_hof, generation, result_data, cache
+        newOffspring,
+        temp,
+        csv_lines,
+        meta_csv_lines,
+        gradient_results,
+        grad_hof,
+        meta_hof,
+        generation,
+        result_data,
+        cache,
     )
     multiprocessing.get_logger().info("ending coarse refine")
 
     if new_results:
         multiprocessing.get_logger().info("starting fine refine")
-        fineOffspring = cache.toolbox.map(cache.toolbox.evaluate_grad_fine, map(tuple, meta_hof))
+        fineOffspring = cache.toolbox.map(
+            cache.toolbox.evaluate_grad_fine, map(tuple, meta_hof)
+        )
         processOffspring(
-            fineOffspring, temp, csv_lines, meta_csv_lines, gradient_results, grad_hof, meta_hof, generation, result_data, cache
+            fineOffspring,
+            temp,
+            csv_lines,
+            meta_csv_lines,
+            gradient_results,
+            grad_hof,
+            meta_hof,
+            generation,
+            result_data,
+            cache,
         )
         multiprocessing.get_logger().info("ending fine refine")
 
@@ -130,7 +188,18 @@ def search(
     return gradCheck, temp
 
 
-def processOffspring(offspring, temp, csv_lines, meta_csv_lines, gradient_results, grad_hof, meta_hof, generation, result_data, cache):
+def processOffspring(
+    offspring,
+    temp,
+    csv_lines,
+    meta_csv_lines,
+    gradient_results,
+    grad_hof,
+    meta_hof,
+    generation,
+    result_data,
+    cache,
+):
     new_meta = []
     for i in offspring:
         if i is None:
@@ -140,7 +209,13 @@ def processOffspring(offspring, temp, csv_lines, meta_csv_lines, gradient_result
 
             ind = cache.toolbox.individual_guess(i.x)
 
-            fit, csv_line, meta_score, results, individual = cache.toolbox.evaluate_final(ind, run_experiment=runExperimentSens)
+            (
+                fit,
+                csv_line,
+                meta_score,
+                results,
+                individual,
+            ) = cache.toolbox.evaluate_final(ind, run_experiment=runExperimentSens)
 
             ind.fitness.values = fit
 
@@ -151,7 +226,9 @@ def processOffspring(offspring, temp, csv_lines, meta_csv_lines, gradient_result
             except (AttributeError, numpy.linalg.LinAlgError):
                 csv_line[1] = ""
 
-            save_name_base = hashlib.md5(str(list(ind)).encode("utf-8", "ignore")).hexdigest()
+            save_name_base = hashlib.md5(
+                str(list(ind)).encode("utf-8", "ignore")
+            ).hexdigest()
             ind.csv_line = [time.ctime(), save_name_base] + csv_line
 
             ind_meta = cache.toolbox.individualMeta(ind)
@@ -166,7 +243,9 @@ def processOffspring(offspring, temp, csv_lines, meta_csv_lines, gradient_result
                 if onFront and not cache.metaResultsOnly:
                     util.processResultsGrad(save_name_base, ind, cache, results)
 
-                onFrontMeta, significant = pareto.updateParetoFront(meta_hof, ind_meta, cache)
+                onFrontMeta, significant = pareto.updateParetoFront(
+                    meta_hof, ind_meta, cache
+                )
                 new_meta.append(onFrontMeta)
                 if onFrontMeta:
                     meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
@@ -215,24 +294,39 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
                 sim_values = exp["sim_value"]
                 exp_values = exp["exp_value"]
 
-                for sim_time, sim_value, exp_value in zip(sim_times, sim_values, exp_values):
-                    if len(sim_time) < len(exp_value) and len(exp_value) % len(sim_time) == 0:
+                for sim_time, sim_value, exp_value in zip(
+                    sim_times, sim_values, exp_values
+                ):
+                    if (
+                        len(sim_time) < len(exp_value)
+                        and len(exp_value) % len(sim_time) == 0
+                    ):
                         # dealing with fractionation data, there are multiple data sets of len(sim_time)
                         exp_value = exp_value.reshape(-1, len(sim_time))
                         sim_value = sim_value.reshape(-1, len(sim_time))
                         for exp_row, sim_row in zip(exp_value, sim_value):
                             temp_area_total += numpy.trapz(exp_row, sim_time)
-                            temp_area_overlap += numpy.trapz(numpy.min([sim_row, exp_row], 0), sim_time)
+                            temp_area_overlap += numpy.trapz(
+                                numpy.min([sim_row, exp_row], 0), sim_time
+                            )
                     else:
                         temp_area_total += numpy.trapz(exp_value, sim_time)
-                        temp_area_overlap += numpy.trapz(numpy.min([sim_value, exp_value], 0), sim_time)
+                        temp_area_overlap += numpy.trapz(
+                            numpy.min([sim_value, exp_value], 0), sim_time
+                        )
 
             percent = temp_area_overlap / temp_area_total
             if percent > cutoff:
                 temp_offspring.append((percent, ind))
-                multiprocessing.get_logger().info("kept %s with overlap (%s) in gradient descent", ind, percent)
+                multiprocessing.get_logger().info(
+                    "kept %s with overlap (%s) in gradient descent", ind, percent
+                )
             else:
-                multiprocessing.get_logger().info("removed %s for insufficient overlap (%s) in gradient descent", ind, percent)
+                multiprocessing.get_logger().info(
+                    "removed %s for insufficient overlap (%s) in gradient descent",
+                    ind,
+                    percent,
+                )
         else:
             multiprocessing.get_logger().info("removed %s for failure", ind)
 
@@ -241,8 +335,12 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
 
     if cache.multiStartPercent < 1.0 and temp_offspring:
         # cut to the top multiStartPercent items with a minimum of 1 item
-        temp_offspring = temp_offspring[: max(int(cache.multiStartPercent * len(checkOffspring)), 1)]
-        multiprocessing.get_logger().info("gradient overlap cutoff %.2g", temp_offspring[-1][0])
+        temp_offspring = temp_offspring[
+            : max(int(cache.multiStartPercent * len(checkOffspring)), 1)
+        ]
+        multiprocessing.get_logger().info(
+            "gradient overlap cutoff %.2g", temp_offspring[-1][0]
+        )
 
     temp_offspring = [ind for (percent, ind) in temp_offspring]
 
@@ -267,6 +365,7 @@ def gradSearch(x, json_path):
         cache.cache.setup(json_path)
     return refine(x, 1e-4)
 
+
 def refine(x, xtol):
     localRefine = cache.cache.settings.get("localRefine", "gradient")
     if localRefine == "gradient":
@@ -282,11 +381,15 @@ def refine(x, xtol):
                 ftol=None,
                 gtol=None,
                 loss="linear",
-                diff_step=1e-4
+                diff_step=1e-4,
             )
 
-            cadetValues, cadetValuesExtended = util.convert_individual(val.x, cache.cache)
-            cadetValuesInput, cadetValuesExtendedInput = util.convert_individual(x, cache.cache)
+            cadetValues, cadetValuesExtended = util.convert_individual(
+                val.x, cache.cache
+            )
+            cadetValuesInput, cadetValuesExtendedInput = util.convert_individual(
+                x, cache.cache
+            )
 
             val.cadetValues = cadetValues
             val.cadetValuesExtended = cadetValuesExtended
@@ -294,7 +397,12 @@ def refine(x, xtol):
             val.cadetValuesExtendedInput = cadetValuesExtendedInput
             val.cond = numpy.linalg.cond(val.jac)
 
-            multiprocessing.get_logger().info("gradient optimization result start: %s (%s) result: %s", x, cadetValues, val)
+            multiprocessing.get_logger().info(
+                "gradient optimization result start: %s (%s) result: %s",
+                x,
+                cadetValues,
+                val,
+            )
 
             return val
         except GradientException:
@@ -309,34 +417,54 @@ def refine(x, xtol):
 
         try:
             x = numpy.clip(x, cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)
-            val = scipy.optimize.minimize(goal, x, method="powell", options={"xtol": xtol}, bounds=list(zip(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)))
+            val = scipy.optimize.minimize(
+                goal,
+                x,
+                method="powell",
+                options={"xtol": xtol},
+                bounds=list(zip(cache.cache.MIN_VALUE, cache.cache.MAX_VALUE)),
+            )
 
-            cadetValues, cadetValuesExtended = util.convert_individual(val.x, cache.cache)
-            cadetValuesInput, cadetValuesExtendedInput = util.convert_individual(x, cache.cache)
+            cadetValues, cadetValuesExtended = util.convert_individual(
+                val.x, cache.cache
+            )
+            cadetValuesInput, cadetValuesExtendedInput = util.convert_individual(
+                x, cache.cache
+            )
 
             val.cadetValues = cadetValues
             val.cadetValuesExtended = cadetValuesExtended
             val.cadetValuesInput = cadetValuesInput
             val.cadetValuesExtendedInput = cadetValuesExtendedInput
 
-            multiprocessing.get_logger().info("gradient optimization result start: %s (%s) result: %s", x, cadetValues, val)
+            multiprocessing.get_logger().info(
+                "gradient optimization result start: %s (%s) result: %s",
+                x,
+                cadetValues,
+                val,
+            )
 
             return val
         except GradientException:
             # If the gradient fails return None as the point so the optimizer can adapt
             return None
 
+
 def fitness_grad(individual, finished=0):
     return fitness_base(evo.runExperiment, individual, finished)
+
 
 def fitness_sens_grad(individual, finished=0):
     return fitness_sens(individual, finished)
 
+
 def fitness(individual, finished=1):
     return fitness_base(evo.runExperiment, individual, finished)
 
+
 def fitness_sens(individual, finished=1):
     return fitness_base(runExperimentSens, individual, finished)
+
 
 def fitness_base(fit, individual, finished):
     minimize = []
@@ -347,7 +475,14 @@ def fitness_base(fit, individual, finished):
     results = {}
     for experiment in cache.cache.settings["experiments"]:
         setup_experiments(cache.cache, experiment)
-        result = fit(individual, "simulationSens", experiment, cache.cache.settings, cache.cache.target, cache.cache)
+        result = fit(
+            individual,
+            "simulationSens",
+            experiment,
+            cache.cache.settings,
+            cache.cache.target,
+            cache.cache,
+        )
 
         if result is not None:
             results[experiment["name"]] = result
@@ -367,23 +502,43 @@ def fitness_base(fit, individual, finished):
         elif cache.cache.allScoreSSE:
             return numpy.array(diff)
         else:
-            multiprocessing.get_logger().info("Norm 1 and SSE based scores can't be mixed %s", cache.cache.badScores)
+            multiprocessing.get_logger().info(
+                "Norm 1 and SSE based scores can't be mixed %s", cache.cache.badScores
+            )
             sys.exit()
 
+
 def saveExperimentsSens(save_name_base, settings, target, results):
-    return util.saveExperiments(save_name_base, settings, target, results, settings["resultsDirGrad"], "%s_%s_GRAD.h5")
+    return util.saveExperiments(
+        save_name_base,
+        settings,
+        target,
+        results,
+        settings["resultsDirGrad"],
+        "%s_%s_GRAD.h5",
+    )
+
 
 def setup_experiments(cache, experiment):
     if "simulationSens" not in experiment:
-        templatePath = Path(cache.settings["resultsDirMisc"], "template_%s_grad.h5" % experiment["name"])
+        templatePath = Path(
+            cache.settings["resultsDirMisc"], "template_%s_grad.h5" % experiment["name"]
+        )
         templateSim = Cadet()
         templateSim.filename = templatePath.as_posix()
         templateSim.load()
         experiment["simulationSens"] = templateSim
 
+
 def runExperimentSens(individual, template_name, experiment, settings, target, cache):
     setup_experiments(cache, experiment)
 
     return util.runExperiment(
-        individual, experiment, settings, target, experiment[template_name], experiment[template_name].root.timeout, cache
+        individual,
+        experiment,
+        settings,
+        target,
+        experiment[template_name],
+        experiment[template_name].root.timeout,
+        cache,
     )

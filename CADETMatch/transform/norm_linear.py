@@ -1,6 +1,7 @@
-import CADETMatch.util as util
 import numpy
+
 import CADETMatch.calc_coeff as calc_coeff
+import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
 
 
@@ -49,7 +50,10 @@ class LinearTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             location = self.parameter["location"]
 
             minX = self.parameter["minX"]

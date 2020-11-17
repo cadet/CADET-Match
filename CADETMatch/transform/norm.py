@@ -1,6 +1,7 @@
+import numpy
+
 import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
-import numpy
 
 
 class NullTransform(AbstractTransform):
@@ -26,7 +27,6 @@ class NullTransform(AbstractTransform):
 
     grad_transform = transform
 
-
     def untransform_inputorder(self, seq):
         values = [
             seq[0],
@@ -51,7 +51,10 @@ class NullTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             location = self.parameter["location"]
 
             try:
@@ -81,10 +84,14 @@ class NullTransform(AbstractTransform):
         minValue = self.parameter["min"]
         maxValue = self.parameter["max"]
 
-        return [minValue,], [maxValue,]
+        return [minValue,], [
+            maxValue,
+        ]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
     def getHeaders(self):
         location = self.parameter["location"]
@@ -140,7 +147,6 @@ class NormTransform(NullTransform):
         ]
         return values
 
-
     def grad_untransform(self, seq):
         return self.untransform(seq)[0]
 
@@ -154,10 +160,14 @@ class NormTransform(NullTransform):
     untransform_matrix_inputorder = untransform_matrix
 
     def getBounds(self):
-        return [0.0,], [1.0,]
+        return [0.0,], [
+            1.0,
+        ]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
 
 plugins = {"norm": NormTransform, "null": NullTransform}

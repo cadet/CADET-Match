@@ -83,7 +83,10 @@ def cross_correlate(exp_time_values, sim_data_values, exp_data_values):
 
     sim_time_values = roll(exp_time_values, shift=int(numpy.ceil(roll_index)))
 
-    diff_time = numpy.abs(exp_time_values[int(len(exp_time_values) / 2)] - sim_time_values[int(len(exp_time_values) / 2)])
+    diff_time = numpy.abs(
+        exp_time_values[int(len(exp_time_values) / 2)]
+        - sim_time_values[int(len(exp_time_values) / 2)]
+    )
 
     return score, diff_time
 
@@ -102,13 +105,20 @@ def pearson(exp_time_values, sim_data_values, exp_data_values):
         score = corr[index]
     except IndexError:
         score = 0.0
-        multiprocessing.get_logger().warn("Index error in pearson score at index %s out of %s entries", index, len(corr))
+        multiprocessing.get_logger().warn(
+            "Index error in pearson score at index %s out of %s entries",
+            index,
+            len(corr),
+        )
 
     endTime = exp_time_values[-1]
 
     sim_time_values = roll(exp_time_values, shift=int(numpy.ceil(roll_index)))
 
-    diff_time = numpy.abs(exp_time_values[int(len(exp_time_values) / 2)] - sim_time_values[int(len(exp_time_values) / 2)])
+    diff_time = numpy.abs(
+        exp_time_values[int(len(exp_time_values) / 2)]
+        - sim_time_values[int(len(exp_time_values) / 2)]
+    )
 
     sim_data_values_copy = roll(sim_data_values, shift=int(numpy.ceil(roll_index)))
 

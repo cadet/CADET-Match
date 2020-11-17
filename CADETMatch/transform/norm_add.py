@@ -72,7 +72,10 @@ class NormAddTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             locationFrom = self.parameter["locationFrom"]
             locationTo = self.parameter["locationTo"]
 
@@ -84,7 +87,9 @@ class NormAddTransform(AbstractTransform):
                 indexFrom = self.parameter["indexFrom"]
                 boundFrom = None
                 compFrom = None
-            valueFrom = self.getValue(sim, locationFrom, bound=boundFrom, comp=compFrom, index=indexFrom)
+            valueFrom = self.getValue(
+                sim, locationFrom, bound=boundFrom, comp=compFrom, index=indexFrom
+            )
 
             try:
                 compTo = self.parameter["componentTo"]
@@ -100,7 +105,14 @@ class NormAddTransform(AbstractTransform):
             else:
                 temp = self.parameter["min"]
 
-            self.setValue(sim, valueFrom + temp, locationTo, bound=boundTo, comp=compTo, index=indexTo)
+            self.setValue(
+                sim,
+                valueFrom + temp,
+                locationTo,
+                bound=boundTo,
+                comp=compTo,
+                index=indexTo,
+            )
 
         if self.count:
             return values, headerValues
@@ -109,13 +121,17 @@ class NormAddTransform(AbstractTransform):
 
     def getBounds(self):
         if self.count:
-            return [0.0,], [1.0,]
+            return [0.0,], [
+                1.0,
+            ]
         else:
             return None, None
 
     def getGradBounds(self):
         if self.count:
-            return [self.parameter["min"],], [self.parameter["max"],]
+            return [self.parameter["min"],], [
+                self.parameter["max"],
+            ]
         else:
             return None, None
 

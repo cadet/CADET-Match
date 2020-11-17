@@ -1,7 +1,9 @@
+import multiprocessing
+
+import numpy
+
 import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
-import multiprocessing
-import numpy
 
 
 class AutoInverseTransform(AbstractTransform):
@@ -19,12 +21,12 @@ class AutoInverseTransform(AbstractTransform):
 
     @property
     def okay_linear(self):
-        minValue = 1.0/self.parameter["min"]
-        maxValue = 1.0/self.parameter["max"]
+        minValue = 1.0 / self.parameter["min"]
+        maxValue = 1.0 / self.parameter["max"]
 
-        maxFactor = self.parameter.get('maxFactor', 1000)
+        maxFactor = self.parameter.get("maxFactor", 1000)
 
-        return minValue/maxValue < maxFactor
+        return minValue / maxValue < maxFactor
 
     @property
     def okay_log(self):
@@ -37,11 +39,11 @@ class AutoInverseTransform(AbstractTransform):
             return self.transform_linear()
 
     def transform_log(self):
-        minValue = 1.0/numpy.log(self.parameter["min"])
-        maxValue = 1.0/numpy.log(self.parameter["max"])
+        minValue = 1.0 / numpy.log(self.parameter["min"])
+        maxValue = 1.0 / numpy.log(self.parameter["max"])
 
         def trans(i):
-            val = (1.0/numpy.log(i) - minValue) / (maxValue - minValue)
+            val = (1.0 / numpy.log(i) - minValue) / (maxValue - minValue)
             return val
 
         return [
@@ -49,11 +51,11 @@ class AutoInverseTransform(AbstractTransform):
         ]
 
     def transform_linear(self):
-        minValue = 1.0/self.parameter["min"]
-        maxValue = 1.0/self.parameter["max"]
+        minValue = 1.0 / self.parameter["min"]
+        maxValue = 1.0 / self.parameter["max"]
 
         def trans(i):
-            val = (1.0/i - minValue) / (maxValue - minValue)
+            val = (1.0 / i - minValue) / (maxValue - minValue)
             return val
 
         return [
@@ -76,31 +78,30 @@ class AutoInverseTransform(AbstractTransform):
 
     def untransform_log_inputorder(self, seq):
         minValue = numpy.log(self.parameter["min"])
-        maxValue = numpy.log(self.parameter["max"])        
+        maxValue = numpy.log(self.parameter["max"])
 
         values = [
-            (minValue * maxValue)/(seq[0]*(minValue - maxValue) + maxValue),
+            (minValue * maxValue) / (seq[0] * (minValue - maxValue) + maxValue),
         ]
 
-        values = [numpy.exp(values[0]),]
+        values = [
+            numpy.exp(values[0]),
+        ]
         return values
-
 
     def untransform_log(self, seq):
         values = self.untransform_log_inputorder(seq)
         headerValues = values
         return values, headerValues
 
-
     def untransform_linear_inputorder(self, seq):
-        minValue = 1.0/self.parameter["min"]
-        maxValue = 1.0/self.parameter["max"]
+        minValue = 1.0 / self.parameter["min"]
+        maxValue = 1.0 / self.parameter["max"]
 
         values = [
-            1.0/((maxValue - minValue) * seq[0] + minValue),
+            1.0 / ((maxValue - minValue) * seq[0] + minValue),
         ]
         return values
-
 
     def untransform_linear(self, seq):
         values = self.untransform_linear_inputorder(seq)
@@ -118,17 +119,17 @@ class AutoInverseTransform(AbstractTransform):
 
     def untransform_matrix_log(self, matrix):
         minValue = numpy.log(self.parameter["min"])
-        maxValue = numpy.log(self.parameter["max"])        
+        maxValue = numpy.log(self.parameter["max"])
 
-        temp =  (minValue * maxValue)/(matrix*(minValue - maxValue) + maxValue)
+        temp = (minValue * maxValue) / (matrix * (minValue - maxValue) + maxValue)
         values = numpy.exp(temp)
         return values
 
     def untransform_matrix_linear(self, matrix):
-        minValue = 1.0/self.parameter["min"]
-        maxValue = 1.0/self.parameter["max"]
+        minValue = 1.0 / self.parameter["min"]
+        maxValue = 1.0 / self.parameter["max"]
 
-        values = 1.0/((maxValue - minValue) * matrix + minValue)
+        values = 1.0 / ((maxValue - minValue) * matrix + minValue)
         return values
 
     untransform_matrix_inputorder = untransform_matrix
@@ -136,7 +137,10 @@ class AutoInverseTransform(AbstractTransform):
     def setSimulation(self, sim, seq, experiment):
         values, headerValues = self.untransform(seq)
 
-        if self.parameter.get("experiments", None) is None or experiment["name"] in self.parameter["experiments"]:
+        if (
+            self.parameter.get("experiments", None) is None
+            or experiment["name"] in self.parameter["experiments"]
+        ):
             location = self.parameter["location"]
 
             try:
@@ -163,16 +167,24 @@ class AutoInverseTransform(AbstractTransform):
             return values, headerValues
 
     def getBounds(self):
-        return [0.0,], [1.0,]
+        return [0.0,], [
+            1.0,
+        ]
 
     def getGradBounds(self):
-        return [self.parameter["min"],], [self.parameter["max"],]
+        return [self.parameter["min"],], [
+            self.parameter["max"],
+        ]
 
     def getHeaders(self):
         if self.okay_log:
-            multiprocessing.get_logger().info("parameter %s log", self.parameter['location'])
+            multiprocessing.get_logger().info(
+                "parameter %s log", self.parameter["location"]
+            )
         else:
-            multiprocessing.get_logger().info("parameter %s linear", self.parameter['location'])
+            multiprocessing.get_logger().info(
+                "parameter %s linear", self.parameter["location"]
+            )
 
         location = self.parameter["location"]
 
@@ -201,5 +213,3 @@ class AutoInverseTransform(AbstractTransform):
 
 
 plugins = {"auto_inverse": AutoInverseTransform}
-
-

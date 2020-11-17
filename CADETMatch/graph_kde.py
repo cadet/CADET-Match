@@ -1,22 +1,21 @@
 import sys
-import filelock
 
+import filelock
 import matplotlib
 import matplotlib.style as mplstyle
-mplstyle.use('fast')
+
+mplstyle.use("fast")
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+import multiprocessing
+from pathlib import Path
 
+import matplotlib.pyplot as plt
+import numpy
 from cadet import H5
+from sklearn.preprocessing import MinMaxScaler
 
 from CADETMatch.cache import cache
-
-from pathlib import Path
-import numpy
-from sklearn.preprocessing import MinMaxScaler
-import multiprocessing
-
 
 
 def main():
@@ -51,17 +50,17 @@ def main():
     plt.scatter(store[:, 0], store[:, 1])
     plt.xlabel("bandwidth")
     plt.ylabel("cross_val_score")
-    plt.yscale('log')
-    plt.xscale('log')
+    plt.yscale("log")
+    plt.xscale("log")
     plt.savefig(str(mcmcDir / "log_bandwidth.png"), bbox_inches="tight")
     plt.close()
 
     plt.figure(figsize=[10, 10])
-    plt.scatter(store[:, 0], 1-store[:, 1])
+    plt.scatter(store[:, 0], 1 - store[:, 1])
     plt.xlabel("bandwidth")
     plt.ylabel("1 - cross_val_score")
-    plt.yscale('log')
-    plt.xscale('log')
+    plt.yscale("log")
+    plt.xscale("log")
     plt.savefig(str(mcmcDir / "1-log_bandwidth.png"), bbox_inches="tight")
     plt.close()
 
@@ -85,7 +84,7 @@ def main():
 
     scaler = MinMaxScaler()
     prob = numpy.exp(kde_settings.root.probability)
-    prob = prob[:kde_settings.root.scores.shape[0]]
+    prob = prob[: kde_settings.root.scores.shape[0]]
     prob = numpy.squeeze(scaler.fit_transform(prob.reshape(-1, 1)))
 
     sort_index = numpy.argsort(prob)
@@ -96,50 +95,69 @@ def main():
         time = times[key.split("_unit", 1)[0]]
         plt.figure(figsize=[20, 10])
         for idx in sort_index:
-            plt.plot(time, value[idx,:], color=colors[idx])
+            plt.plot(time, value[idx, :], color=colors[idx])
         plt.xlabel("time")
         plt.ylabel("concentration")
-        sm = plt.cm.ScalarMappable(cmap=plt.cm.rainbow, norm=plt.Normalize(vmin=0, vmax=1))
+        sm = plt.cm.ScalarMappable(
+            cmap=plt.cm.rainbow, norm=plt.Normalize(vmin=0, vmax=1)
+        )
         plt.colorbar(sm)
-        plt.savefig((error_model / ("%s.png" % key)).as_posix(), bbox_inches="tight", dpi=600)
+        plt.savefig(
+            (error_model / ("%s.png" % key)).as_posix(), bbox_inches="tight", dpi=600
+        )
         plt.close()
 
     for exp_name in kde_data.root.errors:
         temp = kde_data.root.errors[exp_name].pump_delays.reshape(-1, 1)
         if numpy.any(temp > 0):
-            plt.figure(figsize=[10,10])
+            plt.figure(figsize=[10, 10])
             plt.hist(temp, bins=40)
-            plt.savefig((error_model / ("%s_pump_delays.png" % exp_name)).as_posix(), bbox_inches="tight")
+            plt.savefig(
+                (error_model / ("%s_pump_delays.png" % exp_name)).as_posix(),
+                bbox_inches="tight",
+            )
             plt.close()
 
         temp = kde_data.root.errors[exp_name].flow_rates.reshape(-1, 1)
         if numpy.any(temp > 0):
-            plt.figure(figsize=[10,10])
+            plt.figure(figsize=[10, 10])
             plt.hist(temp, bins=40)
-            plt.savefig((error_model / ("%s_flow_rates.png" % exp_name)).as_posix(), bbox_inches="tight")
+            plt.savefig(
+                (error_model / ("%s_flow_rates.png" % exp_name)).as_posix(),
+                bbox_inches="tight",
+            )
             plt.close()
 
         temp = kde_data.root.errors[exp_name].loading_concentrations.reshape(-1, 1)
         if numpy.any(temp > 0):
-            plt.figure(figsize=[10,10])
+            plt.figure(figsize=[10, 10])
             plt.hist(temp, bins=40)
-            plt.savefig((error_model / ("%s_loading_concentrations.png" % exp_name)).as_posix(), bbox_inches="tight")
+            plt.savefig(
+                (error_model / ("%s_loading_concentrations.png" % exp_name)).as_posix(),
+                bbox_inches="tight",
+            )
             plt.close()
 
     (error_model / "scores").mkdir(parents=True, exist_ok=True)
     for idx in range(kde_settings.root.scores.shape[1]):
-        plt.figure(figsize=[10,10])
-        temp = kde_settings.root.scores[:,idx]
+        plt.figure(figsize=[10, 10])
+        temp = kde_settings.root.scores[:, idx]
         plt.hist(temp[temp > 0], bins=40)
-        plt.savefig((error_model / "scores"/ ("%s.png" % idx)).as_posix(), bbox_inches="tight")
+        plt.savefig(
+            (error_model / "scores" / ("%s.png" % idx)).as_posix(), bbox_inches="tight"
+        )
         plt.close()
 
     (error_model / "scores_mirror_scaled").mkdir(parents=True, exist_ok=True)
     for idx in range(kde_settings.root.scores_mirror_scaled.shape[1]):
-        plt.figure(figsize=[10,10])
-        plt.hist(kde_settings.root.scores_mirror_scaled[:,idx], bins=40)
-        plt.savefig((error_model / "scores_mirror_scaled"/ ("%s.png" % idx)).as_posix(), bbox_inches="tight")
+        plt.figure(figsize=[10, 10])
+        plt.hist(kde_settings.root.scores_mirror_scaled[:, idx], bins=40)
+        plt.savefig(
+            (error_model / "scores_mirror_scaled" / ("%s.png" % idx)).as_posix(),
+            bbox_inches="tight",
+        )
         plt.close()
+
 
 if __name__ == "__main__":
     main()

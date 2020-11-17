@@ -1,8 +1,9 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
 import numpy
 import pandas
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "fractionation"
 settings = Dict()
@@ -33,7 +34,9 @@ def run(sim_data, feature):
         selected = (times >= start) & (times <= stop)
 
         local_times = times[selected]
-        local_values = simulation.root.output.solution[feature["unit"]]["solution_outlet_comp_%03d" % component][selected]
+        local_values = simulation.root.output.solution[feature["unit"]][
+            "solution_outlet_comp_%03d" % component
+        ][selected]
 
         sim_value = numpy.trapz(local_values, local_times)
 
@@ -112,5 +115,8 @@ def headers(experimentName, feature):
     temp = []
     for sample in range(rows):
         for component in data_headers[2:]:
-            temp.append("%s_%s_Sample_%s_Component_%s" % (experimentName, feature["name"], sample, component))
+            temp.append(
+                "%s_%s_Sample_%s_Component_%s"
+                % (experimentName, feature["name"], sample, component)
+            )
     return temp

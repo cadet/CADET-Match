@@ -1,8 +1,9 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
 import numpy
 import pandas
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "fractionationMoment"
 settings = Dict()
@@ -48,12 +49,22 @@ def run(sim_data, feature):
         time_center = (start + stop) / 2.0
 
         sim_values = util.fractionate(
-            start, stop, times, simulation.root.output.solution[feature["unit"]]["solution_outlet_comp_%03d" % component]
+            start,
+            stop,
+            times,
+            simulation.root.output.solution[feature["unit"]][
+                "solution_outlet_comp_%03d" % component
+            ],
         )
 
-        mean_sim_time, variance_sim_time, skew_sim_time, mean_sim_value, variance_sim_value, skew_sim_value = util.fracStat(
-            time_center, sim_values
-        )
+        (
+            mean_sim_time,
+            variance_sim_time,
+            skew_sim_time,
+            mean_sim_value,
+            variance_sim_value,
+            skew_sim_value,
+        ) = util.fracStat(time_center, sim_values)
 
         exp_values_sse.extend(values)
         sim_values_sse.extend(sim_values)
@@ -105,7 +116,14 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     for idx, component in enumerate(headers[2:], 2):
         value = numpy.array(data.iloc[:, idx])
 
-        mean_time, variance_time, skew_time, mean_value, variance_value, skew_value = util.fracStat(time_center, value)
+        (
+            mean_time,
+            variance_time,
+            skew_time,
+            mean_value,
+            variance_value,
+            skew_value,
+        ) = util.fracStat(time_center, value)
 
         func_mean_time = score.time_function(CV_time, mean_time, diff_input=False)
         func_variance_time = score.value_function(variance_time)
@@ -146,10 +164,27 @@ def headers(experimentName, feature):
 
     temp = []
     for component in data_headers[2:]:
-        temp.append("%s_%s_Component_%s_time_mean" % (experimentName, feature["name"], component))
-        temp.append("%s_%s_Component_%s_time_var" % (experimentName, feature["name"], component))
-        temp.append("%s_%s_Component_%s_time_skew" % (experimentName, feature["name"], component))
-        temp.append("%s_%s_Component_%s_value_mean" % (experimentName, feature["name"], component))
-        temp.append("%s_%s_Component_%s_value_var" % (experimentName, feature["name"], component))
-        temp.append("%s_%s_Component_%s_value_skew" % (experimentName, feature["name"], component))
+        temp.append(
+            "%s_%s_Component_%s_time_mean"
+            % (experimentName, feature["name"], component)
+        )
+        temp.append(
+            "%s_%s_Component_%s_time_var" % (experimentName, feature["name"], component)
+        )
+        temp.append(
+            "%s_%s_Component_%s_time_skew"
+            % (experimentName, feature["name"], component)
+        )
+        temp.append(
+            "%s_%s_Component_%s_value_mean"
+            % (experimentName, feature["name"], component)
+        )
+        temp.append(
+            "%s_%s_Component_%s_value_var"
+            % (experimentName, feature["name"], component)
+        )
+        temp.append(
+            "%s_%s_Component_%s_value_skew"
+            % (experimentName, feature["name"], component)
+        )
     return temp

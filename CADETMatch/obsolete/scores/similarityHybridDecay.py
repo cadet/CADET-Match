@@ -1,8 +1,9 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
-import scipy.stats
 import numpy
+import scipy.stats
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "similarityHybridDecay"
 settings = Dict()
@@ -10,12 +11,22 @@ settings.adaptive = True
 settings.badScore = 0
 settings.meta_mask = True
 settings.count = 3
-settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
+settings.failure = (
+    [0.0] * settings.count,
+    1e6,
+    1,
+    numpy.array([0.0]),
+    numpy.array([0.0]),
+    numpy.array([1e6]),
+    [1.0] * settings.count,
+)
 
 
 def run(sim_data, feature):
     "similarity, value, start stop"
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature
+    )
     selected = feature["selected"]
 
     exp_data_values = feature["value"][selected]
@@ -29,7 +40,9 @@ def run(sim_data, feature):
 
     time_high, value_high = high
 
-    score_cross, diff_time = score.cross_correlate(exp_time_values, sim_data_values, exp_data_values)
+    score_cross, diff_time = score.cross_correlate(
+        exp_time_values, sim_data_values, exp_data_values
+    )
 
     temp = [
         score.pear_corr(scipy.stats.pearsonr(sim_data_values, exp_data_values)[0]),
@@ -50,7 +63,9 @@ def run(sim_data, feature):
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp = {}
     temp["peak"] = util.find_peak(selectedTimes, selectedValues)[0]
-    temp["time_function"] = score.time_function_decay(CV_time, temp["peak"][0], diff_input=True)
+    temp["time_function"] = score.time_function_decay(
+        CV_time, temp["peak"][0], diff_input=True
+    )
     temp["value_function"] = score.value_function(temp["peak"][1], abstol)
     return temp
 

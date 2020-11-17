@@ -1,9 +1,10 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
-import scipy.stats
 import numpy
 import numpy.linalg
+import scipy.stats
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "DextranTest"
 settings = Dict()
@@ -11,7 +12,15 @@ settings.adaptive = True
 settings.badScore = 0
 settings.meta_mask = True
 settings.count = 2
-settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
+settings.failure = (
+    [0.0] * settings.count,
+    1e6,
+    1,
+    numpy.array([0.0]),
+    numpy.array([0.0]),
+    numpy.array([1e6]),
+    [1.0] * settings.count,
+)
 
 
 def run(sim_data, feature):
@@ -21,14 +30,18 @@ def run(sim_data, feature):
 
     selected = feature["selected"]
 
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature
+    )
 
     diff = feature["value"] - sim_data_values
 
     sse = numpy.sum(diff)
     norm = numpy.linalg.norm(diff)
 
-    if max(sim_data_values) < max_value:  # the system has no point higher than the value we are looking for
+    if (
+        max(sim_data_values) < max_value
+    ):  # the system has no point higher than the value we are looking for
         # remove hard failure
         max_value = max(sim_data_values)
 
@@ -39,9 +52,13 @@ def run(sim_data, feature):
     max_index = numpy.argmax(sim_data_values >= max_value)
 
     sim_data_zero = numpy.zeros(len(sim_data_values))
-    sim_data_zero[min_index : max_index + 1] = sim_data_values[min_index : max_index + 1]
+    sim_data_zero[min_index : max_index + 1] = sim_data_values[
+        min_index : max_index + 1
+    ]
 
-    pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_zero, exp_data_zero)
+    pearson, diff_time = score.pearson_spline(
+        exp_time_values, sim_data_zero, exp_data_zero
+    )
 
     try:
         slope = get_slope(exp_time_values, sim_data_zero)
@@ -120,7 +137,9 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp["max_time"] = feature["stop"]
     temp["max_value"] = max_value
     temp["exp_data_zero"] = exp_data_zero
-    temp["offsetTimeFunction"] = score.time_function_decay_cv(CV_time, selectedTimes, max_time)
+    temp["offsetTimeFunction"] = score.time_function_decay_cv(
+        CV_time, selectedTimes, max_time
+    )
     temp["slope_function"] = score.slope_function(slope)
     return temp
 

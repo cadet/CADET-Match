@@ -1,10 +1,12 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
-import scipy.stats
-import numpy
 import math
+
+import numpy
 import scipy.interpolate
+import scipy.stats
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "DextranAngle"
 settings = Dict()
@@ -12,7 +14,15 @@ settings.adaptive = True
 settings.badScore = 0
 settings.meta_mask = True
 settings.count = 2
-settings.failure = [0.0] * settings.count, 1e6, 1, numpy.array([0.0]), numpy.array([0.0]), numpy.array([1e6]), [1.0] * settings.count
+settings.failure = (
+    [0.0] * settings.count,
+    1e6,
+    1,
+    numpy.array([0.0]),
+    numpy.array([0.0]),
+    numpy.array([1e6]),
+    [1.0] * settings.count,
+)
 
 
 def run(sim_data, feature):
@@ -22,7 +32,9 @@ def run(sim_data, feature):
 
     selected = feature["selected"]
 
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature
+    )
 
     exp_data_values = feature["value"][selected]
     exp_time_values = feature["time"][selected]
@@ -32,7 +44,9 @@ def run(sim_data, feature):
     sse = numpy.sum(diff)
     norm = numpy.linalg.norm(diff)
 
-    if max(sim_data_values) < max_value:  # the system has no point higher than the value we are looking for
+    if (
+        max(sim_data_values) < max_value
+    ):  # the system has no point higher than the value we are looking for
         # remove hard failure
         max_value = max(sim_data_values)
 
@@ -43,11 +57,18 @@ def run(sim_data, feature):
     max_index = numpy.argmax(sim_data_values >= max_value)
 
     sim_data_zero = numpy.zeros(len(sim_data_values))
-    sim_data_zero[min_index : max_index + 1] = sim_data_values[min_index : max_index + 1]
+    sim_data_zero[min_index : max_index + 1] = sim_data_values[
+        min_index : max_index + 1
+    ]
 
-    angle = math.atan2(sim_data_zero[max_index], sim_time_values[max_index] - sim_time_values[min_index])
+    angle = math.atan2(
+        sim_data_zero[max_index],
+        sim_time_values[max_index] - sim_time_values[min_index],
+    )
 
-    pearson, diff_time = score.pearson_spline(exp_time_values, sim_data_zero, exp_data_zero)
+    pearson, diff_time = score.pearson_spline(
+        exp_time_values, sim_data_zero, exp_data_zero
+    )
 
     temp = [
         feature["offsetTimeFunction"](numpy.abs(diff_time)),
@@ -91,8 +112,12 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     temp["max_time"] = feature["stop"]
     temp["max_value"] = max_value
     temp["exp_data_zero"] = exp_data_zero
-    temp["offsetTimeFunction"] = score.time_function_decay_exp(CV_time / 10.0, None, diff_input=True)
-    temp["offsetDerTimeFunction"] = score.time_function_decay(CV_time / 10.0, None, diff_input=True)
+    temp["offsetTimeFunction"] = score.time_function_decay_exp(
+        CV_time / 10.0, None, diff_input=True
+    )
+    temp["offsetDerTimeFunction"] = score.time_function_decay(
+        CV_time / 10.0, None, diff_input=True
+    )
     temp["valueFunction"] = score.value_function_exp(angle, abstol)
     return temp
 

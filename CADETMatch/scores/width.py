@@ -1,7 +1,8 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
 import numpy
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "width"
 
@@ -17,7 +18,9 @@ def get_settings(feature):
 
 def run(sim_data, feature):
     "similarity, value, start stop"
-    sim_time_values, sim_data_values = util.get_times_values(sim_data["simulation"], feature)
+    sim_time_values, sim_data_values = util.get_times_values(
+        sim_data["simulation"], feature
+    )
     selected = feature["selected"]
 
     exp_data_values = feature["value"][selected]
@@ -45,9 +48,15 @@ def run(sim_data, feature):
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
-    temp["width_25"] = score.value_function(find_width(selectedTimes, selectedValues, 0.25), abstol)
-    temp["width_50"] = score.value_function(find_width(selectedTimes, selectedValues, 0.50), abstol)
-    temp["width_75"] = score.value_function(find_width(selectedTimes, selectedValues, 0.75), abstol)
+    temp["width_25"] = score.value_function(
+        find_width(selectedTimes, selectedValues, 0.25), abstol
+    )
+    temp["width_50"] = score.value_function(
+        find_width(selectedTimes, selectedValues, 0.50), abstol
+    )
+    temp["width_75"] = score.value_function(
+        find_width(selectedTimes, selectedValues, 0.75), abstol
+    )
     temp["peak_max"] = max(selectedValues)
     return temp
 

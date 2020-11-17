@@ -1,8 +1,9 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
 import numpy
 import pandas
 from addict import Dict
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "fractionationMeanVariance"
 settings = Dict()
@@ -33,16 +34,35 @@ def run(sim_data, feature):
 
     graph_sim = {}
     graph_exp = {}
-    for (start, stop, component, values, func_mean_time, func_variance_time, func_mean_value, func_variance_value) in funcs:
+    for (
+        start,
+        stop,
+        component,
+        values,
+        func_mean_time,
+        func_variance_time,
+        func_mean_value,
+        func_variance_value,
+    ) in funcs:
         time_center = (start + stop) / 2.0
 
         sim_values = util.fractionate(
-            start, stop, times, simulation.root.output.solution[feature["unit"]]["solution_outlet_comp_%03d" % component]
+            start,
+            stop,
+            times,
+            simulation.root.output.solution[feature["unit"]][
+                "solution_outlet_comp_%03d" % component
+            ],
         )
 
-        mean_sim_time, variance_sim_time, skew_sim_time, mean_sim_value, variance_sim_value, skew_sim_value = util.fracStat(
-            time_center, sim_values
-        )
+        (
+            mean_sim_time,
+            variance_sim_time,
+            skew_sim_time,
+            mean_sim_value,
+            variance_sim_value,
+            skew_sim_value,
+        ) = util.fracStat(time_center, sim_values)
 
         exp_values_sse.extend(values)
         sim_values_sse.extend(sim_values)
@@ -92,7 +112,14 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
     for idx, component in enumerate(headers[2:], 2):
         value = numpy.array(data.iloc[:, idx])
 
-        mean_time, variance_time, skew_time, mean_value, variance_value, skew_value = util.fracStat(time_center, value)
+        (
+            mean_time,
+            variance_time,
+            skew_time,
+            mean_value,
+            variance_value,
+            skew_value,
+        ) = util.fracStat(time_center, value)
 
         func_mean_time = score.time_function(CV_time, mean_time, diff_input=False)
         func_variance_time = score.value_function(variance_time)
@@ -100,7 +127,18 @@ def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol):
         func_mean_value = score.value_function(mean_value, abstolFraction)
         func_variance_value = score.value_function(variance_value, abstolFraction / 1e5)
 
-        funcs.append((start, stop, int(component), value, func_mean_time, func_variance_time, func_mean_value, func_variance_value))
+        funcs.append(
+            (
+                start,
+                stop,
+                int(component),
+                value,
+                func_mean_time,
+                func_variance_time,
+                func_mean_value,
+                func_variance_value,
+            )
+        )
 
     settings.count = 4 * len(funcs)
     temp["funcs"] = funcs
@@ -118,8 +156,19 @@ def headers(experimentName, feature):
 
     temp = []
     for component in data_headers[2:]:
-        temp.append("%s_%s_Component_%s_time_mean" % (experimentName, feature["name"], component))
-        temp.append("%s_%s_Component_%s_time_var" % (experimentName, feature["name"], component))
-        temp.append("%s_%s_Component_%s_value_mean" % (experimentName, feature["name"], component))
-        temp.append("%s_%s_Component_%s_value_var" % (experimentName, feature["name"], component))
+        temp.append(
+            "%s_%s_Component_%s_time_mean"
+            % (experimentName, feature["name"], component)
+        )
+        temp.append(
+            "%s_%s_Component_%s_time_var" % (experimentName, feature["name"], component)
+        )
+        temp.append(
+            "%s_%s_Component_%s_value_mean"
+            % (experimentName, feature["name"], component)
+        )
+        temp.append(
+            "%s_%s_Component_%s_value_var"
+            % (experimentName, feature["name"], component)
+        )
     return temp

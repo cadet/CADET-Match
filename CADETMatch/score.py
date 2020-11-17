@@ -1,15 +1,17 @@
-import scipy.stats
-import numpy
-import scipy.optimize
-import scipy.interpolate
-import scipy.signal
-import numpy.linalg
-import CADETMatch.calc_coeff as calc_coeff
-import CADETMatch.util as util
+import math
 import multiprocessing
 import sys
+
+import numpy
+import numpy.linalg
 import SALib.sample.sobol_sequence
-import math
+import scipy.interpolate
+import scipy.optimize
+import scipy.signal
+import scipy.stats
+
+import CADETMatch.calc_coeff as calc_coeff
+import CADETMatch.util as util
 
 
 def roll_spline(times, values, shift):
@@ -30,31 +32,39 @@ def root_poly(corr, len_times, dt):
     dt_pre = (index - len_times + 1) * dt
 
     if index == 0:
-        indexes = numpy.array([index, index+1, index+2])
-        multiprocessing.get_logger().warn("min index encountered in root poly  index: %s  dt: %s", index, dt_pre)
-    elif index == (len(corr)-1):
-        indexes = numpy.array([index-2, index-1, index])
-        multiprocessing.get_logger().warn("max index encountered in root poly  index: %s  dt: %s", index, dt_pre)
+        indexes = numpy.array([index, index + 1, index + 2])
+        multiprocessing.get_logger().warn(
+            "min index encountered in root poly  index: %s  dt: %s", index, dt_pre
+        )
+    elif index == (len(corr) - 1):
+        indexes = numpy.array([index - 2, index - 1, index])
+        multiprocessing.get_logger().warn(
+            "max index encountered in root poly  index: %s  dt: %s", index, dt_pre
+        )
     else:
-        indexes = numpy.array([index-1, index, index+1])
-        
+        indexes = numpy.array([index - 1, index, index + 1])
+
     x = (indexes - len_times + 1) * dt
     y = corr[indexes]
-    
-    poly, res = numpy.polynomial.Polynomial.fit(x,y,2, full=True)
-    
+
+    poly, res = numpy.polynomial.Polynomial.fit(x, y, 2, full=True)
+
     try:
         dt = poly.deriv().roots()[0]
     except IndexError:
-        #this happens if all y values are the same in which case just take the center value
+        # this happens if all y values are the same in which case just take the center value
         multiprocessing.get_logger().warn("root poly index_error x %s  y %s", x, y)
         dt = x[indexes[1]]
     return dt
 
+
 def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     # resample to a much smaller time step to get a more precise offset
-    sim_spline = scipy.interpolate.InterpolatedUnivariateSpline(exp_time_values, sim_data_values, ext=1)
+    sim_spline = scipy.interpolate.InterpolatedUnivariateSpline(
+        exp_time_values, sim_data_values, ext=1
+    )
     return pearson_spline_fun(exp_time_values, exp_data_values, sim_spline)
+
 
 def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
     scores = []
@@ -73,6 +83,7 @@ def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
     scores[numpy.isnan(scores)] = 0.0
     return scores
 
+
 def pearson_offset(offset, times, sim_data, exp_data):
     sim_spline = scipy.interpolate.InterpolatedUnivariateSpline(times, sim_data, ext=1)
     sim_data_offset = sim_spline(times - offset)
@@ -88,63 +99,74 @@ def pearson_offset(offset, times, sim_data, exp_data):
     score_local = pear_corr(pear)
     return score_local
 
-def pearson_spline_fun(exp_time_values, exp_data_values, sim_spline, size=100, nest=10, bounds=2, tol=1e-8):
-    for i in range(nest+1):
+
+def pearson_spline_fun(
+    exp_time_values, exp_data_values, sim_spline, size=100, nest=10, bounds=2, tol=1e-8
+):
+    for i in range(nest + 1):
         if i == 0:
             lb = -exp_time_values[-1]
             ub = exp_time_values[-1]
-            local_size = min(1000+1, int((ub-lb)*2+1))
-        else:    
+            local_size = min(1000 + 1, int((ub - lb) * 2 + 1))
+        else:
             idx_max = numpy.argmax(pearson)
-            
+
             try:
-                lb = offsets[idx_max-bounds]
+                lb = offsets[idx_max - bounds]
             except IndexError:
                 lb = offsets[0]
-            
+
             try:
-                ub = offsets[idx_max+bounds]
+                ub = offsets[idx_max + bounds]
             except IndexError:
                 ub = offsets[-1]
             local_size = size
-        
+
         if ub - lb < tol:
             break
-    
+
         offsets = numpy.linspace(lb, ub, local_size)
-        
+
         pearson = eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values)
-        
+
         idx_max = numpy.argmax(pearson)
-        
+
         expand_lb = max(bounds - idx_max, 0)
-        expand_ub = max(bounds - (len(pearson) -1 - idx_max), 0)
-        
+        expand_ub = max(bounds - (len(pearson) - 1 - idx_max), 0)
+
         if expand_lb or expand_ub:
-            #need to expand boundaries to handle our new edges
-            #if boundaries do have to be expanded make sure to expand by double the amount required since it is only done once
+            # need to expand boundaries to handle our new edges
+            # if boundaries do have to be expanded make sure to expand by double the amount required since it is only done once
             expand_lb = expand_lb * 2
             expand_ub = expand_ub * 2
             dt = offsets[1] - offsets[0]
             if expand_lb:
-                local_offsets = numpy.linspace(offsets[0] - expand_lb*dt, offsets[0] - dt, expand_lb)
-                local_pearson = eval_offsets(local_offsets, sim_spline, exp_time_values, exp_data_values)
-                
+                local_offsets = numpy.linspace(
+                    offsets[0] - expand_lb * dt, offsets[0] - dt, expand_lb
+                )
+                local_pearson = eval_offsets(
+                    local_offsets, sim_spline, exp_time_values, exp_data_values
+                )
+
                 offsets = numpy.concatenate([local_offsets, offsets])
                 pearson = numpy.concatenate([local_pearson, pearson])
-                
+
             if expand_ub:
-                local_offsets = numpy.linspace(offsets[-1] + dt, offsets[-1] + expand_ub * dt, expand_ub)
-                
-                local_pearson = eval_offsets(local_offsets, sim_spline, exp_time_values, exp_data_values)
-                
+                local_offsets = numpy.linspace(
+                    offsets[-1] + dt, offsets[-1] + expand_ub * dt, expand_ub
+                )
+
+                local_pearson = eval_offsets(
+                    local_offsets, sim_spline, exp_time_values, exp_data_values
+                )
+
                 offsets = numpy.concatenate([offsets, local_offsets])
                 pearson = numpy.concatenate([pearson, local_pearson])
-                
+
     idx = numpy.argmax(pearson)
 
     dt, time_found, goal_found = util.find_opt_poly(offsets, pearson, idx)
-     
+
     # calculate pearson correlation at the new time
     sim_data_values_copy = sim_spline(exp_time_values - dt)
     try:
@@ -204,7 +226,9 @@ def value_function(peak_height, tolerance=1e-8, bottom_score=0.0):
     a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
 
     if numpy.abs(peak_height) < tolerance:
-        multiprocessing.get_logger().warn("peak height less than tolerance %s %s", tolerance, peak_height)
+        multiprocessing.get_logger().warn(
+            "peak height less than tolerance %s %s", tolerance, peak_height
+        )
 
         def wrapper(x):
             if numpy.abs(x) < tolerance:
@@ -233,7 +257,9 @@ def value_function_exp(peak_height, tolerance=1e-8, bottom_score=0.05):
     # a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
 
     if numpy.abs(peak_height) < tolerance:
-        multiprocessing.get_logger().warn("peak height less than tolerance %s %s", tolerance, peak_height)
+        multiprocessing.get_logger().warn(
+            "peak height less than tolerance %s %s", tolerance, peak_height
+        )
 
         def wrapper(x):
             if numpy.abs(x) < tolerance:
@@ -291,8 +317,8 @@ def cut_zero(times, values, min_value, max_value):
         # the whole array is below the max_value we are looking for
         return values, None, None, None, None
 
-    max_index = numpy.argmin((values[:peak_max_index] - max_value)**2)
-    min_index = numpy.argmin((values[:max_index] - min_value)**2)
+    max_index = numpy.argmin((values[:peak_max_index] - max_value) ** 2)
+    min_index = numpy.argmin((values[:max_index] - min_value) ** 2)
 
     min_time_found = times[min_index]
     min_value_found = values[min_index]
@@ -312,7 +338,7 @@ def find_cuts(times, values, spline, spline_der):
     def goal(time):
         return -float(spline_der(time))
 
-    time_space = numpy.linspace(0, max_time, int(max_time)*10)
+    time_space = numpy.linspace(0, max_time, int(max_time) * 10)
     goal_space = -(spline_der(time_space))
 
     idx = numpy.argmin(goal_space)
@@ -322,51 +348,76 @@ def find_cuts(times, values, spline, spline_der):
     lb = time_found[0]
     ub = time_found[-1]
 
-    result = scipy.optimize.minimize(goal, guess, method="powell", bounds=[(lb, ub),])
+    result = scipy.optimize.minimize(
+        goal,
+        guess,
+        method="powell",
+        bounds=[
+            (lb, ub),
+        ],
+    )
 
     max_time = float(result.x[0])
     max_value = float(spline(max_time))
 
     max_target_time = find_target(spline_der, 1, times, values)
 
-    max_index = numpy.argmin((values - max_value)**2)
+    max_index = numpy.argmin((values - max_value) ** 2)
 
-    min_time = find_target(spline, 1e-3 * max_value, times[:max_index], values[:max_index])
+    min_time = find_target(
+        spline, 1e-3 * max_value, times[:max_index], values[:max_index]
+    )
     min_value = float(spline(min_time))
 
     return min_time, min_value, max_time, max_value
 
+
 def find_target(spline, target, times, values, rate=10):
     max_index = numpy.argmax(values)
     max_time = times[max_index]
-    
-    test_times = numpy.linspace(0, max_time, int(max_time)*rate)
+
+    test_times = numpy.linspace(0, max_time, int(max_time) * rate)
 
     if not len(test_times):
         return None
 
     test_values = spline(test_times)
-    
-    error = (test_values - target)**2
-    idx = numpy.argmin(error) 
+
+    error = (test_values - target) ** 2
+    idx = numpy.argmin(error)
 
     guess, time_found, goal_found = util.find_opt_poly(test_times, error, idx)
 
     lb = time_found[0]
     ub = time_found[-1]
-    
+
     def goal(time):
         sse = float((spline(time) - target) ** 2)
         return sse
 
-    result = scipy.optimize.minimize(goal, guess, method="powell", tol=1e-5, bounds=[(lb,ub),])
+    result = scipy.optimize.minimize(
+        goal,
+        guess,
+        method="powell",
+        tol=1e-5,
+        bounds=[
+            (lb, ub),
+        ],
+    )
 
     found_time = float(result.x[0])
     found_value = spline(found_time)
 
     if result.success is False:
-        multiprocessing.get_logger().info("target %s time %s value %s lb %s guess %s ub %s", target, found_time, 
-                                          found_value, lb, guess, ub)
-        return None    
-    
+        multiprocessing.get_logger().info(
+            "target %s time %s value %s lb %s guess %s ub %s",
+            target,
+            found_time,
+            found_value,
+            lb,
+            guess,
+            ub,
+        )
+        return None
+
     return found_time

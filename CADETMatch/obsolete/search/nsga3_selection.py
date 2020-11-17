@@ -19,11 +19,12 @@
 #    by Luis Marti (IC/UFF) http://lmarti.com
 
 from __future__ import division  # making it work with Python 2.x
-import random
-import numpy as np
-from deap import tools
 
+import random
+
+import numpy as np
 import SALib.sample.sobol_sequence
+from deap import tools
 
 
 class ReferencePoint(list):
@@ -72,7 +73,10 @@ def find_ideal_point(individuals):
 
 def find_extreme_points(individuals):
     "Finds the individuals with extreme values for each objective function."
-    return [sorted(individuals, key=lambda ind: ind.fitness.wvalues[o] * -1)[-1] for o in range(len(individuals[0].fitness.values))]
+    return [
+        sorted(individuals, key=lambda ind: ind.fitness.wvalues[o] * -1)[-1]
+        for o in range(len(individuals[0].fitness.values))
+    ]
 
 
 def construct_hyperplane(individuals, extreme_points):
@@ -112,13 +116,20 @@ def normalize_objectives(individuals, intercepts, ideal_point):
     num_objs = len(individuals[0].fitness.values)
 
     for ind in individuals:
-        ind.fitness.normalized_values = list([normalize_objective(ind, m, intercepts, ideal_point) for m in range(num_objs)])
+        ind.fitness.normalized_values = list(
+            [
+                normalize_objective(ind, m, intercepts, ideal_point)
+                for m in range(num_objs)
+            ]
+        )
     return individuals
 
 
 def perpendicular_distance(direction, point):
     k = np.dot(direction, point) / np.sum(np.power(direction, 2))
-    d = np.sum(np.power(np.subtract(np.multiply(direction, [k] * len(direction)), point), 2))
+    d = np.sum(
+        np.power(np.subtract(np.multiply(direction, [k] * len(direction)), point), 2)
+    )
     return np.sqrt(d)
 
 
@@ -174,7 +185,11 @@ def niching_select(individuals, k):
         # unless it takes more time in higher dimensions or larger problems there is no point in further
         # optimization here
 
-        rp_associations_count = np.fromiter((rp.associations_count for rp in reference_points), int, len(reference_points))
+        rp_associations_count = np.fromiter(
+            (rp.associations_count for rp in reference_points),
+            int,
+            len(reference_points),
+        )
 
         min_assoc_rp = np.min(rp_associations_count[np.nonzero(rp_associations_count)])
 
@@ -185,9 +200,13 @@ def niching_select(individuals, k):
         associated_inds = chosen_rp.associations
         if chosen_rp.associations:
             if chosen_rp.associations_count == 0:
-                sel = min(chosen_rp.associations, key=lambda ind: ind.ref_point_distance)
+                sel = min(
+                    chosen_rp.associations, key=lambda ind: ind.ref_point_distance
+                )
             else:
-                sel = chosen_rp.associations[random.randint(0, len(chosen_rp.associations) - 1)]
+                sel = chosen_rp.associations[
+                    random.randint(0, len(chosen_rp.associations) - 1)
+                ]
             res += [sel]
             chosen_rp.associations.remove(sel)
             chosen_rp.associations_count += 1

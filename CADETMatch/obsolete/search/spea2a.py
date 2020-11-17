@@ -1,13 +1,13 @@
 import math
-import CADETMatch.util as util
-import CADETMatch.checkpoint_algorithms as checkpoint_algorithms
 import random
 
+import deap.tools.emo
 import numpy
 from scipy.spatial.distance import cdist
 
-import deap.tools.emo
+import CADETMatch.checkpoint_algorithms as checkpoint_algorithms
 import CADETMatch.pareto as pareto
+import CADETMatch.util as util
 
 name = "SPEA2a"
 
@@ -27,15 +27,21 @@ def run(cache, tools, creator):
 
     if "seeds" in cache.settings:
         seed_pop = [
-            cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings["transform"], sublist)])
+            cache.toolbox.individual_guess(
+                [f(v) for f, v in zip(cache.settings["transform"], sublist)]
+            )
             for sublist in cache.settings["seeds"]
         ]
         pop.extend(seed_pop)
 
     totalGenerations = parameters * cache.settings["generations"]
 
-    hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit(cache))
-    meta_hof = pareto.ParetoFront(similar=pareto.similar, similar_fit=pareto.similar_fit_meta)
+    hof = pareto.ParetoFront(
+        similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
+    )
+    meta_hof = pareto.ParetoFront(
+        similar=pareto.similar, similar_fit=pareto.similar_fit_meta
+    )
 
     return checkpoint_algorithms.eaMuCommaLambda(
         pop,
@@ -53,30 +59,72 @@ def run(cache, tools, creator):
     )
 
 
-def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
+def setupDEAP(
+    cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools
+):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
-    creator.create("Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None)
+    creator.create(
+        "Individual", list, typecode="d", fitness=creator.FitnessMax, strategy=None
+    )
 
     cache.toolbox.register(
-        "individual", util.generateIndividual, creator.Individual, len(cache.MIN_VALUE), cache.MIN_VALUE, cache.MAX_VALUE, cache
+        "individual",
+        util.generateIndividual,
+        creator.Individual,
+        len(cache.MIN_VALUE),
+        cache.MIN_VALUE,
+        cache.MAX_VALUE,
+        cache,
     )
-    cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)
+    cache.toolbox.register(
+        "population", tools.initRepeat, list, cache.toolbox.individual
+    )
 
-    cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
+    cache.toolbox.register(
+        "individual_guess", util.initIndividual, creator.Individual, cache
+    )
 
-    cache.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=5.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE)
+    cache.toolbox.register(
+        "mate",
+        tools.cxSimulatedBinaryBounded,
+        eta=5.0,
+        low=cache.MIN_VALUE,
+        up=cache.MAX_VALUE,
+    )
 
     if cache.adaptive:
         cache.toolbox.register(
-            "mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0 / len(cache.MIN_VALUE)
+            "mutate",
+            util.mutationBoundedAdaptive,
+            low=cache.MIN_VALUE,
+            up=cache.MAX_VALUE,
+            indpb=1.0 / len(cache.MIN_VALUE),
         )
-        cache.toolbox.register("force_mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
+        cache.toolbox.register(
+            "force_mutate",
+            util.mutationBoundedAdaptive,
+            low=cache.MIN_VALUE,
+            up=cache.MAX_VALUE,
+            indpb=1.0,
+        )
     else:
         cache.toolbox.register(
-            "mutate", tools.mutPolynomialBounded, eta=2.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0 / len(cache.MIN_VALUE)
+            "mutate",
+            tools.mutPolynomialBounded,
+            eta=2.0,
+            low=cache.MIN_VALUE,
+            up=cache.MAX_VALUE,
+            indpb=1.0 / len(cache.MIN_VALUE),
         )
-        cache.toolbox.register("force_mutate", tools.mutPolynomialBounded, eta=2.0, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0)
+        cache.toolbox.register(
+            "force_mutate",
+            tools.mutPolynomialBounded,
+            eta=2.0,
+            low=cache.MIN_VALUE,
+            up=cache.MAX_VALUE,
+            indpb=1.0,
+        )
 
     cache.toolbox.register("select", selSPEA2)
     cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
@@ -100,11 +148,11 @@ def selSPEA2(individuals, k):
     than sorting the population according to a strength Pareto scheme. The
     list returned contains references to the input *individuals*. For more
     details on the SPEA-II operator see [Zitzler2001]_.
-    
+
     :param individuals: A list of individuals to select from.
     :param k: The number of individuals to select.
     :returns: A list of selected individuals.
-    
+
     .. [Zitzler2001] Zitzler, Laumanns and Thiele, "SPEA 2: Improving the
        strength Pareto evolutionary algorithm", 2001.
     """
@@ -137,7 +185,10 @@ def selSPEA2(individuals, k):
             for j in range(i + 1, N):
                 dist = 0.0
                 for l in range(L):
-                    val = individuals[i].fitness.values[l] - individuals[j].fitness.values[l]
+                    val = (
+                        individuals[i].fitness.values[l]
+                        - individuals[j].fitness.values[l]
+                    )
                     dist += val * val
                 distances[j] = dist
             kth_dist = deap.tools.emo._randomizedSelect(distances, 0, N - 1, K)
@@ -154,7 +205,9 @@ def selSPEA2(individuals, k):
         distances = [[0.0] * N for i in range(N)]
         sorted_indices = [[0] * N for i in range(N)]
 
-        vec_fitness = numpy.array([individuals[i].fitness.values for i in chosen_indices])
+        vec_fitness = numpy.array(
+            [individuals[i].fitness.values for i in chosen_indices]
+        )
         vec_distances = cdist(vec_fitness, vec_fitness, "sqeuclidean")
         numpy.fill_diagonal(vec_distances, -1)
         distances = vec_distances
@@ -186,7 +239,9 @@ def selSPEA2(individuals, k):
             for i in range(N):
                 for j in range(1, size - 1):
                     if sorted_indices[i, j] == min_pos:
-                        sorted_indices[i, j : size - 1] = sorted_indices[i, j + 1 : size]
+                        sorted_indices[i, j : size - 1] = sorted_indices[
+                            i, j + 1 : size
+                        ]
                         sorted_indices[i, j:size] = min_pos
                         break
 

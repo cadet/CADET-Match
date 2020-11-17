@@ -1,14 +1,15 @@
-import CADETMatch.util as util
-import CADETMatch.checkpoint_algorithms as checkpoint_algorithms
-import random
-import CADETMatch.nsga3_selection as nsga3_selection
-from deap import tools
-import CADETMatch.pareto as pareto
 import array
-import numpy
-
-import SALib.sample.sobol_sequence
+import random
 from collections import Sequence
+
+import numpy
+import SALib.sample.sobol_sequence
+from deap import tools
+
+import CADETMatch.checkpoint_algorithms as checkpoint_algorithms
+import CADETMatch.nsga3_selection as nsga3_selection
+import CADETMatch.pareto as pareto
+import CADETMatch.util as util
 
 name = "NSGA3_strategy"
 
@@ -27,7 +28,9 @@ def run(cache, tools, creator):
 
     if "seeds" in cache.settings:
         seed_pop = [
-            cache.toolbox.individual_guess([f(v) for f, v in zip(cache.settings["transform"], sublist)])
+            cache.toolbox.individual_guess(
+                [f(v) for f, v in zip(cache.settings["transform"], sublist)]
+            )
             for sublist in cache.settings["seeds"]
         ]
         pop.extend(seed_pop)
@@ -105,15 +108,33 @@ def sobolGenerator(icls, scls, cache, smin, smax, n):
         return []
 
 
-def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools):
+def setupDEAP(
+    cache, fitness, grad_fitness, grad_search, map_function, creator, base, tools
+):
     "setup the DEAP variables"
     creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
-    creator.create("Individual", array.array, typecode="d", fitness=creator.FitnessMax, strategy=None, mean=None, confidence=None)
+    creator.create(
+        "Individual",
+        array.array,
+        typecode="d",
+        fitness=creator.FitnessMax,
+        strategy=None,
+        mean=None,
+        confidence=None,
+    )
     creator.create("Strategy", array.array, typecode="d")
 
     creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0, 1.0, 1.0, -1.0])
-    creator.create("IndividualMeta", array.array, typecode="d", fitness=creator.FitnessMaxMeta, strategy=None)
-    cache.toolbox.register("individualMeta", util.initIndividual, creator.IndividualMeta, cache)
+    creator.create(
+        "IndividualMeta",
+        array.array,
+        typecode="d",
+        fitness=creator.FitnessMaxMeta,
+        strategy=None,
+    )
+    cache.toolbox.register(
+        "individualMeta", util.initIndividual, creator.IndividualMeta, cache
+    )
 
     MIN_STRAT = [80.0] * len(cache.MIN_VALUE)
     MAX_STRAT = [200.0] * len(cache.MIN_VALUE)
@@ -134,16 +155,37 @@ def setupDEAP(cache, fitness, grad_fitness, grad_search, map_function, creator, 
     )
 
     if cache.sobolGeneration:
-        cache.toolbox.register("population", sobolGenerator, creator.Individual, creator.Strategy, cache, MIN_STRAT, MAX_STRAT_START)
+        cache.toolbox.register(
+            "population",
+            sobolGenerator,
+            creator.Individual,
+            creator.Strategy,
+            cache,
+            MIN_STRAT,
+            MAX_STRAT_START,
+        )
     else:
-        cache.toolbox.register("population", tools.initRepeat, list, cache.toolbox.individual)
-    cache.toolbox.register("randomPopulation", tools.initRepeat, list, cache.toolbox.individual)
+        cache.toolbox.register(
+            "population", tools.initRepeat, list, cache.toolbox.individual
+        )
+    cache.toolbox.register(
+        "randomPopulation", tools.initRepeat, list, cache.toolbox.individual
+    )
 
-    cache.toolbox.register("individual_guess", util.initIndividual, creator.Individual, cache)
+    cache.toolbox.register(
+        "individual_guess", util.initIndividual, creator.Individual, cache
+    )
 
     # cache.toolbox.register("mate", cxESBlend, alpha=0.1, imins=cache.MIN_VALUE, imaxs=cache.MAX_VALUE, smins=MIN_STRAT, smaxs=MAX_STRAT)
 
-    cache.toolbox.register("mate", cxSimulatedBinaryBounded, low=cache.MIN_VALUE, up=cache.MAX_VALUE, slow=MIN_STRAT, sup=MAX_STRAT)
+    cache.toolbox.register(
+        "mate",
+        cxSimulatedBinaryBounded,
+        low=cache.MIN_VALUE,
+        up=cache.MAX_VALUE,
+        slow=MIN_STRAT,
+        sup=MAX_STRAT,
+    )
 
     # if cache.adaptive:
     #    cache.toolbox.register("mutate", util.mutationBoundedAdaptive, low=cache.MIN_VALUE, up=cache.MAX_VALUE, indpb=1.0/len(cache.MIN_VALUE))
@@ -202,11 +244,17 @@ def cxSimulatedBinaryBounded(ind1, ind2, low, up, slow, sup):
     if not isinstance(low, Sequence):
         low = repeat(low, size)
     elif len(low) < size:
-        raise IndexError("low must be at least the size of the shorter individual: %d < %d" % (len(low), size))
+        raise IndexError(
+            "low must be at least the size of the shorter individual: %d < %d"
+            % (len(low), size)
+        )
     if not isinstance(up, Sequence):
         up = repeat(up, size)
     elif len(up) < size:
-        raise IndexError("up must be at least the size of the shorter individual: %d < %d" % (len(up), size))
+        raise IndexError(
+            "up must be at least the size of the shorter individual: %d < %d"
+            % (len(up), size)
+        )
 
     for i, xl, xu in zip(range(size), low, up):
         if random.random() <= 0.5:

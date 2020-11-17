@@ -1,10 +1,12 @@
-import CADETMatch.util as util
-import CADETMatch.score as score
+import multiprocessing
+
 import numpy
 import pandas
 import scipy.optimize
 from addict import Dict
-import multiprocessing
+
+import CADETMatch.score as score
+import CADETMatch.util as util
 
 name = "fractionationSlide"
 
@@ -57,28 +59,51 @@ def run(sim_data, feature):
     for component, value_func in funcs:
         exp_values = numpy.array(data[str(component)])
         selected = numpy.isfinite(exp_values)
-        sim_value = simulation.root.output.solution[feature["unit"]]["solution_outlet_comp_%03d" % component]
+        sim_value = simulation.root.output.solution[feature["unit"]][
+            "solution_outlet_comp_%03d" % component
+        ]
 
         spline = scipy.interpolate.InterpolatedUnivariateSpline(times, sim_value, ext=1)
 
         lb = times[numpy.argmax(sim_value)] - times[-1]
         ub = times[numpy.argmax(sim_value)] - times[0]
 
-        #getting a starting point estimate
+        # getting a starting point estimate
         offsets = numpy.linspace(lb, ub, 100)
-        errors = numpy.array([goal(offset, exp_values[selected], times, spline, start[selected], stop[selected]) for offset in offsets])
+        errors = numpy.array(
+            [
+                goal(
+                    offset,
+                    exp_values[selected],
+                    times,
+                    spline,
+                    start[selected],
+                    stop[selected],
+                )
+                for offset in offsets
+            ]
+        )
         idx_min = numpy.argmin(errors)
 
-        offset_start, min_offsets, min_errors = util.find_opt_poly(offsets, errors, idx_min)
+        offset_start, min_offsets, min_errors = util.find_opt_poly(
+            offsets, errors, idx_min
+        )
 
         result_powell = scipy.optimize.minimize(
-            goal, offset_start, args=(exp_values[selected], times, spline, start[selected], stop[selected]), method="powell",
-            bounds=[(min_offsets[0], min_offsets[-1]),]
+            goal,
+            offset_start,
+            args=(exp_values[selected], times, spline, start[selected], stop[selected]),
+            method="powell",
+            bounds=[
+                (min_offsets[0], min_offsets[-1]),
+            ],
         )
 
         time_offset = result_powell.x[0]
 
-        fracOffset = util.fractionate_spline(start[selected] - time_offset, stop[selected] - time_offset, spline)
+        fracOffset = util.fractionate_spline(
+            start[selected] - time_offset, stop[selected] - time_offset, spline
+        )
 
         # if the simulation scale and exp scale are too different the estimation of similarity, offset etc is not accurate discard if value max/min > 1e3
         max_exp = max(exp_values[selected])
@@ -89,7 +114,9 @@ def run(sim_data, feature):
             time_score = 0
         else:
             value_score = value_func(max(fracOffset))
-            pear = score.pear_corr(scipy.stats.pearsonr(exp_values[selected], fracOffset)[0])
+            pear = score.pear_corr(
+                scipy.stats.pearsonr(exp_values[selected], fracOffset)[0]
+            )
             time_score = timeFunc(abs(time_offset))
 
         exp_values_sse.extend(exp_values[selected])
@@ -100,7 +127,9 @@ def run(sim_data, feature):
         scores.append(value_score)
 
         graph_sim[component] = list(zip(start[selected], stop[selected], fracOffset))
-        graph_exp[component] = list(zip(start[selected], stop[selected], exp_values[selected]))
+        graph_exp[component] = list(
+            zip(start[selected], stop[selected], exp_values[selected])
+        )
 
         graph_sim_offset[component] = time_offset
 
@@ -159,7 +188,14 @@ def headers(experimentName, feature):
 
     temp = []
     for component in data_headers[2:]:
-        temp.append("%s_%s_Component_%s_Similarity" % (experimentName, feature["name"], component))
-        temp.append("%s_%s_Component_%s_Time" % (experimentName, feature["name"], component))
-        temp.append("%s_%s_Component_%s_Value" % (experimentName, feature["name"], component))
+        temp.append(
+            "%s_%s_Component_%s_Similarity"
+            % (experimentName, feature["name"], component)
+        )
+        temp.append(
+            "%s_%s_Component_%s_Time" % (experimentName, feature["name"], component)
+        )
+        temp.append(
+            "%s_%s_Component_%s_Value" % (experimentName, feature["name"], component)
+        )
     return temp

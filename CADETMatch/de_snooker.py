@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
-
-from emcee.moves.red_blue import RedBlueMove
 import multiprocessing
+
+import numpy as np
+from emcee.moves.red_blue import RedBlueMove
 
 __all__ = ["DESnookerMove"]
 
@@ -46,9 +46,9 @@ class DESnookerMove(RedBlueMove):
             q[i] = q[i] % 1
             metropolis[i] = np.log(np.linalg.norm(q[i] - z)) - np.log(norm)
 
-            #if np.any(np.isnan(q[i])):
+            # if np.any(np.isnan(q[i])):
             #    multiprocessing.get_logger().info("de_snooker q[%s]=%s  w %s  s %s  z %s  z1 %s  z2 %s  delta %s  norm %s  u %s  dot1 %s  dot2 %s  gammas %s", i, q[i], w, s[i],
             #                                      z, z1, z2, delta, norm, u, np.dot(u, z1), np.dot(u, z2), self.gammas)
 
-        #multiprocessing.get_logger().info("de_snooker q %s  s %s  c %s", q, s, c)
+        # multiprocessing.get_logger().info("de_snooker q %s  s %s  c %s", q, s, c)
         return q, 0.5 * (ndim - 1.0) * metropolis

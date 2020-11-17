@@ -1,11 +1,13 @@
-import CADETMatch.match
-import IPython.display as dp
-from CADETMatch.cache import Cache
+import signal
 import subprocess
 import sys
+
+import IPython.display as dp
 import pandas
 import psutil
-import signal
+
+import CADETMatch.match
+from CADETMatch.cache import Cache
 
 
 class Match:
@@ -18,10 +20,17 @@ class Match:
 
     def start_sim(self):
         ncpus = psutil.cpu_count(logical=False)
-        command = [sys.executable, CADETMatch.match.__file__, str(self.json_path), str(ncpus)]  #'-n', str(ncpus),
+        command = [
+            sys.executable,
+            CADETMatch.match.__file__,
+            str(self.json_path),
+            str(ncpus),
+        ]  #'-n', str(ncpus),
         pipe = subprocess.PIPE
 
-        proc = subprocess.Popen(command, stdout=pipe, stderr=subprocess.STDOUT, bufsize=1)
+        proc = subprocess.Popen(
+            command, stdout=pipe, stderr=subprocess.STDOUT, bufsize=1
+        )
 
         def signal_handler(sig, frame):
             for child in psutil.Process(proc.pid).children(recursive=True):
@@ -75,10 +84,20 @@ class Match:
         score = {}
         best_score = {}
 
-        cols = [("Product Root Score", False), ("Min Score", False), ("Mean Score", False), ("SSE", False)]
+        cols = [
+            ("Product Root Score", False),
+            ("Min Score", False),
+            ("Mean Score", False),
+            ("SSE", False),
+        ]
 
         for col_name, order in cols:
-            temp = data.sort_values(by=[col_name,], ascending=order)
+            temp = data.sort_values(
+                by=[
+                    col_name,
+                ],
+                ascending=order,
+            )
             head = temp.head(1)
             name = str(head.Name.iloc[0])
             score[name] = head

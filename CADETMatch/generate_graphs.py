@@ -1,8 +1,10 @@
 import sys
+
 import filelock
 import matplotlib
 import matplotlib.style as mplstyle
-mplstyle.use('fast')
+
+mplstyle.use("fast")
 
 matplotlib.use("Agg")
 
@@ -17,30 +19,28 @@ matplotlib.rc("legend", fontsize=size)  # legend fontsize
 matplotlib.rc("figure", titlesize=size)  # fontsize of the figure title
 matplotlib.rc("figure", autolayout=True)
 
+import itertools
+import logging
+
+# parallelization
+import multiprocessing
+import os
+import warnings
+from pathlib import Path
+
+import numpy
+import pandas
+import scipy.interpolate
+from addict import Dict
+from cadet import H5, Cadet
 from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D
 
-from CADETMatch.cache import cache
-
-from pathlib import Path
-import pandas
-import numpy
-import scipy.interpolate
-import itertools
-
-from cadet import Cadet, H5
-from addict import Dict
-
-# parallelization
-import multiprocessing
-
-import os
-import warnings
-import CADETMatch.util as util
-import logging
 import CADETMatch.loggerwriter as loggerwriter
 import CADETMatch.smoothing as smoothing
+import CADETMatch.util as util
+from CADETMatch.cache import cache
 
 saltIsotherms = {
     b"STERIC_MASS_ACTION",
@@ -51,8 +51,8 @@ saltIsotherms = {
 }
 
 
-from matplotlib.colors import ListedColormap
 import matplotlib.cm
+from matplotlib.colors import ListedColormap
 
 cmap = matplotlib.cm.winter
 
@@ -82,10 +82,9 @@ def main(map_function):
     # full generation 1 = 2D, 2 = 2D + 3D
     fullGeneration = int(sys.argv[2])
 
+    # load all data, all data that can be changed by the main process MUST be loaded and this point and the files locked
+    # this allows the main process to wait for data loading and then continue once complete
 
-    #load all data, all data that can be changed by the main process MUST be loaded and this point and the files locked
-    #this allows the main process to wait for data loading and then continue once complete
-        
     resultDir = Path(cache.settings["resultsDirBase"])
     progress = resultDir / "progress.csv"
     result_lock = resultDir / "result.lock"
@@ -96,17 +95,27 @@ def main(map_function):
 
     lock.acquire()
     multiprocessing.get_logger().info("locking graph subprocess %s", lock.lock_file)
- 
+
     progress_df = pandas.read_csv(progress)
-    
+
     result_data = H5()
     result_data.filename = result_h5.as_posix()
-    result_data.load(paths=["/output", "/output_meta", "/is_extended_input", "/probability",
-                            "/input_transform_extended", "/input_transform",
-                            "/mean", "/confidence", "/distance_correct"])
+    result_data.load(
+        paths=[
+            "/output",
+            "/output_meta",
+            "/is_extended_input",
+            "/probability",
+            "/input_transform_extended",
+            "/input_transform",
+            "/mean",
+            "/confidence",
+            "/distance_correct",
+        ]
+    )
 
     lock.release()
-    multiprocessing.get_logger().info("unlocking graph subprocess") 
+    multiprocessing.get_logger().info("unlocking graph subprocess")
 
     graphMeta(cache, map_function)
     graphProgress(cache, map_function, progress_df)
@@ -130,7 +139,11 @@ def graphDistance(cache, map_function, data):
 
     temp = []
 
-    if "mean" in data.root and "confidence" in data.root and "distance_correct" in data.root:
+    if (
+        "mean" in data.root
+        and "confidence" in data.root
+        and "distance_correct" in data.root
+    ):
         for idx_parameter, parameter in enumerate(parameter_headers_actual):
             for idx_score, score in enumerate(score_headers):
                 temp.append(
@@ -167,7 +180,17 @@ def graphDistance(cache, map_function, data):
 
 
 def plot_2d_scatter(args):
-    output_directory, parameter, parameter_idx, score, score_idx, parameter_data, score_data, mean_data, confidence_data = args
+    (
+        output_directory,
+        parameter,
+        parameter_idx,
+        score,
+        score_idx,
+        parameter_data,
+        score_data,
+        mean_data,
+        confidence_data,
+    ) = args
     fig = figure.Figure()
     canvas = FigureCanvas(fig)
     graph = fig.add_subplot(1, 1, 1)
@@ -211,7 +234,10 @@ def graphExperiments(cache, map_function):
     toGenerate = existsH5 - existsPNG
 
     args = zip(
-        toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings["resultsDirEvo"]), itertools.repeat("%s_%s_EVO.png")
+        toGenerate,
+        itertools.repeat(sys.argv[1]),
+        itertools.repeat(cache.settings["resultsDirEvo"]),
+        itertools.repeat("%s_%s_EVO.png"),
     )
 
     list(map_function(plotExperiments, args))
@@ -233,7 +259,10 @@ def graphMeta(cache, map_function):
     toGenerate = existsH5 - existsPNG
 
     args = zip(
-        toGenerate, itertools.repeat(sys.argv[1]), itertools.repeat(cache.settings["resultsDirMeta"]), itertools.repeat("%s_%s_meta.png")
+        toGenerate,
+        itertools.repeat(sys.argv[1]),
+        itertools.repeat(cache.settings["resultsDirMeta"]),
+        itertools.repeat("%s_%s_meta.png"),
     )
 
     list(map_function(plotExperiments, args))
@@ -256,13 +285,23 @@ def graph_simulation_unit(simulation, unit, graph):
 
     if hasColumn:
         for i in range(ncomp):
-            comps.append(simulation.root.output.solution[unit]["solution_column_outlet_comp_%03d" % i])
+            comps.append(
+                simulation.root.output.solution[unit][
+                    "solution_column_outlet_comp_%03d" % i
+                ]
+            )
     elif hasPort:
         for i in range(ncomp):
-            comps.append(simulation.root.output.solution[unit]["solution_outlet_port_000_comp_%03d" % i])
+            comps.append(
+                simulation.root.output.solution[unit][
+                    "solution_outlet_port_000_comp_%03d" % i
+                ]
+            )
     else:
         for i in range(ncomp):
-            comps.append(simulation.root.output.solution[unit]["solution_outlet_comp_%03d" % i])
+            comps.append(
+                simulation.root.output.solution[unit]["solution_outlet_comp_%03d" % i]
+            )
 
     # for now lets assume that if your first component is much higher concentration than the other components then the first component is salt
     max_comps = [max(comp) for comp in comps]
@@ -280,7 +319,13 @@ def graph_simulation_unit(simulation, unit, graph):
 
         axis2 = graph.twinx()
         for idx, comp in enumerate(comps[1:]):
-            axis2.plot(solution_times, comp, "-", color=get_color(idx, len(comps) - 1, cm_plot), label="P%s" % idx)
+            axis2.plot(
+                solution_times,
+                comp,
+                "-",
+                color=get_color(idx, len(comps) - 1, cm_plot),
+                label="P%s" % idx,
+            )
         axis2.set_ylabel("mM Protein", color="r")
         axis2.tick_params("y", colors="r")
 
@@ -292,7 +337,13 @@ def graph_simulation_unit(simulation, unit, graph):
 
         # colors = ['r', 'g', 'c', 'm', 'y', 'k']
         for idx, comp in enumerate(comps):
-            graph.plot(solution_times, comp, "-", color=get_color(idx, len(comps), cm_plot), label="P%s" % idx)
+            graph.plot(
+                solution_times,
+                comp,
+                "-",
+                color=get_color(idx, len(comps), cm_plot),
+                label="P%s" % idx,
+            )
         graph.set_ylabel("mM Protein", color="r")
         graph.tick_params("y", colors="r")
         graph.set_xlabel("time (s)")
@@ -349,7 +400,9 @@ def plotExperiments(args):
         canvas = FigureCanvas(fig)
 
         simulation = Cadet()
-        h5_path = Path(directory) / (file_pattern.replace("png", "h5") % (save_name_base, experimentName))
+        h5_path = Path(directory) / (
+            file_pattern.replace("png", "h5") % (save_name_base, experimentName)
+        )
         simulation.filename = h5_path.as_posix()
         simulation.load()
 
@@ -357,7 +410,9 @@ def plotExperiments(args):
         results["simulation"] = simulation
 
         for idx, unit in enumerate(units_used):
-            graph_simulation_unit(simulation, unit, fig.add_subplot(numPlots, 1, idx + 1))
+            graph_simulation_unit(
+                simulation, unit, fig.add_subplot(numPlots, 1, idx + 1)
+            )
 
         graphIdx = idx + 2
         for idx, feature in enumerate(experiment["features"]):
@@ -370,7 +425,9 @@ def plotExperiments(args):
             exp_time = feat["time"][selected]
             exp_value = feat["value"][selected]
 
-            sim_time, sim_value = get_times_values(simulation, target[experimentName][featureName])
+            sim_time, sim_value = get_times_values(
+                simulation, target[experimentName][featureName]
+            )
 
             if featureType in (
                 "similarity",
@@ -391,7 +448,9 @@ def plotExperiments(args):
                 "ShapeDecayNoDer",
             ):
 
-                graph = fig.add_subplot(numPlots, 1, graphIdx)  # additional +1 added due to the overview plot
+                graph = fig.add_subplot(
+                    numPlots, 1, graphIdx
+                )  # additional +1 added due to the overview plot
                 graph.plot(sim_time, sim_value, "r--", label="Simulation")
                 graph.plot(exp_time, exp_value, "g:", label="Experiment")
                 graphIdx += 1
@@ -403,13 +462,23 @@ def plotExperiments(args):
                 "ShapeBack",
             ):
                 exp_spline = smoothing.smooth_data_derivative(
-                    exp_time, exp_value, feat["critical_frequency"], feat["smoothing_factor"], feat["critical_frequency_der"]
+                    exp_time,
+                    exp_value,
+                    feat["critical_frequency"],
+                    feat["smoothing_factor"],
+                    feat["critical_frequency_der"],
                 )
                 sim_spline = smoothing.smooth_data_derivative(
-                    sim_time, sim_value, feat["critical_frequency"], feat["smoothing_factor"], feat["critical_frequency_der"]
+                    sim_time,
+                    sim_value,
+                    feat["critical_frequency"],
+                    feat["smoothing_factor"],
+                    feat["critical_frequency_der"],
                 )
 
-                graph = fig.add_subplot(numPlots, 1, graphIdx)  # additional +1 added due to the overview plot
+                graph = fig.add_subplot(
+                    numPlots, 1, graphIdx
+                )  # additional +1 added due to the overview plot
                 graph.plot(sim_time, sim_spline, "r--", label="Simulation")
                 graph.plot(exp_time, exp_spline, "g:", label="Experiment")
                 graphIdx += 1
@@ -438,7 +507,9 @@ def plotExperiments(args):
                     findMax = max(findMax, max_value)
                     max_comp[key] = max(max_comp[key], max_value)
 
-                graph = fig.add_subplot(numPlots, 1, graphIdx)  # additional +1 added due to the overview plot
+                graph = fig.add_subplot(
+                    numPlots, 1, graphIdx
+                )  # additional +1 added due to the overview plot
                 factors = []
                 for idx, (key, value) in enumerate(graph_sim.items()):
                     (time_start, time_stop, values) = zip(*value)
@@ -462,7 +533,13 @@ def plotExperiments(args):
 
                     x, y = convert_frac(time_start, time_stop, values)
 
-                    graph.plot(x, y, "--", color=get_color(idx, len(graph_sim), cm_plot), label=label)
+                    graph.plot(
+                        x,
+                        y,
+                        "--",
+                        color=get_color(idx, len(graph_sim), cm_plot),
+                        label=label,
+                    )
 
                 for idx, (key, value) in enumerate(graph_exp.items()):
                     (time_start, time_stop, values) = zip(*value)
@@ -473,7 +550,11 @@ def plotExperiments(args):
                     x, y = convert_frac(time_start, time_stop, values)
 
                     graph.plot(
-                        x, y, ":", color=get_color(idx, len(graph_sim), cm_plot), label="Experiment Comp: %s Mult:%.2f" % (key, mult)
+                        x,
+                        y,
+                        ":",
+                        color=get_color(idx, len(graph_sim), cm_plot),
+                        label="Experiment Comp: %s Mult:%.2f" % (key, mult),
                     )
                 graphIdx += 1
             graph.legend()
@@ -524,14 +605,38 @@ def graphSpace(fullGeneration, cache, map_function, results):
 
         seq = []
         for (x,), y in itertools.product(comp_one, output_indexes):
-            seq.append([output_2d.as_posix(), input_headers[x], output_headers[y], input[:, x], output[:, y]])
+            seq.append(
+                [
+                    output_2d.as_posix(),
+                    input_headers[x],
+                    output_headers[y],
+                    input[:, x],
+                    output[:, y],
+                ]
+            )
 
         for (x,), y in itertools.product(comp_one, meta_indexes):
-            seq.append([output_2d.as_posix(), input_headers[x], meta_headers[y], input[:, x], output_meta[:, y]])
+            seq.append(
+                [
+                    output_2d.as_posix(),
+                    input_headers[x],
+                    meta_headers[y],
+                    input[:, x],
+                    output_meta[:, y],
+                ]
+            )
 
         if probability is not None:
             for (x,) in comp_one:
-                seq.append([output_prob.as_posix(), input_headers[x], "probability", input[probability_idx, x], probability])
+                seq.append(
+                    [
+                        output_prob.as_posix(),
+                        input_headers[x],
+                        "probability",
+                        input[probability_idx, x],
+                        probability,
+                    ]
+                )
 
         list(map_function(plot_2d, seq))
         multiprocessing.get_logger().info("ending 2d space graphs")
@@ -542,12 +647,28 @@ def graphSpace(fullGeneration, cache, map_function, results):
         seq = []
         for (x, y), z in itertools.product(comp_two, output_indexes):
             seq.append(
-                [output_3d.as_posix(), input_headers[x], input_headers[y], output_headers[z], input[:, x], input[:, y], output[:, z]]
+                [
+                    output_3d.as_posix(),
+                    input_headers[x],
+                    input_headers[y],
+                    output_headers[z],
+                    input[:, x],
+                    input[:, y],
+                    output[:, z],
+                ]
             )
 
         for (x, y), z in itertools.product(comp_two, meta_indexes):
             seq.append(
-                [output_3d.as_posix(), input_headers[x], input_headers[y], meta_headers[z], input[:, x], input[:, y], output_meta[:, z]]
+                [
+                    output_3d.as_posix(),
+                    input_headers[x],
+                    input_headers[y],
+                    meta_headers[z],
+                    input[:, x],
+                    input[:, y],
+                    output_meta[:, z],
+                ]
             )
         list(map_function(plot_3d, seq))
         multiprocessing.get_logger().info("ending 3d space graphs")
@@ -624,9 +745,13 @@ def plot_2d_single(directory_path, header_x, scoreName, data, scores):
     scores_norm = (scores - numpy.min(scores)) / (numpy.max(scores) - numpy.min(scores))
     scatter_data = numpy.array([data_norm, scores_norm]).T
     scatter_data_round = numpy.round(scatter_data, 2)
-    scatter_data_round, idx, counts = numpy.unique(scatter_data_round, axis=0, return_index=True, return_counts=True)
+    scatter_data_round, idx, counts = numpy.unique(
+        scatter_data_round, axis=0, return_index=True, return_counts=True
+    )
 
-    counts_norm = (counts - numpy.min(counts)) / (numpy.max(counts) - numpy.min(counts)) * 100 + 10
+    counts_norm = (counts - numpy.min(counts)) / (
+        numpy.max(counts) - numpy.min(counts)
+    ) * 100 + 10
 
     graph.scatter(data[idx], scores[idx], c=scores[idx], s=counts_norm, cmap=cmap)
 
