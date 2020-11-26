@@ -236,7 +236,7 @@ def graph_process(cache, generation, last=False):
     times["lastMetaTime"] = lastMetaTime
 
 
-def graph_corner_process(cache, last=False, interval=1200):
+def graph_corner_process(cache, last=False, interval=3600):
     last_corner_time = times.get("last_corner_time", time.time())
 
     if last:

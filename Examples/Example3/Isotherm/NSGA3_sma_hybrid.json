@@ -2,22 +2,17 @@
   "CADETPath": "C:/Users/kosh_000/cadet_build/CADET-dev/MS_SMKL_RELEASE/bin/cadet-cli.exe",
   "baseDir": "C:/Users/kosh_000/Documents/Visual Studio 2017/Projects/CADETMatch/Examples/Example3/Isotherm",
   "resultsDir": "fit_orig/",
-   "tempDir": "L:/",
   "CSV": "isotherm_NSGA3.csv",
   "checkpointFile": "check",
-  "stopAverage": 1.1,
-  "stopBest": 1.1,
-  "gradCheck": 1.1,
+  "stopAverage": 0.0,
+  "stopBest": 0.0,
+  "gradCheck": 0.0,
   "gradVector": 1,
   "searchMethod": "NSGA3",
   "mutationRate": 1.0,
   "crossoverRate": 1.0,
   "generations": 1000,
   "population": 12,
-  "minPopulation": 12,
-  "maxPopulation":12,
-  "roundParameters": -1,
-  "roundScores": -1,
   "metaResultsOnly": 1,
   "sobolGeneration":1,
   "stallGenerations": 30,
@@ -26,7 +21,7 @@
     "finalGradRefinement": 1,
 	"parameters": [
 		{
-			"transform": "norm_keq",
+			"transform": "auto_keq",
 			"component": 1,
 			"bound": 0,
 			"location": [
@@ -39,7 +34,7 @@
 			"maxKEQ": 1e3
 		},
 		{
-			"transform": "norm_keq",
+			"transform": "auto_keq",
 			"component": 2,
 			"bound": 0,
 			"location": [
@@ -52,7 +47,7 @@
 			"maxKEQ": 1e3
 		},
 		{
-			"transform": "norm",
+			"transform": "auto",
 			"component": 1,
 			"bound": 0,
 			"location": "/input/model/unit_001/adsorption/SMA_NU",
@@ -60,7 +55,7 @@
 			"max": 40.0
 		},
 		{
-			"transform": "norm",
+			"transform": "auto",
 			"component": 2,
 			"bound": 0,
 			"location": "/input/model/unit_001/adsorption/SMA_NU",
@@ -68,7 +63,7 @@
 			"max": 40.0
 		},
 		{
-			"transform": "norm",
+			"transform": "auto",
 			"component": 1,
 			"bound": 0,
 			"location": "/input/model/unit_001/adsorption/SMA_SIGMA",
@@ -76,7 +71,7 @@
 			"max": 100.0
 		},
 		{
-			"transform": "norm",
+			"transform": "auto",
 			"component": 2,
 			"bound": 0,
 			"location": "/input/model/unit_001/adsorption/SMA_SIGMA",

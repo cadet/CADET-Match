@@ -711,7 +711,6 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     tol = 5e-4
     power = checkpoint["sampler_n"]
     distance = 1.0
-    # distance_a = sampler.a
     stop_next = False
     finished = False
 
