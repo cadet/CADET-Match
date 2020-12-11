@@ -695,7 +695,7 @@ def find_opt_poly(x, y, index):
         root = poly.deriv().roots()[0]
     except IndexError:
         # this happens if all y values are the same in which case just take the center value
-        root = x[indexes[1]]
+        root = x[0]
     root = numpy.clip(root, x[0], x[1])
     return root, x, y
 
