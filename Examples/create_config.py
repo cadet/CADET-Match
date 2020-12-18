@@ -10,14 +10,6 @@ import CADETMatch.util
 
 import create_sims
 
-defaults = Dict()
-defaults.cadet_path = Path(r"C:\Users\kosh_000\cadet_build\CADET\CADET41\bin\cadet-cli.exe").as_posix()
-defaults.base_dir = Path(__file__).parent
-defaults.population = 20
-
-Cadet.cadet_path = defaults.cadet_path
-
-
 def create_experiments(defaults):
     pass
 
@@ -62,15 +54,17 @@ def create_search(defaults):
 
     experiment1.features = [feature1,]
 
-    create_nsga3(config)
-    create_multistart(config)
-    create_graphspace(config)
-    create_scoretest(config)
-    create_gradient(config)
-    create_early_stopping(config)
-    create_refine_shape(config)
-    create_refine_sse(config)
-    create_altScore(config)
+    #create_nsga3(defaults, config)
+    #create_multistart(defaults, config)
+    #create_graphspace(defaults, config)
+    #create_scoretest(defaults, config)
+    #create_gradient(defaults, config)
+    #create_early_stopping(defaults, config)
+    #create_refine_shape(defaults, config)
+    #create_refine_sse(defaults, config)
+    #create_altScore(defaults, config)
+    #create_mcmc_stage1(defaults, config)
+    create_mcmc_stage2(defaults, config)
 
 def create_search_common(dir, config):
     config.baseDir =dir.as_posix()
@@ -85,7 +79,88 @@ def create_search_common(dir, config):
     if results_dir.exists():
         shutil.rmtree(results_dir)
 
-def create_altScore(config):
+def create_mcmc_stage1(defaults, config):
+    dir = defaults.base_dir / "search" / "mcmc" / "stage1"
+    config = config.deepcopy()
+    config.searchMethod = 'NSGA3'
+    config.population = 12
+    config.continueMCMC = 1
+    config.MCMCpopulationSet = 12
+
+    error_model = Dict()
+    error_model.file_path = "dextran.h5"
+    error_model.experimental_csv = "dextran.csv"
+    error_model.name = "main"
+    error_model.units = [2]
+    error_model.delay = [0.0, 2.0]
+    error_model.flow = [1.0, 0.001]
+    error_model.load = [1.0, 0.001]
+    error_model.uv_noise_norm = [1.0, 0.001]
+
+    config.errorModelCount = 1000
+    config.errorModel = [error_model,]
+    create_search_common(dir, config)
+
+def create_mcmc_stage2(defaults, config):
+    dir = defaults.base_dir / "search" / "mcmc" / "stage2"
+    config = config.deepcopy()
+    config.baseDir = dir.as_posix()
+    config.searchMethod = 'NSGA3'
+    config.population = 12
+    config.continueMCMC = 1
+    config.MCMCpopulationSet = 12
+
+    error_model = Dict()
+    error_model.file_path = "non.h5"
+    error_model.experimental_csv = "non.csv"
+    error_model.name = "main"
+    error_model.units = [2]
+    error_model.delay = [0.0, 2.0]
+    error_model.flow = [1.0, 0.001]
+    error_model.load = [1.0, 0.001]
+    error_model.uv_noise_norm = [1.0, 0.001]
+
+    config.errorModelCount = 1000
+    config.errorModel = [error_model,]
+
+    config.experiments[0].csv = "non.csv"
+    config.experiments[0].HDF5 = "non.h5"
+
+    config.experiments[0].features[0].type = "Shape"
+    config.experiments[0].features[0].decay = 1
+
+    parameter1 = Dict()
+    parameter1.location = '/input/model/unit_001/FILM_DIFFUSION'
+    parameter1.min = 1e-12
+    parameter1.max = 1e-2
+    parameter1.component = -1
+    parameter1.bound = -1
+    parameter1.transform = 'auto'
+
+    parameter2 = Dict()
+    parameter2.location = '/input/model/unit_001/PAR_POROSITY'
+    parameter2.min = 0.2
+    parameter2.max = 0.7
+    parameter2.component = -1
+    parameter2.bound = -1
+    parameter2.transform = 'auto'
+
+    config.parameters = [parameter1, parameter2]
+
+    mcmc_h5 = Path(defaults.base_dir / "search" / "mcmc" / "stage1" / "results" / "mcmc_refine" / "mcmc" / "mcmc.h5")
+    config.mcmc_h5 = mcmc_h5.as_posix()
+
+    match_config_file = dir / 'non.json'
+
+    with open(match_config_file.as_posix(), 'w') as json_file:
+        json.dump(config.to_dict(), json_file, indent='\t')
+
+    #clear the results directory
+    results_dir = dir / "results"
+    if results_dir.exists():
+        shutil.rmtree(results_dir)
+
+def create_altScore(defaults, config):
     dir = defaults.base_dir / "search" / "misc" / "altScore"
     config = config.deepcopy()
     config.searchMethod = 'AltScore'
@@ -94,7 +169,7 @@ def create_altScore(config):
     config.experiments[0].features[0].type = "Shape"
     create_search_common(dir, config)
 
-def create_refine_shape(config):
+def create_refine_shape(defaults, config):
     dir = defaults.base_dir / "search" / "misc" / "refine_shape"
     config = config.deepcopy()
     config.searchMethod = 'NSGA3'
@@ -102,7 +177,7 @@ def create_refine_shape(config):
     config.gradVector = False
     create_search_common(dir, config)
 
-def create_refine_sse(config):
+def create_refine_sse(defaults, config):
     dir = defaults.base_dir / "search" / "misc" / "refine_sse"
     config = config.deepcopy()
     config.searchMethod = 'NSGA3'
@@ -110,7 +185,7 @@ def create_refine_sse(config):
     config.gradVector = True
     create_search_common(dir, config)
 
-def create_early_stopping(config):
+def create_early_stopping(defaults, config):
     dir = defaults.base_dir / "search" / "misc" / "early_stopping"
     config = config.deepcopy()
     config.searchMethod = 'NSGA3'
@@ -120,7 +195,7 @@ def create_early_stopping(config):
     config.stopBest = 1e-3
     create_search_common(dir, config)
 
-def create_gradient(config):
+def create_gradient(defaults, config):
     dir = defaults.base_dir / "search" / "gradient"
     config = config.deepcopy()
     config.searchMethod = 'Gradient'
@@ -131,7 +206,7 @@ def create_gradient(config):
 
     create_search_common(dir, config)
 
-def create_scoretest(config):
+def create_scoretest(defaults, config):
     dir = defaults.base_dir / "search" / "scoretest"
     config = config.deepcopy()
     config.searchMethod = 'ScoreTest'
@@ -140,7 +215,7 @@ def create_scoretest(config):
 
     create_search_common(dir, config)
 
-def create_graphspace(config):
+def create_graphspace(defaults, config):
     #nsga3
     dir = defaults.base_dir / "search" / "graphSpace"
     config = config.deepcopy()
@@ -150,7 +225,7 @@ def create_graphspace(config):
 
     create_search_common(dir, config)
 
-def create_multistart(config):
+def create_multistart(defaults, config):
     #nsga3
     dir = defaults.base_dir / "search" / "multistart"
     config = config.deepcopy()
@@ -159,7 +234,7 @@ def create_multistart(config):
     config.gradVector = True
     create_search_common(dir, config)
 
-def create_nsga3(config):
+def create_nsga3(defaults, config):
     #nsga3
     dir = defaults.base_dir / "search" / "nsga3"
     config = config.deepcopy()
@@ -177,7 +252,7 @@ def create_transforms(defaults):
 def create_typical_experiments(defaults):
     pass
 
-def main():
+def main(defaults):
     "create simulations by directory"
     create_experiments(defaults)
     create_scores(defaults)

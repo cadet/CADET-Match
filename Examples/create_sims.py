@@ -114,6 +114,14 @@ def create_dextran_model(defaults):
 
     return dextran_model
 
+def create_nonbinding_model(defaults):
+    dextran_model = create_dextran_model(defaults)
+    dextran_model.root.input.model.unit_001.film_diffusion = [defaults.film_diffusion,]
+    dextran_model.root.input.solver.sections.section_times = [0.0, 12.0, 1000.0]
+    dextran_model.root.input.solver.user_solution_times = numpy.linspace(0, 1000, 1001)
+
+    return dextran_model
+
 def create_linear_model(defaults):
 
     linear_model = get_cadet_template(n_units=3, defaults=defaults)

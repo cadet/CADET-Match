@@ -8,26 +8,6 @@ import CADETMatch.util
 
 import create_sims
 
-defaults = Dict()
-defaults.cadet_path = Path(r"C:\Users\kosh_000\cadet_build\CADET\CADET41\bin\cadet-cli.exe").as_posix()
-defaults.base_dir = Path(__file__).parent
-defaults.flow_rate = 2.88e-8 # m^3/s
-defaults.ncol = 100
-defaults.npar = 10
-defaults.abstol = 1e-8
-defaults.algtol = 1e-10
-defaults.reltol = 1e-8
-defaults.lin_ka1 = 4e-4
-defaults.lin_ka2 = 1e-4
-defaults.lin_kd1 = 4e-3
-defaults.lin_kd2 = 1e-3
-defaults.col_dispersion = 2e-7
-defaults.film_diffusion = 1e-6
-defaults.par_diffusion = 3e-11
-
-Cadet.cadet_path = defaults.cadet_path
-
-
 def create_experiments(defaults):
     pass
 
@@ -46,6 +26,7 @@ def create_scores(defaults):
 
     for path in dextran_paths:
         dir = scores_dir / path
+        dir.mkdir(parents=True, exist_ok=True)
         dir_name = dir.name
         dex_sim.filename = (dir / "dextran.h5").as_posix()
         dex_sim.save()
@@ -62,6 +43,7 @@ def create_scores(defaults):
     flat_sim = create_sims.create_dextran_model(defaults)
     flat_sim.root.input.model.unit_000.sec_000.const_coeff = [0.0,]
     dir = scores_dir / "Ceiling"
+    dir.mkdir(parents=True, exist_ok=True)
     dir_name = dir.name
     flat_sim.filename = (dir / "flat.h5").as_posix()
     flat_sim.save()
@@ -82,6 +64,7 @@ def create_scores(defaults):
     dirs = [scores_dir / "fractionationSlide", scores_dir / "other" / "fractionationSSE", scores_dir / "misc" / "multiple_components"]
 
     for dir in dirs:
+        dir.mkdir(parents=True, exist_ok=True)
         dir_name = dir.name
         frac_sim.filename = (dir / "fraction.h5").as_posix()
         frac_sim.save()
@@ -113,13 +96,14 @@ def create_scores(defaults):
 def create_search(defaults):
     dex_sim = create_sims.create_dextran_model(defaults)
 
-    dextran_paths = ['gradient', 'graphSpace', 'mcmc', 'multistart', 'nsga3', 'scoretest',
+    dextran_paths = ['gradient', 'graphSpace', 'mcmc/stage1', 'multistart', 'nsga3', 'scoretest',
                      'misc/early_stopping', 'misc/refine_shape', 'misc/refine_sse']
 
     search_dir = defaults.base_dir / "search"
 
     for path in dextran_paths:
         dir = search_dir / path
+        dir.mkdir(parents=True, exist_ok=True)
         dir_name = dir.name
         dex_sim.filename = (dir / "dextran.h5").as_posix()
         dex_sim.save()
@@ -132,13 +116,35 @@ def create_search(defaults):
 
         numpy.savetxt(dir / "dextran.csv", data, delimiter=',')
 
+
+    non_sim = create_sims.create_nonbinding_model(defaults)
+
+    non_paths = ['mcmc/stage2', ]
+
+    search_dir = defaults.base_dir / "search"
+
+    for path in non_paths:
+        dir = search_dir / path
+        dir.mkdir(parents=True, exist_ok=True)
+        dir_name = dir.name
+        non_sim.filename = (dir / "non.h5").as_posix()
+        non_sim.save()
+        print("Run ", dir_name, non_sim.run())
+        non_sim.load()
+
+        times = non_sim.root.output.solution.solution_times
+        values = non_sim.root.output.solution.unit_002.solution_outlet_comp_000
+        data = numpy.array([times, values]).T
+
+        numpy.savetxt(dir / "non.csv", data, delimiter=',')
+
 def create_transforms(defaults):
     pass
 
 def create_typical_experiments(defaults):
     pass
 
-def main():
+def main(defaults):
     "create simulations by directory"
     create_experiments(defaults)
     create_scores(defaults)

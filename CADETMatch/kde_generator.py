@@ -164,7 +164,7 @@ def synthetic_error_simulation(x):
     uv_store = {}
     uv_store_norm = {}
 
-    for experiment in cache.cache.settings["kde_synthetic"]:
+    for experiment in cache.cache.settings["errorModel"]:
         delay_settings = experiment["delay"]
         flow_settings = experiment["flow"]
         load_settings = experiment["load"]
@@ -311,7 +311,7 @@ def synthetic_error_simulation(x):
 def get_section_counts(cache):
     sections = []
 
-    for experiment in cache.cache.settings["kde_synthetic"]:
+    for experiment in cache.cache.settings["errorModel"]:
         name = experiment["name"]
 
         if "file_path" in experiment:
@@ -336,12 +336,11 @@ def get_section_counts(cache):
 
 def generate_error_sequence(cache):
     errors = {}
-
-    for experiment in cache.settings["kde_synthetic"]:
+    count = cache.settings["errorModelCount"]
+    for experiment in cache.settings["errorModel"]:
         delay_settings = experiment["delay"]
         flow_settings = experiment["flow"]
         load_settings = experiment["load"]
-        count = experiment["count"]
         name = experiment["name"]
 
         if "file_path" in experiment:
@@ -459,9 +458,8 @@ def keep_data(data, lb=0.5, ub=99.5):
 
 
 def generate_synthetic_error(cache):
-    if "kde_synthetic" in cache.settings:
-        count_settings = int(cache.settings["kde_synthetic"][0]["count"])
-
+    count_settings = int(cache.settings["errorModelCount"])
+    if "errorModel" in cache.settings:
         scores_all = []
         times = {}
         outputs_all = {}

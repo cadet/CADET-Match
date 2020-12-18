@@ -492,10 +492,10 @@ def setupMCMC(cache):
                     {"name": "AbsoluteHeight", "type": "AbsoluteHeight"}
                 )
 
-        if "kde_synthetic" in settings:
+        if "errorModel" in settings:
             individual = getBestIndividual(cache)
             found = createSimulationBestIndividual(individual, cache)
-            for experiment in settings["kde_synthetic"]:
+            for experiment in settings["errorModel"]:
                 experiment["file_path"] = found[experiment["name"]]
 
         new_settings_file = resultDir / settings_file.name
@@ -510,25 +510,7 @@ def update_json_mcmc(settings):
     data.load(paths=["/bounds_change/json"])
     json_data = jstyleson.loads(str(data.root.bounds_change.json, "ascii"))
 
-    if "parameters_mcmc" in settings:
-        new_parameters = settings["parameters_mcmc"]
-
-        for a, b in zip(new_parameters, json_data):
-            if (
-                a["transform"] == b["transform"]
-                and a["location"].split("/")[-1] == b["location"].split("/")[-1]
-            ):
-                a["min"] = b["min"]
-                a["max"] = b["max"]
-            else:
-                multiprocessing.get_logger().info(
-                    "parameters_mcmc does not have the same transform and variables in the same order as the prior, MCMC cannot continue until this is fixed"
-                )
-                sys.exit()
-
-        settings["parameters"].extend(new_parameters)
-    else:
-        settings["parameters"].extend(json_data)
+    settings["parameters"].extend(json_data)
 
 
 def setupAltFeature(cache, name):
@@ -1323,7 +1305,7 @@ def biasSimulation(simulation, experiment, cache):
         name = experiment["name"]
 
         error_model = None
-        for error in cache.settings["kde_synthetic"]:
+        for error in cache.settings["errorModel"]:
             if error["name"] == name:
                 error_model = error
                 break

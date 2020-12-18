@@ -388,8 +388,8 @@ class Cache:
                 self.add_units_isotherm(units_used, feature.get("isotherm", ""))
                 self.add_units_isotherm(units_used, feature.get("unit_name", ""))
 
-    def add_units_error_model(self, kde_synthetic, target):
-        for error_model in kde_synthetic:
+    def add_units_error_model(self, error_models, target):
+        for error_model in error_models:
             error_model_name = error_model["name"]
             if error_model_name in target:
                 units_used = target[error_model_name]["units_used"]
@@ -404,8 +404,8 @@ class Cache:
 
         for experiment in self.settings["experiments"]:
             self.target[experiment["name"]] = self.setupExperiment(experiment)
-        if "kde_synthetic" in self.settings:
-            self.add_units_error_model(self.settings["kde_synthetic"], self.target)
+        if "errorModel" in self.settings:
+            self.add_units_error_model(self.settings["errorModel"], self.target)
         self.target["bestHumanScores"] = numpy.ones(5) * self.badScore
 
         # SSE are negative so they sort correctly with better scores being less negative

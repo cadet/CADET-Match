@@ -281,7 +281,7 @@ def setupTemplates(cache):
 
         if (
             cache.settings["searchMethod"] != "MCMC"
-            and "kde_synthetic" in cache.settings
+            and "errorModel" in cache.settings
         ):
             # the base case needs to be saved since the normal template file is what the rest of the code will look for
             template_base_path = Path(
