@@ -426,7 +426,6 @@ def plotExperiments(args):
                 "similarityDecay",
                 "curve",
                 "SSE",
-                "LogSSE",
                 "Shape",
                 "ShapeDecay",
                 "Dextran",

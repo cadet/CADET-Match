@@ -14,7 +14,7 @@ def create_experiments(defaults):
 def create_scores(defaults):
     #dextran scores
     dextran_paths = ['DextranShape', 'Shape', 'ShapeBack', 'ShapeFront', 'SSE', 
-                     'other/curve', 'other/DextranSSE', 'other/LogSSE', 'other/ShapeDecay',
+                     'other/curve', 'other/DextranSSE', 'other/ShapeDecay',
                      'other/ShapeDecayNoDer', 'other/ShapeDecaySimple', 'other/ShapeNoDer', 
                      'other/ShapeOnly', 'other/ShapeSimple', 'other/similarity', 
                      'other/similarityDecay', 'other/width', 'misc/slicing', 

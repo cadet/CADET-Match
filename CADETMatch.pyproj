@@ -120,7 +120,7 @@
     <Compile Include="CADETMatch\scores\dextranSSE.py" />
     <Compile Include="CADETMatch\scores\fractionationSlide.py" />
     <Compile Include="CADETMatch\scores\fractionationSSE.py" />
-    <Compile Include="CADETMatch\scores\logsse.py" />
+    <Compile Include="CADETMatch\obsolete\scores\logsse.py" />
     <Compile Include="CADETMatch\scores\shape.py" />
     <Compile Include="CADETMatch\scores\shapeBack.py" />
     <Compile Include="CADETMatch\scores\shapeDecay.py" />

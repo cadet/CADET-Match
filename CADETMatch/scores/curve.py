@@ -4,6 +4,7 @@ from addict import Dict
 
 import CADETMatch.score as score
 import CADETMatch.util as util
+import CADETMatch.smoothing as smoothing
 
 name = "curve"
 
