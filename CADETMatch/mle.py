@@ -281,7 +281,6 @@ def plot_mle(simulations, cache, labels):
         units_used = cache.target[experimentName]["units_used"]
 
         numPlotsSeq = [len(units_used)]
-        # Shape and ShapeDecay have a chromatogram + derivative
         for feature in experiment["features"]:
             settings = cache.scores[feature["type"]].get_settings(feature)
             numPlotsSeq.append(settings.graph_der + settings.graph + settings.graph_frac)
