@@ -23,8 +23,8 @@ import CADETMatch.evo as evo
 import CADETMatch.kde_generator as kde_generator
 import CADETMatch.pareto as pareto
 import CADETMatch.progress as progress
-import CADETMatch.sub as sub
 import CADETMatch.util as util
+import CADETMatch.sub as sub
 
 name = "MCMC"
 
@@ -504,7 +504,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     if "mcmc_h5" in cache.settings:
         data = cadet.H5()
         data.filename = cache.settings["mcmc_h5"]
-        data.load(paths=["/bounds_change/center_trans"])
+        data.load(paths=["/bounds_change/center_trans"], lock=True)
         previous_parameters = data.root.bounds_change.center_trans.shape[1]
     else:
         previous_parameters = 0
@@ -526,7 +526,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     mcmc_store.root.bounds.auto_chain = auto_chain
     mcmc_store.root.bounds.auto_probability = auto_probability
 
-    mcmc_store.save()
+    mcmc_store.save(lock=True)
 
     while not finished:
         state = next(
@@ -727,7 +727,7 @@ def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     mcmc_store.root.burn.auto_chain = auto_chain
     mcmc_store.root.burn.auto_probability = auto_probability
 
-    mcmc_store.save()
+    mcmc_store.save(lock=True)
 
     while not finished:
         state = next(
@@ -1069,7 +1069,7 @@ def run(cache, tools, creator):
     mcmc_store.filename = mcmc_h5.as_posix()
 
     if mcmc_h5.exists():
-        mcmc_store.load()
+        mcmc_store.load(lock=True)
 
     parameters = len(cache.MIN_VALUE)
 
@@ -1236,7 +1236,7 @@ def resetPopulation(checkpoint, cache):
         previousResultsFile = Path(cache.settings["PreviousResults"])
         results_h5 = cadet.H5()
         results_h5.filename = previousResultsFile.as_posix()
-        results_h5.load()
+        results_h5.load(paths=["/meta_population_transform"], lock=True)
         previousResults = results_h5.root.meta_population_transform
 
         row, col = previousResults.shape
@@ -1250,7 +1250,7 @@ def resetPopulation(checkpoint, cache):
 
             data = cadet.H5()
             data.filename = mle_h5.as_posix()
-            data.load()
+            data.load(lock=True)
             multiprocessing.get_logger().info("%s", list(data.root.keys()))
             stat_MLE = data.root.stat_MLE.reshape(1, -1)
             previousResults = numpy.hstack(
@@ -1491,7 +1491,8 @@ def process_chain(chain, cache, idx):
 def writeMCMC(cache, mcmc_store, process_mcmc_store):
     "write out the mcmc data so it can be plotted"
     process_mcmc_store(cache, mcmc_store)
-    mcmc_store.save()
+
+    mcmc_store.save(lock=True)
 
 
 def interval(flat_chain, cache):

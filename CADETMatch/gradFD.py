@@ -264,14 +264,14 @@ def write_gradient_results(gradient_results, cache):
     results.filename = grad_path.as_posix()
 
     if grad_path.exists():
-        results.load()
+        results.load(lock=True)
 
     for i in gradient_results:
         grad_key = " ".join(["%.16f" % val for val in i.cadetValuesInput])
 
         for key, value in i.items():
             results[grad_key][key] = value
-    results.save()
+    results.save(lock=True)
 
 
 def filterOverlapArea(cache, checkOffspring, cutoff=0.01):

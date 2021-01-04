@@ -1,6 +1,5 @@
 import sys
 
-import filelock
 import matplotlib
 import matplotlib.style as mplstyle
 
@@ -67,10 +66,6 @@ def main():
     resultDir = Path(cache.settings["resultsDirBase"])
     result_lock = resultDir / "result.lock"
 
-    lock = filelock.FileLock(result_lock.as_posix())
-
-    lock.acquire()
-    multiprocessing.get_logger().info("locking corner subprocess %s", lock.lock_file)
 
     mcmcDir = Path(cache.settings["resultsDirMCMC"])
     mcmc_h5 = mcmcDir / "mcmc.h5"
@@ -79,18 +74,15 @@ def main():
     if mcmc_h5.exists():
         data_mcmc = H5()
         data_mcmc.filename = mcmc_h5.as_posix()
-        data_mcmc.load()
+        data_mcmc.load(lock=True)
 
         data_results = None
     else:
         data_results = H5()
         data_results.filename = result_h5.as_posix()
-        data_results.load()
+        data_results.load(lock=True)
 
         data_mcmc = None
-
-    lock.release()
-    multiprocessing.get_logger().info("unlocking corner subprocess")
 
     graphCorner(cache, data_mcmc, data_results)
 

@@ -1,6 +1,5 @@
 import sys
 
-import filelock
 import matplotlib
 import matplotlib.style as mplstyle
 
@@ -26,23 +25,15 @@ def main():
     dir_base = Path(cache.settings["resultsDirBase"])
     result_lock = dir_base / "result.lock"
 
-    lock = filelock.FileLock(result_lock.as_posix())
-
-    lock.acquire()
-    multiprocessing.get_logger().info("locking kde subprocess %s", lock.lock_file)
-
     kde_settings = H5()
     kde_settings.filename = (mcmcDir / "kde_settings.h5").as_posix()
-    kde_settings.load()
+    kde_settings.load(lock=True)
 
     file = dir_base / "kde_data.h5"
 
     kde_data = H5()
     kde_data.filename = file.as_posix()
-    kde_data.load()
-
-    lock.release()
-    multiprocessing.get_logger().info("unlocking kde subprocess")
+    kde_data.load(lock=True)
 
     store = kde_settings.root.store
 

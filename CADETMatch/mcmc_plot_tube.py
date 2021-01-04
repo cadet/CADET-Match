@@ -3,7 +3,6 @@ import sys
 import warnings
 from pathlib import Path
 
-import filelock
 import joblib
 import matplotlib
 import matplotlib.style as mplstyle
@@ -106,7 +105,8 @@ def plotTube(cache, chain, kde, scaler):
                 h5.root["exp_%s_%s_value" % (expName, comp)] = cache.target[exp_name][
                     "value"
                 ]
-    h5.save()
+    
+    h5.save(lock=True)
 
 
 def processChainForPlots(cache, chain, kde, scaler):
@@ -254,7 +254,8 @@ def writeSelected(
     h5.root.mcmc_selected_transformed = numpy.array(mcmc_selected_transformed)
     h5.root.mcmc_selected_score = numpy.array(mcmc_selected_score)
     h5.root.mcmc_selected_kdescore = numpy.array(mcmc_score)
-    h5.save()
+
+    h5.save(lock=True)
 
 
 def plot_mcmc(output_mcmc, value, expName, name, expTime, expValue, probability):
@@ -317,21 +318,14 @@ def main():
     resultDir = Path(cache.settings["resultsDirBase"])
     result_lock = resultDir / "result.lock"
 
-    lock = filelock.FileLock(result_lock.as_posix())
-
-    lock.acquire()
-    multiprocessing.get_logger().info("locking plot_tube subprocess %s", lock.lock_file)
-
     mcmc_store = H5()
     mcmc_store.filename = mcmc_h5.as_posix()
     mcmc_store.load(
         paths=[
             "/flat_chain",
-        ]
+        ],
+        lock=True
     )
-
-    lock.release()
-    multiprocessing.get_logger().info("unlocking plot_tube subprocess")
 
     kde, kde_scaler = kde_generator.getKDE(cache)
     plotTube(cache, mcmc_store.root.flat_chain, kde, kde_scaler)

@@ -1,6 +1,5 @@
 import sys
 
-import filelock
 import matplotlib
 import matplotlib.style as mplstyle
 
@@ -55,21 +54,12 @@ def main(map_function):
         resultDir = Path(cache.settings["resultsDirBase"])
         result_lock = resultDir / "result.lock"
 
-        lock = filelock.FileLock(result_lock.as_posix())
-
-        lock.acquire()
-        multiprocessing.get_logger().info(
-            "locking autocorr subprocess %s", lock.lock_file
-        )
-
         mcmc_store = H5()
         mcmc_store.filename = mcmc_h5.as_posix()
         mcmc_store.load(
-            paths=["/full_chain", "/train_full_chain", "/bounds_full_chain"]
+            paths=["/full_chain", "/train_full_chain", "/bounds_full_chain"],
+            lock=True
         )
-
-        lock.release()
-        multiprocessing.get_logger().info("unlocking autocorr subprocess")
 
         progress_path = Path(cache.settings["resultsDirBase"]) / "result.h5"
 

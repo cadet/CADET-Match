@@ -19,7 +19,6 @@ from sklearn.neighbors import KernelDensity
 
 import CADETMatch.kde_util as kde_util
 import CADETMatch.score as score
-import CADETMatch.sub as sub
 
 bw_tol = 1e-4
 
@@ -34,6 +33,7 @@ import scipy.stats
 import CADETMatch.cache as cache
 import CADETMatch.synthetic_error as synthetic_error
 import CADETMatch.util as util
+import CADETMatch.sub as sub
 
 
 def mirror(data):
@@ -91,7 +91,8 @@ def setupKDE(cache):
     h5_data.root.scores_mirror = scores_mirror
     h5_data.root.scores_mirror_scaled = scores_scaler
     h5_data.root.probability = probability
-    h5_data.save()
+
+    h5_data.save(lock=True)
 
     sub.graph_kde(cache)
 
@@ -540,7 +541,7 @@ def generate_synthetic_error(cache):
             kde_data.root.uv_store[key] = numpy.array(value)[keep_idx, :]
             kde_data.root.original.uv_store[key] = numpy.array(value)[keep_idx, :]
 
-        kde_data.save()
+        kde_data.save(lock=True)
 
         return scores[keep_idx, :]
 

@@ -39,7 +39,7 @@ def run(cache, tools, creator):
         previousResults = cache.settings["PreviousResults"]
         data = H5()
         data.filename = previousResults
-        data.load(paths=["/meta_population", "/meta_population_transform"])
+        data.load(paths=["/meta_population", "/meta_population_transform"], lock=True)
 
         meta_population = data.root.meta_population
         meta_population_transform = data.root.meta_population_transform

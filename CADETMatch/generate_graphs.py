@@ -1,6 +1,5 @@
 import sys
 
-import filelock
 import matplotlib
 import matplotlib.style as mplstyle
 
@@ -91,11 +90,6 @@ def main(map_function):
 
     result_h5 = resultDir / "result.h5"
 
-    lock = filelock.FileLock(result_lock.as_posix())
-
-    lock.acquire()
-    multiprocessing.get_logger().info("locking graph subprocess %s", lock.lock_file)
-
     progress_df = pandas.read_csv(progress)
 
     result_data = H5()
@@ -111,11 +105,9 @@ def main(map_function):
             "/mean",
             "/confidence",
             "/distance_correct",
-        ]
+        ],
+        lock=True
     )
-
-    lock.release()
-    multiprocessing.get_logger().info("unlocking graph subprocess")
 
     graphMeta(cache, map_function)
     graphProgress(cache, map_function, progress_df)

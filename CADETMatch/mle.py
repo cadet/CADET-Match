@@ -3,7 +3,6 @@ import sys
 import warnings
 from pathlib import Path
 
-import filelock
 import joblib
 import matplotlib
 import matplotlib.style as mplstyle
@@ -178,9 +177,9 @@ def process_mle(chain, gen, cache):
     h5 = H5()
     h5.filename = mle_h5.as_posix()
     if mle_h5.exists():
-        h5.load()
+        h5.load(lock=True)
 
-        if 0:  # h5.root.generations[-1] == gen:
+        if h5.root.generations[-1] == gen:
             multiprocessing.get_logger().info(
                 "new information is not yet available and mle will quit"
             )
@@ -264,7 +263,7 @@ def process_mle(chain, gen, cache):
     )
     h5.root.stat_MLE = mle_ind
 
-    h5.save()
+    h5.save(lock=True)
 
     plot_mle(simulations, cache, labels)
 
@@ -578,17 +577,9 @@ def main():
     resultDir = Path(cache.settings["resultsDirBase"])
     result_lock = resultDir / "result.lock"
 
-    lock = filelock.FileLock(result_lock.as_posix())
-
-    lock.acquire()
-    multiprocessing.get_logger().info("locking mle subprocess %s", lock.lock_file)
-
     mcmc_store = H5()
     mcmc_store.filename = mcmc_h5.as_posix()
-    mcmc_store.load(paths=["/flat_chain", "/mcmc_acceptance"])
-
-    lock.release()
-    multiprocessing.get_logger().info("unlocking mle subprocess")
+    mcmc_store.load(paths=["/flat_chain", "/mcmc_acceptance"], lock=True)
 
     process_mle(mcmc_store.root.flat_chain, len(mcmc_store.root.mcmc_acceptance), cache)
 

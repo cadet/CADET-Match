@@ -72,7 +72,8 @@ def main(map_function):
                 "/bounds_probability",
                 "/train_probability",
                 "/run_probability",
-            ]
+            ],
+            lock=True
         )
 
         progress_path = Path(cache.settings["resultsDirBase"]) / "result.h5"

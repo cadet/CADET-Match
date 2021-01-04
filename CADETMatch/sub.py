@@ -25,10 +25,8 @@ def run_sub(cache, key, line, file_name):
     sub = processes.get(key, None)
 
     if sub is None:
-        lock = get_lock(cache)
-        lock.release()
         multiprocessing.get_logger().info(
-            "creating subprocess %s for %s %s", key, file_name, lock.lock_file
+            "creating subprocess %s for %s", key, file_name
         )
         sub = subprocess.Popen(
             line,
@@ -37,18 +35,6 @@ def run_sub(cache, key, line, file_name):
             cwd=cwd,
         )
         processes[key] = sub
-
-        multiprocessing.get_logger().info(
-            "sleeping subprocess %s for %s", key, file_name
-        )
-        time.sleep(10)
-        multiprocessing.get_logger().info(
-            "waiting for lock subprocess %s for %s", key, file_name
-        )
-        lock.acquire()
-        multiprocessing.get_logger().info(
-            "acquired lock subprocess %s for %s", key, file_name
-        )
 
     process_sub(key, file_name)
 

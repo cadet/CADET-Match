@@ -9,6 +9,7 @@ import psutil
 from cadet import H5
 
 import CADETMatch.util as util
+import filelock
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -687,48 +688,52 @@ def writeProgress(
         resultDir = Path(cache.settings["resultsDir"])
         result_h5 = resultDir / "result.h5"
 
+        lock = filelock.FileLock(result_h5.as_posix() + '.lock')
+
         if not result_h5.exists():
-            write_results(
-                cache,
-                result_h5,
-                result_data,
-                gen_data,
-                now,
-                sim_start,
-                population_input,
-                population_output,
-                data,
-                hof_param,
-                hof_param_transform,
-                data_meta,
-                meta_param,
-                meta_param_transform,
-                data_grad,
-                grad_param,
-                grad_param_transform,
-                probability,
-            )
+            with lock:
+                write_results(
+                    cache,
+                    result_h5,
+                    result_data,
+                    gen_data,
+                    now,
+                    sim_start,
+                    population_input,
+                    population_output,
+                    data,
+                    hof_param,
+                    hof_param_transform,
+                    data_meta,
+                    meta_param,
+                    meta_param_transform,
+                    data_grad,
+                    grad_param,
+                    grad_param_transform,
+                    probability,
+                )
         else:
-            update_results(
-                cache,
-                result_h5,
-                result_data,
-                gen_data,
-                now,
-                sim_start,
-                population_input,
-                population_output,
-                data,
-                hof_param,
-                hof_param_transform,
-                data_meta,
-                meta_param,
-                meta_param_transform,
-                data_grad,
-                grad_param,
-                grad_param_transform,
-                probability,
-            )
+            with lock:
+                update_results(
+                    cache,
+                    result_h5,
+                    result_data,
+                    gen_data,
+                    now,
+                    sim_start,
+                    population_input,
+                    population_output,
+                    data,
+                    hof_param,
+                    hof_param_transform,
+                    data_meta,
+                    meta_param,
+                    meta_param_transform,
+                    data_grad,
+                    grad_param,
+                    grad_param_transform,
+                    probability,
+                )
 
         clear_result_data(result_data)
 

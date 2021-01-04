@@ -202,7 +202,7 @@ def load_data(name, cache):
     data.filename = factor_file.as_posix()
 
     if factor_file.exists():
-        data.load()
+        data.load(lock=True)
 
     if name in data.root:
         s = float(data.root[name].s)
@@ -317,7 +317,7 @@ def record_smoothing(
     data.filename = factor_file.as_posix()
 
     if factor_file.exists():
-        data.load()
+        data.load(lock=True)
 
     if name not in data.root:
         data.root[name].knots = knots
@@ -332,7 +332,7 @@ def record_smoothing(
             data.root[name].crit_fs_der = -1.0
         else:
             data.root[name].crit_fs_der = float(crit_fs)
-        data.save()
+        data.save(lock=True)
 
     crit_fs_message = "critical frequency disable"
     if crit_fs is not None:

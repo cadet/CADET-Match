@@ -133,10 +133,11 @@ def print_version():
         ("matplotlib", "3.2.1"),
         ("pandas", "1.0.5"),
         ("h5py", "2.10.0"),
-        ("cadet", "0.6"),
+        ("cadet", "0.8"),
         ("seaborn", "0.10.1"),
         ("scikit-learn", "0.23.1"),
         ("jstyleson", "0.0.2"),
+        ('filelock', "3.0.12")
     ]
 
     for module, version_tested in modules:
@@ -219,7 +220,7 @@ def setTemplateValuesAuto(simulation, set_values_auto, cache):
 
     data = H5()
     data.filename = mle_h5.as_posix()
-    data.load()
+    data.load(lock=True)
     stat_MLE = data.root.stat_MLE
 
     used = set()

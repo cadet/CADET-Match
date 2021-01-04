@@ -507,10 +507,30 @@ def setupMCMC(cache):
 def update_json_mcmc(settings):
     data = H5()
     data.filename = settings["mcmc_h5"]
-    data.load(paths=["/bounds_change/json"])
-    json_data = jstyleson.loads(str(data.root.bounds_change.json, "ascii"))
+    data.load(paths=["/bounds_change/json"], lock=True)
+    prior_parameters = jstyleson.loads(str(data.root.bounds_change.json, "ascii"))
 
-    settings["parameters"].extend(json_data)
+    keep = ['transform', 'min', 'max', 'minKA', 'maxKA',
+                      'minKEQ', 'maxKEQ', 'factor', 'minNu', 'maxNu',
+                      'minSigma', 'maxSigma', 'minVolume', 'maxVolume',
+                      'minArea', 'maxArea', 'minLength', 'maxLength']
+
+    if "parameters_mcmc" in settings:
+        new_parameters = settings["parameters_mcmc"]
+
+        for new, prior in zip(new_parameters, prior_parameters):
+            if new["location"].split("/")[-1] == prior["location"].split("/")[-1]:
+                #update just the location data everthing else needs to remain the same
+                for key, value in new.items():
+                    if key not in keep:
+                        prior[key] = new[key]
+            else:
+                multiprocessing.get_logger().info(
+                    "parameters_mcmc does not have the same transform and variables in the same order as the prior, MCMC cannot continue until this is fixed"
+                )
+                sys.exit()
+       
+    settings["parameters"].extend(prior_parameters)
 
 
 def setupAltFeature(cache, name):
@@ -577,7 +597,7 @@ def getBestIndividual(cache):
     progress_path = Path(cache.settings["resultsDirBase"]) / "result.h5"
     results = H5()
     results.filename = progress_path.as_posix()
-    results.load(paths=["/meta_score", "/meta_population"])
+    results.load(paths=["/meta_score", "/meta_population"], lock=True)
 
     idx = numpy.argmax(results.root.meta_score[:, 1])
     individual = results.root.meta_population[idx, :]
