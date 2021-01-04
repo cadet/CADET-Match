@@ -376,12 +376,8 @@ def plotExperiments(args):
         numPlotsSeq = [len(units_used)]
         # Shape and ShapeDecay have a chromatogram + derivative
         for feature in experiment["features"]:
-            if feature["type"] in ("Shape", "ShapeDecay", "ShapeFront", "ShapeBack"):
-                numPlotsSeq.append(2)
-            elif feature["type"] in ("AbsoluteTime", "AbsoluteHeight"):
-                pass
-            else:
-                numPlotsSeq.append(1)
+            settings = cache.scores[feature["type"]].get_settings(feature)
+            numPlotsSeq.append(settings.graph_der + settings.graph + settings.graph_frac)
 
         numPlots = sum(numPlotsSeq)
 
