@@ -133,7 +133,7 @@
     <Compile Include="CADETMatch\scores\similarity.py" />
     <Compile Include="CADETMatch\scores\similarityDecay.py" />
     <Compile Include="CADETMatch\scores\sse.py" />
-    <Compile Include="CADETMatch\scores\width.py" />
+    <Compile Include="CADETMatch\obsolete\scores\width.py" />
     <Compile Include="CADETMatch\scores\__init__.py" />
     <Compile Include="CADETMatch\score_calc.py" />
     <Compile Include="CADETMatch\search\altScore.py">

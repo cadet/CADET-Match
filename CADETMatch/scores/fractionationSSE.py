@@ -21,6 +21,9 @@ def get_settings(feature):
     settings.badScore = -sys.float_info.max
     settings.meta_mask = True
     settings.count = 1
+    settings.graph_der = 0
+    settings.graph = 0
+    settings.graph_frac = 1
     return settings
 
 

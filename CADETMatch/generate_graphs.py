@@ -421,24 +421,8 @@ def plotExperiments(args):
                 simulation, target[experimentName][featureName]
             )
 
-            if featureType in (
-                "similarity",
-                "similarityDecay",
-                "curve",
-                "SSE",
-                "Shape",
-                "ShapeDecay",
-                "Dextran",
-                "DextranShape",
-                "ShapeDecaySimple",
-                "ShapeSimple",
-                "DextranSSE",
-                "ShapeFront",
-                "ShapeBack",
-                "ShapeNoDer",
-                "ShapeDecayNoDer",
-            ):
-
+            settings = cache.scores[featureType].get_settings(feature)
+            if settings.graph:
                 graph = fig.add_subplot(
                     numPlots, 1, graphIdx
                 )  # additional +1 added due to the overview plot
@@ -446,12 +430,7 @@ def plotExperiments(args):
                 graph.plot(exp_time, exp_value, "g:", label="Experiment")
                 graphIdx += 1
 
-            if featureType in (
-                "Shape",
-                "ShapeDecay",
-                "ShapeFront",
-                "ShapeBack",
-            ):
+            if settings.graph_der:
                 exp_spline = smoothing.smooth_data_derivative(
                     exp_time,
                     exp_value,
@@ -474,10 +453,7 @@ def plotExperiments(args):
                 graph.plot(exp_time, exp_spline, "g:", label="Experiment")
                 graphIdx += 1
 
-            if featureType in (
-                "fractionationSlide",
-                "fractionationSSE",
-            ):
+            if settings.graph_frac:
                 cache.scores[featureType].run(results, feat)
 
                 graph_exp = results["graph_exp"]

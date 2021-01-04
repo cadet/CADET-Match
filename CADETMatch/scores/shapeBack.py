@@ -20,10 +20,15 @@ def get_settings(feature):
 
     derivative = feature.get("derivative", 1)
 
+    settings.graph = 1
+    settings.graph_frac = 0
+
     if derivative:
         settings.count = 5
+        settings.graph_der = 1
     else:
         settings.count = 3
+        settings.graph_der = 0
     return settings
 
 

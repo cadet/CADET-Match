@@ -317,24 +317,8 @@ def plot_mle(simulations, cache, labels):
             exp_time = feat["time"][selected]
             exp_value = feat["value"][selected]
 
-            if featureType in (
-                "similarity",
-                "similarityDecay",
-                "curve",
-                "SSE",
-                "Shape",
-                "ShapeDecay",
-                "Dextran",
-                "DextranShape",
-                "ShapeDecaySimple",
-                "ShapeSimple",
-                "DextranSSE",
-                "ShapeFront",
-                "ShapeBack",
-                "ShapeNoDer",
-                "ShapeDecayNoDer",
-            ):
-
+            settings = cache.scores[featureType].get_settings(feature)
+            if settings.graph:
                 graph = fig.add_subplot(
                     numPlots, 1, graphIdx
                 )  # additional +1 added due to the overview plot
@@ -376,23 +360,7 @@ def plot_mle(simulations, cache, labels):
                 )
                 graphIdx += 1
 
-            if featureType in (
-                "similarity",
-                "similarityDecay",
-                "curve",
-                "SSE",
-                "Shape",
-                "ShapeDecay",
-                "Dextran",
-                "DextranShape",
-                "ShapeDecaySimple",
-                "ShapeSimple",
-                "DextranSSE",
-                "ShapeFront",
-                "ShapeBack",
-                "ShapeNoDer",
-                "ShapeDecayNoDer",
-            ):
+            if settings.graph_der:
 
                 graph = fig.add_subplot(
                     numPlots, 1, graphIdx

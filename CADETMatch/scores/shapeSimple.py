@@ -16,6 +16,9 @@ def get_settings(feature):
     settings.badScore = 0
     settings.meta_mask = True
     settings.count = 3
+    settings.graph_der = 1
+    settings.graph = 1
+    settings.graph_frac = 0
     return settings
 
 

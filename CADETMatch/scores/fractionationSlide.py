@@ -22,7 +22,9 @@ def get_settings(feature):
     comps = len(headers[2:])
 
     settings.count = 3 * comps
-
+    settings.graph_der = 0
+    settings.graph = 0
+    settings.graph_frac = 1
     return settings
 
 

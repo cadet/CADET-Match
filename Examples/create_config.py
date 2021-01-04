@@ -62,7 +62,7 @@ def create_shared_scores(defaults):
                      'other/curve', 'other/DextranSSE', 'other/ShapeDecay',
                      'other/ShapeDecayNoDer', 'other/ShapeDecaySimple', 'other/ShapeNoDer', 
                      'other/ShapeOnly', 'other/ShapeSimple', 'other/similarity', 
-                     'other/similarityDecay', 'other/width']
+                     'other/similarityDecay']
 
     scores_dir = defaults.base_dir / "scores"
 
