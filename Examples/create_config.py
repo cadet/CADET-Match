@@ -15,8 +15,144 @@ def create_experiments(defaults):
 
 def create_scores(defaults):
     #create_shared_scores(defaults)
-    create_ceiling(defaults)
+    #create_ceiling(defaults)
+    #create_fractionation(defaults)
+    create_slicing(defaults)
 
+def create_slicing(defaults):
+    "create all the scores that have the same config except for the score name"
+    config = Dict()
+    config.CADETPath = Cadet.cadet_path
+    config.resultsDir = 'results'
+    config.searchMethod = 'NSGA3'
+    config.population = defaults.population
+    config.gradVector = True
+    
+    parameter1 = Dict()
+    parameter1.location = '/input/model/unit_001/COL_DISPERSION'
+    parameter1.min = 1e-10
+    parameter1.max = 1e-6
+    parameter1.component = -1
+    parameter1.bound = -1
+    parameter1.transform = 'auto'
+
+    parameter2 = Dict()
+    parameter2.location = '/input/model/unit_001/COL_POROSITY'
+    parameter2.min = 0.2
+    parameter2.max = 0.7
+    parameter2.component = -1
+    parameter2.bound = -1
+    parameter2.transform = 'auto'
+
+    config.parameters = [parameter1, parameter2]
+
+    experiment1 = Dict()
+    experiment1.name = 'main'
+    experiment1.csv = 'dextran.csv'
+    experiment1.HDF5 = 'dextran.h5'
+    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    config.experiments = [experiment1,]
+
+    feature1 = Dict()
+    feature1.name = "feature_front"
+    feature1.type = 'ShapeFront'
+    feature1.start = 250
+    feature1.stop = 350
+
+    feature2 = Dict()
+    feature2.name = "feature_back"
+    feature2.type = 'ShapeBack'
+    feature2.start = 330
+    feature2.stop = 430
+
+    experiment1.features = [feature1,feature2]
+
+    scores_dir = defaults.base_dir / "scores" 
+
+    dir = scores_dir / "misc" / "multiple_scores_slicing"
+
+    create_common(dir, config)
+
+def create_fractionation(defaults):
+    "create the ceiling"
+    config = Dict()
+    config.CADETPath = Cadet.cadet_path
+    config.resultsDir = 'results'
+    config.searchMethod = 'NSGA3'
+    config.population = defaults.population
+    config.gradVector = True
+    
+    parameter1 = Dict()
+    parameter1.location = ['/input/model/unit_001/adsorption/LIN_KA','/input/model/unit_001/adsorption/LIN_KD']
+    parameter1.minKA = 1e-6
+    parameter1.maxKA = 1e-2
+    parameter1.minKEQ = 1e-3
+    parameter1.maxKEQ = 1e3
+    parameter1.component = 0
+    parameter1.bound = 0
+    parameter1.transform = 'auto_keq'
+
+    parameter2 = Dict()
+    parameter2.location = ['/input/model/unit_001/adsorption/LIN_KA','/input/model/unit_001/adsorption/LIN_KD']
+    parameter2.minKA = 1e-6
+    parameter2.maxKA = 1e-2
+    parameter2.minKEQ = 1e-3
+    parameter2.maxKEQ = 1e3
+    parameter2.component = 1
+    parameter2.bound = 0
+    parameter2.transform = 'auto_keq'
+
+    config.parameters = [parameter1, parameter2]
+
+    experiment1 = Dict()
+    experiment1.name = 'main'
+    experiment1.csv = 'data_sum.csv'
+    experiment1.HDF5 = 'fraction.h5'
+    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    config.experiments = [experiment1,]
+
+    feature1 = Dict()
+    feature1.name = "sum_signal"
+    feature1.type = 'Shape'
+    feature1.isotherm = ['/output/solution/unit_002/SOLUTION_OUTLET_COMP_000', '/output/solution/unit_002/SOLUTION_OUTLET_COMP_001']
+    feature1.csv = 'data_sum.csv'
+
+    feature2 = Dict()
+    feature2.name = "fractionation"
+    feature2.type = 'fractionationSlide'
+    feature2.unit_name = "unit_002"
+    feature2.fraction_csv = 'frac.csv'
+
+    experiment1.features = [feature1,feature2]
+
+    scores_dir = defaults.base_dir / "scores"
+    dir = scores_dir / "fractionationSlide"
+
+    #create_common(dir, config)
+
+
+    #modify for fractionationSSE
+
+    dir = scores_dir / "other" / "fractionationSSE"
+
+    config.experiments[0].features[1].type = "fractionationSSE" 
+    config.experiments[0].features[0].type = "SSE" 
+
+    #create_common(dir, config)
+
+    dir = scores_dir / "misc" / "multiple_components"
+
+    config.experiments[0].features[1].type = "Shape" 
+    config.experiments[0].features[1].isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_001'
+    config.experiments[0].features[1].csv = 'comp1.csv'
+
+    config.experiments[0].features[0].type = "Shape" 
+    config.experiments[0].features[0].isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    config.experiments[0].features[0].csv = 'comp0.csv'
+
+    #create_common(dir, config)
 
 def create_ceiling(defaults):
     "create the ceiling"
@@ -112,6 +248,14 @@ def create_shared_scores(defaults):
         score_name = dir.name
         temp_config = config.deepcopy()
         temp_config.experiments[0].features[0].type = score_name
+
+        if score_name in ('Shape', 'ShapeBack', 'ShapeFront'):
+            temp_config.experiments[0].features[0].decay = 0
+            temp_config.experiments[0].features[0].derivative = 1
+
+        if score_name in ('ShapeBack', 'ShapeFront'):
+            temp_config.experiments[0].features[0].max_percent = 0.98
+            temp_config.experiments[0].features[0].min_percent = 0.02
 
         create_common(dir, temp_config)
 

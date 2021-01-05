@@ -7,6 +7,8 @@ import CADETMatch.score as score
 import CADETMatch.smoothing as smoothing
 import CADETMatch.util as util
 
+import multiprocessing
+
 # Used to match the front side of a peak (good for breakthrough curves, the drops the derivative lower score)
 
 name = "ShapeFront"
@@ -59,6 +61,9 @@ def slice_front(times, seq, seq_der, feature):
     idx_min = numpy.argmin((seq_resample[:max_index] - select_min) ** 2)
     idx_max = numpy.argmin((seq_resample[:max_index] - select_max) ** 2)
 
+    lb_time = new_times[idx_min]
+    ub_time = new_times[idx_max]
+
     min_value = seq_resample[idx_min]
     max_value = seq_resample[idx_max]
     new_seq[idx_min : idx_max + 1] = seq_resample[idx_min : idx_max + 1]
@@ -78,11 +83,16 @@ def slice_front_values(new_times, times, seq, seq_der, min_value, max_value, fea
     new_seq_der = numpy.zeros(new_times.shape)
 
     max_index = numpy.argmax(seq_resample)
-    idx_min = numpy.argmin((seq_resample[:max_index] - min_value) ** 2)
-    idx_max = numpy.argmin((seq_resample[:max_index] - max_value) ** 2)
 
-    new_seq[idx_min : idx_max + 1] = seq_resample[idx_min : idx_max + 1]
-    new_seq_der[idx_min : idx_max + 1] = seq_der_resample[idx_min : idx_max + 1]
+    try:
+        idx_min = numpy.argmin((seq_resample[:max_index] - min_value) ** 2)
+        idx_max = numpy.argmin((seq_resample[:max_index] - max_value) ** 2)
+
+        new_seq[idx_min : idx_max + 1] = seq_resample[idx_min : idx_max + 1]
+        new_seq_der[idx_min : idx_max + 1] = seq_der_resample[idx_min : idx_max + 1]
+    except (IndexError, ValueError):
+        pass
+
     return new_seq, new_seq_der
 
 

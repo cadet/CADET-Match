@@ -17,8 +17,7 @@ def create_scores(defaults):
                      'other/curve', 'other/DextranSSE', 'other/ShapeDecay',
                      'other/ShapeDecayNoDer', 'other/ShapeDecaySimple', 'other/ShapeNoDer', 
                      'other/ShapeOnly', 'other/ShapeSimple', 'other/similarity', 
-                     'other/similarityDecay', 'misc/slicing', 
-                     'misc/multiple_scores']
+                     'other/similarityDecay', 'misc/multiple_scores_slicing']
 
     dex_sim = create_sims.create_dextran_model(defaults)
 

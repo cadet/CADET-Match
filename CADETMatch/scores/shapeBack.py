@@ -7,6 +7,8 @@ import CADETMatch.score as score
 import CADETMatch.smoothing as smoothing
 import CADETMatch.util as util
 
+import multiprocessing
+
 # Used to match the back side of a peak (good for breakthrough curves, this drops the derivative upper score)
 
 name = "ShapeBack"
@@ -75,11 +77,14 @@ def slice_back_values(new_times, times, seq, seq_der, min_value, max_value, feat
     new_seq = numpy.zeros(new_times.shape)
     new_seq_der = numpy.zeros(new_times.shape)
 
-    idx_max = numpy.argmin((seq_resample - min_value) ** 2)
-    idx_min = numpy.argmin((seq_resample[:idx_max] - max_value) ** 2)
+    try:
+        idx_max = numpy.argmin((seq_resample - min_value) ** 2)
+        idx_min = numpy.argmin((seq_resample[:idx_max] - max_value) ** 2)
 
-    new_seq[idx_min : idx_max + 1] = seq_resample[idx_min : idx_max + 1]
-    new_seq_der[idx_min : idx_max + 1] = seq_der_resample[idx_min : idx_max + 1]
+        new_seq[idx_min : idx_max + 1] = seq_resample[idx_min : idx_max + 1]
+        new_seq_der[idx_min : idx_max + 1] = seq_der_resample[idx_min : idx_max + 1]
+    except (IndexError, ValueError):
+        pass
     return new_seq, new_seq_der
 
 
