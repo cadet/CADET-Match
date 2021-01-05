@@ -41,7 +41,8 @@ def create_scores(defaults):
 
     #flatten
     flat_sim = create_sims.create_dextran_model(defaults)
-    flat_sim.root.input.model.unit_000.sec_000.const_coeff = [0.0,]
+    flat_sim.root.input.model.unit_000.sec_000.const_coeff = [1.0,]
+    flat_sim.root.input.model.unit_000.sec_001.const_coeff = [1.0,]
     dir = scores_dir / "Ceiling"
     dir.mkdir(parents=True, exist_ok=True)
     dir_name = dir.name

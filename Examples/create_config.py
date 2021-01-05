@@ -14,8 +14,49 @@ def create_experiments(defaults):
     pass
 
 def create_scores(defaults):
-    create_shared_scores(defaults)
-    pass
+    #create_shared_scores(defaults)
+    create_ceiling(defaults)
+
+
+def create_ceiling(defaults):
+    "create the ceiling"
+    config = Dict()
+    config.CADETPath = Cadet.cadet_path
+    config.resultsDir = 'results'
+    config.searchMethod = 'NSGA3'
+    config.population = defaults.population
+    config.gradVector = True
+    
+    parameter1 = Dict()
+    parameter1.location = '/input/model/unit_000/sec_000/CONST_COEFF'
+    parameter1.min = 0.1
+    parameter1.max = 5.0
+    parameter1.component = 0
+    parameter1.bound = 0
+    parameter1.transform = 'auto'
+
+    config.parameters = [parameter1,]
+
+    experiment1 = Dict()
+    experiment1.name = 'main'
+    experiment1.csv = 'flat.csv'
+    experiment1.HDF5 = 'flat.h5'
+    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    config.experiments = [experiment1,]
+
+    feature1 = Dict()
+    feature1.name = "main_feature"
+    feature1.type = 'Ceiling'
+    feature1.max_value = 1.0
+
+    experiment1.features = [feature1,]
+
+    scores_dir = defaults.base_dir / "scores"
+    dir = scores_dir / "Ceiling"
+    score_name = dir.name
+
+    create_common(dir, config)
 
 def create_shared_scores(defaults):
     "create all the scores that have the same config except for the score name"

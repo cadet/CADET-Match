@@ -20,14 +20,14 @@ class GradientException(Exception):
 
 
 def create_template(
-    experiment, name, tolerance, cache, settings, template_name, store_name
+    experiment, name, cache, settings, template_name, store_name
 ):
     simulationGrad = Cadet(experiment["simulation"].root)
     template_path_grad = Path(settings["resultsDirMisc"], template_name % name)
     simulationGrad.filename = template_path_grad.as_posix()
 
     if cache.dynamicTolerance:
-        simulationGrad.root.input.solver.time_integrator.abstol = tolerance
+        simulationGrad.root.input.solver.time_integrator.abstol = util.get_grad_tolerance(cache, name)
         simulationGrad.root.input.solver.time_integrator.reltol = 0.0
 
     start = time.time()
@@ -65,12 +65,9 @@ def setupTemplates(cache):
     for experiment in settings["experiments"]:
         name = experiment["name"]
 
-        abstolFactorGrad = util.get_grad_tolerance(cache, name)
-
         create_template(
             experiment,
             name,
-            abstolFactorGrad,
             cache,
             settings,
             "template_%s_grad.h5",

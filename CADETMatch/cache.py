@@ -568,6 +568,10 @@ class Cache:
 
         temp["smallest_peak"] = min(peak_maxes)
         temp["largest_peak"] = max(peak_maxes)
+
+        if min(peak_maxes) == max(peak_maxes):
+            self.dynamicTolerance = False
+
         temp["units_used"] = units_used
         return temp
 

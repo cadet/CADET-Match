@@ -286,7 +286,7 @@ def getBoundOffset(unit):
 
     if not len(NBOUND):
         "If NBOUND is empty it is all zero"
-        NBOUND = [0.0] * unit.ncomp
+        NBOUND = [0] * unit.ncomp
 
     boundOffset = numpy.cumsum(
         numpy.concatenate(

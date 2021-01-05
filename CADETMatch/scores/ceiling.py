@@ -51,6 +51,7 @@ def run(sim_data, feature):
 
 def setup(sim, feature, selectedTimes, selectedValues, CV_time, abstol, cache):
     temp = {}
+    temp["peak_max"] = max(selectedValues)
     temp["value_function"] = score.value_function(feature["max_value"], abstol)
     return temp
 
