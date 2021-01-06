@@ -9,7 +9,66 @@ import CADETMatch.util
 import create_sims
 
 def create_experiments(defaults):
-    pass
+    dex_sim = create_sims.create_dextran_model(defaults)
+    non_sim = create_sims.create_nonbinding_model(defaults)
+
+    experiments_dir = defaults.base_dir / "experiments"
+
+    single = experiments_dir / "single"
+    single.mkdir(parents=True, exist_ok=True)
+
+    multiple = experiments_dir / "multiple"
+    multiple.mkdir(parents=True, exist_ok=True)
+
+    advanced = experiments_dir / "multiple_advanced"
+    advanced.mkdir(parents=True, exist_ok=True)
+
+    dex_sim.filename = (single / "dextran.h5").as_posix()
+    dex_sim.save()
+
+    dex_sim.filename = (multiple / "dextran1.h5").as_posix()
+    dex_sim.save()
+
+    dex_sim.filename = (advanced / "dextran.h5").as_posix()
+    dex_sim.save()
+
+    print("Run ", dex_sim.run())
+    dex_sim.load()
+
+    times = dex_sim.root.output.solution.solution_times
+    values = dex_sim.root.output.solution.unit_002.solution_outlet_comp_000
+    data = numpy.array([times, values]).T
+
+    numpy.savetxt(single / "dextran.csv", data, delimiter=',')
+    numpy.savetxt(multiple / "dextran1.csv", data, delimiter=',')
+    numpy.savetxt(advanced / "dextran.csv", data, delimiter=',')
+
+
+    dex_sim.filename = (multiple / "dextran2.h5").as_posix()
+    dex_sim.root.input.solver.sections.section_times = [0.0, 24.0, 600.0]
+    dex_sim.root.input.model.unit_000.sec_000.const_coeff = [0.001,]
+    dex_sim.save()
+
+    print("Run ", dex_sim.run())
+    dex_sim.load()
+
+    times = dex_sim.root.output.solution.solution_times
+    values = dex_sim.root.output.solution.unit_002.solution_outlet_comp_000
+    data = numpy.array([times, values]).T
+
+    numpy.savetxt(multiple / "dextran2.csv", data, delimiter=',')
+
+    non_sim.filename = (advanced / "non.h5").as_posix()
+    non_sim.save()
+
+    print("Run ", non_sim.run())
+    non_sim.load()
+
+    times = non_sim.root.output.solution.solution_times
+    values = non_sim.root.output.solution.unit_002.solution_outlet_comp_000
+    data = numpy.array([times, values]).T
+
+    numpy.savetxt(advanced / "non.csv", data, delimiter=',')
 
 def create_scores(defaults):
     #dextran scores
@@ -142,7 +201,7 @@ def create_transforms(defaults):
     pass
 
 def create_typical_experiments(defaults):
-    pass
+    pass    
 
 def main(defaults):
     "create simulations by directory"

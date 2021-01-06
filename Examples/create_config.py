@@ -11,7 +11,132 @@ import CADETMatch.util
 import create_sims
 
 def create_experiments(defaults):
-    pass
+    config = Dict()
+    config.CADETPath = Cadet.cadet_path
+    config.resultsDir = 'results'
+    config.searchMethod = 'NSGA3'
+    config.population = defaults.population
+    config.gradVector = True
+    
+    parameter1 = Dict()
+    parameter1.location = '/input/model/unit_001/COL_DISPERSION'
+    parameter1.min = 1e-10
+    parameter1.max = 1e-6
+    parameter1.component = -1
+    parameter1.bound = -1
+    parameter1.transform = 'auto'
+
+    parameter2 = Dict()
+    parameter2.location = '/input/model/unit_001/COL_POROSITY'
+    parameter2.min = 0.2
+    parameter2.max = 0.7
+    parameter2.component = -1
+    parameter2.bound = -1
+    parameter2.transform = 'auto'
+
+    config.parameters = [parameter1, parameter2]
+
+    experiment1 = Dict()
+    experiment1.name = 'main'
+    experiment1.csv = 'dextran.csv'
+    experiment1.HDF5 = 'dextran.h5'
+    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    config.experiments = [experiment1,]
+
+    feature1 = Dict()
+    feature1.name = "main_feature"
+    feature1.type = 'DextranShape'
+
+    experiment1.features = [feature1,]
+
+    experiments_dir = defaults.base_dir / "experiments"
+
+    single = experiments_dir / "single"
+    single.mkdir(parents=True, exist_ok=True)
+
+    multiple = experiments_dir / "multiple"
+    multiple.mkdir(parents=True, exist_ok=True)
+
+    advanced = experiments_dir / "multiple_advanced"
+    advanced.mkdir(parents=True, exist_ok=True)
+
+    create_common(single, config)   
+    
+
+    #multiple
+    experiment1 = Dict()
+    experiment1.name = 'main1'
+    experiment1.csv = 'dextran1.csv'
+    experiment1.HDF5 = 'dextran1.h5'
+    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    experiment2 = Dict()
+    experiment2.name = 'main2'
+    experiment2.csv = 'dextran2.csv'
+    experiment2.HDF5 = 'dextran2.h5'
+    experiment2.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    feature1 = Dict()
+    feature1.name = "main_feature"
+    feature1.type = 'DextranShape'
+
+    experiment1.features = [feature1,]
+    experiment2.features = [feature1,]
+
+    config.experiments = [experiment1, experiment2]
+     
+    create_common(multiple, config)   
+
+    #multiple advanced
+    #multiple
+    experiment1 = Dict()
+    experiment1.name = 'dextran'
+    experiment1.csv = 'dextran.csv'
+    experiment1.HDF5 = 'dextran.h5'
+    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    experiment2 = Dict()
+    experiment2.name = 'non'
+    experiment2.csv = 'non.csv'
+    experiment2.HDF5 = 'non.h5'
+    experiment2.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    feature1 = Dict()
+    feature1.name = "main_feature"
+    feature1.type = 'DextranShape'
+
+    feature2 = Dict()
+    feature2.name = "main_feature"
+    feature2.type = 'Shape'
+    feature2.decay = 1
+
+    experiment1.features = [feature1,]
+    experiment2.features = [feature2,]
+
+    config.experiments = [experiment1, experiment2]
+
+    parameter3 = Dict()
+    parameter3.location = '/input/model/unit_001/FILM_DIFFUSION'
+    parameter3.min = 1e-9
+    parameter3.max = 1e-4
+    parameter3.component = 0
+    parameter3.bound = 0
+    parameter3.transform = 'auto'
+    parameter3.experiments = ["non"]
+
+    parameter4 = Dict()
+    parameter4.location = '/input/model/unit_001/PAR_POROSITY'
+    parameter4.min = 0.2
+    parameter4.max = 0.7
+    parameter4.component = -1
+    parameter4.bound = -1
+    parameter4.transform = 'auto'
+    parameter4.experiments = ["non"]
+
+    config.parameters = [parameter1, parameter2, parameter3, parameter4]
+     
+    create_common(advanced, config)
 
 def create_scores(defaults):
     create_shared_scores(defaults)

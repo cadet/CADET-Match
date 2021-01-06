@@ -164,7 +164,7 @@ class AutoInverseTransform(AbstractTransform):
 
             if index is not None:
                 sim[location.lower()][index] = values[0]
-            return values, headerValues
+        return values, headerValues
 
     def getBounds(self):
         return [0.0,], [
