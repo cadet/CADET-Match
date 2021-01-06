@@ -14,9 +14,9 @@ def create_experiments(defaults):
     pass
 
 def create_scores(defaults):
-    #create_shared_scores(defaults)
-    #create_ceiling(defaults)
-    #create_fractionation(defaults)
+    create_shared_scores(defaults)
+    create_ceiling(defaults)
+    create_fractionation(defaults)
     create_slicing(defaults)
 
 def create_slicing(defaults):
@@ -130,7 +130,7 @@ def create_fractionation(defaults):
     scores_dir = defaults.base_dir / "scores"
     dir = scores_dir / "fractionationSlide"
 
-    #create_common(dir, config)
+    create_common(dir, config)
 
 
     #modify for fractionationSSE
@@ -140,7 +140,7 @@ def create_fractionation(defaults):
     config.experiments[0].features[1].type = "fractionationSSE" 
     config.experiments[0].features[0].type = "SSE" 
 
-    #create_common(dir, config)
+    create_common(dir, config)
 
     dir = scores_dir / "misc" / "multiple_components"
 
@@ -152,7 +152,7 @@ def create_fractionation(defaults):
     config.experiments[0].features[0].isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
     config.experiments[0].features[0].csv = 'comp0.csv'
 
-    #create_common(dir, config)
+    create_common(dir, config)
 
 def create_ceiling(defaults):
     "create the ceiling"
@@ -297,17 +297,17 @@ def create_search(defaults):
 
     experiment1.features = [feature1,]
 
-    #create_nsga3(defaults, config)
-    #create_multistart(defaults, config)
-    #create_graphspace(defaults, config)
-    #create_scoretest(defaults, config)
-    #create_gradient(defaults, config)
-    #create_early_stopping(defaults, config)
-    #create_refine_shape(defaults, config)
-    #create_refine_sse(defaults, config)
-    #create_altScore(defaults, config)
-    #create_mcmc_stage1(defaults, config)
-    #create_mcmc_stage2(defaults, config)
+    create_nsga3(defaults, config)
+    create_multistart(defaults, config)
+    create_graphspace(defaults, config)
+    create_scoretest(defaults, config)
+    create_gradient(defaults, config)
+    create_early_stopping(defaults, config)
+    create_refine_shape(defaults, config)
+    create_refine_sse(defaults, config)
+    create_altScore(defaults, config)
+    create_mcmc_stage1(defaults, config)
+    create_mcmc_stage2(defaults, config)
 
 def create_common(dir, config):
     config.baseDir =dir.as_posix()
@@ -316,11 +316,6 @@ def create_common(dir, config):
 
     with open(match_config_file.as_posix(), 'w') as json_file:
         json.dump(config.to_dict(), json_file, indent='\t')
-
-    #clear the results directory
-    results_dir = dir / "results"
-    if results_dir.exists():
-        shutil.rmtree(results_dir)
 
 def create_mcmc_stage1(defaults, config):
     dir = defaults.base_dir / "search" / "mcmc" / "stage1"
@@ -397,11 +392,6 @@ def create_mcmc_stage2(defaults, config):
 
     with open(match_config_file.as_posix(), 'w') as json_file:
         json.dump(config.to_dict(), json_file, indent='\t')
-
-    #clear the results directory
-    results_dir = dir / "results"
-    if results_dir.exists():
-        shutil.rmtree(results_dir)
 
 def create_altScore(defaults, config):
     dir = defaults.base_dir / "search" / "misc" / "altScore"

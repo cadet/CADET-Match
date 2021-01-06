@@ -12,7 +12,7 @@
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>CondaEnv|CondaEnv|cadet_run</InterpreterId>
-    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\scores\misc\multiple_scores_slicing\dextran.json" -n 1</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\kosh_000\Documents\Visual Studio 2017\Projects\CADETMatch\Examples\scores\misc\multiple_scores_slicing\dextran.json" -n 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
     <InterpreterArguments>
@@ -177,6 +177,9 @@
     <Compile Include="CADETMatch\__init__.py" />
     <Compile Include="CADETMatch\__main__.py" />
     <Compile Include="CADETMatch\generate_mixing_graphs.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Examples\clear_results.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Examples\create_config.py">
