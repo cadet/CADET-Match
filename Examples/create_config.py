@@ -670,8 +670,47 @@ def create_transforms_dextran(defaults):
 
     create_common(experiments_dir / 'other/diameter', temp_config)
 
-    #dextran_paths = ['norm_volume_area', 'north_volume_length', 'set_value', 
-    #                 'other/volume_area', 'other/volume_length']
+
+    parameter1 = Dict()
+    parameter1.area_location = '/input/model/unit_001/CROSS_SECTION_AREA'
+    parameter1.length_location = '/input/model/unit_001/COL_LENGTH'
+    parameter1.minVolume = 1e-6
+    parameter1.maxVolume = 1e-4
+    parameter1.minArea = 1e-5
+    parameter1.maxArea = 1e-3
+    parameter1.component = -1
+    parameter1.bound = -1
+    parameter1.transform = 'norm_volume_area'
+
+    temp_config.parameters = [parameter1,]
+
+    create_common(experiments_dir / 'norm_volume_area', temp_config)
+
+    parameter1.transform = 'volume_area'
+
+    create_common(experiments_dir / 'other/volume_area', temp_config)
+
+
+    parameter1 = Dict()
+    parameter1.area_location = '/input/model/unit_001/CROSS_SECTION_AREA'
+    parameter1.length_location = '/input/model/unit_001/COL_LENGTH'
+    parameter1.minVolume = 1e-6
+    parameter1.maxVolume = 1e-4
+    parameter1.minLength = 0.1
+    parameter1.maxLength = 0.3
+    parameter1.component = -1
+    parameter1.bound = -1
+    parameter1.transform = 'norm_volume_length'
+
+    temp_config.parameters = [parameter1,]
+
+    create_common(experiments_dir / 'norm_volume_length', temp_config)
+
+    parameter1.transform = 'volume_length'
+
+    create_common(experiments_dir / 'other/volume_length', temp_config)
+
+    #dextran_paths = ['set_value']
 
 def main(defaults):
     "create simulations by directory"

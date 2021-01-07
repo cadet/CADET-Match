@@ -249,7 +249,7 @@ def create_transforms_non(defaults):
 def create_transforms_dextran(defaults):
     dex_sim = create_sims.create_dextran_model(defaults)
 
-    dextran_paths = ['auto', 'norm_diameter', 'norm_volume_area', 'north_volume_length', 'set_value', 
+    dextran_paths = ['auto', 'norm_diameter', 'norm_volume_area', 'norm_volume_length', 'set_value', 
                      'other/diameter', 'other/log', 'other/norm', 'other/norm_log', 'other/null', 
                      'other/volume_area', 'other/volume_length']
 
