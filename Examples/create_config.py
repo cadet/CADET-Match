@@ -606,7 +606,74 @@ def create_nsga3(defaults, config):
 
 def create_transforms(defaults):
     create_transforms_dextran(defaults)
+    create_transforms_non(defaults)
 
+
+def create_transforms_non(defaults):
+    config = Dict()
+    config.CADETPath = Cadet.cadet_path
+    config.resultsDir = 'results'
+    config.searchMethod = 'NSGA3'
+    config.population = defaults.population
+    config.gradVector = True
+    
+    parameter1 = Dict()
+    parameter1.location = '/input/model/unit_001/FILM_DIFFUSION'
+    parameter1.min = 1e-8
+    parameter1.max = 1e-4
+    parameter1.component = 0
+    parameter1.bound = 0
+    parameter1.transform = 'auto_inverse'
+
+    config.parameters = [parameter1,]
+
+    experiment1 = Dict()
+    experiment1.name = 'main'
+    experiment1.csv = 'non.csv'
+    experiment1.HDF5 = 'non.h5'
+    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    config.experiments = [experiment1,]
+
+    feature1 = Dict()
+    feature1.name = "main_feature"
+    feature1.type = 'Shape'
+    feature1.decay = 1
+
+    experiment1.features = [feature1,]
+
+    experiments_dir = defaults.base_dir / "transforms"
+    create_common(experiments_dir / "auto_inverse", config)
+
+    #
+    parameter1 = Dict()
+    parameter1.locationFrom = '/input/model/unit_001/COL_POROSITY'
+    parameter1.componentFrom= -1
+    parameter1.boundFrom = -1
+    parameter1.locationTo = '/input/model/unit_001/PAR_POROSITY'
+    parameter1.componentTo = -1
+    parameter1.boundTo = -1
+    parameter1.min = -0.1
+    parameter1.max = 0.1    
+    parameter1.transform = 'norm_add'
+
+    config.parameters = [parameter1,]
+    create_common(experiments_dir / "norm_add", config)
+
+
+    parameter1 = Dict()
+    parameter1.locationFrom = '/input/model/unit_001/COL_POROSITY'
+    parameter1.componentFrom= -1
+    parameter1.boundFrom = -1
+    parameter1.locationTo = '/input/model/unit_001/PAR_POROSITY'
+    parameter1.componentTo = -1
+    parameter1.boundTo = -1
+    parameter1.min = 0.8
+    parameter1.max = 1.5    
+    parameter1.transform = 'norm_mult'
+
+    config.parameters = [parameter1,]
+    create_common(experiments_dir / "norm_mult", config)
 
 def create_transforms_dextran(defaults):
     config = Dict()
@@ -710,7 +777,6 @@ def create_transforms_dextran(defaults):
 
     create_common(experiments_dir / 'other/volume_length', temp_config)
 
-    #dextran_paths = ['set_value']
 
 def main(defaults):
     "create simulations by directory"

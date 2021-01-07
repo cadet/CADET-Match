@@ -35,8 +35,8 @@ def run_matching():
 
 def main():
     "create simulations by directory"
-    #create_examples.main(defaults)
-    #create_config.main(defaults)
+    create_examples.main(defaults)
+    create_config.main(defaults)
     run_matching()
 
 if __name__ == "__main__":
