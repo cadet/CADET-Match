@@ -605,10 +605,73 @@ def create_nsga3(defaults, config):
 
 
 def create_transforms(defaults):
-    pass
+    create_transforms_dextran(defaults)
 
-def create_typical_experiments(defaults):
-    pass
+
+def create_transforms_dextran(defaults):
+    config = Dict()
+    config.CADETPath = Cadet.cadet_path
+    config.resultsDir = 'results'
+    config.searchMethod = 'NSGA3'
+    config.population = defaults.population
+    config.gradVector = True
+    
+    parameter1 = Dict()
+    parameter1.location = '/input/model/unit_001/COL_POROSITY'
+    parameter1.min = 0.2
+    parameter1.max = 0.7
+    parameter1.component = -1
+    parameter1.bound = -1
+    parameter1.transform = 'auto'
+
+    config.parameters = [parameter1,]
+
+    experiment1 = Dict()
+    experiment1.name = 'main'
+    experiment1.csv = 'dextran.csv'
+    experiment1.HDF5 = 'dextran.h5'
+    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    config.experiments = [experiment1,]
+
+    feature1 = Dict()
+    feature1.name = "main_feature"
+    feature1.type = 'DextranShape'
+
+    experiment1.features = [feature1,]
+
+    experiments_dir = defaults.base_dir / "transforms"
+
+    dextran_paths = ['auto', 'other/log', 'other/norm', 'other/norm_log', 'other/null']
+
+    for path in dextran_paths:
+        dir = experiments_dir / path
+        score_name = dir.name
+        temp_config = config.deepcopy()
+        temp_config.parameters[0].transform = score_name
+
+        create_common(dir, temp_config)
+
+    temp_config = config.deepcopy()
+
+    parameter1 = Dict()
+    parameter1.location = '/input/model/unit_001/CROSS_SECTION_AREA'
+    parameter1.min = 1e-3
+    parameter1.max = 1e-1
+    parameter1.component = -1
+    parameter1.bound = -1
+    parameter1.transform = 'norm_diameter'
+
+    temp_config.parameters = [parameter1,]
+
+    create_common(experiments_dir / 'norm_diameter', temp_config)
+
+    parameter1.transform = 'diameter'
+
+    create_common(experiments_dir / 'other/diameter', temp_config)
+
+    #dextran_paths = ['norm_volume_area', 'north_volume_length', 'set_value', 
+    #                 'other/volume_area', 'other/volume_length']
 
 def main(defaults):
     "create simulations by directory"
@@ -616,7 +679,6 @@ def main(defaults):
     create_scores(defaults)
     create_search(defaults)
     create_transforms(defaults)
-    create_typical_experiments(defaults)
 
 if __name__ == "__main__":
     main()

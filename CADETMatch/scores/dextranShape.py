@@ -42,12 +42,13 @@ def run(sim_data, feature):
         feature["smoothing_factor"],
     )
 
-    if sim_spline is None:
-        return None
-
-    pearson, diff_time = score.pearson_spline_fun(
-        exp_time_zero, exp_data_zero, sim_spline
-    )
+    if sim_spline is not None:
+        pearson, diff_time = score.pearson_spline_fun(
+            exp_time_zero, exp_data_zero, sim_spline
+        )
+    else:
+        pearson = 0.0
+        diff_time = 1e308
 
     exp_data_zero_sse = feature["exp_data_zero_sse"]
 

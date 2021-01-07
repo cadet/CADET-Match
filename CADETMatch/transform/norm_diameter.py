@@ -2,12 +2,13 @@ import math
 
 import CADETMatch.util as util
 from CADETMatch.abstract.transform import AbstractTransform
+import numpy
 
 
 class DiameterTransform(AbstractTransform):
     @property
     def name(self):
-        return "null"
+        return "diameter"
 
     @property
     def count(self):
@@ -34,7 +35,7 @@ class DiameterTransform(AbstractTransform):
         ]
 
     def untransform(self, seq):
-        diameter = self.untransform_inputorder(seq)
+        diameter = self.untransform_inputorder(seq)[0]
         values = [
             math.pi * diameter ** 2 / 4.0,
         ]

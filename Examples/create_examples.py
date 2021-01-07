@@ -198,10 +198,77 @@ def create_search(defaults):
         numpy.savetxt(dir / "non.csv", data, delimiter=',')
 
 def create_transforms(defaults):
-    pass
+    create_transforms_dextran(defaults)
+    create_transforms_non(defaults)
+    create_transforms_linear(defaults)
 
-def create_typical_experiments(defaults):
-    pass    
+def create_transforms_linear(defaults):
+    lin_sim = create_sims.create_linear_model(defaults)
+
+    lin_paths = ['auto_keq', 'other/keq', 'other/norm_keq', ]
+
+    search_dir = defaults.base_dir / "transforms"
+
+    for path in lin_paths:
+        dir = search_dir / path
+        dir.mkdir(parents=True, exist_ok=True)
+        dir_name = dir.name
+        lin_sim.filename = (dir / "lin.h5").as_posix()
+        lin_sim.save()
+        print("Run ", dir_name, lin_sim.run())
+        lin_sim.load()
+
+        times = lin_sim.root.output.solution.solution_times
+        values = lin_sim.root.output.solution.unit_002.solution_outlet_comp_000
+        data = numpy.array([times, values]).T
+
+        numpy.savetxt(dir / "lin.csv", data, delimiter=',')
+
+def create_transforms_non(defaults):
+    non_sim = create_sims.create_nonbinding_model(defaults)
+
+    non_paths = ['auto_inverse', 'norm_add', 'norm_mult', ]
+
+    search_dir = defaults.base_dir / "transforms"
+
+    for path in non_paths:
+        dir = search_dir / path
+        dir.mkdir(parents=True, exist_ok=True)
+        dir_name = dir.name
+        non_sim.filename = (dir / "non.h5").as_posix()
+        non_sim.save()
+        print("Run ", dir_name, non_sim.run())
+        non_sim.load()
+
+        times = non_sim.root.output.solution.solution_times
+        values = non_sim.root.output.solution.unit_002.solution_outlet_comp_000
+        data = numpy.array([times, values]).T
+
+        numpy.savetxt(dir / "non.csv", data, delimiter=',')
+    
+def create_transforms_dextran(defaults):
+    dex_sim = create_sims.create_dextran_model(defaults)
+
+    dextran_paths = ['auto', 'norm_diameter', 'norm_volume_area', 'north_volume_length', 'set_value', 
+                     'other/diameter', 'other/log', 'other/norm', 'other/norm_log', 'other/null', 
+                     'other/volume_area', 'other/volume_length']
+
+    search_dir = defaults.base_dir / "transforms"
+
+    for path in dextran_paths:
+        dir = search_dir / path
+        dir.mkdir(parents=True, exist_ok=True)
+        dir_name = dir.name
+        dex_sim.filename = (dir / "dextran.h5").as_posix()
+        dex_sim.save()
+        print("Run ", dir_name, dex_sim.run())
+        dex_sim.load()
+
+        times = dex_sim.root.output.solution.solution_times
+        values = dex_sim.root.output.solution.unit_002.solution_outlet_comp_000
+        data = numpy.array([times, values]).T
+
+        numpy.savetxt(dir / "dextran.csv", data, delimiter=',')
 
 def main(defaults):
     "create simulations by directory"
@@ -209,7 +276,6 @@ def main(defaults):
     create_scores(defaults)
     create_search(defaults)
     create_transforms(defaults)
-    create_typical_experiments(defaults)
 
 if __name__ == "__main__":
     main()
