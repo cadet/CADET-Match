@@ -173,6 +173,8 @@ class NormLinearTransform(LinearTransform):
         minValues = numpy.array([minLower, minUpper])
         maxValues = numpy.array([maxLower, maxUpper])
 
+        values = numpy.array(matrix)
+
         values = (maxValues - minValues) * values + minValues
 
         return values

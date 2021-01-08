@@ -607,6 +607,198 @@ def create_nsga3(defaults, config):
 def create_transforms(defaults):
     create_transforms_dextran(defaults)
     create_transforms_non(defaults)
+    create_experiments_linear(defaults)
+    create_experiments_cstr(defaults)
+    create_experiments_linear_exp(defaults)
+
+def create_experiments_linear_exp(defaults):
+    config = Dict()
+    config.CADETPath = Cadet.cadet_path
+    config.resultsDir = 'results'
+    config.searchMethod = 'NSGA3'
+    config.population = defaults.population
+    config.gradVector = True
+    
+    parameter1 = Dict()
+    parameter1.location = '/input/model/unit_001/COL_DISPERSION'
+    parameter1.minLower = 1e-8
+    parameter1.maxLower = 1e-6
+    parameter1.minUpper = 1e-8
+    parameter1.maxUpper = 1e-6
+    parameter1.minX = 1
+    parameter1.maxX = 3
+    parameter1.x_name = 'pH'
+    parameter1.component = -1
+    parameter1.bound = -1
+    parameter1.transform = 'norm_linear'
+    
+    config.parameters = [parameter1]
+
+    experiment1 = Dict()
+    experiment1.name = 'main1'
+    experiment1.csv = 'dex1.csv'
+    experiment1.HDF5 = 'dex1.h5'
+    experiment1.pH = 1
+    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    experiment2 = experiment1.deepcopy()
+    experiment2.name = 'main2'
+    experiment2.csv = 'dex2.csv'
+    experiment2.HDF5 = 'dex2.h5'
+    experiment2.pH = 2
+
+    experiment3 = experiment1.deepcopy()
+    experiment3.name = 'main3'
+    experiment3.csv = 'dex3.csv'
+    experiment3.HDF5 = 'dex3.h5'
+    experiment3.pH = 3
+
+    config.experiments = [experiment1, experiment2, experiment3]
+
+    feature1 = Dict()
+    feature1.name = "main_feature"
+    feature1.type = 'Shape'
+    feature1.decay = 1
+
+    experiment1.features = [feature1,]
+    experiment2.features = [feature1,]
+    experiment3.features = [feature1,]
+
+    experiments_dir = defaults.base_dir / "transforms"
+
+    create_common(experiments_dir / "norm_linear", config)
+
+    parameter1.transform = 'linear'
+
+    create_common(experiments_dir / "other" / "linear", config)
+
+def create_experiments_cstr(defaults):
+    config = Dict()
+    config.CADETPath = Cadet.cadet_path
+    config.resultsDir = 'results'
+    config.searchMethod = 'NSGA3'
+    config.population = defaults.population
+    config.gradVector = True
+    
+    parameter1 = Dict()
+    parameter1.location = '/input/model/unit_001/INIT_VOLUME'
+    parameter1.min = 1e-7
+    parameter1.max = 1e-4
+    parameter1.component = -1
+    parameter1.bound = -1
+    parameter1.transform = 'auto'
+
+    parameter2 = Dict()
+    parameter2.locationFrom = '/input/model/unit_001/INIT_VOLUME'
+    parameter2.componentFrom = -1
+    parameter2.boundFrom = -1
+    parameter2.locationTo = '/input/model/unit_003/INIT_VOLUME'
+    parameter2.componentTo = -1
+    parameter2.boundTo = -1
+    parameter2.transform = 'set_value'
+
+    parameter3 = Dict()
+    parameter3.location1 = '/input/model/unit_001/INIT_VOLUME'
+    parameter3.component1 = -1
+    parameter3.bound1 = -1
+    parameter3.location2 = '/input/model/unit_003/INIT_VOLUME'
+    parameter3.component2 = -1
+    parameter3.bound2 = -1
+    parameter3.locationSum = '/input/model/unit_004/INIT_VOLUME'
+    parameter3.componentSum = -1
+    parameter3.boundSum = -1
+    parameter3.transform = 'sum'
+
+    config.parameters = [parameter1,parameter2, parameter3]
+
+    experiment1 = Dict()
+    experiment1.name = 'main'
+    experiment1.csv = 'cstr.csv'
+    experiment1.HDF5 = 'cstr.h5'
+    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    config.experiments = [experiment1,]
+
+    feature1 = Dict()
+    feature1.name = "main_feature"
+    feature1.type = 'Shape'
+    feature1.decay = 1
+
+    experiment1.features = [feature1,]
+
+    experiments_dir = defaults.base_dir / "transforms"
+
+    create_common(experiments_dir / "sum", config)
+
+def create_experiments_linear(defaults):
+    config = Dict()
+    config.CADETPath = Cadet.cadet_path
+    config.resultsDir = 'results'
+    config.searchMethod = 'NSGA3'
+    config.population = defaults.population
+    config.gradVector = True
+    
+    parameter1 = Dict()
+    parameter1.location = ['/input/model/unit_001/adsorption/LIN_KA','/input/model/unit_001/adsorption/LIN_KD']
+    parameter1.minKA = 1e-5
+    parameter1.maxKA = 1e-3
+    parameter1.minKEQ = 1e-2
+    parameter1.maxKEQ = 1e2
+    parameter1.component = 0
+    parameter1.bound = 0
+    parameter1.transform = 'auto_keq'
+
+    config.parameters = [parameter1,]
+
+    experiment1 = Dict()
+    experiment1.name = 'main'
+    experiment1.csv = 'lin.csv'
+    experiment1.HDF5 = 'lin.h5'
+    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    config.experiments = [experiment1,]
+
+    feature1 = Dict()
+    feature1.name = "main_feature"
+    feature1.type = 'Shape'
+    feature1.decay = 1
+
+    experiment1.features = [feature1,]
+
+    experiments_dir = defaults.base_dir / "transforms"
+
+    linear_paths = ['auto_keq', 'other/keq', 'other/norm_keq']
+
+    for path in linear_paths:
+        dir = experiments_dir / path
+        score_name = dir.name
+        temp_config = config.deepcopy()
+        temp_config.parameters[0].transform = score_name
+
+        create_common(dir, temp_config)
+
+    #set_value estimate one concentration and set the other
+    temp_config = config.deepcopy()
+
+    parameter1 = Dict()
+    parameter1.location = '/input/model/unit_000/sec_000/CONST_COEFF'
+    parameter1.min = 1e-2
+    parameter1.max = 1e0
+    parameter1.component = 0
+    parameter1.bound = 0
+    parameter1.transform = 'auto'
+
+    parameter2 = Dict()
+    parameter2.locationFrom = '/input/model/unit_000/sec_000/CONST_COEFF'
+    parameter2.componentFrom = 0
+    parameter2.boundFrom = 0
+    parameter2.locationTo = '/input/model/unit_000/sec_000/CONST_COEFF'
+    parameter2.componentTo = 1
+    parameter2.boundTo = 0
+    parameter2.transform = 'set_value'
+
+    temp_config.parameters = [parameter1,parameter2]
+    create_common(experiments_dir / "set_value", temp_config)
 
 
 def create_transforms_non(defaults):

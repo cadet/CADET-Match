@@ -181,3 +181,61 @@ def create_linear_model(defaults):
     linear_model.root.input.solver.user_solution_times = numpy.linspace(0, 1200, 1201)
 
     return linear_model
+
+def create_cstr_model(defaults):
+
+    cstr_model = get_cadet_template(n_units=5, defaults=defaults)
+
+    # INLET
+    cstr_model.root.input.model.unit_000.unit_type = 'INLET'
+    cstr_model.root.input.model.unit_000.ncomp = 1
+    cstr_model.root.input.model.unit_000.inlet_type = 'PIECEWISE_CUBIC_POLY'
+
+    # CSTR
+    cstr_model.root.input.model.unit_001.unit_type = 'CSTR'
+    cstr_model.root.input.model.unit_001.ncomp = 1
+    cstr_model.root.input.model.unit_001.init_c = [0.0]
+    cstr_model.root.input.model.unit_001.adsorption_model = 'NONE'
+    cstr_model.root.input.model.unit_001.init_volume = 5e-6
+
+    cstr_model.root.input.model.unit_003.unit_type = 'CSTR'
+    cstr_model.root.input.model.unit_003.ncomp = 1
+    cstr_model.root.input.model.unit_003.init_c = [0.0]
+    cstr_model.root.input.model.unit_003.adsorption_model = 'NONE'
+    cstr_model.root.input.model.unit_003.init_volume = 5e-6
+
+    cstr_model.root.input.model.unit_004.unit_type = 'CSTR'
+    cstr_model.root.input.model.unit_004.ncomp = 1
+    cstr_model.root.input.model.unit_004.init_c = [0.0]
+    cstr_model.root.input.model.unit_004.adsorption_model = 'NONE'
+    cstr_model.root.input.model.unit_004.init_volume = 1e-5
+
+    
+    ## Outlet
+    cstr_model.root.input.model.unit_002.ncomp = 1
+    cstr_model.root.input.model.unit_002.unit_type = 'OUTLET'
+    
+    # Sections and connections
+    cstr_model.root.input.solver.sections.nsec = 2
+    cstr_model.root.input.solver.sections.section_times = [0.0, 50.0, 1200.0]
+    cstr_model.root.input.solver.sections.section_continuity = [0,]
+    
+    ## Inlet Profile
+    cstr_model.root.input.model.unit_000.sec_000.const_coeff = [0.1]
+    cstr_model.root.input.model.unit_000.sec_001.const_coeff = [0.0]
+    
+    ## Switches
+    cstr_model.root.input.model.connections.nswitches = 1
+    cstr_model.root.input.model.connections.switch_000.section = 0
+    cstr_model.root.input.model.connections.switch_000.connections = [
+        0, 1, -1, -1, defaults.flow_rate,
+        1, 3, -1, -1, defaults.flow_rate,
+        3, 2, -1, -1, defaults.flow_rate,
+        0, 4, -1, -1, defaults.flow_rate,
+        4, 2, -1, -1, defaults.flow_rate
+    ]
+
+    #set the times that the simulator writes out data for
+    cstr_model.root.input.solver.user_solution_times = numpy.linspace(0, 1200, 1201*10)
+
+    return cstr_model

@@ -201,11 +201,84 @@ def create_transforms(defaults):
     create_transforms_dextran(defaults)
     create_transforms_non(defaults)
     create_transforms_linear(defaults)
+    create_transforms_sum(defaults)
+    create_transforms_linear_exp(defaults)
+
+def create_transforms_linear_exp(defaults):
+    dex_sim1 = create_sims.create_dextran_model(defaults)
+
+    dex_sim2 = create_sims.create_dextran_model(defaults)
+    dex_sim2.root.input.model.unit_001.col_dispersion = 2 * dex_sim2.root.input.model.unit_001.col_dispersion
+
+    dex_sim3 = create_sims.create_dextran_model(defaults)
+    dex_sim3.root.input.model.unit_001.col_dispersion = 3 * dex_sim3.root.input.model.unit_001.col_dispersion
+
+    search_dir = defaults.base_dir / "transforms"
+
+    for path in ['norm_linear', 'other/linear']:
+        dir = search_dir / path
+        dir.mkdir(parents=True, exist_ok=True)
+        dir_name = dir.name
+        
+        dex_sim1.filename = (dir / "dex1.h5").as_posix()
+        dex_sim1.save()
+        print("Run ", dir_name, dex_sim1.run())
+        dex_sim1.load()
+
+        times = dex_sim1.root.output.solution.solution_times
+        values = dex_sim1.root.output.solution.unit_002.solution_outlet_comp_000
+        data = numpy.array([times, values]).T
+
+        numpy.savetxt(dir / "dex1.csv", data, delimiter=',')
+
+        dex_sim2.filename = (dir / "dex2.h5").as_posix()
+        dex_sim2.save()
+        print("Run ", dir_name, dex_sim2.run())
+        dex_sim2.load()
+
+        times = dex_sim2.root.output.solution.solution_times
+        values = dex_sim2.root.output.solution.unit_002.solution_outlet_comp_000
+        data = numpy.array([times, values]).T
+
+        numpy.savetxt(dir / "dex2.csv", data, delimiter=',')
+
+        dex_sim3.filename = (dir / "dex3.h5").as_posix()
+        dex_sim3.save()
+        print("Run ", dir_name, dex_sim3.run())
+        dex_sim3.load()
+
+        times = dex_sim3.root.output.solution.solution_times
+        values = dex_sim3.root.output.solution.unit_002.solution_outlet_comp_000
+        data = numpy.array([times, values]).T
+
+        numpy.savetxt(dir / "dex3.csv", data, delimiter=',')
+
+
+
+def create_transforms_sum(defaults):
+    cstr_sim = create_sims.create_cstr_model(defaults)
+
+    search_dir = defaults.base_dir / "transforms"
+
+    dir = search_dir / "sum"
+    dir.mkdir(parents=True, exist_ok=True)
+    dir_name = dir.name
+    cstr_sim.filename = (dir / "cstr.h5").as_posix()
+    cstr_sim.save()
+    print("Run ", dir_name, cstr_sim.run())
+    cstr_sim.load()
+
+    times = cstr_sim.root.output.solution.solution_times
+    values = cstr_sim.root.output.solution.unit_002.solution_outlet_comp_000
+    data = numpy.array([times, values]).T
+
+    numpy.savetxt(dir / "cstr.csv", data, delimiter=',')
+
 
 def create_transforms_linear(defaults):
     lin_sim = create_sims.create_linear_model(defaults)
 
-    lin_paths = ['auto_keq', 'other/keq', 'other/norm_keq', ]
+    lin_paths = ['auto_keq', 'other/keq', 'other/norm_keq', 'set_value']
 
     search_dir = defaults.base_dir / "transforms"
 

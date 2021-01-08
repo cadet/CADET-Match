@@ -51,7 +51,7 @@ class SumTransform(AbstractTransform):
                 index1 = self.parameter["index1"]
                 bound1 = None
                 comp1 = None
-            value1 = getValue(sim, location1, bound=bound1, comp=comp1, index=index1)
+            value1 = self.getValue(sim, location1, bound=bound1, comp=comp1, index=index1)
 
             try:
                 comp2 = self.parameter["component2"]
@@ -62,7 +62,7 @@ class SumTransform(AbstractTransform):
                 bound2 = None
                 comp2 = None
 
-            value2 = getValue(sim, location2, bound=bound2, comp=comp2, index=index2)
+            value2 = self.getValue(sim, location2, bound=bound2, comp=comp2, index=index2)
 
             try:
                 compSum = self.parameter["componentSum"]
@@ -72,7 +72,7 @@ class SumTransform(AbstractTransform):
                 indexSum = self.parameter["indexSum"]
                 boundSum = None
                 compSum = None
-            setValue(
+            self.setValue(
                 sim,
                 value1 + value2,
                 locationSum,
