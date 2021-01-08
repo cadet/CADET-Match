@@ -120,7 +120,8 @@ def create_scores(defaults):
     #use a 2-comp linear isotherm and densely sample the time to improve the estimation
     frac_sim = create_sims.create_linear_model(defaults)
 
-    dirs = [scores_dir / "fractionationSlide", scores_dir / "other" / "fractionationSSE", scores_dir / "misc" / "multiple_components"]
+    dirs = [scores_dir / "fractionationSlide", scores_dir / "other" / "fractionationSSE", scores_dir / "misc" / "multiple_components",
+           defaults.base_dir / "transforms" / "misc" / "index"]
 
     for dir in dirs:
         dir.mkdir(parents=True, exist_ok=True)

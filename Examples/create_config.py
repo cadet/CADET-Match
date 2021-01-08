@@ -610,6 +610,55 @@ def create_transforms(defaults):
     create_experiments_linear(defaults)
     create_experiments_cstr(defaults)
     create_experiments_linear_exp(defaults)
+    create_experiments_index(defaults)
+
+def create_experiments_index(defaults):
+    config = Dict()
+    config.CADETPath = Cadet.cadet_path
+    config.resultsDir = 'results'
+    config.searchMethod = 'NSGA3'
+    config.population = defaults.population
+    config.gradVector = True
+    
+    parameter1 = Dict()
+    parameter1.location = '/input/model/unit_001/adsorption/LIN_KA'
+    parameter1.min = 1e-6
+    parameter1.max = 1e-2
+    parameter1.index = 0
+    parameter1.transform = 'auto'
+
+    parameter2 = Dict()
+    parameter2.location = '/input/model/unit_001/adsorption/LIN_KA'
+    parameter2.min = 1e-6
+    parameter2.max = 1e-2
+    parameter2.index = 1
+    parameter2.transform = 'auto'
+
+    config.parameters = [parameter1, parameter2]
+
+    experiment1 = Dict()
+    experiment1.name = 'main'
+    experiment1.csv = 'data_sum.csv'
+    experiment1.HDF5 = 'fraction.h5'
+    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+
+    config.experiments = [experiment1,]
+
+    feature1 = Dict()
+    feature1.name = "comp0"
+    feature1.type = 'Shape'
+    feature1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    feature1.csv = 'comp0.csv'
+
+    feature2 = Dict()
+    feature2.name = "comp1"
+    feature2.type = 'Shape'
+    feature2.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_001'
+    feature2.csv = 'comp1.csv'
+
+    experiment1.features = [feature1,feature2]
+
+    create_common(defaults.base_dir / "transforms" / "misc" / "index", config)
 
 def create_experiments_linear_exp(defaults):
     config = Dict()
