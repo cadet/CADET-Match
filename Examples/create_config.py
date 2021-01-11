@@ -520,6 +520,7 @@ def create_mcmc_stage2(defaults, config):
 
 def create_altScore(defaults, config):
     dir = defaults.base_dir / "search" / "misc" / "altScore"
+    dir.mkdir(parents=True, exist_ok=True)
     config = config.deepcopy()
     config.searchMethod = 'AltScore'
     config.population = 0

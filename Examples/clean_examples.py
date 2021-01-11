@@ -3,15 +3,10 @@ import sys
 from pathlib import Path
 import shutil
 
-
 def clear():
-    for path in Path(__file__).parent.rglob("results"):
+    for path in Path(sys.argv[1]).parent.rglob("results"):
         print(path)
         shutil.rmtree(path)
 
-def main():
-    "create simulations by directory"
-    clear()
-
 if __name__ == "__main__":
-    main()
+    clear()

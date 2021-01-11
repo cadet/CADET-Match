@@ -2,6 +2,7 @@ import argparse
 import importlib
 import subprocess
 import sys
+import pathlib
 
 import psutil
 
@@ -63,8 +64,28 @@ def makeParser():
     )
 
     parser.add_argument(
-        "-n", help="Number of scoop processes to use. Use 1 for debugging", default=0
+        "-n", help="Number of parallel processes to use. Use 1 for debugging", default=0
     )
+
+    parser.add_argument(
+        "--generate_examples", help="Directory for CADETMatch Example generation", action="store", 
+        type=pathlib.Path
+    )
+
+    parser.add_argument(
+        "--cadet_examples", help="Set path to the cadet-cli binary for examples to use", action="store", 
+        type=pathlib.Path
+    )
+
+    parser.add_argument(
+        "--run_examples", help="Directory for CADETMatch Example running", action="store", 
+        type=pathlib.Path
+    )
+
+    parser.add_argument(
+        "--clean_examples", help="Directory for CADETMatch Example cleaning (remove results directories)", action="store_true", 
+        type=pathlib.Path
+    )    
 
     return parser
 
@@ -73,12 +94,6 @@ def run_command(module, json, number_of_jobs, additional=None):
     command = [
         sys.executable,
     ]
-    # if int(number_of_jobs) > 0:
-    #    command.extend(['-n', str(number_of_jobs)])
-    # else:
-    #    ncpus = psutil.cpu_count(logical=False)
-    #    command.extend(['-n', str(ncpus)])
-
     command.extend([importlib.util.find_spec(module).origin, str(json)])
     if additional is not None:
         command.extend(additional)
@@ -93,6 +108,9 @@ def run_command(module, json, number_of_jobs, additional=None):
 if __name__ == "__main__":
     parser = makeParser()
     args = parser.parse_args()
+
+    if args.generate_examples and args.cadet_examples is None:
+        parser.error("--generate_examples requires --cadet_examples")
 
     if args.match:
         sys.exit(run_command("CADETMatch.match", args.json, args.n))
@@ -112,3 +130,9 @@ if __name__ == "__main__":
         sys.exit(run_command("CADETMatch.mcmc_plot_tube", args.json, args.n))
     if args.generate_mle:
         sys.exit(run_command("CADETMatch.mle", args.json, args.n))
+    if args.clean_examples:
+        sys.exit(run_command("CADETMatch.Examples.clean_examples", args.clean_examples))
+    if args.run_examples:
+        sys.exit(run_command("CADETMatch.Examples.run_examples", args.run_examples))
+    if args.generate_examples:
+        sys.exit(run_command("CADETMatch.Examples.generate_examples", args.generate_examples, args.cadet_examples))

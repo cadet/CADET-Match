@@ -7,8 +7,8 @@ from cadet import H5, Cadet
 from addict import Dict
 
 defaults = Dict()
-defaults.cadet_path = Path(r"C:\Users\kosh_000\cadet_build\CADET\CADET41\bin\cadet-cli.exe").as_posix()
-defaults.base_dir = Path(__file__).parent
+defaults.cadet_path = Path(sys.argv[2]).as_posix()
+defaults.base_dir = Path(sys.argv[1]).parent
 defaults.flow_rate = 2.88e-8 # m^3/s
 defaults.ncol = 100
 defaults.npar = 10
@@ -26,18 +26,7 @@ defaults.population = 20
 
 Cadet.cadet_path = defaults.cadet_path
 
-def run_matching():
-    for path in Path(__file__).parent.rglob("*.json"):
-        if not (path.parent / "results").exists() and path.parent.name != "results" and path.parent.name != "mcmc_refine":
-            print(path)
-            command = [sys.executable, '-m', 'CADETMatch', '--match', '-j', path.as_posix()]
-            subprocess.run(command)
-
-def main():
-    "create simulations by directory"
+if __name__ == "__main__":
     create_examples.main(defaults)
     create_config.main(defaults)
-    run_matching()
 
-if __name__ == "__main__":
-    main()

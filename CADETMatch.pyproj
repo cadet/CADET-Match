@@ -179,7 +179,7 @@
     <Compile Include="CADETMatch\generate_mixing_graphs.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Examples\clear_results.py">
+    <Compile Include="Examples\clean_examples.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Examples\create_config.py">
@@ -191,7 +191,10 @@
     <Compile Include="Examples\create_sims.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Examples\run_matching.py">
+    <Compile Include="Examples\generate_examples.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Examples\run_examples.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="setup.py" />
