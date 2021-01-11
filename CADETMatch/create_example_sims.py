@@ -99,7 +99,15 @@ def create_dextran_model(defaults):
     
     ## Inlet Profile
     dextran_model.root.input.model.unit_000.sec_000.const_coeff = [0.002,]
+    dextran_model.root.input.model.unit_000.sec_000.lin_coeff = [0.0,]
+    dextran_model.root.input.model.unit_000.sec_000.quad_coeff = [0.0,]
+    dextran_model.root.input.model.unit_000.sec_000.cube_coeff = [0.0,]
+
+
     dextran_model.root.input.model.unit_000.sec_001.const_coeff = [0.0,]
+    dextran_model.root.input.model.unit_000.sec_001.lin_coeff = [0.0,]
+    dextran_model.root.input.model.unit_000.sec_001.quad_coeff = [0.0,]
+    dextran_model.root.input.model.unit_000.sec_001.cube_coeff = [0.0,]
     
     ## Switches
     dextran_model.root.input.model.connections.nswitches = 1
@@ -167,7 +175,14 @@ def create_linear_model(defaults):
     
     ## Inlet Profile
     linear_model.root.input.model.unit_000.sec_000.const_coeff = [0.1,0.1]
+    linear_model.root.input.model.unit_000.sec_000.lin_coeff = [0.0,0.0]
+    linear_model.root.input.model.unit_000.sec_000.quad_coeff = [0.0,0.0]
+    linear_model.root.input.model.unit_000.sec_000.cube_coeff = [0.0,0.0]
+
     linear_model.root.input.model.unit_000.sec_001.const_coeff = [0.0,0.0]
+    linear_model.root.input.model.unit_000.sec_001.lin_coeff = [0.0,0.0]
+    linear_model.root.input.model.unit_000.sec_001.quad_coeff = [0.0,0.0]
+    linear_model.root.input.model.unit_000.sec_001.cube_coeff = [0.0,0.0]
     
     ## Switches
     linear_model.root.input.model.connections.nswitches = 1
@@ -222,7 +237,14 @@ def create_cstr_model(defaults):
     
     ## Inlet Profile
     cstr_model.root.input.model.unit_000.sec_000.const_coeff = [0.1]
+    cstr_model.root.input.model.unit_000.sec_000.lin_coeff = [0.0,]
+    cstr_model.root.input.model.unit_000.sec_000.quad_coeff = [0.0,]
+    cstr_model.root.input.model.unit_000.sec_000.cube_coeff = [0.0,]
+
     cstr_model.root.input.model.unit_000.sec_001.const_coeff = [0.0]
+    cstr_model.root.input.model.unit_000.sec_001.lin_coeff = [0.0,]
+    cstr_model.root.input.model.unit_000.sec_001.quad_coeff = [0.0,]
+    cstr_model.root.input.model.unit_000.sec_001.cube_coeff = [0.0,]
     
     ## Switches
     cstr_model.root.input.model.connections.nswitches = 1

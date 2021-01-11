@@ -4,7 +4,7 @@ from pathlib import Path
 import shutil
 
 def clear():
-    for path in Path(sys.argv[1]).rglob("results"):
+    for path in sorted(Path(sys.argv[1]).resolve().rglob("results")):
         print(path)
         shutil.rmtree(path)
 

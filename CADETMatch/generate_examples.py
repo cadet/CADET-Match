@@ -8,7 +8,7 @@ from addict import Dict
 
 defaults = Dict()
 defaults.cadet_path = Path(sys.argv[2]).as_posix()
-defaults.base_dir = Path(sys.argv[1])
+defaults.base_dir = Path(sys.argv[1]).resolve()
 defaults.flow_rate = 2.88e-8 # m^3/s
 defaults.ncol = 100
 defaults.npar = 10
