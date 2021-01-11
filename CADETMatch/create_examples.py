@@ -6,11 +6,11 @@ import numpy
 import pandas
 import CADETMatch.util
 
-import create_sims
+import create_example_sims
 
 def create_experiments(defaults):
-    dex_sim = create_sims.create_dextran_model(defaults)
-    non_sim = create_sims.create_nonbinding_model(defaults)
+    dex_sim = create_example_sims.create_dextran_model(defaults)
+    non_sim = create_example_sims.create_nonbinding_model(defaults)
 
     experiments_dir = defaults.base_dir / "experiments"
 
@@ -78,7 +78,7 @@ def create_scores(defaults):
                      'other/ShapeOnly', 'other/ShapeSimple', 'other/similarity', 
                      'other/similarityDecay', 'misc/multiple_scores_slicing']
 
-    dex_sim = create_sims.create_dextran_model(defaults)
+    dex_sim = create_example_sims.create_dextran_model(defaults)
 
     scores_dir = defaults.base_dir / "scores"
 
@@ -98,7 +98,7 @@ def create_scores(defaults):
         numpy.savetxt(dir / "dextran.csv", data, delimiter=',')
 
     #flatten
-    flat_sim = create_sims.create_dextran_model(defaults)
+    flat_sim = create_example_sims.create_dextran_model(defaults)
     flat_sim.root.input.model.unit_000.sec_000.const_coeff = [1.0,]
     flat_sim.root.input.model.unit_000.sec_001.const_coeff = [1.0,]
     dir = scores_dir / "Ceiling"
@@ -118,7 +118,7 @@ def create_scores(defaults):
 
     #fractionate
     #use a 2-comp linear isotherm and densely sample the time to improve the estimation
-    frac_sim = create_sims.create_linear_model(defaults)
+    frac_sim = create_example_sims.create_linear_model(defaults)
 
     dirs = [scores_dir / "fractionationSlide", scores_dir / "other" / "fractionationSSE", scores_dir / "misc" / "multiple_components",
            defaults.base_dir / "transforms" / "misc" / "index"]
@@ -154,7 +154,7 @@ def create_scores(defaults):
 
 
 def create_search(defaults):
-    dex_sim = create_sims.create_dextran_model(defaults)
+    dex_sim = create_example_sims.create_dextran_model(defaults)
 
     dextran_paths = ['gradient', 'graphSpace', 'mcmc/stage1', 'multistart', 'nsga3', 'scoretest',
                      'misc/early_stopping', 'misc/refine_shape', 'misc/refine_sse']
@@ -177,7 +177,7 @@ def create_search(defaults):
         numpy.savetxt(dir / "dextran.csv", data, delimiter=',')
 
 
-    non_sim = create_sims.create_nonbinding_model(defaults)
+    non_sim = create_example_sims.create_nonbinding_model(defaults)
 
     non_paths = ['mcmc/stage2', ]
 
@@ -206,12 +206,12 @@ def create_transforms(defaults):
     create_transforms_linear_exp(defaults)
 
 def create_transforms_linear_exp(defaults):
-    dex_sim1 = create_sims.create_dextran_model(defaults)
+    dex_sim1 = create_example_sims.create_dextran_model(defaults)
 
-    dex_sim2 = create_sims.create_dextran_model(defaults)
+    dex_sim2 = create_example_sims.create_dextran_model(defaults)
     dex_sim2.root.input.model.unit_001.col_dispersion = 2 * dex_sim2.root.input.model.unit_001.col_dispersion
 
-    dex_sim3 = create_sims.create_dextran_model(defaults)
+    dex_sim3 = create_example_sims.create_dextran_model(defaults)
     dex_sim3.root.input.model.unit_001.col_dispersion = 3 * dex_sim3.root.input.model.unit_001.col_dispersion
 
     search_dir = defaults.base_dir / "transforms"
@@ -257,7 +257,7 @@ def create_transforms_linear_exp(defaults):
 
 
 def create_transforms_sum(defaults):
-    cstr_sim = create_sims.create_cstr_model(defaults)
+    cstr_sim = create_example_sims.create_cstr_model(defaults)
 
     search_dir = defaults.base_dir / "transforms"
 
@@ -277,7 +277,7 @@ def create_transforms_sum(defaults):
 
 
 def create_transforms_linear(defaults):
-    lin_sim = create_sims.create_linear_model(defaults)
+    lin_sim = create_example_sims.create_linear_model(defaults)
 
     lin_paths = ['auto_keq', 'other/keq', 'other/norm_keq', 'set_value']
 
@@ -299,7 +299,7 @@ def create_transforms_linear(defaults):
         numpy.savetxt(dir / "lin.csv", data, delimiter=',')
 
 def create_transforms_non(defaults):
-    non_sim = create_sims.create_nonbinding_model(defaults)
+    non_sim = create_example_sims.create_nonbinding_model(defaults)
 
     non_paths = ['auto_inverse', 'norm_add', 'norm_mult', ]
 
@@ -321,7 +321,7 @@ def create_transforms_non(defaults):
         numpy.savetxt(dir / "non.csv", data, delimiter=',')
     
 def create_transforms_dextran(defaults):
-    dex_sim = create_sims.create_dextran_model(defaults)
+    dex_sim = create_example_sims.create_dextran_model(defaults)
 
     dextran_paths = ['auto', 'norm_diameter', 'norm_volume_area', 'norm_volume_length', 
                      'other/diameter', 'other/log', 'other/norm', 'other/norm_log', 'other/null', 

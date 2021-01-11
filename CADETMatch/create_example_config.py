@@ -8,8 +8,6 @@ import json
 import shutil
 import CADETMatch.util
 
-import create_sims
-
 def create_experiments(defaults):
     config = Dict()
     config.CADETPath = Cadet.cadet_path

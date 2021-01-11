@@ -1,5 +1,5 @@
 import create_examples
-import create_config
+import create_example_config
 import subprocess
 import sys
 from pathlib import Path
@@ -8,7 +8,7 @@ from addict import Dict
 
 defaults = Dict()
 defaults.cadet_path = Path(sys.argv[2]).as_posix()
-defaults.base_dir = Path(sys.argv[1]).parent
+defaults.base_dir = Path(sys.argv[1])
 defaults.flow_rate = 2.88e-8 # m^3/s
 defaults.ncol = 100
 defaults.npar = 10
@@ -28,5 +28,5 @@ Cadet.cadet_path = defaults.cadet_path
 
 if __name__ == "__main__":
     create_examples.main(defaults)
-    create_config.main(defaults)
+    create_example_config.main(defaults)
 

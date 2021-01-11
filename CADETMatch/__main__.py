@@ -83,7 +83,7 @@ def makeParser():
     )
 
     parser.add_argument(
-        "--clean_examples", help="Directory for CADETMatch Example cleaning (remove results directories)", action="store_true", 
+        "--clean_examples", help="Directory for CADETMatch Example cleaning (remove results directories)", action="store", 
         type=pathlib.Path
     )    
 
@@ -99,6 +99,19 @@ def run_command(module, json, number_of_jobs, additional=None):
         command.extend(additional)
 
     command.append(str(number_of_jobs))
+
+    rc = subprocess.run(command, bufsize=1)
+
+    return rc.returncode
+
+def run_examples(module, *args):
+    command = [
+        sys.executable,
+    ]
+    command.extend([importlib.util.find_spec(module).origin, ])
+
+    for arg in args:
+        command.append(str(arg))
 
     rc = subprocess.run(command, bufsize=1)
 
@@ -131,8 +144,8 @@ if __name__ == "__main__":
     if args.generate_mle:
         sys.exit(run_command("CADETMatch.mle", args.json, args.n))
     if args.clean_examples:
-        sys.exit(run_command("CADETMatch.Examples.clean_examples", args.clean_examples))
+        sys.exit(run_examples("CADETMatch.clean_examples", args.clean_examples))
     if args.run_examples:
-        sys.exit(run_command("CADETMatch.Examples.run_examples", args.run_examples))
+        sys.exit(run_examples("CADETMatch.run_examples", args.run_examples))
     if args.generate_examples:
-        sys.exit(run_command("CADETMatch.Examples.generate_examples", args.generate_examples, args.cadet_examples))
+        sys.exit(run_examples("CADETMatch.generate_examples", args.generate_examples, args.cadet_examples))

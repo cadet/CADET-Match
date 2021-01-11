@@ -179,22 +179,22 @@
     <Compile Include="CADETMatch\generate_mixing_graphs.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Examples\clean_examples.py">
+    <Compile Include="CADETMatch\clean_examples.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Examples\create_config.py">
+    <Compile Include="CADETMatch\create_example_config.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Examples\create_examples.py">
+    <Compile Include="CADETMatch\create_examples.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Examples\create_sims.py">
+    <Compile Include="CADETMatch\create_example_sims.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Examples\generate_examples.py">
+    <Compile Include="CADETMatch\generate_examples.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Examples\run_examples.py">
+    <Compile Include="CADETMatch\run_examples.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="setup.py" />
