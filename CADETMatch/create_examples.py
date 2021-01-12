@@ -157,7 +157,7 @@ def create_search(defaults):
     dex_sim = create_example_sims.create_dextran_model(defaults)
 
     dextran_paths = ['gradient', 'graphSpace', 'mcmc/stage1', 'multistart', 'nsga3', 'scoretest',
-                     'misc/early_stopping', 'misc/refine_shape', 'misc/refine_sse']
+                     'other/early_stopping', 'other/refine_shape', 'other/refine_sse']
 
     search_dir = defaults.base_dir / "search"
 

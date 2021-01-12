@@ -692,7 +692,10 @@ def find_opt_poly(x, y, index):
         x = x[::-1]
         y = y[::-1]
 
-    poly, res = numpy.polynomial.Polynomial.fit(x, y, 2, full=True)
+    try:
+        poly, res = numpy.polynomial.Polynomial.fit(x, y, 2, full=True)
+    except numpy.linalg.LinAlgError:
+        multiprocessing.get_logger().error("Polyfit failed for  %s %s", x, y)
     try:
         root = poly.deriv().roots()[0]
     except IndexError:

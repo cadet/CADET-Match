@@ -432,8 +432,11 @@ def create_search(defaults):
     create_mcmc_stage1(defaults, config)
     create_mcmc_stage2(defaults, config)
 
-def create_common(dir, config):
-    config.baseDir =dir.as_posix()
+def create_common(dir, config, altDir=None):
+    if altDir is not None:
+        config.baseDir = altDir.as_posix()
+    else:
+        config.baseDir = dir.as_posix()
 
     match_config_file = dir / 'dextran.json'
 
@@ -517,17 +520,19 @@ def create_mcmc_stage2(defaults, config):
         json.dump(config.to_dict(), json_file, indent='\t')
 
 def create_altScore(defaults, config):
-    dir = defaults.base_dir / "search" / "misc" / "altScore"
+    dir = defaults.base_dir / "search" / "other" / "altScore"
     dir.mkdir(parents=True, exist_ok=True)
     config = config.deepcopy()
     config.searchMethod = 'AltScore'
     config.population = 0
     config.PreviousResults = (defaults.base_dir / "search" / "nsga3" / "results" / "result.h5").as_posix()
     config.experiments[0].features[0].type = "Shape"
-    create_common(dir, config)
+    config.resultsDir = (dir / "results").as_posix()
+    config.resultsDirOriginal = (defaults.base_dir / "search" / "nsga3" / "results").as_posix()
+    create_common(dir, config, altDir = (defaults.base_dir / "search" / "nsga3"))
 
 def create_refine_shape(defaults, config):
-    dir = defaults.base_dir / "search" / "misc" / "refine_shape"
+    dir = defaults.base_dir / "search" / "other" / "refine_shape"
     config = config.deepcopy()
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
@@ -535,7 +540,7 @@ def create_refine_shape(defaults, config):
     create_common(dir, config)
 
 def create_refine_sse(defaults, config):
-    dir = defaults.base_dir / "search" / "misc" / "refine_sse"
+    dir = defaults.base_dir / "search" / "other" / "refine_sse"
     config = config.deepcopy()
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
@@ -543,7 +548,7 @@ def create_refine_sse(defaults, config):
     create_common(dir, config)
 
 def create_early_stopping(defaults, config):
-    dir = defaults.base_dir / "search" / "misc" / "early_stopping"
+    dir = defaults.base_dir / "search" / "other" / "early_stopping"
     config = config.deepcopy()
     config.searchMethod = 'NSGA3'
     config.population = defaults.population

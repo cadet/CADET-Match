@@ -109,19 +109,24 @@ def refine_smooth(times, values, x, y, start, name):
     smoothing_sample = numpy.linspace(lb, ub, 50)
     errors = numpy.array([goal([i]) for i in smoothing_sample])
 
-    root, fs_x, fs_y = util.find_opt_poly(
-        smoothing_sample, errors, numpy.argmin(errors)
-    )
+    if numpy.any(numpy.isnan(errors)):
+        #all points are equal distant to our min point, changing smoothness does not change number of knots
+        #this means we should use the lowest smoothness possible to have the least error possible with no impact on knots
+        s = 10 ** lb
+    else:
+        root, fs_x, fs_y = util.find_opt_poly(
+            smoothing_sample, errors, numpy.argmin(errors)
+        )
 
-    result = scipy.optimize.minimize(
-        goal,
-        root,
-        method="powell",
-        bounds=[
-            (fs_x[0], fs_x[-1]),
-        ],
-    )
-    s = 10 ** result.x[0]
+        result = scipy.optimize.minimize(
+            goal,
+            root,
+            method="powell",
+            bounds=[
+                (fs_x[0], fs_x[-1]),
+            ],
+        )
+        s = 10 ** result.x[0]
 
     spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=5, ext=3)
 
