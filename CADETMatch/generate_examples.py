@@ -24,7 +24,7 @@ defaults.film_diffusion = 1e-6
 defaults.par_diffusion = 3e-11
 defaults.population = 20
 
-Cadet.cadet_path = defaults.cadet_path
+Cadet.class_cadet_path(defaults.cadet_path)
 
 if __name__ == "__main__":
     create_examples.main(defaults)

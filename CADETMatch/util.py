@@ -311,11 +311,13 @@ def runExperiment(
     cache,
     post_function=None,
 ):
-    handle, path = tempfile.mkstemp(suffix=".h5", dir=cache.tempDir)
-    os.close(handle)
-
     simulation = Cadet(template_sim.root)
-    simulation.filename = path
+
+    if simulation.is_file:
+        handle, path = tempfile.mkstemp(suffix=".h5", dir=cache.tempDir)
+        os.close(handle)
+    
+        simulation.filename = path
 
     simulation.root.input.solver.nthreads = int(settings.get("nThreads", 1))
 
@@ -327,23 +329,30 @@ def runExperiment(
         cadetValues = []
         cadetValuesKEQ = []
 
-    simulation.save()
+    if simulation.is_file:
+        simulation.save()
 
     try:
         simulation.run(timeout=timeout, check=True)
     except subprocess.TimeoutExpired:
         multiprocessing.get_logger().warn("Simulation Timed Out")
-        os.remove(path)
+        simulation.clear()
+        if simulation.is_file:
+            os.remove(path)
         return None
 
     except subprocess.CalledProcessError as error:
         multiprocessing.get_logger().error("The simulation failed %s", individual)
         logError(cache, cadetValuesKEQ, error)
+        simulation.clear()
         return None
 
     # read sim data
-    simulation.load(paths=["/meta", "/output"], update=True)
-    os.remove(path)
+    simulation.load_results()
+    simulation.clear()
+
+    if simulation.is_file:
+        os.remove(path)
 
     simulationFailed = isinstance(simulation.root.output.solution.solution_times, Dict)
     if simulationFailed:
@@ -358,7 +367,7 @@ def runExperiment(
 
     temp = {}
     temp["simulation"] = simulation
-    temp["path"] = path
+    temp["path"] = path if simulation.is_file else None
     temp["scores"] = []
     temp["error"] = 0.0
     temp["error_count"] = 0.0

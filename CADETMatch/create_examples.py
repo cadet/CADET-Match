@@ -32,8 +32,7 @@ def create_experiments(defaults):
     dex_sim.filename = (advanced / "dextran.h5").as_posix()
     dex_sim.save()
 
-    print("Run ", dex_sim.run())
-    dex_sim.load()
+    print("Run ", dex_sim.run_load())
 
     times = dex_sim.root.output.solution.solution_times
     values = dex_sim.root.output.solution.unit_002.solution_outlet_comp_000
@@ -49,8 +48,7 @@ def create_experiments(defaults):
     dex_sim.root.input.model.unit_000.sec_000.const_coeff = [0.001,]
     dex_sim.save()
 
-    print("Run ", dex_sim.run())
-    dex_sim.load()
+    print("Run ", dex_sim.run_load())
 
     times = dex_sim.root.output.solution.solution_times
     values = dex_sim.root.output.solution.unit_002.solution_outlet_comp_000
@@ -61,8 +59,7 @@ def create_experiments(defaults):
     non_sim.filename = (advanced / "non.h5").as_posix()
     non_sim.save()
 
-    print("Run ", non_sim.run())
-    non_sim.load()
+    print("Run ", non_sim.run_load())
 
     times = non_sim.root.output.solution.solution_times
     values = non_sim.root.output.solution.unit_002.solution_outlet_comp_000
@@ -88,8 +85,7 @@ def create_scores(defaults):
         dir_name = dir.name
         dex_sim.filename = (dir / "dextran.h5").as_posix()
         dex_sim.save()
-        print("Run ", dir_name, dex_sim.run())
-        dex_sim.load()
+        print("Run ", dir_name, dex_sim.run_load())
 
         times = dex_sim.root.output.solution.solution_times
         values = dex_sim.root.output.solution.unit_002.solution_outlet_comp_000
@@ -106,8 +102,7 @@ def create_scores(defaults):
     dir_name = dir.name
     flat_sim.filename = (dir / "flat.h5").as_posix()
     flat_sim.save()
-    print("Run ", dir_name, flat_sim.run())
-    flat_sim.load()
+    print("Run ", dir_name, flat_sim.run_load())
 
     times = flat_sim.root.output.solution.solution_times
     values = flat_sim.root.output.solution.unit_002.solution_outlet_comp_000
@@ -128,8 +123,7 @@ def create_scores(defaults):
         dir_name = dir.name
         frac_sim.filename = (dir / "fraction.h5").as_posix()
         frac_sim.save()
-        print("Run ", dir_name, frac_sim.run())
-        frac_sim.load()
+        print("Run ", dir_name, frac_sim.run_load())
 
         times0 = frac_sim.root.output.solution.solution_times
         values0 = frac_sim.root.output.solution.unit_002.solution_outlet_comp_000
@@ -167,8 +161,7 @@ def create_search(defaults):
         dir_name = dir.name
         dex_sim.filename = (dir / "dextran.h5").as_posix()
         dex_sim.save()
-        print("Run ", dir_name, dex_sim.run())
-        dex_sim.load()
+        print("Run ", dir_name, dex_sim.run_load())
 
         times = dex_sim.root.output.solution.solution_times
         values = dex_sim.root.output.solution.unit_002.solution_outlet_comp_000
@@ -189,8 +182,7 @@ def create_search(defaults):
         dir_name = dir.name
         non_sim.filename = (dir / "non.h5").as_posix()
         non_sim.save()
-        print("Run ", dir_name, non_sim.run())
-        non_sim.load()
+        print("Run ", dir_name, non_sim.run_load())
 
         times = non_sim.root.output.solution.solution_times
         values = non_sim.root.output.solution.unit_002.solution_outlet_comp_000
@@ -223,9 +215,8 @@ def create_transforms_linear_exp(defaults):
         
         dex_sim1.filename = (dir / "dex1.h5").as_posix()
         dex_sim1.save()
-        print("Run ", dir_name, dex_sim1.run())
-        dex_sim1.load()
-
+        print("Run ", dir_name, dex_sim1.run_load())
+ 
         times = dex_sim1.root.output.solution.solution_times
         values = dex_sim1.root.output.solution.unit_002.solution_outlet_comp_000
         data = numpy.array([times, values]).T
@@ -234,8 +225,7 @@ def create_transforms_linear_exp(defaults):
 
         dex_sim2.filename = (dir / "dex2.h5").as_posix()
         dex_sim2.save()
-        print("Run ", dir_name, dex_sim2.run())
-        dex_sim2.load()
+        print("Run ", dir_name, dex_sim2.run_load())
 
         times = dex_sim2.root.output.solution.solution_times
         values = dex_sim2.root.output.solution.unit_002.solution_outlet_comp_000
@@ -245,8 +235,7 @@ def create_transforms_linear_exp(defaults):
 
         dex_sim3.filename = (dir / "dex3.h5").as_posix()
         dex_sim3.save()
-        print("Run ", dir_name, dex_sim3.run())
-        dex_sim3.load()
+        print("Run ", dir_name, dex_sim3.run_load())
 
         times = dex_sim3.root.output.solution.solution_times
         values = dex_sim3.root.output.solution.unit_002.solution_outlet_comp_000
@@ -266,8 +255,7 @@ def create_transforms_sum(defaults):
     dir_name = dir.name
     cstr_sim.filename = (dir / "cstr.h5").as_posix()
     cstr_sim.save()
-    print("Run ", dir_name, cstr_sim.run())
-    cstr_sim.load()
+    print("Run ", dir_name, cstr_sim.run_load())
 
     times = cstr_sim.root.output.solution.solution_times
     values = cstr_sim.root.output.solution.unit_002.solution_outlet_comp_000
@@ -289,8 +277,7 @@ def create_transforms_linear(defaults):
         dir_name = dir.name
         lin_sim.filename = (dir / "lin.h5").as_posix()
         lin_sim.save()
-        print("Run ", dir_name, lin_sim.run())
-        lin_sim.load()
+        print("Run ", dir_name, lin_sim.run_load())
 
         times = lin_sim.root.output.solution.solution_times
         values = lin_sim.root.output.solution.unit_002.solution_outlet_comp_000
@@ -311,8 +298,7 @@ def create_transforms_non(defaults):
         dir_name = dir.name
         non_sim.filename = (dir / "non.h5").as_posix()
         non_sim.save()
-        print("Run ", dir_name, non_sim.run())
-        non_sim.load()
+        print("Run ", dir_name, non_sim.run_load())
 
         times = non_sim.root.output.solution.solution_times
         values = non_sim.root.output.solution.unit_002.solution_outlet_comp_000
@@ -335,8 +321,7 @@ def create_transforms_dextran(defaults):
         dir_name = dir.name
         dex_sim.filename = (dir / "dextran.h5").as_posix()
         dex_sim.save()
-        print("Run ", dir_name, dex_sim.run())
-        dex_sim.load()
+        print("Run ", dir_name, dex_sim.run_load())
 
         times = dex_sim.root.output.solution.solution_times
         values = dex_sim.root.output.solution.unit_002.solution_outlet_comp_000

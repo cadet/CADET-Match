@@ -372,8 +372,6 @@ def continue_mcmc(cache, map_function):
 if __name__ == "__main__":
     start = time.time()
     map_function = util.getMapFunction()
-    # import cProfile
-    # cProfile.run('main(map_function=map_function)', 'restats')
     main(map_function=map_function)
     multiprocessing.get_logger().info("System has finished")
     multiprocessing.get_logger().info(
