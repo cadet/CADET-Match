@@ -78,7 +78,24 @@ def makeParser():
     )
 
     parser.add_argument(
+        "--example_population", help="Set population per estimated variable", action="store",
+        default=0,
+        type=int
+    )
+
+    parser.add_argument(
+        "--example_mcmc_population", help="Set mcmc population to use", action="store", 
+        default=0,
+        type=int
+    )
+
+    parser.add_argument(
         "--run_examples", help="Directory for CADETMatch Example running", action="store", 
+        type=pathlib.Path
+    )
+
+    parser.add_argument(
+        "--results_examples", help="Gather results from directory for CADETMatch Example that have been run", action="store", 
         type=pathlib.Path
     )
 
@@ -147,5 +164,8 @@ if __name__ == "__main__":
         sys.exit(run_examples("CADETMatch.clean_examples", args.clean_examples))
     if args.run_examples:
         sys.exit(run_examples("CADETMatch.run_examples", args.run_examples))
+    if args.results_examples:
+        sys.exit(run_examples("CADETMatch.results_examples", args.results_examples))
     if args.generate_examples:
-        sys.exit(run_examples("CADETMatch.generate_examples", args.generate_examples, args.cadet_examples))
+        sys.exit(run_examples("CADETMatch.generate_examples", args.generate_examples, args.cadet_examples,
+                              args.example_population, args.example_mcmc_population))

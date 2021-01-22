@@ -22,7 +22,19 @@ defaults.lin_kd2 = 1e-3
 defaults.col_dispersion = 2e-7
 defaults.film_diffusion = 1e-6
 defaults.par_diffusion = 3e-11
-defaults.population = 20
+
+population = int(sys.argv[3])
+mcmc_population = int(sys.argv[4])
+
+if population:
+    defaults.population = population
+else:
+    defaults.population = 20
+
+if mcmc_population:
+    defaults.MCMCpopulation = mcmc_population
+else:
+    defaults.MCMCpopulation = 20
 
 Cadet.class_cadet_path(defaults.cadet_path)
 

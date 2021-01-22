@@ -447,9 +447,9 @@ def create_mcmc_stage1(defaults, config):
     dir = defaults.base_dir / "search" / "mcmc" / "stage1"
     config = config.deepcopy()
     config.searchMethod = 'NSGA3'
-    config.population = 12
+    config.population = defaults.population
     config.continueMCMC = 1
-    config.MCMCpopulationSet = 12
+    config.MCMCpopulationSet = defaults.MCMCpopulation
 
     error_model = Dict()
     error_model.file_path = "dextran.h5"
@@ -470,9 +470,9 @@ def create_mcmc_stage2(defaults, config):
     config = config.deepcopy()
     config.baseDir = dir.as_posix()
     config.searchMethod = 'NSGA3'
-    config.population = 12
+    config.population = defaults.population
     config.continueMCMC = 1
-    config.MCMCpopulationSet = 12
+    config.MCMCpopulationSet = defaults.MCMCpopulation
 
     error_model = Dict()
     error_model.file_path = "non.h5"

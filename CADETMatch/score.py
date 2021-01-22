@@ -75,7 +75,7 @@ def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
         if (exp_data_values == exp_data_values[0]).all() or (rolled == rolled[0]).all():
             score = 0
         else:
-            score = scipy.stats.pearsonr(exp_data_values, rolled)[0]
+            score = scipy.stats.pearsonr(exp_data_values, rolled)[0] #* numpy.trapz(numpy.min([exp_data_values,rolled], axis=0), exp_time_values)
 
         scores.append(score)
 
