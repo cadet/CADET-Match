@@ -66,19 +66,6 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     )
     return pearson_spline_fun(exp_time_values, exp_data_values, sim_spline)
 
-
-def pearsonr_flex(x, y, axis=1):
-    # stats.pearsonr adapted for
-    # x and y are (N,2) arrays
-    n = x.shape[axis]
-    xm = x - x.mean(axis, keepdims=True)
-    ym = y - y.mean(axis, keepdims=True)
-    r_num = numpy.sum(xm*ym, axis=axis)
-    r_den = numpy.sqrt(numpy.sum(xm**2, axis=axis) * numpy.sum(ym**2, axis=axis))
-    r = r_num / r_den
-    r = numpy.clip(r, -1.0, 1.0)
-    return r
-
 @numba.njit(fastmath=True)
 def pearsonr_mat(x, Y):
     r = numpy.zeros(Y.shape[0])
