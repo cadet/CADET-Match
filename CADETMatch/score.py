@@ -12,6 +12,7 @@ import scipy.stats
 
 import CADETMatch.calc_coeff as calc_coeff
 import CADETMatch.util as util
+import numba
 
 
 def roll_spline(times, values, shift):
@@ -66,23 +67,55 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     return pearson_spline_fun(exp_time_values, exp_data_values, sim_spline)
 
 
-def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
-    scores = []
+def pearsonr_flex(x, y, axis=1):
+    # stats.pearsonr adapted for
+    # x and y are (N,2) arrays
+    n = x.shape[axis]
+    xm = x - x.mean(axis, keepdims=True)
+    ym = y - y.mean(axis, keepdims=True)
+    r_num = numpy.sum(xm*ym, axis=axis)
+    r_den = numpy.sqrt(numpy.sum(xm**2, axis=axis) * numpy.sum(ym**2, axis=axis))
+    r = r_num / r_den
+    r = numpy.clip(r, -1.0, 1.0)
+    return r
 
-    for offset in offsets:
-        rolled = sim_spline(exp_time_values - offset)
+@numba.njit(fastmath=True)
+def pearsonr_mat(x, Y):
+    r = numpy.zeros(Y.shape[0])
+    xm = x - x.mean()
+    
+    r_x_den = 0.0
+    for i in range(x.shape[0]):
+        r_x_den += xm[i]*xm[i]
+    r_x_den = numpy.sqrt(r_x_den)
 
-        if (exp_data_values == exp_data_values[0]).all() or (rolled == rolled[0]).all():
-            score = 0
+    for i in range(Y.shape[0]):
+        ymean = 0.0
+        for j in range(Y.shape[1]):
+            ymean += Y[i,j]
+        ym = Y[i] - ymean/Y.shape[1]
+
+        r_num = 0.0
+        r_y_den = 0.0
+        for j in range(Y.shape[1]):
+            r_num += xm[j]*ym[j]
+            r_y_den += ym[j] * ym[j]
+        r_y_den = numpy.sqrt(r_y_den)
+
+        if r_y_den == 0.0:
+            r[i] = -1.0
         else:
-            score = scipy.stats.pearsonr(exp_data_values, rolled)[0] #* numpy.trapz(numpy.min([exp_data_values,rolled], axis=0), exp_time_values)
+            r[i] = min(max(r_num/(r_x_den*r_y_den), -1.0), 1.0)
+    return r
 
-        scores.append(score)
+def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
+    rol_mat = numpy.zeros([len(offsets), len(exp_data_values)])
 
-    scores = numpy.array(scores)
-    scores[numpy.isnan(scores)] = 0.0
+    for idx,offset in enumerate(offsets):
+        rol_mat[idx,:] = sim_spline(exp_time_values - offset)
+
+    scores = pearsonr_mat(exp_data_values, rol_mat)
     return scores
-
 
 def pearson_offset(offset, times, sim_data, exp_data):
     sim_spline = scipy.interpolate.InterpolatedUnivariateSpline(times, sim_data, ext=1)
