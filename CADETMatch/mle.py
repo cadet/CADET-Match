@@ -36,6 +36,8 @@ import logging
 
 import CADETMatch.loggerwriter as loggerwriter
 
+import arviz as az
+
 
 def get_color(idx, max_colors, cmap):
     return cmap(1.0 * float(idx) / max_colors)
@@ -60,15 +62,33 @@ plt.rc("legend", fontsize=size)  # legend fontsize
 plt.rc("figure", titlesize=size)  # fontsize of the figure title
 plt.rc("figure", autolayout=True)
 
+class ArvizSampler:
+    def __init__(self, chain, prob):
+        self.chain = chain.swapaxes(0, 1)
+        self.prob = prob.swapaxes(0, 1)
+    
+    def get_chain(self):
+        return self.chain
 
-def reduce_data(data, size, bw_size):
-    # size reduces data for normal usage, bw_size reduces the size just for bandwidth estimation
-    # lb, ub = numpy.percentile(data, [5, 95], 0)
-    # selected = (data >= lb) & (data <= ub)
+    def get_log_prob(self):
+        return self.prob
 
-    # selected = numpy.all(selected, 1)
+def flatten(chain):
+    chain_shape = chain.shape
+    flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
+    return flat_chain
 
-    # data = data[selected, :]
+def reduce_data(data_chain, probability, headers, size, bw_size):
+    sampler = ArvizSampler(data_chain, probability)
+    emcee_data = az.from_emcee(sampler, var_names=headers)
+    hdi = az.hdi(emcee_data, hdi_prob=0.9).to_array().values
+
+    data= flatten(data_chain)
+
+    selected = (data > hdi[:,0]) & (data < hdi[:,1])
+    selected = numpy.all(selected, axis=1)
+
+    data = data[selected]
 
     scaler = preprocessing.RobustScaler().fit(data)
 
@@ -98,12 +118,12 @@ def goal_kde(x, kde):
     return -score[0]
 
 
-def get_mle(data):
+def get_mle(data_chain, probability, headers):
     popsize = 100
 
     multiprocessing.get_logger().info("setting up scaler and reducing data")
     data_transform, data_reduced, data_reduced_bw, scaler = reduce_data(
-        data, 32000, 10000
+        data_chain, probability, headers, 32000, 20000
     )
     multiprocessing.get_logger().info("finished setting up scaler and reducing data")
     multiprocessing.get_logger().info("data_reduced shape %s", data_reduced.shape)
@@ -168,7 +188,7 @@ def addChain(axis, *args):
         return numpy.array(temp[0])
 
 
-def process_mle(chain, gen, cache):
+def process_mle(chain, probability, gen, cache):
     mcmc_dir = Path(cache.settings["resultsDirMCMC"])
 
     mcmc_csv = Path(cache.settings["resultsDirMCMC"]) / "prob.csv"
@@ -179,20 +199,22 @@ def process_mle(chain, gen, cache):
     if mle_h5.exists():
         h5.load(lock=True)
 
-        if h5.root.generations[-1] == gen:
+        if 0: #h5.root.generations[-1] == gen:
             multiprocessing.get_logger().info(
                 "new information is not yet available and mle will quit"
             )
             return
 
-    multiprocessing.get_logger().info("process mle chain shape before %s", chain.shape)
+    #multiprocessing.get_logger().info("process mle chain shape before %s", chain.shape)
     # This step cleans up bad entries
-    chain = chain[~numpy.all(chain == 0, axis=1)]
-    multiprocessing.get_logger().info(
-        "process mle chain shape after cleaning 0 entries %s", chain.shape
-    )
+    #selected = ~numpy.all(chain == 0, axis=1)
+    #chain = chain[selected]
+    #probability = probability[selected]
+    #multiprocessing.get_logger().info(
+    #    "process mle chain shape after cleaning 0 entries %s", chain.shape
+    #)
 
-    mle_x, kde, scaler = get_mle(chain)
+    mle_x, kde, scaler = get_mle(chain, probability, cache.parameter_headers_actual)
 
     multiprocessing.get_logger().info("mle_x: %s", mle_x)
 
@@ -212,7 +234,7 @@ def process_mle(chain, gen, cache):
 
     # run simulations for 5% 50% 95% and MLE vs experimental data
     percentile_splits = [5, 10, 50, 90, 95]
-    percentile = numpy.percentile(chain, percentile_splits, 0)
+    percentile = numpy.percentile(flatten(chain), percentile_splits, 0)
 
     multiprocessing.get_logger().info("percentile: %s %s", percentile.shape, percentile)
 
@@ -514,9 +536,11 @@ def main():
 
     mcmc_store = H5()
     mcmc_store.filename = mcmc_h5.as_posix()
-    mcmc_store.load(paths=["/flat_chain", "/mcmc_acceptance"], lock=True)
+    mcmc_store.load(paths=["/full_chain", "/mcmc_acceptance", "/run_probability_flat"], lock=True)
 
-    process_mle(mcmc_store.root.flat_chain, len(mcmc_store.root.mcmc_acceptance), cache)
+    process_mle(mcmc_store.root.full_chain, 
+                mcmc_store.root.run_probability_flat,
+                len(mcmc_store.root.mcmc_acceptance), cache)
 
 
 if __name__ == "__main__":

@@ -67,7 +67,7 @@ def pearson_spline(exp_time_values, sim_data_values, exp_data_values):
     return pearson_spline_fun(exp_time_values, exp_data_values, sim_spline)
 
 @numba.njit(fastmath=True)
-def pearsonr_mat(x, Y):
+def pearsonr_mat(x, Y, times):
     r = numpy.zeros(Y.shape[0])
     xm = x - x.mean()
     
@@ -92,7 +92,13 @@ def pearsonr_mat(x, Y):
         if r_y_den == 0.0:
             r[i] = -1.0
         else:
-            r[i] = min(max(r_num/(r_x_den*r_y_den), -1.0), 1.0)
+            min_fun = numpy.zeros(x.shape[0])
+            for j in range(x.shape[0]):
+                min_fun[j] = min(x[j], Y[i,j])
+
+            area = numpy.trapz(min_fun, times)
+
+            r[i] = min(max(r_num/(r_x_den*r_y_den), -1.0), 1.0) * area
     return r
 
 def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
@@ -101,7 +107,7 @@ def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
     for idx,offset in enumerate(offsets):
         rol_mat[idx,:] = sim_spline(exp_time_values - offset)
 
-    scores = pearsonr_mat(exp_data_values, rol_mat)
+    scores = pearsonr_mat(exp_data_values, rol_mat, exp_time_values)
     return scores
 
 def pearson_offset(offset, times, sim_data, exp_data):
@@ -121,7 +127,7 @@ def pearson_offset(offset, times, sim_data, exp_data):
 
 
 def pearson_spline_fun(
-    exp_time_values, exp_data_values, sim_spline, size=100, nest=10, bounds=2, tol=1e-8
+    exp_time_values, exp_data_values, sim_spline, size=100, nest=10, bounds=2, tol=1e-4
 ):
     for i in range(nest + 1):
         if i == 0:
