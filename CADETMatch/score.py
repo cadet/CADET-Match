@@ -92,13 +92,7 @@ def pearsonr_mat(x, Y, times):
         if r_y_den == 0.0:
             r[i] = -1.0
         else:
-            min_fun = numpy.zeros(x.shape[0])
-            for j in range(x.shape[0]):
-                min_fun[j] = min(x[j], Y[i,j])
-
-            area = numpy.trapz(min_fun, times)
-
-            r[i] = min(max(r_num/(r_x_den*r_y_den), -1.0), 1.0) * area
+            r[i] = min(max(r_num/(r_x_den*r_y_den), -1.0), 1.0)
     return r
 
 def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):

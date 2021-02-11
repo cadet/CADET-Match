@@ -80,7 +80,7 @@ def flatten(chain):
 
 def reduce_data(data_chain, probability, headers, size, bw_size):
     sampler = ArvizSampler(data_chain, probability)
-    emcee_data = az.from_emcee(sampler, var_names=headers)
+    emcee_data = az.from_emcee(sampler)
     hdi = az.hdi(emcee_data, hdi_prob=0.9).to_array().values
 
     data= flatten(data_chain)
