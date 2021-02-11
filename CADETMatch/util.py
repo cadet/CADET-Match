@@ -714,21 +714,6 @@ def find_opt_poly(x, y, index):
     return root, x, y
 
 
-def fractionate(start_seq, stop_seq, times, values):
-    temp = []
-    for (start, stop) in zip(start_seq, stop_seq):
-        selected = (times >= start) & (times <= stop)
-        local_times = times[selected]
-        local_values = values[selected]
-
-        # need to use the actual start and stop times from the data no what we want to cut at
-        stop = local_times[-1]
-        start = local_times[0]
-
-        temp.append(numpy.trapz(local_values, local_times) / (stop - start))
-    return numpy.array(temp)
-
-
 def metaCSV(cache):
     repeat = int(cache.settings["repeat"])
 
