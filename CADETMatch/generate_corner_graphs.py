@@ -229,18 +229,6 @@ def graphCorner(cache, data_mcmc=None, data_results=None):
                 "full",
             )
 
-        if "burn_in_acceptance" in data.root:
-            multiprocessing.get_logger().info("plot burn in acceptance")
-            fig = figure.Figure(figsize=[10, 10])
-            canvas = FigureCanvas(fig)
-            graph = fig.add_subplot(1, 1, 1)
-            graph.plot(util.get_confidence(data.root.burn_in_acceptance))
-            graph.set_title("Burn In Acceptance")
-            graph.set_xlabel("Step")
-            graph.set_ylabel("Acceptance")
-            fig.set_size_inches((12, 12))
-            fig.savefig(str(out_dir / "burn_in_acceptance.png"))
-
         if "integrated_autocorrelation_time" in data.root:
             iat = data.root.integrated_autocorrelation_time
 

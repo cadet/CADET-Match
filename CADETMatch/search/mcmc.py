@@ -476,6 +476,8 @@ def auto_high_probability_iterations(cache, checkpoint, sampler, iterations):
 
         accept = numpy.mean(sampler.acceptance_fraction)
 
+        auto_gamma(sampler, accept)
+
         auto_chain = addChain(auto_chain, p[:, numpy.newaxis, :])
         auto_probability = addChain(auto_probability, ln_prob[:, numpy.newaxis])
 
@@ -490,6 +492,12 @@ def auto_high_probability_iterations(cache, checkpoint, sampler, iterations):
     sampler.reset()
     return auto_chain, auto_probability
 
+def auto_gamma(sampler, acceptance):
+    sampler._moves[1].factor *= max(min(numpy.sqrt(acceptance/0.25), 1.1),0.9)
+
+    multiprocessing.get_logger().info(
+            "factor %.3f", sampler._moves[1].factor
+        )
 
 def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     bounds_seq = checkpoint.get("bounds_seq", [])
@@ -517,7 +525,6 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
     sampler.iterations = checkpoint["sampler_iterations"]
     sampler.naccepted = checkpoint["sampler_naccepted"]
-    sampler._moves[1].n = checkpoint["sampler_n"]
 
     auto_chain, auto_probability = auto_high_probability(
         cache, checkpoint, sampler, iterations=100, steps=5
@@ -544,6 +551,8 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
         accept = numpy.mean(sampler.acceptance_fraction)
         bounds_seq.append(accept)
+
+        auto_gamma(sampler, accept)
 
         bounds_chain = addChain(bounds_chain, p[:, numpy.newaxis, :])
         bounds_probability = addChain(bounds_probability, ln_prob[:, numpy.newaxis])
@@ -606,15 +615,15 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
                     mcmc_store,
                 )
 
-                p_burn, ln_prob = select_best_kmeans(bounds_chain, bounds_probability)
+                p_chain, ln_prob = select_best_kmeans(bounds_chain, bounds_probability)
 
-                p_burn_trans = util.convert_population_inputorder(p_burn, cache)
+                p_chain_trans = util.convert_population_inputorder(p_chain, cache)
 
                 multiprocessing.get_logger().info(
-                    "before bounds conversion %s", p_burn_trans
+                    "before bounds conversion %s", p_chain_trans
                 )
                 multiprocessing.get_logger().info(
-                    "before bounds conversion p_burn %s", p_burn
+                    "before bounds conversion p_chain %s", p_chain
                 )
 
                 json_path = change_bounds_json(
@@ -624,24 +633,24 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
                 sampler.log_prob_fn.args[0] = json_path
                 sampler.log_prob_fn.args[1] = cache
 
-                p_burn = numpy.array(
-                    [util.convert_individual_inverse(i, cache) for i in p_burn_trans]
+                p_chain = numpy.array(
+                    [util.convert_individual_inverse(i, cache) for i in p_chain_trans]
                 )
 
-                p_burn_trans = util.convert_population_inputorder(p_burn, cache)
+                p_chain_trans = util.convert_population_inputorder(p_chain, cache)
 
                 multiprocessing.get_logger().info(
-                    "after bounds conversion %s", p_burn_trans
+                    "after bounds conversion %s", p_chain_trans
                 )
                 multiprocessing.get_logger().info(
-                    "after bounds conversion p_burn %s", p_burn
+                    "after bounds conversion p_chain %s", p_chain
                 )
 
-                checkpoint["state"] = "burn_in"
-                checkpoint["p_burn"] = p_burn
-                checkpoint["ln_prob_burn"] = ln_prob
-                checkpoint["rstate_burn"] = None
-                checkpoint["starting_population"] = p_burn
+                checkpoint["state"] = "chain"
+                checkpoint["p_chain"] = p_chain
+                checkpoint["ln_prob_chain"] = ln_prob
+                checkpoint["rstate_chain"] = None
+                checkpoint["starting_population"] = p_chain
 
                 write_checkpoint(-1, checkpoint, checkpointFile)
 
@@ -691,183 +700,6 @@ def process_sampler_burn_write(cache, mcmc_store):
 
     mcmc_store.root.train_chain_stat_transform = train_chain_stat_transform
 
-    interval_chain = train_chain_flat
-    interval_chain_transform = train_chain_flat_transform
-    process_interval(cache, mcmc_store, interval_chain, interval_chain_transform)
-
-
-def sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store):
-    burn_seq = checkpoint.get("burn_seq", [])
-
-    train_chain = checkpoint.get("train_chain", None)
-    train_probability = checkpoint.get("train_probability", None)
-
-    train_chain_stat = checkpoint.get("train_chain_stat", None)
-
-    converge = checkpoint.get("converge")
-
-    parameters = len(cache.MIN_VALUE)
-
-    tol = 5e-4
-    power = checkpoint["sampler_n"]
-    distance = 1.0
-    stop_next = False
-    finished = False
-
-    generation = checkpoint["idx_burn"]
-
-    sampler.iterations = checkpoint["sampler_iterations"]
-    sampler.naccepted = checkpoint["sampler_naccepted"]
-    sampler._moves[1].n = checkpoint["sampler_n"]
-
-    auto_chain, auto_probability = auto_high_probability(
-        cache, checkpoint, sampler, iterations=100, steps=5
-    )
-
-    mcmc_store.root.burn.auto_chain = auto_chain
-    mcmc_store.root.burn.auto_probability = auto_probability
-
-    mcmc_store.save(lock=True)
-
-    while not finished:
-        state = next(
-            sampler.sample(
-                checkpoint["p_burn"],
-                log_prob0=checkpoint["ln_prob_burn"],
-                rstate0=checkpoint["rstate_burn"],
-                iterations=1,
-                tune=False,
-            )
-        )
-
-        p = state.coords
-        ln_prob = state.log_prob
-        random_state = state.random_state
-
-        accept = numpy.mean(sampler.acceptance_fraction)
-        burn_seq.append(accept)
-        converge[:-1] = converge[1:]
-        converge[-1] = accept
-
-        train_chain = addChain(train_chain, p[:, numpy.newaxis, :])
-        train_probability = addChain(train_probability, ln_prob[:, numpy.newaxis])
-
-        train_chain_stat = addChain(
-            train_chain_stat,
-            numpy.percentile(flatten(train_chain), [5, 50, 95], 0)[:, numpy.newaxis, :],
-        )
-
-        converge_real = converge[~numpy.isnan(converge)]
-        multiprocessing.get_logger().info(
-            "burn:  idx: %s accept: %.3g std: %.3g mean: %.3g converge: %.3g",
-            generation,
-            accept,
-            numpy.std(converge_real),
-            numpy.mean(converge_real),
-            numpy.std(converge_real) / tol,
-        )
-
-        generation += 1
-
-        checkpoint["p_burn"] = p
-        checkpoint["ln_prob_burn"] = ln_prob
-        checkpoint["rstate_burn"] = random_state
-        checkpoint["idx_burn"] = generation
-        checkpoint["train_chain"] = train_chain
-        checkpoint["train_probability"] = train_probability
-        checkpoint["burn_seq"] = burn_seq
-        checkpoint["converge"] = converge
-        checkpoint["sampler_iterations"] = sampler.iterations
-        checkpoint["sampler_naccepted"] = sampler.naccepted
-        checkpoint["train_chain_stat"] = train_chain_stat
-        checkpoint["sampler_n"] = sampler._moves[1].n
-
-        mcmc_store.root.train_full_chain = train_chain
-        mcmc_store.root.burn_seq = numpy.array(burn_seq).reshape(-1, 1)
-        mcmc_store.root.train_chain_stat = train_chain_stat
-        mcmc_store.root.train_probability = train_probability
-        mcmc_store.root.train_probability_flat = train_probability.reshape(-1, 1)
-
-        write_interval(
-            cache.checkpointInterval,
-            cache,
-            checkpoint,
-            checkpointFile,
-            mcmc_store,
-            process_sampler_burn_write,
-        )
-        sub.graph_corner_process(cache, last=False)
-
-        if numpy.std(converge_real) < tol and len(converge) == len(converge_real):
-            average_converge = numpy.mean(converge)
-            if average_converge > min_acceptance:
-                multiprocessing.get_logger().info(
-                    "burn in completed at iteration %s", generation
-                )
-                finished = True
-
-            if stop_next is True:
-                multiprocessing.get_logger().info(
-                    "burn in completed at iteration %s based on minimum distances",
-                    generation,
-                )
-                finished = True
-
-            if not finished:
-                new_distance = min_acceptance - average_converge
-                if new_distance < distance:
-                    distance_n = sampler._moves[1].n
-                    distance = new_distance
-
-                    multiprocessing.get_logger().info(
-                        "burn in acceptance is out of tolerance and n must be adjusted while burn in continues"
-                    )
-                    converge[:] = numpy.nan
-                    prev_n = sampler._moves[1].n
-                    if average_converge < (min_acceptance - 2 * acceptance_delta):
-                        # n must be decreased to increase the acceptance rate (step size)
-                        power -= 3
-                    elif average_converge < (min_acceptance - acceptance_delta):
-                        # n must be decreased to increase the acceptance rate (step size)
-                        power -= 2
-                    else:
-                        power -= 1
-                    new_n = power
-                    sampler._moves[1].n = power
-
-                    mcmc_store.root.train_power = power
-
-                    sampler.reset()
-                    checkpoint["p_burn"] = checkpoint["starting_population"]
-                    checkpoint["ln_prob_burn"] = None
-                    multiprocessing.get_logger().info(
-                        "previous n: %s    new n: %s", prev_n, new_n
-                    )
-                else:
-                    sampler._moves[1].n = distance_n
-
-                    mcmc_store.root.train_power = distance_n
-
-                    sampler.reset()
-                    checkpoint["p_burn"] = checkpoint["starting_population"]
-                    checkpoint["ln_prob_burn"] = None
-                    stop_next = True
-
-    checkpoint["sampler_iterations"] = sampler.iterations
-    checkpoint["sampler_naccepted"] = sampler.naccepted
-    checkpoint["state"] = "chain"
-    checkpoint["p_chain"] = p
-    checkpoint["ln_prob_burn"] = ln_prob
-    checkpoint["ln_prob_chain"] = ln_prob
-    checkpoint["rstate_burn"] = random_state
-    checkpoint["rstate_chain"] = random_state
-    checkpoint["sampler_a"] = sampler._moves[1].n
-
-    write_interval(
-        -1, cache, checkpoint, checkpointFile, mcmc_store, process_sampler_burn_write
-    )
-
-
 def process_sampler_run_write(cache, mcmc_store):
     chain = mcmc_store.root.full_chain
     chain_seq = mcmc_store.root.mcmc_acceptance
@@ -912,7 +744,6 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
     sampler.iterations = checkpoint["sampler_iterations"]
     sampler.naccepted = checkpoint["sampler_naccepted"]
-    sampler._moves[1].n = checkpoint["sampler_n"]
     tau_percent = None
 
     while not finished:
@@ -931,6 +762,8 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
         accept = numpy.mean(sampler.acceptance_fraction)
         chain_seq.append(accept)
+
+        auto_gamma(sampler, accept)
 
         run_chain = addChain(run_chain, p[:, numpy.newaxis, :])
         run_probability = addChain(run_probability, ln_prob[:, numpy.newaxis])
@@ -966,7 +799,7 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         if generation % checkInterval == 0:
             try:
                 tau = autocorr.integrated_time(
-                    numpy.swapaxes(run_chain, 0, 1), tol=cache.MCMCTauMult
+                    numpy.swapaxes(run_chain, 0, 1), tol=cache.MCMCTauMult +2   #the first two auto-correlation times will be discard as burn-in
                 )
                 multiprocessing.get_logger().info(
                     "Mean acceptance fraction: %s %0.3f tau: %s with shape: %s",
@@ -1014,13 +847,33 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         sub.mle_process(cache, last=False)
         sub.graph_corner_process(cache, last=False)
 
+    #need to remove the first two IAT from the results before final storage
+
+    burn = int(numpy.ceil(numpy.max(tau)) * 2)
+
     checkpoint["p_chain"] = p
     checkpoint["ln_prob_chain"] = ln_prob
     checkpoint["rstate_chain"] = random_state
     checkpoint["idx_chain"] = generation
-    checkpoint["run_chain"] = run_chain
-    checkpoint["run_probability"] = run_probability
-    checkpoint["chain_seq"] = chain_seq
+    checkpoint["run_chain"] = run_chain[:,burn:,:]
+    checkpoint["run_probability"] = run_probability[:,burn:]
+    checkpoint["chain_seq"] = chain_seq[burn:]
+
+
+    mcmc_store.root.full_chain = mcmc_store.root.full_chain[:, burn:, :]
+    mcmc_store.root.mcmc_acceptance = mcmc_store.root.mcmc_acceptance[burn:]
+    mcmc_store.root.run_chain_stat = mcmc_store.root.run_chain_stat[:, burn:, :]
+    mcmc_store.root.run_probability = mcmc_store.root.run_probability[:,burn:]
+    mcmc_store.root.run_probability_flat = mcmc_store.root.run_probability.reshape(-1, 1)
+
+    mcmc_store.root.train_full_chain = mcmc_store.root.full_chain[:, :burn, :]
+    mcmc_store.root.burn_seq = mcmc_store.root.mcmc_acceptance[:burn]
+    mcmc_store.root.train_chain_stat = mcmc_store.root.run_chain_stat[:, :burn, :]
+    mcmc_store.root.train_probability = mcmc_store.root.run_probability[:,:burn]
+    mcmc_store.root.train_probability_flat = mcmc_store.root.train_probability
+
+    process_sampler_burn_write(cache, mcmc_store)
+
     checkpoint["state"] = "complete"
 
     write_interval(
@@ -1145,45 +998,9 @@ def run(cache, tools, creator):
             vectorize=True,
         )
 
-        if "sampler_n" not in checkpoint:
-            checkpoint["sampler_n"] = sampler._moves[1].n
-
         if checkpoint["state"] == "auto_bounds":
             sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store)
             sub.graph_corner_process(cache, last=False, interval=60)
-
-        if checkpoint["state"] == "burn_in":
-            sampler_burn(cache, checkpoint, sampler, checkpointFile, mcmc_store)
-            sub.graph_corner_process(cache, last=False, interval=60)
-
-        if checkpoint["state"] == "chain":
-            run_chain = checkpoint.get("run_chain", None)
-            if run_chain is not None:
-                temp = run_chain[:, : checkpoint["idx_chain"], 0].T
-                multiprocessing.get_logger().info("complete shape %s", temp.shape)
-
-                try:
-                    tau = autocorr.integrated_time(
-                        numpy.swapaxes(
-                            run_chain[:, : checkpoint["idx_chain"], :], 0, 1
-                        ),
-                        tol=cache.MCMCTauMult,
-                    )
-                    multiprocessing.get_logger().info(
-                        "we have previously run long enough and can quit %s",
-                        checkpoint["idx_chain"],
-                    )
-                    checkpoint["state"] = "complete"
-                except autocorr.AutocorrError as err:
-                    multiprocessing.get_logger().info(str(err))
-                    tau = err.tau
-
-                multiprocessing.get_logger().info(
-                    "Mean acceptance fraction: %s %0.3f tau: %s",
-                    checkpoint["idx_chain"],
-                    checkpoint["chain_seq"][-1],
-                    tau,
-                )
 
         if checkpoint["state"] == "chain":
             sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store)
@@ -1265,9 +1082,9 @@ def resetPopulation(checkpoint, cache):
         checkpoint["starting_population"] = [
             util.convert_individual_inverse(i, cache) for i in population
         ]
-        multiprocessing.get_logger().info("p_burn startup population: %s", population)
+        multiprocessing.get_logger().info("startup population: %s", population)
         multiprocessing.get_logger().info(
-            "p_burn startup: %s", checkpoint["starting_population"]
+            "startup: %s", checkpoint["starting_population"]
         )
     else:
         checkpoint["starting_population"] = SALib.sample.sobol_sequence.sample(
@@ -1304,10 +1121,6 @@ def getCheckPoint(checkpointFile, cache):
         checkpoint["rstate_bounds"] = None
         checkpoint["idx_bounds"] = 0
 
-        checkpoint["ln_prob_burn"] = None
-        checkpoint["rstate_burn"] = None
-        checkpoint["idx_burn"] = 0
-
         checkpoint["p_chain"] = None
         checkpoint["ln_prob_chain"] = None
         checkpoint["rstate_chain"] = None
@@ -1316,12 +1129,8 @@ def getCheckPoint(checkpointFile, cache):
         checkpoint["sampler_iterations"] = 0
         checkpoint["sampler_naccepted"] = numpy.zeros(populationSize)
 
-        checkpoint["converge"] = (
-            numpy.ones(cache.settings.get("burnStable", 50)) * numpy.nan
-        )
 
     checkpoint["length_chain"] = cache.settings.get("chainLength", 50000)
-    checkpoint["length_burn"] = cache.settings.get("burnIn", 50000)
     return checkpoint
 
 
