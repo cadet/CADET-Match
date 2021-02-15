@@ -476,8 +476,6 @@ def auto_high_probability_iterations(cache, checkpoint, sampler, iterations):
 
         accept = numpy.mean(sampler.acceptance_fraction)
 
-        auto_gamma(sampler, accept)
-
         auto_chain = addChain(auto_chain, p[:, numpy.newaxis, :])
         auto_probability = addChain(auto_probability, ln_prob[:, numpy.newaxis])
 
@@ -491,13 +489,6 @@ def auto_high_probability_iterations(cache, checkpoint, sampler, iterations):
 
     sampler.reset()
     return auto_chain, auto_probability
-
-def auto_gamma(sampler, acceptance):
-    sampler._moves[1].factor *= max(min(numpy.sqrt(acceptance/0.25), 1.1),0.9)
-
-    multiprocessing.get_logger().info(
-            "factor %.3f", sampler._moves[1].factor
-        )
 
 def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     bounds_seq = checkpoint.get("bounds_seq", [])
@@ -551,8 +542,6 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
         accept = numpy.mean(sampler.acceptance_fraction)
         bounds_seq.append(accept)
-
-        auto_gamma(sampler, accept)
 
         bounds_chain = addChain(bounds_chain, p[:, numpy.newaxis, :])
         bounds_probability = addChain(bounds_probability, ln_prob[:, numpy.newaxis])
@@ -762,8 +751,6 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
         accept = numpy.mean(sampler.acceptance_fraction)
         chain_seq.append(accept)
-
-        auto_gamma(sampler, accept)
 
         run_chain = addChain(run_chain, p[:, numpy.newaxis, :])
         run_probability = addChain(run_probability, ln_prob[:, numpy.newaxis])
