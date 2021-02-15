@@ -15,6 +15,11 @@ from cadet import H5
 from sklearn.preprocessing import MinMaxScaler
 
 from CADETMatch.cache import cache
+import CADETMatch.util as util
+import CADETMatch.kde_util as kde_util
+
+import seaborn as sns
+import pandas
 
 
 def main():
@@ -102,7 +107,10 @@ def main():
         temp = kde_data.root.errors[exp_name].pump_delays.reshape(-1, 1)
         if numpy.any(temp > 0):
             plt.figure(figsize=[10, 10])
-            plt.hist(temp, bins=40)
+            x, prob = kde_util.plot_kde(temp)
+            plt.plot(x, prob, label="Pump Delays")
+            plt.ylim([0, 1.2*max(prob)])
+            plt.legend()
             plt.savefig(
                 (error_model / ("%s_pump_delays.png" % exp_name)).as_posix(),
                 bbox_inches="tight",
@@ -112,7 +120,10 @@ def main():
         temp = kde_data.root.errors[exp_name].flow_rates.reshape(-1, 1)
         if numpy.any(temp > 0):
             plt.figure(figsize=[10, 10])
-            plt.hist(temp, bins=40)
+            x, prob = kde_util.plot_kde(temp)
+            plt.plot(x, prob, label="Flow Rates")
+            plt.ylim([0, 1.2*max(prob)])
+            plt.legend()
             plt.savefig(
                 (error_model / ("%s_flow_rates.png" % exp_name)).as_posix(),
                 bbox_inches="tight",
@@ -122,7 +133,10 @@ def main():
         temp = kde_data.root.errors[exp_name].loading_concentrations.reshape(-1, 1)
         if numpy.any(temp > 0):
             plt.figure(figsize=[10, 10])
-            plt.hist(temp, bins=40)
+            x, prob = kde_util.plot_kde(temp)
+            plt.plot(x, prob, label="Loading Concentration")
+            plt.ylim([0, 1.2*max(prob)])
+            plt.legend()
             plt.savefig(
                 (error_model / ("%s_loading_concentrations.png" % exp_name)).as_posix(),
                 bbox_inches="tight",
@@ -133,7 +147,10 @@ def main():
     for idx in range(kde_settings.root.scores.shape[1]):
         plt.figure(figsize=[10, 10])
         temp = kde_settings.root.scores[:, idx]
-        plt.hist(temp[temp > 0], bins=40)
+        x, prob = kde_util.plot_kde(temp[temp>0])
+        plt.plot(x, prob, label=cache.score_headers[idx])
+        plt.ylim([0, 1.2*max(prob)])
+        plt.legend()
         plt.savefig(
             (error_model / "scores" / ("%s.png" % idx)).as_posix(), bbox_inches="tight"
         )
@@ -142,7 +159,10 @@ def main():
     (error_model / "scores_mirror_scaled").mkdir(parents=True, exist_ok=True)
     for idx in range(kde_settings.root.scores_mirror_scaled.shape[1]):
         plt.figure(figsize=[10, 10])
-        plt.hist(kde_settings.root.scores_mirror_scaled[:, idx], bins=40)
+        x, prob = kde_util.plot_kde(kde_settings.root.scores_mirror_scaled[:, idx], mirror=False)
+        plt.plot(x, prob, label=cache.score_headers[idx])
+        plt.ylim([0, 1.2*max(prob)])
+        plt.legend()
         plt.savefig(
             (error_model / "scores_mirror_scaled" / ("%s.png" % idx)).as_posix(),
             bbox_inches="tight",

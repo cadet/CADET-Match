@@ -1464,3 +1464,15 @@ def translate_meta_min(score, cache):
         temp[:3] = 1 - temp[:3]
 
     return temp
+
+def get_bins(array, axis=None):
+    array = numpy.atleast_2d(array)
+    shape = array.shape
+    if axis:
+        length = shape[axis]
+    else:
+        length = shape[0]
+    h = 2 * scipy.stats.iqr(array, axis=axis) * length**(-1/3)
+    bins = (numpy.max(array, axis=axis) - numpy.min(array, axis=axis))/h
+    bin = scipy.stats.mstats.gmean(numpy.atleast_1d(bins))
+    return round(bin)
