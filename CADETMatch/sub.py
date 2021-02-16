@@ -147,6 +147,9 @@ def graph_main(cache, graph_type):
 def wait_main():
     wait_sub("main", "generate_graphs.py")
 
+def wait_kde():
+    wait_sub("graph_kde", "graph_kde.py")
+
 
 def graph_kde(cache):
     line = [

@@ -20,8 +20,6 @@ from sklearn.neighbors import KernelDensity
 import CADETMatch.kde_util as kde_util
 import CADETMatch.score as score
 
-bw_tol = 1e-4
-
 import sys
 import warnings
 

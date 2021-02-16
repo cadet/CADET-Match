@@ -12,7 +12,7 @@
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>CondaEnv|CondaEnv|cadet_run</InterpreterId>
-    <CommandLineArguments>"F:\match_dll_trapz\search\mcmc\stage1\results_test\mcmc_refine\dextran.json" -n 12</CommandLineArguments>
+    <CommandLineArguments>"F:\match_dll_trapz\search\mcmc\stage1\dextran.json" -n 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
     <InterpreterArguments>
@@ -300,7 +300,6 @@
   <ItemGroup>
     <InterpreterReference Include="CondaEnv|CondaEnv|cadet_devel" />
     <InterpreterReference Include="CondaEnv|CondaEnv|cadet_run" />
-    <InterpreterReference Include="CondaEnv|CondaEnv|cadet_test" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>
