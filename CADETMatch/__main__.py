@@ -60,7 +60,7 @@ def makeParser():
     )
 
     parser.add_argument(
-        "--generate_mle", help="Generate maximum liklihood", action="store_true"
+        "--generate_mle", "--generate_map", help="Generate maximum a posteriori", action="store_true"
     )
 
     parser.add_argument(
