@@ -42,6 +42,7 @@ Please report any bugs that you find `here <https://github.com/modsim/CADET-Matc
 
     install/index
     cli/index
+    configuration/index
     license
     Legal notice <https://www.fz-juelich.de/portal/EN/Service/LegalNotice/_node.html>
 

@@ -1,7 +1,7 @@
 .. _install:
 
-Install CADETMatch
-^^^^^^^^^^^^^^^^^^
+Install
+-------
 
 CADETMatch is a parameter estimation and error modeling library for Python. CADETMatch has a number of
 dependencies and they can be automatically installed. 

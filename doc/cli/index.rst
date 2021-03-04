@@ -1,5 +1,5 @@
-Running CADETMatch
-^^^^^^^^^^^^^^^^^^
+Running
+^^^^^^^
 
 CADETMatch is designed to be used through a command line interface. It is also possible to use CADETMatch using Jupyter notebooks but this
 is not recommended for normal usage. CADETMatch has automatic checkpointing and if matching is interrupted it will resume from the last step

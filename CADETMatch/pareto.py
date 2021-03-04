@@ -92,7 +92,7 @@ class ParetoFrontMeta(ParetoFront):
         self.best_sse = numpy.inf
         self.best_sse_ind = None
         self.best_rmse = numpy.inf
-        self.best_rmse_end = None
+        self.best_rmse_ind = None
 
     def update(self, population, numGoals):
         """Update the Pareto front hall of fame with the *population* by adding

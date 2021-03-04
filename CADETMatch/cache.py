@@ -182,7 +182,6 @@ class Cache:
             self.settings.get("soboloGeneration", True)
         ) or bool(self.settings.get("sobolGeneration", True))
         self.graphSpearman = bool(self.settings.get("graphSpearman", False))
-        self.scoreMCMC = self.settings.get("scoreMCMC", "sse")
 
         self.continueMCMC = bool(self.settings.get("continueMCMC", False))
         self.MCMCTauMult = int(self.settings.get("MCMCTauMult", 50))
