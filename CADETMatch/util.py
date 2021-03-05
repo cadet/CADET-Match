@@ -46,12 +46,12 @@ def get_times_values(simulation, target, selected=None):
     try:
         times = simulation.root.output.solution.solution_times
 
-        isotherm = target["isotherm"]
+        output_path = target["output_path"]
 
-        if isinstance(isotherm, list):
-            values = numpy.sum([simulation[i] for i in isotherm], 0)
+        if isinstance(output_path, list):
+            values = numpy.sum([simulation[i] for i in output_path], 0)
         else:
-            values = simulation[isotherm]
+            values = simulation[output_path]
     except (AttributeError, KeyError):
         times = simulation[:, 0]
         values = simulation[:, 1]
@@ -382,7 +382,7 @@ def runExperiment(
     temp["sim_value"] = []
     temp["exp_value"] = []
 
-    for feature in experiment["features"]:
+    for feature in experiment["scores"]:
         featureType = feature["type"]
         featureName = feature["name"]
 
@@ -487,17 +487,17 @@ def setupMCMC(cache):
         for experiment in settings["experiments"]:
             foundAbsoluteTime = False
             foundAbsoluteHeight = False
-            for feature in experiment["features"]:
+            for feature in experiment["scores"]:
                 if feature["type"] == "AbsoluteTime":
                     foundAbsoluteTime = True
                 if feature["type"] == "AbsoluteHeight":
                     foundAbsoluteHeight = True
             if foundAbsoluteTime is False:
-                experiment["features"].append(
+                experiment["scores"].append(
                     {"name": "AbsoluteTime", "type": "AbsoluteTime"}
                 )
             if foundAbsoluteHeight is False:
-                experiment["features"].append(
+                experiment["scores"].append(
                     {"name": "AbsoluteHeight", "type": "AbsoluteHeight"}
                 )
 
@@ -568,10 +568,10 @@ def setupAltFeature(cache, name):
         settings["searchMethod"] = "AltScore"
 
         for experiment in settings["experiments"]:
-            for feature in experiment["featuresAlt"]:
+            for feature in experiment["scoresAlt"]:
                 if feature["name"] == name:
-                    experiment["features"] = feature["features"]
-            del experiment["featuresAlt"]
+                    experiment["scores"] = feature["scores"]
+            del experiment["scoresAlt"]
 
         new_settings_file = resultDir / settings_file.name
         with new_settings_file.open(mode="w") as json_data:
@@ -635,7 +635,7 @@ def copyCSVWithNoise(idx, center, noise):
                 new_csv_path = baseDir / csv_path.name
                 numpy.savetxt(str(new_csv_path), data, delimiter=",")
                 experiment["csv"] = str(new_csv_path)
-            for feature in experiment["features"]:
+            for feature in experiment["scores"]:
                 if "csv" in feature:
                     data = numpy.genfromtxt(feature["csv"], delimiter=",")
                     addNoise(data, center, noise)

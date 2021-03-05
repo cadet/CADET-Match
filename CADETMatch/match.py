@@ -28,10 +28,10 @@ def main(map_function):
     # grad.setupTemplates(cache)
     hof = evo.run(cache)
 
-    multiprocessing.get_logger().info("altFeatures %s", cache.altFeatures)
-    multiprocessing.get_logger().info("altFeatureNames %s", cache.altFeatureNames)
+    multiprocessing.get_logger().info("altScoress %s", cache.altScores)
+    multiprocessing.get_logger().info("altScoreNames %s", cache.altScoreNames)
 
-    if cache.altFeatures:
+    if cache.altScores:
         for name in cache.altFeatureNames:
             json_path = util.setupAltFeature(cache, name)
             setup(cache, json_path, map_function)

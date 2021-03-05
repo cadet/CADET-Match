@@ -45,8 +45,8 @@ class Cache:
         self.graphSpearman = False
         self.continueMCMC = False
         self.errorBias = True
-        self.altFeatures = False
-        self.altFeatureNames = []
+        self.altScores = False
+        self.altScoreNames = []
         self.progress_headers = [
             "Generation",
             "Population",
@@ -243,7 +243,7 @@ class Cache:
         meta_mask_seq = []
 
         for idx, experiment in enumerate(self.settings["experiments"]):
-            for feature in experiment["features"]:
+            for feature in experiment["scores"]:
                 if feature["type"] in self.scores:
                     settings = self.scores[feature["type"]].get_settings(feature)
                     meta_mask = settings.meta_mask
@@ -268,6 +268,25 @@ class Cache:
                 self.settings["csv"] = self.settings["CSV"]
             if "csv" not in self.settings:
                 self.settings["csv"] = "results.csv"
+
+            #convert features to scores
+            for experiment in self.settings['experiments']:
+                if "features" in experiment:
+                    experiment['scores'] = experiment['features']
+
+                    for score in experiment['scores']:
+                        if "isotherm" in score:
+                            score['output_path'] = score['isotherm']
+
+                if "isotherm" in experiment:
+                    experiment["output_path"] = experiment["isotherm"]
+
+                if "featuresAlt" in experiment:
+                    experiment['scoresAlt'] = experiment['featureAlt']
+
+                    for score in experiment['scoresAlt']:
+                        if "isotherm" in score:
+                            score['output_path'] = score['isotherm']
 
             if self.settings["searchMethod"] == "Gradient":
                 self.settings["population"] = 1
@@ -321,7 +340,7 @@ class Cache:
         for idx, experiment in enumerate(self.settings["experiments"]):
             experimentName = experiment["name"]
             experiment["headers"] = []
-            for feature in experiment["features"]:
+            for feature in experiment["scores"]:
                 if feature["type"] in self.scores:
                     temp = self.scores[feature["type"]].headers(experimentName, feature)
 
@@ -382,9 +401,9 @@ class Cache:
 
     def add_units_features_alt(self, units_used, features_alt):
         for feature_alt in features_alt:
-            self.add_units_isotherm(units_used, feature_alt.get("isotherm", ""))
-            for feature in feature_alt["features"]:
-                self.add_units_isotherm(units_used, feature.get("isotherm", ""))
+            self.add_units_isotherm(units_used, feature_alt.get("output_path", ""))
+            for feature in feature_alt["scores"]:
+                self.add_units_isotherm(units_used, feature.get("output_path", ""))
                 self.add_units_isotherm(units_used, feature.get("unit_name", ""))
 
     def add_units_error_model(self, error_models, target):
@@ -464,7 +483,7 @@ class Cache:
 
         if dataFromSim:
             temp["time"], temp["value"] = get_times_values(
-                sim, {"isotherm": experiment["isotherm"]}
+                sim, {"output_path": experiment["output_path"]}
             )
 
         elif "csv" in experiment:
@@ -479,16 +498,16 @@ class Cache:
                 temp["factor"] = 1.0
             temp["valueFactor"] = temp["value"] * temp["factor"]
 
-        if "featuresAlt" in experiment:
-            self.altFeatures = True
-            self.altFeatureNames = [
-                altFeature["name"] for altFeature in experiment["featuresAlt"]
+        if "scoresAlt" in experiment:
+            self.altScores = True
+            self.altScoreNames = [
+                altFeature["name"] for altFeature in experiment["scoresAlt"]
             ]
 
-            self.add_units_features_alt(units_used, experiment["featuresAlt"])
+            self.add_units_features_alt(units_used, experiment["scoresAlt"])
 
         peak_maxes = []
-        for feature in experiment["features"]:
+        for feature in experiment["scores"]:
             featureName = feature["name"]
             featureType = feature["type"]
 
@@ -503,7 +522,7 @@ class Cache:
                     (
                         temp[featureName]["time"],
                         temp[featureName]["value"],
-                    ) = get_times_values(sim, {"isotherm": feature["isotherm"]})
+                    ) = get_times_values(sim, {"output_path": feature["output_path"]})
                 else:
                     dataLocal = numpy.loadtxt(feature["csv"], delimiter=",")
                     temp[featureName]["time"] = dataLocal[:, 0]
@@ -529,12 +548,12 @@ class Cache:
                 feature["start"] = featureStart = temp[featureName]["time"][0]
                 feature["stop"] = featureStop = temp[featureName]["time"][-1]
 
-            if "isotherm" in feature:
-                temp[featureName]["isotherm"] = feature["isotherm"]
+            if "output_path" in feature:
+                temp[featureName]["output_path"] = feature["output_path"]
             else:
-                temp[featureName]["isotherm"] = experiment["isotherm"]
+                temp[featureName]["output_path"] = experiment["output_path"]
 
-            self.add_units_isotherm(units_used, temp[featureName]["isotherm"])
+            self.add_units_isotherm(units_used, temp[featureName]["output_path"])
 
             temp[featureName]["selected"] = (
                 temp[featureName]["time"] >= featureStart
@@ -604,11 +623,11 @@ cache = Cache()
 def get_times_values(simulation, target):
     "simplified version of the function so that util does not have to be imported"
     times = simulation.root.output.solution.solution_times
-    isotherm = target["isotherm"]
+    output_path = target["output_path"]
 
-    if isinstance(isotherm, list):
-        values = numpy.sum([simulation[i] for i in isotherm], 0)
+    if isinstance(output_path, list):
+        values = numpy.sum([simulation[i] for i in output_path], 0)
     else:
-        values = simulation[isotherm]
+        values = simulation[output_path]
 
     return times, values

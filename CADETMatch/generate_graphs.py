@@ -374,7 +374,7 @@ def plotExperiments(args):
         units_used = cache.target[experimentName]["units_used"]
 
         numPlotsSeq = [len(units_used)]
-        for feature in experiment["features"]:
+        for feature in experiment["scores"]:
             settings = cache.scores[feature["type"]].get_settings(feature)
             numPlotsSeq.append(settings.graph_der + settings.graph + settings.graph_frac)
 
@@ -402,7 +402,7 @@ def plotExperiments(args):
             )
 
         graphIdx = idx + 2
-        for idx, feature in enumerate(experiment["features"]):
+        for idx, feature in enumerate(experiment["scores"]):
             featureName = feature["name"]
             featureType = feature["type"]
 
@@ -781,12 +781,12 @@ def get_times_values(simulation, target, selected=None):
 
     times = simulation.root.output.solution.solution_times
 
-    isotherm = target["isotherm"]
+    output_path = target["output_path"]
 
-    if isinstance(isotherm, list):
-        values = numpy.sum([simulation[i] for i in isotherm], 0)
+    if isinstance(output_path, list):
+        values = numpy.sum([simulation[i] for i in output_path], 0)
     else:
-        values = simulation[isotherm]
+        values = simulation[output_path]
 
     if selected is None:
         selected = target["selected"]
