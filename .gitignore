@@ -428,3 +428,5 @@ __pycache__/
 /radon.txt
 /build/doctrees
 /build/html
+/.spyproject/config
+/examples/SMA

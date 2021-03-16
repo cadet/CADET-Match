@@ -12,7 +12,7 @@
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>CondaEnv|CondaEnv|cadet_run</InterpreterId>
-    <CommandLineArguments>"F:\Parameter Estimation\Experimental\AMS-003\Bypass\det\NSGA3_Shape\altScore\Shape_test\Gradient_bypass_SSE.json" 1 -n 1</CommandLineArguments>
+    <CommandLineArguments>"F:\cadetmatch_new_varnames\search\graphSpace\dextran.json" 1 -n 12</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
     <InterpreterArguments>
@@ -27,10 +27,16 @@
     <Content Include="CADETMatch\README.txt" />
     <Content Include="doc\cli\examples.rst" />
     <Content Include="doc\cli\index.rst" />
+    <Content Include="doc\configuration\error.rst">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="doc\configuration\experiments.rst">
       <SubType>Code</SubType>
     </Content>
     <Content Include="doc\configuration\index.rst" />
+    <Content Include="doc\configuration\scores.rst">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="doc\configuration\search.rst" />
     <Content Include="doc\configuration\transform.rst">
       <SubType>Code</SubType>

@@ -77,6 +77,8 @@ continueMCMC          Boolean       False          No        Once search finishe
 seeds                 List          None           No        Optimization can be seeded with specific values to test
 =================== =========== ================ ========== =================================================================================================================================
 
+.. _mcmc-search:
+
 MCMC
 ^^^^
 
