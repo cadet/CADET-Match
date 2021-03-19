@@ -1,6 +1,6 @@
 License
 =======
-CADET is released under the GNU GPL v3
+CADET-Match is released under the GNU GPL v3
 
 ::
 
