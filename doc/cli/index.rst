@@ -3,7 +3,7 @@ Running
 
 CADETMatch is designed to be used through a command line interface. It is also possible to use CADETMatch using Jupyter notebooks but this
 is not recommended for normal usage. CADETMatch has automatic checkpointing and if matching is interrupted it will resume from the last step
-complated.
+completed.
 
 These commands can be run from the Windows command line or from any Linux command line. These commands can also be run through cluster
 control software. 

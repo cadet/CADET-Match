@@ -1,45 +1,49 @@
 Transform
 ---------
 
-CADETMatch has many variable transforms available. The most common ones will be covered first. There are a few additional ones
-available in the code that are retained for backwards compatibility that will not be covered and their usage is not recomended.
+CADETMatch has many variable transforms available.
+The most common ones will be covered first.
+There are a few additional ones available in the code that are retained for backwards compatibility that will not be covered and their usage is not recomended.
 
 Each parameter for parameter estimation or error modeling must be listed in the parameters list and a transform selected.
 
 .. code-block:: json
 
     {
-    "parameters": [
-        {
-        },
-        {
-        }
-    ],
+        "parameters": [
+            {
+            },
+            {
+            }
+        ],
     }
 
 Indexing
 ^^^^^^^^
 
+An index is used when you want to directly index into the arrays to modify, this is very rarely used and mostly comes up with the MultiState SMA rates between states. 
 All transforms use the same method for indexing. 
 
-You either need to specific component and bound or specify index. Indexing starts at 0. A value of -1 is used to indicate a value
-is not component specific (ie a scalar).
+You either need to specific component and bound or specify index.
+Indexing starts at 0.
+A value of -1 is used to indicate a value that is not component specific (i.e. a scalar).
 
-Component 0 Bound state 0 would be   component=0  bound=0
-Component 1 but independent of bound state would be  component=0 bound=-1
-Independent of component or bound state would be component=-1 bound=-1
+Scalar value:index=-1
+Index at position n: index=n
 
-Index is used when you want to directly index into the arrays to modify, this is very
-rarely used and mostly comes up with the MultiState SMA rates between states
+Component 0 Bound state 0 would be component=0 bound=0.
 
-Scalar value   index=-1
-Index at position n   index=n
+Component 1 but independent of bound state would be component=0 bound=-1.
+
+Independent of component or bound state would be component=-1 bound=-1.
+
 
 Auto
 ^^^^
 
-Auto is the most common transform. This transform will convert from the upper and lower boundary to a range of 0 to 1 for the search algorithm. It
-will automatically switch between a linear and a log transform as needed for search performance. 
+Auto is the most common transform.
+This transform will convert from the upper and lower boundary to a range of 0 to 1 for the search algorithm.
+It will automatically switch between a linear and a log transform as needed for search performance. 
 
 =================== =========== ================ ========== =========================================================================================================
  Key                  Values       Default        Required     Description
@@ -68,8 +72,8 @@ experiments           String       None             No        If provided this v
 Auto Inverse
 ^^^^^^^^^^^^
 
-Auto-inverse works like auto except it transforms used 1/variable. This transform was designed to deal with coupling of film diffusion and
-pore diffusion and improves optimization. 
+Auto-inverse works like auto except it transforms used 1/variable.
+This transform was designed to deal with coupling of film diffusion and pore diffusion and improves optimization. 
 
 =================== =========== ================ ========== =========================================================================================================
  Key                  Values       Default        Required     Description
@@ -87,21 +91,22 @@ experiments           String       None             No        If provided this v
 .. code-block:: json
 
     {
-		"transform": "auto_inverse",
-		"component": -1,
-		"bound": -1,
-		"location": "/input/model/unit_001/FILM_DIFFUSION",
-		"min": 1e-9,
-		"max": 1e-5
-	}
+        "transform": "auto_inverse",
+        "component": -1,
+        "bound": -1,
+        "location": "/input/model/unit_001/FILM_DIFFUSION",
+        "min": 1e-9,
+        "max": 1e-5
+    }
 
 Auto kEQ
 ^^^^^^^^
 
-This transforms convert from kA and kD to kA and kEQ with all the other properties of auto. In reality kA and kD are coupled and this allows
-the search algorithm to see the coupling. There are also some fits where kA and kD are fast enough that a system is effectively in rapid
-equilibrium. Without this transform a large number of kA and kD values will be found with equally good results. With this transform kEQ
-will have a definite value and there will be a large range of kA values which provides more understanding for the problem.
+This transforms convert from kA and kD to kA and kEQ with all the other properties of auto.
+In reality kA and kD are coupled and this allows the search algorithm to see the coupling.
+There are also some fits where kA and kD are fast enough that a system is effectively in rapid equilibrium.
+Without this transform a large number of kA and kD values will be found with equally good results.
+With this transform kEQ will have a definite value and there will be a large range of kA values which provides more understanding for the problem.
 
 =================== =========== ================ ========== =========================================================================================================
  Key                  Values       Default        Required     Description
@@ -121,25 +126,24 @@ experiments           String       None             No        If provided this v
 .. code-block:: json
 
     {
-		"transform": "auto_keq",
-		"component": 0,
-		"bound": 0,
-		"location": [
-			"/input/model/unit_001/adsorption/LIN_KA",
-			"/input/model/unit_001/adsorption/LIN_KD"
-		],
-		"minKA": 1e-8,
-		"maxKA": 1e8,
-		"minKEQ": 1e-4,
-		"maxKEQ": 1e4
-	}
+        "transform": "auto_keq",
+        "component": 0,
+        "bound": 0,
+        "location": [
+            "/input/model/unit_001/adsorption/LIN_KA",
+            "/input/model/unit_001/adsorption/LIN_KD"
+        ],
+        "minKA": 1e-8,
+        "maxKA": 1e8,
+        "minKEQ": 1e-4,
+        "maxKEQ": 1e4
+    }
 
 Norm Add
 ^^^^^^^^
 
-This transform allows another parameter to be read and a fixed or variable value added to it and assigned to a second variable. For example if
-you are optimizing the charge nu for SMA with a few different charge variants you may not know all the charge variants but you know they are all
-close together and so you can estimate one and then use norm_add for the others to require they are close.
+This transform allows another parameter to be read and a fixed or variable value added to it and assigned to a second variable.
+For example if you are optimizing the charge nu for SMA with a few different charge variants you may not know all the charge variants but you know they are all close together and so you can estimate one and then use norm_add for the others to require they are close.
 
 =================== =========== ================ ========== =========================================================================================================
  Key                  Values       Default        Required     Description
@@ -159,25 +163,23 @@ experiments           String       None             No        If provided this v
 
 .. code-block:: json
 
-	{
-		"transform": "norm_add",
-		"locationFrom": "/input/model/unit_001/COL_POROSITY",
-		"componentFrom": -1,
-		"boundFrom": -1,
-		"locationTo": "/input/model/unit_001/PAR_POROSITY",
-		"componentTo": -1,
-		"boundTo": -1,
-		"min": -0.1,
-		"max": 0.1
-			
-	}
+    {
+        "transform": "norm_add",
+        "locationFrom": "/input/model/unit_001/COL_POROSITY",
+        "componentFrom": -1,
+        "boundFrom": -1,
+        "locationTo": "/input/model/unit_001/PAR_POROSITY",
+        "componentTo": -1,
+        "boundTo": -1,
+        "min": -0.1,
+        "max": 0.1
+    }
 
 Norm Mult
 ^^^^^^^^^
 
-This transform allows another parameter to be read and a fixed or variable value multiplied to it and assigned to a second variable. For instance if
-you are estimating the shielding factor sigma for a monomer and also need to estimate it for a dimer you can estimated sigma for the monomer normally
-and then specify that the dimer is approximately twice as large.
+This transform allows another parameter to be read and a fixed or variable value multiplied to it and assigned to a second variable.
+For instance if you are estimating the shielding factor sigma for a monomer and also need to estimate it for a dimer you can estimated sigma for the monomer normally and then specify that the dimer is approximately twice as large.
 
 =================== =========== ================ ========== =========================================================================================================
  Key                  Values       Default        Required     Description
@@ -212,9 +214,9 @@ experiments           String       None             No        If provided this v
 Set Value
 ^^^^^^^^^
 
-This transform copies a value from another estimated value. One of the common usage cases is when estimating the axial dispersion of the tubing. It
-can be a good assumption that the axial dispersion is the same in the tubing leading to the column and the tubing leaving it so with this one of them
-is estimated and the value copied to the other one so fewer values need to be estimated.
+This transform copies a value from another estimated value.
+One of the common usage cases is when estimating the axial dispersion of the tubing.
+It can be a good assumption that the axial dispersion is the same in the tubing leading to the column and the tubing leaving it so with this one of them is estimated and the value copied to the other one so fewer values need to be estimated.
 
 =================== =========== ================ ========== =========================================================================================================
  Key                  Values       Default        Required     Description
@@ -245,8 +247,8 @@ experiments           String       None             No        If provided this v
 Sum
 ^^^
 
-This transform reads two values and assigns it to a 3rd value. This was created for a situation where the volume of two CSTRs where estimated
-and a 3rd CSTR needed to have a volume equal to the sum of the first two.
+This transform reads two values and assigns it to a 3rd value.
+This was created for a situation where the volume of two CSTRs where estimated and a 3rd CSTR needed to have a volume equal to the sum of the first two.
 
 =================== =========== ================ ========== =========================================================================================================
  Key                  Values       Default        Required     Description
@@ -284,9 +286,9 @@ experiments          String       None             No        If provided this va
 Norm Diameter
 ^^^^^^^^^^^^^
 
-CADET uses the cross sectional area of the column and tubing and measuring this precisely can be difficult. It is often much simpler to measure
-the diameter and provide a small search range and then allow this transform to convert that to the area. This assumes circular tubing and uses
-Area = pi*d^2/4
+CADET uses the cross sectional area of the column and tubing and measuring this precisely can be difficult.
+It is often much simpler to measure the diameter and provide a small search range and then allow this transform to convert that to the area.
+This assumes circular tubing and uses Area = pi*d^2/4.
 
 =================== =========== ================ ========== =========================================================================================================
  Key                  Values       Default        Required     Description
@@ -315,8 +317,8 @@ Norm Volume Length
 ^^^^^^^^^^^^^^^^^^
 
 When estimating the size of a Disperive Plug Flow Reactor needed to model a piece of tubing it is normal to estimate the dispersion, area and length.
-This works but can be problematic to estimate and get a realistic estimate due to the degrees of freedom. Finding the volume of the tube and the
-length of the tube is much easier to do accurately and this makes it a much better transform to work with.
+This works but can be problematic to estimate and get a realistic estimate due to the degrees of freedom.
+Finding the volume of the tube and the length of the tube is much easier to do accurately and this makes it a much better transform to work with.
 
 =================== =========== ================ ========== =========================================================================================================
  Key                  Values       Default        Required     Description
@@ -350,8 +352,7 @@ experiments           String       None             No        If provided this v
 Norm Volume Area
 ^^^^^^^^^^^^^^^^
 
-This transform works like the volume length transform except it uses volume an area and should only be used if it is easier to estimate the
-cross sectional area of the tubing than its length.
+This transform works like the volume length transform except it uses volume an area and should only be used if it is easier to estimate the cross sectional area of the tubing than its length.
 
 =================== =========== ================ ========== =========================================================================================================
  Key                  Values       Default        Required     Description
@@ -381,3 +382,4 @@ experiments           String       None             No        If provided this v
 		"component": -1,
 		"bound": -1		
 	}
+

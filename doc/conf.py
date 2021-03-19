@@ -17,9 +17,9 @@ from datetime import date
 
 # -- Project information -----------------------------------------------------
 
-project = 'CADET'
-copyright = f'2008-{date.today().year}'
-author = 'CADET Authors'
+project = 'CADET-Match'
+copyright = f'2017-{date.today().year}'
+author = 'CADET-Match Authors'
 
 
 # -- General configuration ---------------------------------------------------
@@ -66,7 +66,7 @@ html_theme_options = {
 }
 
 html_favicon = '_static/cadet_icon.png'
-html_title = 'CADET'
+html_title = 'CADET-Match'
 html_baseurl = 'https://cadet.github.io/'
 html_static_path = ['_static']
 html_extra_path = ['robots.txt', 'google7a5fbf15028eb634.html']
