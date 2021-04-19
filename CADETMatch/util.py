@@ -608,7 +608,7 @@ def getBestIndividual(cache):
     results.filename = progress_path.as_posix()
     results.load(paths=["/meta_score", "/meta_population"], lock=True)
 
-    idx = numpy.argmax(results.root.meta_score[:, 1])
+    idx = numpy.argmin(results.root.meta_score[:, 0])
     individual = results.root.meta_population[idx, :]
     return individual
 
