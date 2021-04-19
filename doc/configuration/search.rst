@@ -1,8 +1,9 @@
 Search
 ------
 
-CADETMatch uses a number of different search strategies for parameter estimation. Parameters that are common to more than one
-search method will be repeated. The choice of search strategy is set by using searchMethod. 
+CADETMatch uses a number of different search strategies for parameter estimation.
+Parameters that are common to more than one search method will be repeated.
+The choice of search strategy is set by using searchMethod. 
 
 =================== =========== ================ ========== =========================================================================================================
  Key                  Values       Default        Required     Description
@@ -15,8 +16,8 @@ Most of the search strategies are population based and capable of running in par
 NSGA3
 ^^^^^
 
-NSGA3 is a genetic algorithm designed for high-dimensional problems. If only a single objective is used the system will
-automatically switch to NSGA2.
+NSGA3 is a genetic algorithm designed for high-dimensional problems.
+If only a single objective is used the system will automatically switch to NSGA2.
 
 =================== =========== ================ ========== =================================================================================================================================
  Key                  Values       Default        Required     Description
@@ -44,8 +45,9 @@ MultiObjectiveSSE     Boolean       False          No        If set to true SSE 
 Multistart
 ^^^^^^^^^^
 
-This is a simple MultiStart gradient descent search. If your problem is known to be solveable with gradient descent this can be a good
-search choice. While this search algorithm can be used as a precursor for MCMC that is not recomended.   
+This is a simple MultiStart gradient descent search.
+If your problem is known to be solveable with gradient descent this can be a good search choice.
+While this search algorithm can be used as a precursor for MCMC that is not recomended.   
 
 =================== =========== ================ ========== =================================================================================================================================
  Key                  Values       Default        Required     Description
@@ -62,9 +64,11 @@ seeds                 List          None           No        Optimization can be
 GraphSpace
 ^^^^^^^^^^
 
-The purpose of GraphSpace is to create a map of your problem. It is designed to be used with an extremely large population and it will just
-evaluate the goal, generate graphs and terminate. It will not actually optimize. What it does tell you is what variable ranges are reasonable to
-optimize in. This is a good first step for any new problem where the ranges of the parameters is extremely large and the viable ranges are unknown.
+The purpose of GraphSpace is to create a map of your problem.
+It is designed to be used with an extremely large population and it will just evaluate the goal, generate graphs and terminate.
+It will not actually optimize.
+What it does tell you is what variable ranges are reasonable to optimize in.
+This is a good first step for any new problem where the ranges of the parameters is extremely large and the viable ranges are unknown.
 
 =================== =========== ================ ========== =================================================================================================================================
  Key                  Values       Default        Required     Description
@@ -82,8 +86,10 @@ seeds                 List          None           No        Optimization can be
 MCMC
 ^^^^
 
-MCMC is used for error modeling. It is highly suggested that NSGA3 is used with continueMCMC. MCMC is not an optimization algorithm and should not be
-used as one. In order to run an error model is also required.
+MCMC is used for error modeling.
+It is highly suggested that NSGA3 is used with continueMCMC.
+MCMC is not an optimization algorithm and should not be used as one.
+In order to run an error model is also required.
 
 =================== =========== ================ ========== =====================================================================================================================================
  Key                  Values       Default        Required     Description
@@ -98,9 +104,9 @@ MCMCTauMult           Integer       50               No        MCMC runs until t
 AltScore
 ^^^^^^^^
 
-AltScore is very rarely used. What it allows is reading another completed result and will just re-evaluate the entries of the pareto front with a different goal and
-report the results. This can be useful for goal design to see the impact of combining different scores and if that would make the problem easier or harder to
-optimize.
+AltScore is very rarely used.
+What it allows is reading another completed result and will just re-evaluate the entries of the pareto front with a different goal and report the results.
+This can be useful for goal design to see the impact of combining different scores and if that would make the problem easier or harder to optimize.
 
 =================== =========== ================ ========== =====================================================================================================================================
  Key                  Values       Default        Required     Description
@@ -112,8 +118,8 @@ PreviousResults       Path          None             Yes       Look at the previ
 Gradient
 ^^^^^^^^
 
-This is a simple test search algorithm that reads seeds and runs gradient descent from them. This search algorithm has little practical usage and requires good
-starting points.
+This is a simple test search algorithm that reads seeds and runs gradient descent from them.
+This search algorithm has little practical usage and requires good starting points.
 
 =================== =========== ================ ========== =================================================================================================================================
  Key                  Values       Default        Required     Description
@@ -126,10 +132,12 @@ seeds                 List          None           Yes        Optimization can b
 ScoreTest
 ^^^^^^^^^
 
-This is the simplest of all the systems and just designed for testing goals. Given one or more seeds they are simulated, scored and results returned.
+This is the simplest of all the systems and just designed for testing goals.
+Given one or more seeds they are simulated, scored and results returned.
 
 =================== =========== ================ ========== =================================================================================================================================
  Key                  Values       Default        Required     Description
 =================== =========== ================ ========== =================================================================================================================================
 seeds                 List          None           Yes        Optimization can be seeded with specific values to test
 =================== =========== ================ ========== =================================================================================================================================
+
