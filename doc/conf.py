@@ -40,9 +40,11 @@ extensions = [
 bibtex_bibfiles = ['literature.bib']
 
 # Versions
-smv_tag_whitelist = r'^v\d+\.\d+\.\d+$'       # Include tags like "v2.1"
 smv_released_pattern = r'^tags/.*$'           # Tags only
+smv_tag_whitelist = r'^v\d+\.\d+\.\d+$'       # Include tags like "v2.1"
+smv_branch_whitelist = r'^.*$'                # Include all branches
 smv_remote_whitelist = r'^(origin|upstream)$' # Use branches from origin and upstream
+smv_outputdir_format = '{ref.name}'        # Use the branch/tag name
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
