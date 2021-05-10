@@ -32,10 +32,17 @@ extensions = [
     'sphinx.ext.githubpages',
     'sphinx_sitemap',
     'sphinxcontrib.bibtex',
+    'sphinx_multiversion',
     #'sphinxcontrib.tikz',
 ]
 
+# Bibliography
 bibtex_bibfiles = ['literature.bib']
+
+# Versions
+smv_tag_whitelist = r'^v\d+\.\d+\.\d+$'       # Include tags like "v2.1"
+smv_released_pattern = r'^tags/.*$'           # Tags only
+smv_remote_whitelist = r'^(origin|upstream)$' # Use branches from origin and upstream
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -75,6 +82,7 @@ html_sidebars = {
         'about.html',
         'navigation.html',
         'searchbox.html',
+        'versioning.html',
     ]
 }
 
