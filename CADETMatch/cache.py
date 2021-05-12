@@ -434,6 +434,8 @@ class Cache:
 
         units_used = []
 
+        resident_time_unit = int(experiment.get('resident_time_unit', 1))
+
         if sim is None:
             sim = Cadet()
             sim.filename = Path(experiment["HDF5"]).as_posix()
@@ -448,26 +450,28 @@ class Cache:
         conn = numpy.reshape(conn, [-1, self.connectionNumberEntries])
 
         # find all the entries that connect to the column
-        filter = conn[:, 1] == 1
+        filter = conn[:, 1] == resident_time_unit
 
         # flow is the sum of all flow rates that connect to this column which is in the last column
         flow = sum(conn[filter, -1])
 
-        if sim.root.input.model.unit_001.unit_type == b"CSTR":
-            volume = float(sim.root.input.model.unit_001.init_volume)
+        unit = sim.root.input.model[f'unit_{resident_time_unit:03d}']
+
+        if unit.unit_type == b"CSTR":
+            volume = float(unit.init_volume)
 
             CV_time = volume / flow
 
         else:
             # CV needs to be based on superficial velocity not interstitial velocity
-            length = float(sim.root.input.model.unit_001.col_length)
+            length = float(unit.col_length)
 
-            velocity = sim.root.input.model.unit_001.velocity
+            velocity = unit.velocity
             if velocity == {}:
                 velocity = 1.0
             velocity = float(velocity)
 
-            area = sim.root.input.model.unit_001.cross_section_area
+            area = unit.cross_section_area
             if area == {}:
                 area = 1.0
             area = float(area)
