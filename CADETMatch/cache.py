@@ -434,7 +434,7 @@ class Cache:
 
         units_used = []
 
-        resident_time_unit = int(experiment.get('resident_time_unit', 1))
+        residence_time_unit = int(experiment.get('residence_time_unit', 1))
 
         if sim is None:
             sim = Cadet()
@@ -450,12 +450,12 @@ class Cache:
         conn = numpy.reshape(conn, [-1, self.connectionNumberEntries])
 
         # find all the entries that connect to the column
-        filter = conn[:, 1] == resident_time_unit
+        filter = conn[:, 1] == residence_time_unit
 
         # flow is the sum of all flow rates that connect to this column which is in the last column
         flow = sum(conn[filter, -1])
 
-        unit = sim.root.input.model[f'unit_{resident_time_unit:03d}']
+        unit = sim.root.input.model[f'unit_{residence_time_unit:03d}']
 
         if unit.unit_type == b"CSTR":
             volume = float(unit.init_volume)
