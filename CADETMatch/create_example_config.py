@@ -38,7 +38,7 @@ def create_experiments(defaults):
     experiment1.name = 'main'
     experiment1.csv = 'dextran.csv'
     experiment1.HDF5 = 'dextran.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     config.experiments = [experiment1,]
 
@@ -46,7 +46,7 @@ def create_experiments(defaults):
     feature1.name = "main_feature"
     feature1.type = 'DextranShape'
 
-    experiment1.features = [feature1,]
+    experiment1.scores = [feature1,]
 
     experiments_dir = defaults.base_dir / "experiments"
 
@@ -67,20 +67,20 @@ def create_experiments(defaults):
     experiment1.name = 'main1'
     experiment1.csv = 'dextran1.csv'
     experiment1.HDF5 = 'dextran1.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     experiment2 = Dict()
     experiment2.name = 'main2'
     experiment2.csv = 'dextran2.csv'
     experiment2.HDF5 = 'dextran2.h5'
-    experiment2.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment2.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     feature1 = Dict()
     feature1.name = "main_feature"
     feature1.type = 'DextranShape'
 
-    experiment1.features = [feature1,]
-    experiment2.features = [feature1,]
+    experiment1.scores = [feature1,]
+    experiment2.scores = [feature1,]
 
     config.experiments = [experiment1, experiment2]
      
@@ -92,13 +92,13 @@ def create_experiments(defaults):
     experiment1.name = 'dextran'
     experiment1.csv = 'dextran.csv'
     experiment1.HDF5 = 'dextran.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     experiment2 = Dict()
     experiment2.name = 'non'
     experiment2.csv = 'non.csv'
     experiment2.HDF5 = 'non.h5'
-    experiment2.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment2.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     feature1 = Dict()
     feature1.name = "main_feature"
@@ -109,8 +109,8 @@ def create_experiments(defaults):
     feature2.type = 'Shape'
     feature2.decay = 1
 
-    experiment1.features = [feature1,]
-    experiment2.features = [feature2,]
+    experiment1.scores = [feature1,]
+    experiment2.scores = [feature2,]
 
     config.experiments = [experiment1, experiment2]
 
@@ -173,7 +173,7 @@ def create_slicing(defaults):
     experiment1.name = 'main'
     experiment1.csv = 'dextran.csv'
     experiment1.HDF5 = 'dextran.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     config.experiments = [experiment1,]
 
@@ -189,7 +189,7 @@ def create_slicing(defaults):
     feature2.start = 330
     feature2.stop = 430
 
-    experiment1.features = [feature1,feature2]
+    experiment1.scores = [feature1,feature2]
 
     scores_dir = defaults.base_dir / "scores" 
 
@@ -232,14 +232,14 @@ def create_fractionation(defaults):
     experiment1.name = 'main'
     experiment1.csv = 'data_sum.csv'
     experiment1.HDF5 = 'fraction.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     config.experiments = [experiment1,]
 
     feature1 = Dict()
     feature1.name = "sum_signal"
     feature1.type = 'Shape'
-    feature1.isotherm = ['/output/solution/unit_002/SOLUTION_OUTLET_COMP_000', '/output/solution/unit_002/SOLUTION_OUTLET_COMP_001']
+    feature1.output_path = ['/output/solution/unit_002/SOLUTION_OUTLET_COMP_000', '/output/solution/unit_002/SOLUTION_OUTLET_COMP_001']
     feature1.csv = 'data_sum.csv'
 
     feature2 = Dict()
@@ -248,7 +248,7 @@ def create_fractionation(defaults):
     feature2.unit_name = "unit_002"
     feature2.fraction_csv = 'frac.csv'
 
-    experiment1.features = [feature1,feature2]
+    experiment1.scores = [feature1,feature2]
 
     scores_dir = defaults.base_dir / "scores"
     dir = scores_dir / "fractionationSlide"
@@ -260,20 +260,20 @@ def create_fractionation(defaults):
 
     dir = scores_dir / "other" / "fractionationSSE"
 
-    config.experiments[0].features[1].type = "fractionationSSE" 
-    config.experiments[0].features[0].type = "SSE" 
+    config.experiments[0].scores[1].type = "fractionationSSE" 
+    config.experiments[0].scores[0].type = "SSE" 
 
     create_common(dir, config)
 
     dir = scores_dir / "misc" / "multiple_components"
 
-    config.experiments[0].features[1].type = "Shape" 
-    config.experiments[0].features[1].isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_001'
-    config.experiments[0].features[1].csv = 'comp1.csv'
+    config.experiments[0].scores[1].type = "Shape" 
+    config.experiments[0].scores[1].output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_001'
+    config.experiments[0].scores[1].csv = 'comp1.csv'
 
-    config.experiments[0].features[0].type = "Shape" 
-    config.experiments[0].features[0].isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
-    config.experiments[0].features[0].csv = 'comp0.csv'
+    config.experiments[0].scores[0].type = "Shape" 
+    config.experiments[0].scores[0].output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    config.experiments[0].scores[0].csv = 'comp0.csv'
 
     create_common(dir, config)
 
@@ -300,7 +300,7 @@ def create_ceiling(defaults):
     experiment1.name = 'main'
     experiment1.csv = 'flat.csv'
     experiment1.HDF5 = 'flat.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     config.experiments = [experiment1,]
 
@@ -309,7 +309,7 @@ def create_ceiling(defaults):
     feature1.type = 'Ceiling'
     feature1.max_value = 1.0
 
-    experiment1.features = [feature1,]
+    experiment1.scores = [feature1,]
 
     scores_dir = defaults.base_dir / "scores"
     dir = scores_dir / "Ceiling"
@@ -348,7 +348,7 @@ def create_shared_scores(defaults):
     experiment1.name = 'main'
     experiment1.csv = 'dextran.csv'
     experiment1.HDF5 = 'dextran.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     config.experiments = [experiment1,]
 
@@ -356,7 +356,7 @@ def create_shared_scores(defaults):
     feature1.name = "main_feature"
     feature1.type = 'DextranShape'
 
-    experiment1.features = [feature1,]
+    experiment1.scores = [feature1,]
 
     dextran_paths = ['DextranShape', 'Shape', 'ShapeBack', 'ShapeFront', 'SSE', 
                      'other/curve', 'other/DextranSSE', 'other/ShapeDecay',
@@ -370,15 +370,15 @@ def create_shared_scores(defaults):
         dir = scores_dir / path
         score_name = dir.name
         temp_config = config.deepcopy()
-        temp_config.experiments[0].features[0].type = score_name
+        temp_config.experiments[0].scores[0].type = score_name
 
         if score_name in ('Shape', 'ShapeBack', 'ShapeFront'):
-            temp_config.experiments[0].features[0].decay = 0
-            temp_config.experiments[0].features[0].derivative = 1
+            temp_config.experiments[0].scores[0].decay = 0
+            temp_config.experiments[0].scores[0].derivative = 1
 
         if score_name in ('ShapeBack', 'ShapeFront'):
-            temp_config.experiments[0].features[0].max_percent = 0.98
-            temp_config.experiments[0].features[0].min_percent = 0.02
+            temp_config.experiments[0].scores[0].max_percent = 0.98
+            temp_config.experiments[0].scores[0].min_percent = 0.02
 
         create_common(dir, temp_config)
 
@@ -410,7 +410,7 @@ def create_search(defaults):
     experiment1.name = 'main'
     experiment1.csv = 'dextran.csv'
     experiment1.HDF5 = 'dextran.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     config.experiments = [experiment1,]
 
@@ -418,7 +418,7 @@ def create_search(defaults):
     feature1.name = "main_feature"
     feature1.type = 'DextranShape'
 
-    experiment1.features = [feature1,]
+    experiment1.scores = [feature1,]
 
     create_nsga3(defaults, config)
     create_multistart(defaults, config)
@@ -490,8 +490,8 @@ def create_mcmc_stage2(defaults, config):
     config.experiments[0].csv = "non.csv"
     config.experiments[0].HDF5 = "non.h5"
 
-    config.experiments[0].features[0].type = "Shape"
-    config.experiments[0].features[0].decay = 1
+    config.experiments[0].scores[0].type = "Shape"
+    config.experiments[0].scores[0].decay = 1
 
     parameter1 = Dict()
     parameter1.location = '/input/model/unit_001/FILM_DIFFUSION'
@@ -526,7 +526,7 @@ def create_altScore(defaults, config):
     config.searchMethod = 'AltScore'
     config.population = 0
     config.PreviousResults = (defaults.base_dir / "search" / "nsga3" / "results" / "result.h5").as_posix()
-    config.experiments[0].features[0].type = "Shape"
+    config.experiments[0].scores[0].type = "Shape"
     config.resultsDir = (dir / "results").as_posix()
     config.resultsDirOriginal = (defaults.base_dir / "search" / "nsga3" / "results").as_posix()
     create_common(dir, config, altDir = (defaults.base_dir / "search" / "nsga3"))
@@ -563,7 +563,7 @@ def create_gradient(defaults, config):
     config.searchMethod = 'Gradient'
     config.population = 0
     config.gradVector = 1
-    config.experiments[0].features[0].type = "SSE"
+    config.experiments[0].scores[0].type = "SSE"
     config.seeds = [[2e-7, 0.37],[1e-7, 0.37],[2e-7, 0.41],[1e-6, 0.5],[1e-10, 0.2]]
 
     create_common(dir, config)
@@ -644,23 +644,23 @@ def create_experiments_index(defaults):
     experiment1.name = 'main'
     experiment1.csv = 'data_sum.csv'
     experiment1.HDF5 = 'fraction.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     config.experiments = [experiment1,]
 
     feature1 = Dict()
     feature1.name = "comp0"
     feature1.type = 'Shape'
-    feature1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    feature1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
     feature1.csv = 'comp0.csv'
 
     feature2 = Dict()
     feature2.name = "comp1"
     feature2.type = 'Shape'
-    feature2.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_001'
+    feature2.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_001'
     feature2.csv = 'comp1.csv'
 
-    experiment1.features = [feature1,feature2]
+    experiment1.scores = [feature1,feature2]
 
     create_common(defaults.base_dir / "transforms" / "misc" / "index", config)
 
@@ -692,7 +692,7 @@ def create_experiments_linear_exp(defaults):
     experiment1.csv = 'dex1.csv'
     experiment1.HDF5 = 'dex1.h5'
     experiment1.pH = 1
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     experiment2 = experiment1.deepcopy()
     experiment2.name = 'main2'
@@ -713,9 +713,9 @@ def create_experiments_linear_exp(defaults):
     feature1.type = 'Shape'
     feature1.decay = 1
 
-    experiment1.features = [feature1,]
-    experiment2.features = [feature1,]
-    experiment3.features = [feature1,]
+    experiment1.scores = [feature1,]
+    experiment2.scores = [feature1,]
+    experiment3.scores = [feature1,]
 
     experiments_dir = defaults.base_dir / "transforms"
 
@@ -768,7 +768,7 @@ def create_experiments_cstr(defaults):
     experiment1.name = 'main'
     experiment1.csv = 'cstr.csv'
     experiment1.HDF5 = 'cstr.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     config.experiments = [experiment1,]
 
@@ -777,7 +777,7 @@ def create_experiments_cstr(defaults):
     feature1.type = 'Shape'
     feature1.decay = 1
 
-    experiment1.features = [feature1,]
+    experiment1.scores = [feature1,]
 
     experiments_dir = defaults.base_dir / "transforms"
 
@@ -807,7 +807,7 @@ def create_experiments_linear(defaults):
     experiment1.name = 'main'
     experiment1.csv = 'lin.csv'
     experiment1.HDF5 = 'lin.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     config.experiments = [experiment1,]
 
@@ -816,7 +816,7 @@ def create_experiments_linear(defaults):
     feature1.type = 'Shape'
     feature1.decay = 1
 
-    experiment1.features = [feature1,]
+    experiment1.scores = [feature1,]
 
     experiments_dir = defaults.base_dir / "transforms"
 
@@ -876,7 +876,7 @@ def create_transforms_non(defaults):
     experiment1.name = 'main'
     experiment1.csv = 'non.csv'
     experiment1.HDF5 = 'non.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     config.experiments = [experiment1,]
 
@@ -885,7 +885,7 @@ def create_transforms_non(defaults):
     feature1.type = 'Shape'
     feature1.decay = 1
 
-    experiment1.features = [feature1,]
+    experiment1.scores = [feature1,]
 
     experiments_dir = defaults.base_dir / "transforms"
     create_common(experiments_dir / "auto_inverse", config)
@@ -942,7 +942,7 @@ def create_transforms_dextran(defaults):
     experiment1.name = 'main'
     experiment1.csv = 'dextran.csv'
     experiment1.HDF5 = 'dextran.h5'
-    experiment1.isotherm = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
+    experiment1.output_path = '/output/solution/unit_002/SOLUTION_OUTLET_COMP_000'
 
     config.experiments = [experiment1,]
 
@@ -950,7 +950,7 @@ def create_transforms_dextran(defaults):
     feature1.name = "main_feature"
     feature1.type = 'DextranShape'
 
-    experiment1.features = [feature1,]
+    experiment1.scores = [feature1,]
 
     experiments_dir = defaults.base_dir / "transforms"
 

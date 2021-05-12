@@ -60,7 +60,7 @@ def makeParser():
     )
 
     parser.add_argument(
-        "--generate_mle", help="Generate maximum liklihood", action="store_true"
+        "--generate_mle", "--generate_map", help="Generate maximum a posteriori", action="store_true"
     )
 
     parser.add_argument(
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     if args.clean_examples:
         sys.exit(run_examples("CADETMatch.clean_examples", args.clean_examples))
     if args.run_examples:
-        sys.exit(run_examples("CADETMatch.run_examples", args.run_examples))
+        sys.exit(run_examples("CADETMatch.run_examples", args.run_examples, args.n))
     if args.results_examples:
         sys.exit(run_examples("CADETMatch.results_examples", args.results_examples))
     if args.generate_examples:

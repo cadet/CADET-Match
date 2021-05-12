@@ -303,7 +303,7 @@ def plot_mle(simulations, cache, labels):
         units_used = cache.target[experimentName]["units_used"]
 
         numPlotsSeq = [len(units_used)]
-        for feature in experiment["features"]:
+        for feature in experiment["scores"]:
             settings = cache.scores[feature["type"]].get_settings(feature)
             numPlotsSeq.append(settings.graph_der + settings.graph + settings.graph_frac)
 
@@ -324,7 +324,7 @@ def plot_mle(simulations, cache, labels):
             )
 
         graphIdx = 2
-        for idx, feature in enumerate(experiment["features"]):
+        for idx, feature in enumerate(experiment["scores"]):
             featureName = feature["name"]
             featureType = feature["type"]
 

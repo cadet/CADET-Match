@@ -1116,8 +1116,6 @@ def getCheckPoint(checkpointFile, cache):
         checkpoint["sampler_iterations"] = 0
         checkpoint["sampler_naccepted"] = numpy.zeros(populationSize)
 
-
-    checkpoint["length_chain"] = cache.settings.get("chainLength", 50000)
     return checkpoint
 
 

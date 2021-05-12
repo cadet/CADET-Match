@@ -12,7 +12,7 @@
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>CondaEnv|CondaEnv|cadet_run</InterpreterId>
-    <CommandLineArguments>"F:\match_dll_trapz\search\mcmc\stage1\dextran.json" -n 6</CommandLineArguments>
+    <CommandLineArguments>"F:\cadetmatch_new_varnames\search\nsga3\dextran.json" 1 -n 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
     <InterpreterArguments>
@@ -25,6 +25,33 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="CADETMatch\README.txt" />
+    <Content Include="doc\cli\examples.rst" />
+    <Content Include="doc\cli\index.rst" />
+    <Content Include="doc\configuration\error.rst">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="doc\configuration\experiments.rst">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="doc\configuration\index.rst" />
+    <Content Include="doc\configuration\scores.rst">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="doc\configuration\search.rst" />
+    <Content Include="doc\configuration\transform.rst">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="doc\google7a5fbf15028eb634.html" />
+    <Content Include="doc\index.rst" />
+    <Content Include="doc\install\index.rst" />
+    <Content Include="doc\install\sections.png" />
+    <Content Include="doc\license.rst" />
+    <Content Include="doc\literature.bib" />
+    <Content Include="doc\robots.txt" />
+    <Content Include="doc\_static\cadet_icon.png" />
+    <Content Include="doc\_static\cadet_logo.png" />
+    <Content Include="doc\_static\css\custom.css" />
+    <Content Include="doc\_static\sections.png" />
     <Content Include="Examples\search\nsga3\dextran.h5" />
     <Content Include="MANIFEST.in" />
   </ItemGroup>
@@ -200,6 +227,7 @@
     <Compile Include="CADETMatch\results_examples.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="doc\conf.py" />
     <Compile Include="setup.py" />
     <Compile Include="CADETMatch\sub.py">
       <SubType>Code</SubType>
@@ -215,6 +243,12 @@
     <Folder Include="CADETMatch\scores" />
     <Folder Include="CADETMatch\search" />
     <Folder Include="CADETMatch\transform" />
+    <Folder Include="doc\" />
+    <Folder Include="doc\cli\" />
+    <Folder Include="doc\configuration\" />
+    <Folder Include="doc\install\" />
+    <Folder Include="doc\_static\" />
+    <Folder Include="doc\_static\css\" />
     <Folder Include="Examples" />
     <Folder Include="Examples\experiments\" />
     <Folder Include="Examples\experiments\multiple\" />
