@@ -426,3 +426,5 @@ __pycache__/
 /Examples/transforms
 /radon.json
 /radon.txt
+/.spyproject/config
+/examples/SMA
