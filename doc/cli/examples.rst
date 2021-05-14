@@ -55,4 +55,4 @@ This command processes all of the run examples and creates a text report of the 
 
 .. code-block:: bash
 
-    python -m CADETmatch --results_examples <example directory>
+    python -m CADETMatch --results_examples <example directory>

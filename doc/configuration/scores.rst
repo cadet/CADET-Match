@@ -210,7 +210,7 @@ output_path          Path or List     None             No        Path or list of
 
     {
         "name": "peak",
-        "type": "DextranShape",
+        "type": "DextranSSE",
     }
 
 Fractionation Slide

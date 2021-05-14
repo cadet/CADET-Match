@@ -8,7 +8,7 @@ completed.
 These commands can be run from the Windows command line or from any Linux command line. These commands can also be run through cluster
 control software. 
 
-``python -m CADETmatch`` is the basis of all the commands and other options can be added as needed.
+``python -m CADETMatch`` is the basis of all the commands and other options can be added as needed.
 
 ``--json <path to json configuration file>``
 
@@ -51,7 +51,7 @@ Generate graphs using 6 cores
 
 .. code-block:: bash
 
-    python -m CADETmatch --generate_graphs --json <path to connfiguration file> -n 6
+    python -m CADETMatch --generate_graphs --json <path to connfiguration file> -n 6
 
 
 Running CADETMatch remotely
