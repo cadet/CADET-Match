@@ -55,7 +55,7 @@ def get_cadet_template(n_units=3, defaults=None):
     cadet_template.root.input.model.solver.schur_safety = 1e-8
 
     # Run the simulation on single thread
-    cadet_template.root.input.solver.nthreads = -1
+    cadet_template.root.input.solver.nthreads = 0
     
     return cadet_template
 
