@@ -114,7 +114,6 @@ def reduce_data(data_chain, probability, headers, size, bw_size):
 def goal_kde(x, kde):
     test_value = numpy.array(x).reshape(1, -1)
     score = kde.score_samples(test_value)
-    score_exp = numpy.exp(score)
     return -score[0]
 
 
@@ -151,7 +150,7 @@ def get_mle(data_chain, probability, headers):
     best_point = data_transform[idx_max_ln].reshape(1, -1)
 
     multiprocessing.get_logger().info(
-        "starting point %s=%s", data_transform[idx_max_ln], prob_best_ln
+        "starting point %s=%s", data_transform[idx_max_ln], -prob_best_ln
     )
 
     individuals_mle = kde_ga.sample(popsize - 1)
