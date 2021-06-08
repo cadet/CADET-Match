@@ -136,7 +136,11 @@ def saveExperiments(save_name_base, settings, target, results, directory, file_p
     for experiment in settings["experiments"]:
         experimentName = experiment["name"]
         simulation = results[experimentName]["simulation"]
-        simulation.root.unfreeze()
+        try:
+            #for addict 2.4.0 otherwise when variables are set below it can't find __frozen even though it is not used
+            simulation.root.unfreeze()
+        except TypeError:
+            pass
 
         dst = Path(directory, file_pattern % (save_name_base, experimentName))
 
