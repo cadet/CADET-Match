@@ -36,7 +36,7 @@ if mcmc_population:
 else:
     defaults.MCMCpopulation = 20
 
-Cadet.class_cadet_path(defaults.cadet_path)
+Cadet.cadet_path = defaults.cadet_path
 
 if __name__ == "__main__":
     create_examples.main(defaults)

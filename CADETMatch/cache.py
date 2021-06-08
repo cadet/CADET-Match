@@ -130,7 +130,7 @@ class Cache:
 
         self.errorBias = bool(self.settings.get("errorBias", True))
 
-        Cadet.class_cadet_path(self.settings["CADETPath"])
+        Cadet.cadet_path = self.settings["CADETPath"]
 
         self.normalizeOutput = bool(self.settings.get("normalizeOutput", False))
         self.connectionNumberEntries = int(
