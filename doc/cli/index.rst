@@ -31,8 +31,6 @@ may fail if the required data has not been generated yet.
 
 ``--generate_graphs_autocorr`` Generate auto-correlation graphs
 
-``--generate_spearman`` Generate Spearman plots. These are used to evaluate conflicts between parameters in experimental data.
-
 ``--generate_mcmc_plot_tube`` Generate MCMC plot tubes (probability plots of chromatograms based on MCMC posterior)
 
 ``--generate_mcmc_mixing`` Generate MCMC mixing graphs

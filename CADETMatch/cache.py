@@ -42,7 +42,6 @@ class Cache:
         self.fullTrainingData = 0
         self.normalizeOutput = True
         self.sobolGeneration = True
-        self.graphSpearman = False
         self.continueMCMC = False
         self.errorBias = True
         self.altScores = False
@@ -181,7 +180,6 @@ class Cache:
         self.sobolGeneration = bool(
             self.settings.get("soboloGeneration", True)
         ) or bool(self.settings.get("sobolGeneration", True))
-        self.graphSpearman = bool(self.settings.get("graphSpearman", False))
 
         self.continueMCMC = bool(self.settings.get("continueMCMC", False))
         self.MCMCTauMult = int(self.settings.get("MCMCTauMult", 50))

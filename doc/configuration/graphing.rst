@@ -13,7 +13,6 @@ All times are in seconds.
 =================== =========== ================ ========== =================================================================================================
 graphGenerateTime     Integer       3600              No       Generate progress graphs and graphs of the simulations on the pareto front
 graphMetaTime         Integer       1200              No       Generate progress graphs only
-graphSpearman         Boolean       False             No       Generate Spearman graphs for estimated parameters and metrics
 =================== =========== ================ ========== =================================================================================================
 
 

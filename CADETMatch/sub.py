@@ -20,19 +20,17 @@ def get_lock(cache):
 
 
 def run_sub(cache, key, line, file_name):
-    cwd = str(Path(__file__).parent)
-
     sub = processes.get(key, None)
 
     if sub is None:
         multiprocessing.get_logger().info(
             "creating subprocess %s for %s", key, file_name
         )
+
         sub = subprocess.Popen(
             line,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            cwd=cwd,
+            stderr=subprocess.PIPE
         )
         processes[key] = sub
 
@@ -74,27 +72,10 @@ def log_subprocess(name, stdout, stderr):
     for line in stderr.splitlines():
         multiprocessing.get_logger().info("%s stderr: %s", name, line)
 
-
-def graph_spearman(cache, generation):
-    if cache.graphSpearman:
-        line = [
-            sys.executable,
-            "graph_spearman.py",
-            str(cache.json_path),
-            str(generation),
-            str(util.getCoreCounts()),
-        ]
-        run_sub(cache, "spearman", line, "graph_spearman.py")
-
-
-def wait_spearman():
-    wait_sub("spearman", "graph_spearman.py")
-
-
 def graph_corner(cache):
     line = [
         sys.executable,
-        "generate_corner_graphs.py",
+        (Path(__file__).parent / "generate_corner_graphs.py").as_posix(),
         str(cache.json_path),
         str(util.getCoreCounts()),
     ]
@@ -108,7 +89,7 @@ def wait_corner():
 def graph_autocorr(cache):
     line = [
         sys.executable,
-        "generate_autocorr_graphs.py",
+        (Path(__file__).parent / "generate_autocorr_graphs.py").as_posix(),
         str(cache.json_path),
         str(util.getCoreCounts()),
     ]
@@ -122,7 +103,7 @@ def wait_autocorr():
 def graph_mixing(cache):
     line = [
         sys.executable,
-        "generate_mixing_graphs.py",
+        (Path(__file__).parent / "generate_mixing_graphs.py").as_posix(),
         str(cache.json_path),
         str(util.getCoreCounts()),
     ]
@@ -136,7 +117,7 @@ def wait_mixing():
 def graph_main(cache, graph_type):
     line = [
         sys.executable,
-        "generate_graphs.py",
+        (Path(__file__).parent / "generate_graphs.py").as_posix(),
         str(cache.json_path),
         graph_type,
         str(util.getCoreCounts()),
@@ -154,7 +135,7 @@ def wait_kde():
 def graph_kde(cache):
     line = [
         sys.executable,
-        "graph_kde.py",
+        (Path(__file__).parent / "graph_kde.py").as_posix(),
         str(cache.json_path),
         str(util.getCoreCounts()),
     ]
@@ -166,7 +147,10 @@ def process_kde():
 
 
 def graph_mle(cache):
-    line = [sys.executable, "mle.py", str(cache.json_path), str(util.getCoreCounts())]
+    line = [sys.executable, 
+        (Path(__file__).parent / "mle.py").as_posix(), 
+        str(cache.json_path), 
+        str(util.getCoreCounts())]
     run_sub(cache, "graph_mle", line, "mle.py")
 
 
@@ -177,7 +161,7 @@ def wait_mle():
 def graph_tube(cache):
     line = [
         sys.executable,
-        "mcmc_plot_tube.py",
+        (Path(__file__).parent / "mcmc_plot_tube.py").as_posix(),
         str(cache.json_path),
         str(util.getCoreCounts()),
     ]
@@ -186,21 +170,6 @@ def graph_tube(cache):
 
 def wait_tube():
     wait_sub("graph_tube", "mcmc_plot_tube.py")
-
-
-def graph_spearman_video(cache):
-    line = [
-        sys.executable,
-        "video_spearman.py",
-        str(cache.json_path),
-        str(getCoreCounts()),
-    ]
-    run_sub(cache, "spearman_video", line, "video_spearman.py")
-
-
-def wait_spearman_video():
-    wait_sub("spearman_video", "video_spearman.py")
-
 
 def graph_process(cache, generation, last=False):
     lastGraphTime = times.get("lastGraphTime", time.time())
@@ -258,8 +227,6 @@ def graph_corner_process(cache, last=False, interval=3600):
 def mle_process(cache, last=False, interval=3600):
     last_mle_time = times.get("last_mle_time", time.time())
 
-    cwd = str(Path(__file__).parent.parent)
-
     if last:
         wait_mle()
 
@@ -278,8 +245,6 @@ def mle_process(cache, last=False, interval=3600):
 def tube_process(cache, last=False, interval=3600):
     last_tube_time = times.get("last_tube_time", time.time())
 
-    cwd = str(Path(__file__).parent.parent)
-
     if last:
         wait_tube()
 
@@ -293,9 +258,3 @@ def tube_process(cache, last=False, interval=3600):
         last_tube_time = time.time()
 
     times["last_tube_time"] = last_tube_time
-
-
-def graph_spearman(cache):
-    if cache.graphSpearman:
-        graph_spearman_video(cache)
-        wait_spearman_video(cache)

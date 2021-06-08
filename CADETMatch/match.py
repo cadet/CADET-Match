@@ -312,7 +312,7 @@ def setupTemplates(cache):
         template_path = Path(
             cache.settings["resultsDirMisc"], "template_%s_final.h5" % name
         )
-        template_final = Cadet(template.root.copy())
+        template_final = Cadet(template.root)
         template_final.filename = template_path.as_posix()
         if cache.dynamicTolerance:
             template_final.root.input.solver.time_integrator.abstol = (

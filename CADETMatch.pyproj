@@ -11,8 +11,8 @@
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>CondaEnv|CondaEnv|cadet_run</InterpreterId>
-    <CommandLineArguments>"F:\cadetmatch_new_varnames\search\nsga3\dextran.json" 1 -n 1</CommandLineArguments>
+    <InterpreterId>CondaEnv|CondaEnv|addict_test</InterpreterId>
+    <CommandLineArguments>"F:\match_dll\experiments\single\dextran.json" 6</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
     <InterpreterArguments>
@@ -72,7 +72,6 @@
     <Compile Include="CADETMatch\generate_graphs.py" />
     <Compile Include="CADETMatch\gradFD.py" />
     <Compile Include="CADETMatch\graph_kde.py" />
-    <Compile Include="CADETMatch\graph_spearman.py" />
     <Compile Include="CADETMatch\jacobian.py" />
     <Compile Include="CADETMatch\jupyter.py" />
     <Compile Include="CADETMatch\kde_util.py">
@@ -200,7 +199,6 @@
     <Compile Include="CADETMatch\transform\__init__.py" />
     <Compile Include="CADETMatch\util.py" />
     <Compile Include="CADETMatch\version.py" />
-    <Compile Include="CADETMatch\video_spearman.py" />
     <Compile Include="CADETMatch\__init__.py" />
     <Compile Include="CADETMatch\__main__.py" />
     <Compile Include="CADETMatch\generate_mixing_graphs.py">
@@ -332,6 +330,7 @@
     <Folder Include="Examples\typical_experiments\non_binding_column\" />
   </ItemGroup>
   <ItemGroup>
+    <InterpreterReference Include="CondaEnv|CondaEnv|addict_test" />
     <InterpreterReference Include="CondaEnv|CondaEnv|cadet_devel" />
     <InterpreterReference Include="CondaEnv|CondaEnv|cadet_run" />
   </ItemGroup>

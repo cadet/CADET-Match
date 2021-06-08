@@ -44,10 +44,6 @@ def makeParser():
     )
 
     parser.add_argument(
-        "--generate_spearman", help="Generate spearman graphs", action="store_true"
-    )
-
-    parser.add_argument(
         "--generate_mcmc_plot_tube",
         help="Generate mcmc plot tube graphs",
         action="store_true",
@@ -154,8 +150,6 @@ if __name__ == "__main__":
         sys.exit(run_command("CADETMatch.generate_graphs", args.json, args.n, ["1"]))
     if args.generate_graphs_all:
         sys.exit(run_command("CADETMatch.generate_graphs", args.json, args.n, ["2"]))
-    if args.generate_spearman:
-        sys.exit(run_command("CADETMatch.graph_spearman", args.json, args.n, ["end"]))
     if args.generate_mcmc_plot_tube:
         sys.exit(run_command("CADETMatch.mcmc_plot_tube", args.json, args.n))
     if args.generate_mle:

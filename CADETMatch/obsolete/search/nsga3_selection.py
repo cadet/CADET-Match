@@ -165,8 +165,6 @@ def niching_select(individuals, k):
     if len(individuals) == k:
         return individuals
 
-    # individuals = copy.deepcopy(individuals)
-
     ideal_point = find_ideal_point(individuals)
     extremes = find_extreme_points(individuals)
     intercepts = construct_hyperplane(individuals, extremes)

@@ -15,7 +15,7 @@ def all_steps(simulation):
                 continue
             else:
                 switch_name_prev = "switch_%03d" % (i - 1)
-                connections[switch_name] = connections[switch_name_prev].copy()
+                connections[switch_name] = connections[switch_name_prev].deepcopy()
                 connections[switch_name].section = i
 
 
@@ -26,7 +26,7 @@ def get_switches(simulation):
 
     for i in range(nswitches):
         switch_name = "switch_%03d" % i
-        switches.append(connections[switch_name].copy())
+        switches.append(connections[switch_name].deepcopy())
 
     return switches
 
@@ -44,7 +44,7 @@ def get_inlets(simulation):
         temp = []
         for i in range(nsec):
             sec_name = "sec_%03d" % i
-            temp.append(unit[sec_name].copy())
+            temp.append(unit[sec_name].deepcopy())
         inlets[unit_name] = temp
     return inlets
 

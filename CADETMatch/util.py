@@ -136,6 +136,7 @@ def saveExperiments(save_name_base, settings, target, results, directory, file_p
     for experiment in settings["experiments"]:
         experimentName = experiment["name"]
         simulation = results[experimentName]["simulation"]
+        simulation.root.unfreeze()
 
         dst = Path(directory, file_pattern % (save_name_base, experimentName))
 
@@ -482,7 +483,6 @@ def setupMCMC(cache):
             update_json_mcmc(settings)
 
         settings["searchMethod"] = "MCMC"
-        settings["graphSpearman"] = 0
 
         for experiment in settings["experiments"]:
             foundAbsoluteTime = False
@@ -1192,7 +1192,6 @@ def cleanDir(dir, hof):
 
 def finish(cache):
     sub.graph_process(cache, "Last", last=True)
-    sub.graph_spearman(cache)
 
 
 def find_outliers(data, lower_percent=10, upper_percent=90):
