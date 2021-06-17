@@ -29,7 +29,7 @@ setuptools.setup(
           'matplotlib>=3.2.1',
           'pandas>=1.0.5',
           'h5py>=2.10.0',
-          'CADET>=0.10',
+          'CADET-Python>=0.11',
           'seaborn>=0.10.1',
           'scikit-learn>=0.23.1',
           'importlib-metadata>=1.7.0',

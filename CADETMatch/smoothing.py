@@ -39,14 +39,7 @@ def refine_butter(times, values, x, y, fs, start):
     def goal(crit_fs):
         crit_fs = 10.0 ** crit_fs[0]
         try:
-            sos = scipy.signal.butter(
-                butter_order,
-                crit_fs,
-                btype="lowpass",
-                analog=False,
-                fs=fs,
-                output="sos",
-            )
+            sos = scipy.signal.bessel(butter_order, crit_fs, btype="lowpass", analog=False, fs=fs, output="sos", norm="delay")
         except ValueError:
             return 1e6
         low_passed = scipy.signal.sosfiltfilt(sos, values)
@@ -161,9 +154,7 @@ def find_butter(times, values):
 
     for i in numpy.logspace(-6, ub_l, 50):
         try:
-            sos = scipy.signal.butter(
-                butter_order, i, btype="lowpass", analog=False, fs=fs, output="sos"
-            )
+            sos = scipy.signal.bessel(butter_order, i, btype="lowpass", analog=False, fs=fs, output="sos", norm="delay")
             low_passed = scipy.signal.sosfiltfilt(sos, values)
 
             filters.append(i)
@@ -184,9 +175,7 @@ def smoothing_filter_butter(times, values, crit_fs):
         return values
     fs = 1.0 / (times[1] - times[0])
 
-    sos = scipy.signal.butter(
-        butter_order, crit_fs, btype="lowpass", analog=False, fs=fs, output="sos"
-    )
+    sos = scipy.signal.bessel(butter_order, crit_fs, btype="lowpass", analog=False, fs=fs, output="sos", norm="delay")
     low_passed = scipy.signal.sosfiltfilt(sos, values)
     return low_passed
 
@@ -246,7 +235,7 @@ def load_data(name, cache):
 
 def find_smoothing_factors(times, values, name, cache):
     times, values = resample(times, values)
-    min = 1e-2
+    min = 1e-3
 
     s, crit_fs, crit_fs_der = load_data(name, cache)
 
@@ -272,33 +261,38 @@ def find_smoothing_factors(times, values, name, cache):
     knots.append(len(spline.get_knots()))
     all_s.append(min)
 
-    # This limits to 1e-14 max smoothness which is way beyond anything normal
-    for i in range(1, 200):
-        s = min / (1.1 ** i)
-        with warnings.catch_warnings():
-            warnings.filterwarnings("error")
+    max_knots = 600
 
-            try:
-                spline = scipy.interpolate.UnivariateSpline(
-                    times, values_filter, s=s, k=5, ext=3
-                )
-                knots.append(len(spline.get_knots()))
-                all_s.append(s)
+    if len(spline.get_knots()) < max_knots:  #if we already need more knots than the max knots at min accuracy there is no reason to check
+        # This limits to 1e-14 max smoothness which is way beyond anything normal
+        for i in range(1, 200):
+            s = min / (1.1 ** i)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("error")
 
-                if len(spline.get_knots()) > 600:
+                try:
+                    spline = scipy.interpolate.UnivariateSpline(
+                        times, values_filter, s=s, k=5, ext=3
+                    )
+                    knots.append(len(spline.get_knots()))
+                    all_s.append(s)
+
+                    if len(spline.get_knots()) > max_knots:
+                        break
+
+                except Warning:
+                    multiprocessing.get_logger().info("caught a warning for %s %s", name, s)
                     break
 
-            except Warning:
-                multiprocessing.get_logger().info("caught a warning for %s %s", name, s)
-                break
+        knots = numpy.array(knots)
+        all_s = numpy.array(all_s)
 
-    knots = numpy.array(knots)
-    all_s = numpy.array(all_s)
+        s, s_knots = find_L(all_s, knots)
 
-    s, s_knots = find_L(all_s, knots)
-
-    if s is not None:
-        s, s_knots = refine_smooth(times, values_filter, all_s, knots, s, name)
+        if s is not None:
+            s, s_knots = refine_smooth(times, values_filter, all_s, knots, s, name)
+    else:
+        s = min
 
     spline, factor = create_spline(times, values, crit_fs, s)
 
@@ -429,26 +423,31 @@ def butter(times, values, crit_fs_der):
     return values_filter
 
 
-def resample(times, values):
-    diff_times = times[1:] - times[:-1]
-    max_time = numpy.max(diff_times)
-    min_time = numpy.min(diff_times)
-    per = (max_time - min_time) / min_time
+def resample(times, values, max_samples=5000):
+    if len(times) > max_samples:
+        times_resample = numpy.linspace(times[0], times[-1], max_samples)
+        spline_resample = scipy.interpolate.InterpolatedUnivariateSpline(times, values, k=5, ext=3)
+        values_resample = spline_resample(times_resample)
 
-    if per > 0.01:
-        # time step is not consistent, resample the time steps to a uniform grid based on the smallest time step size seen
-        times_resample = numpy.arange(times[0], times[-1], min_time)
-        times_resample[-1] = times[-1]
-        diff_times = times_resample[1:] - times_resample[:-1]
+        return times_resample, values_resample
+    else: 
+        diff_times = times[1:] - times[:-1]
         max_time = numpy.max(diff_times)
         min_time = numpy.min(diff_times)
         per = (max_time - min_time) / min_time
 
-        spline_resample = scipy.interpolate.InterpolatedUnivariateSpline(
-            times, values, k=5, ext=3
-        )
-        values_resample = spline_resample(times_resample)
+        if per > 0.01:
+            # time step is not consistent, resample the time steps to a uniform grid based on the smallest time step size seen
+            #but not more samples than max_samples
+            times_resample = numpy.arange(times[0], times[-1], min_time)
 
-        return times_resample, values_resample
-    else:
-        return times, values
+            if len(times_resample) > max_samples:
+               times_resample = numpy.linspace(times[0], times[-1], max_samples) 
+
+            times_resample[-1] = times[-1]
+            spline_resample = scipy.interpolate.InterpolatedUnivariateSpline(times, values, k=5, ext=3)
+            values_resample = spline_resample(times_resample)
+
+            return times_resample, values_resample
+        else:
+            return times, values

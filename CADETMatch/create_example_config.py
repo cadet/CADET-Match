@@ -10,7 +10,7 @@ import CADETMatch.util
 
 def create_experiments(defaults):
     config = Dict()
-    config.CADETPath = Cadet.cadet_runner.cadet_path
+    config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
@@ -145,7 +145,7 @@ def create_scores(defaults):
 def create_slicing(defaults):
     "create all the scores that have the same config except for the score name"
     config = Dict()
-    config.CADETPath = Cadet.cadet_runner.cadet_path
+    config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
@@ -200,7 +200,7 @@ def create_slicing(defaults):
 def create_fractionation(defaults):
     "create the ceiling"
     config = Dict()
-    config.CADETPath = Cadet.cadet_runner.cadet_path
+    config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
@@ -280,7 +280,7 @@ def create_fractionation(defaults):
 def create_ceiling(defaults):
     "create the ceiling"
     config = Dict()
-    config.CADETPath = Cadet.cadet_runner.cadet_path
+    config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
@@ -320,7 +320,7 @@ def create_ceiling(defaults):
 def create_shared_scores(defaults):
     "create all the scores that have the same config except for the score name"
     config = Dict()
-    config.CADETPath = Cadet.cadet_runner.cadet_path
+    config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
@@ -385,7 +385,7 @@ def create_shared_scores(defaults):
 
 def create_search(defaults):
     config = Dict()
-    config.CADETPath = Cadet.cadet_runner.cadet_path
+    config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
     
     parameter1 = Dict()
@@ -618,7 +618,7 @@ def create_transforms(defaults):
 
 def create_experiments_index(defaults):
     config = Dict()
-    config.CADETPath = Cadet.cadet_runner.cadet_path
+    config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
@@ -666,7 +666,7 @@ def create_experiments_index(defaults):
 
 def create_experiments_linear_exp(defaults):
     config = Dict()
-    config.CADETPath = Cadet.cadet_runner.cadet_path
+    config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
@@ -727,7 +727,7 @@ def create_experiments_linear_exp(defaults):
 
 def create_experiments_cstr(defaults):
     config = Dict()
-    config.CADETPath = Cadet.cadet_runner.cadet_path
+    config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
@@ -785,7 +785,7 @@ def create_experiments_cstr(defaults):
 
 def create_experiments_linear(defaults):
     config = Dict()
-    config.CADETPath = Cadet.cadet_runner.cadet_path
+    config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
@@ -856,7 +856,7 @@ def create_experiments_linear(defaults):
 
 def create_transforms_non(defaults):
     config = Dict()
-    config.CADETPath = Cadet.cadet_runner.cadet_path
+    config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
@@ -922,7 +922,7 @@ def create_transforms_non(defaults):
 
 def create_transforms_dextran(defaults):
     config = Dict()
-    config.CADETPath = Cadet.cadet_runner.cadet_path
+    config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
     config.searchMethod = 'NSGA3'
     config.population = defaults.population
