@@ -33,7 +33,6 @@ extensions = [
     'sphinx_sitemap',
     'sphinxcontrib.bibtex',
     'sphinx_multiversion',
-    #'sphinxcontrib.tikz',
 ]
 
 # Bibliography
@@ -78,7 +77,7 @@ html_favicon = '_static/cadet_icon.png'
 html_title = 'CADET-Match'
 html_baseurl = 'https://cadet.github.io/'
 html_static_path = ['_static']
-html_extra_path = ['robots.txt', 'google7a5fbf15028eb634.html']
+html_extra_path = ['robots.txt']
 html_sidebars = {
     '**': [
         'about.html',
@@ -89,25 +88,4 @@ html_sidebars = {
 }
 
 html_style = 'css/custom.css'
-
-# Options for LaTeX output
-# ------------------------
-
-# The paper size ('letter' or 'a4').
-latex_paper_size = "a4"
-
-# The font size ('10pt', '11pt' or '12pt').
-latex_font_size = '10pt'
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, document class [howto/manual]).
-latex_documents = [
-        (
-            "modelling/index",
-            "manual.pdf",
-            "CADET Manual",
-            "CADET Authors",
-            "manual",
-        )
-    ]
 
