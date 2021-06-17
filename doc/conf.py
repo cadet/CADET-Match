@@ -10,9 +10,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('.'))
 from datetime import date
 
 # -- Project information -----------------------------------------------------
@@ -20,7 +20,6 @@ from datetime import date
 project = 'CADET-Match'
 copyright = f'2017-{date.today().year}'
 author = 'CADET-Match Authors'
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -39,11 +38,11 @@ extensions = [
 bibtex_bibfiles = ['literature.bib']
 
 # Versions
-smv_released_pattern = r'^tags/.*$'           # Tags only
-smv_tag_whitelist = r'^v\d+\.\d+\.\d+$'       # Include tags like "v2.1"
-smv_branch_whitelist = r'^.*$'                # Include all branches
-smv_remote_whitelist = r'^(origin|upstream)$' # Use branches from origin and upstream
-smv_outputdir_format = '{ref.name}'        # Use the branch/tag name
+smv_released_pattern = r'^tags/.*$'         # Tags only
+smv_tag_whitelist = r'^v\d+\.\d+\.\d+$'     # Include tags like "v2.1.1"
+smv_branch_whitelist = r"^master$"          # Only use master branch
+smv_remote_whitelist = r"^origin$"          # Use branches from remote origin
+smv_outputdir_format = '{ref.name}'         # Use the branch/tag name
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
