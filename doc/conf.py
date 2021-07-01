@@ -65,8 +65,9 @@ math_eqref_format = '{number}'
 #
 html_theme = 'alabaster'
 html_theme_options = {
+    'canonical_url': 'https://cadet.github.io/CADET-Match/master/',
+    'description': 'CADET Parameter estimation engine',
     # 'logo': 'cadet_logo.png',
-    # 'description': 'Chromatography Analysis and Design Toolkit',
     'sidebar_collapse': True,
     'fixed_sidebar': True,
     'show_powered_by': False,
@@ -74,9 +75,8 @@ html_theme_options = {
 
 html_favicon = '_static/cadet_icon.png'
 html_title = 'CADET-Match'
-html_baseurl = 'https://cadet.github.io/'
+html_baseurl = 'https://cadet.github.io/CADET-Match/master/'
 html_static_path = ['_static']
-html_extra_path = ['robots.txt']
 html_sidebars = {
     '**': [
         'about.html',
