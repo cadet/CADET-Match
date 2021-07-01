@@ -522,22 +522,16 @@ def generate_synthetic_error(cache):
 
         for output_name, output in outputs_all.items():
             kde_data.root[output_name] = numpy.array(output)[keep_idx, :]
-            kde_data.root.original[output_name] = numpy.array(output)[keep_idx, :]
 
         for time_name, time in times.items():
             kde_data.root["%s_time" % time_name] = time
-            kde_data.root.original["%s_time" % time_name] = time
 
         for name, experiment in errors_all.items():
             for error_name, error_value in experiment.items():
                 kde_data.root.errors[name][error_name] = error_value[keep_idx, :]
-                kde_data.root.original.errors[name][error_name] = error_value[
-                    keep_idx, :
-                ]
 
         for key, value in uv_store_all.items():
             kde_data.root.uv_store[key] = numpy.array(value)[keep_idx, :]
-            kde_data.root.original.uv_store[key] = numpy.array(value)[keep_idx, :]
 
         kde_data.save(lock=True)
 
