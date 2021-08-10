@@ -164,6 +164,18 @@ def main():
         )
         plt.close()
 
+    (error_model / "scores_mirror").mkdir(parents=True, exist_ok=True)
+    for idx in range(kde_settings.root.scores_mirror.shape[1]):
+        plt.figure(figsize=[10, 10])
+        name = cache.score_headers[idx]
+        df = pandas.DataFrame(kde_settings.root.scores_mirror[:, idx], columns=[name,])
+        sns.histplot(df[name], bins='auto')   
+        plt.savefig(
+            (error_model / "scores_mirror" / ("%s.png" % idx)).as_posix(),
+            bbox_inches="tight",
+        )
+        plt.close()
+
 
 if __name__ == "__main__":
     main()

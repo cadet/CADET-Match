@@ -32,17 +32,6 @@ def fitness(individual, json_path, run_experiment=None):
     )
 
 
-def meta_score_trans(cache, score):
-    temp = numpy.copy(score)
-
-    if cache.allScoreSSE:
-        temp[:3] = -temp[:3]
-    else:
-        temp[:3] = 1 - temp[:3]
-
-    return temp
-
-
 def fitness_base(runner, template_name, individual, json_path, run_experiment):
     if json_path != cache.cache.json_path:
         cache.cache.setup_dir(json_path)
@@ -96,8 +85,8 @@ def fitness_base(runner, template_name, individual, json_path, run_experiment):
     csv_record = []
     csv_record.extend(["EVO", "NA"])
     csv_record.extend(cadetValuesKEQ)
-    csv_record.extend(progress.score_trans(cache.cache, scores))
-    csv_record.extend(meta_score_trans(cache.cache, meta_score))
+    csv_record.extend(scores)
+    csv_record.extend(meta_score)
 
     return scores, csv_record, meta_score, results, tuple(individual)
 

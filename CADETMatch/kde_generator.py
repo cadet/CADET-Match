@@ -34,25 +34,18 @@ import CADETMatch.util as util
 import CADETMatch.sub as sub
 
 
-def mirror(data):
-    data_max = numpy.max(data, 0)
+def mirror(data, meta_mask):
+    data_min = numpy.min(data, 0)
 
-    mirror_index = data_max <= 1.0
-    keep_index = data_max > 1.0
+    mirror_index = meta_mask
+    keep_index = numpy.logical_not(meta_mask)
 
-    data_min = data_max - data
     data_mask = numpy.ma.masked_equal(data_min, 0.0, copy=False)
     min_value = data_mask.min(axis=0)
 
-    data_mirror = numpy.zeros(data.shape)
+    data_mirror = numpy.copy(data)
 
-    data_mirror[:, mirror_index] = (
-        data_max[mirror_index]
-        + data_max[mirror_index]
-        - numpy.copy(data[:, mirror_index])
-        + min_value[mirror_index]
-    )
-    data_mirror[:, keep_index] = data[:, keep_index]
+    data_mirror[:, mirror_index] = -data_mirror[:, mirror_index]
     full_data = numpy.vstack([data_mirror, data])
 
     return full_data
@@ -63,7 +56,7 @@ def setupKDE(cache):
 
     mcmcDir = Path(cache.settings["resultsDirMCMC"])
 
-    scores_mirror = mirror(scores)
+    scores_mirror = mirror(scores, cache.meta_mask)
 
     scaler = getScaler(scores_mirror)
 

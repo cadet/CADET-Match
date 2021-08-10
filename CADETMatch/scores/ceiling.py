@@ -3,6 +3,7 @@ from addict import Dict
 import CADETMatch.calc_coeff as calc_coeff
 import CADETMatch.score as score
 import CADETMatch.util as util
+import numpy
 
 name = "Ceiling"
 
@@ -10,7 +11,7 @@ name = "Ceiling"
 def get_settings(feature):
     settings = Dict()
     settings.adaptive = True
-    settings.badScore = 0
+    settings.badScore = 1
     settings.meta_mask = True
     settings.count = 1
     settings.graph_der = 0
@@ -30,9 +31,9 @@ def run(sim_data, feature):
     max_value = max(sim_data_values)
 
     if max_value <= feature["max_value"]:
-        value = 1.0
+        value = 0.0
     else:
-        value = feature["value_function"](max_value)
+        value = numpy.clip(feature["value_function"](max_value), 0.0, 1.0)
 
     temp = [
         value,
@@ -44,8 +45,7 @@ def run(sim_data, feature):
         len(sim_data_values),
         sim_time_values,
         sim_data_values,
-        exp_data_values,
-        [1.0 - i for i in temp],
+        exp_data_values
     )
 
 

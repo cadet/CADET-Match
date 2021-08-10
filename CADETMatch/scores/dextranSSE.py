@@ -16,7 +16,7 @@ name = "DextranSSE"
 def get_settings(feature):
     settings = Dict()
     settings.adaptive = False
-    settings.badScore = -sys.float_info.max
+    settings.badScore = sys.float_info.max
     settings.meta_mask = True
     settings.count = 1
     settings.graph_der = 0
@@ -65,16 +65,13 @@ def run(sim_data, feature):
 
     data = (
         [
-            -sse,
+            sse,
         ],
         sse,
         len(sim_data_zero),
         sim_time_values,
         sim_data_zero,
-        exp_data_zero,
-        [
-            sse,
-        ],
+        exp_data_zero
     )
 
     return data

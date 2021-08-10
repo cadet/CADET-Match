@@ -78,13 +78,8 @@ def setupTemplates(cache):
 def grad_score(values, cache):
     values = numpy.array(values)
 
-    if cache.allScoreSSE:
-        values = -values
+    prod = util.product_score(values)
 
-    prod = scipy.stats.gmean(values)
-
-    if not cache.allScoreSSE:
-        prod = 1 - prod
     return prod
 
 
@@ -158,10 +153,6 @@ def search(
     if temp:
         best = meta_hof.getBestScores()
         prod = best[0]
-        if cache.allScoreSSE:
-            prod = -prod
-        else:
-            prod = 1 - prod
         if prod < gradCheck:
             gradCheck = prod
             multiprocessing.get_logger().info("updating gradCheck %s", gradCheck)
@@ -464,7 +455,7 @@ def fitness_sens(individual, finished=1):
 
 
 def fitness_base(fit, individual, finished):
-    minimize = []
+    scores = []
     error = 0.0
 
     diff = []
@@ -483,7 +474,7 @@ def fitness_base(fit, individual, finished):
 
         if result is not None:
             results[experiment["name"]] = result
-            minimize.extend(results[experiment["name"]]["minimize"])
+            scores.extend(results[experiment["name"]]["scores"])
             error += results[experiment["name"]]["error"]
             diff.extend(results[experiment["name"]]["diff"])
         else:
@@ -493,9 +484,9 @@ def fitness_base(fit, individual, finished):
     if cache.cache.gradVector:
         return numpy.array(diff)
     else:
-        minimize = numpy.array(minimize)
+        scores = numpy.array(scores)
         if cache.cache.allScoreNorm:
-            return minimize
+            return scores
         elif cache.cache.allScoreSSE:
             return numpy.array(diff)
         else:

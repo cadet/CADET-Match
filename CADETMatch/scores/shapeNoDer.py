@@ -13,7 +13,7 @@ name = "ShapeNoDer"
 def get_settings(feature):
     settings = Dict()
     settings.adaptive = True
-    settings.badScore = 0
+    settings.badScore = 1
     settings.meta_mask = True
     settings.count = 3
     settings.graph_der = 0
@@ -51,8 +51,7 @@ def run(sim_data, feature):
         len(sim_data_values),
         sim_time_values,
         sim_data_values,
-        exp_data_values,
-        [1.0 - i for i in temp],
+        exp_data_values
     )
 
 

@@ -18,7 +18,6 @@ progressRate = 0.75
 
 
 def stop_iteration(best, stalled, cache):
-    best = util.translate_meta_min(best, cache)
     stopAverage = cache.settings.get("stopAverage", 0.0)
     stopBest = cache.settings.get("stopBest", 0.0)
     stopRMSE = cache.settings.get("stopRMSE", 0.0)

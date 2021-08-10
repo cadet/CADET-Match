@@ -11,8 +11,8 @@
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>CondaEnv|CondaEnv|cadet_run</InterpreterId>
-    <CommandLineArguments>"C:\Users\kosh_000\Downloads\dataset\bypass\Dextran\MCMC.json" 6</CommandLineArguments>
+    <InterpreterId>CondaEnv|CondaEnv|cadet_devel</InterpreterId>
+    <CommandLineArguments>"F:\fast_test_ryzen_min\search\mcmc\stage1\results\mcmc_refine\dextran.json" 12</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
     <InterpreterArguments>
@@ -330,7 +330,6 @@
     <Folder Include="Examples\typical_experiments\non_binding_column\" />
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="CondaEnv|CondaEnv|addict_test" />
     <InterpreterReference Include="CondaEnv|CondaEnv|cadet_devel" />
     <InterpreterReference Include="CondaEnv|CondaEnv|cadet_run" />
   </ItemGroup>

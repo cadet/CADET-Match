@@ -61,24 +61,24 @@ def setupDEAP(
     tools,
 ):
     "setup the DEAP variables"
-    creator.create("FitnessMax", base.Fitness, weights=[1.0] * cache.numGoals)
+    creator.create("FitnessMin", base.Fitness, weights=[-1.0] * cache.numGoals)
     creator.create(
         "Individual",
         array.array,
         typecode="d",
-        fitness=creator.FitnessMax,
+        fitness=creator.FitnessMin,
         strategy=None,
         mean=None,
         confidence=None,
         csv_line=None,
     )
 
-    creator.create("FitnessMaxMeta", base.Fitness, weights=[1.0, 1.0, 1.0, -1.0, -1.0])
+    creator.create("FitnessMinMeta", base.Fitness, weights=[-1.0, -1.0, -1.0, -1.0, -1.0])
     creator.create(
         "IndividualMeta",
         array.array,
         typecode="d",
-        fitness=creator.FitnessMaxMeta,
+        fitness=creator.FitnessMinMeta,
         strategy=None,
         csv_line=None,
         best=None,

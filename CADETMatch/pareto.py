@@ -257,21 +257,6 @@ def similar_fit_norm(a, b):
     # used to catch division by zero
     a[a == 0.0] = smallest
 
-    a = numpy.log(1 - a)
-    b = numpy.log(1 - b)
-
-    diff = numpy.abs((a - b) / a)
-    return numpy.all(diff < diff_step)
-
-
-def similar_fit_sse(a, b):
-    "we only need a parameter to 4 digits of accuracy so have the pareto front only keep up to 5 digits for members of the front"
-    a = numpy.absolute(numpy.array(a))
-    b = numpy.absolute(numpy.array(b))
-
-    # used to catch division by zero
-    a[a == 0.0] = smallest
-
     a = numpy.log(a)
     b = numpy.log(b)
 
@@ -279,7 +264,7 @@ def similar_fit_sse(a, b):
     return numpy.all(diff < diff_step)
 
 
-def similar_fit_meta_norm(a, b):
+def similar_fit_meta_split(a, b):
     a = numpy.array(a)
     b = numpy.array(b)
 
@@ -287,8 +272,8 @@ def similar_fit_meta_norm(a, b):
     a[a == 0.0] = smallest
 
     # SSE is in the last slot so we only want to use the first 3 meta scores
-    a = numpy.log(1 - a[:3])
-    b = numpy.log(1 - b[:3])
+    a = numpy.log(a[:3])
+    b = numpy.log(b[:3])
 
     diff = numpy.abs((a - b) / a)
     return numpy.all(diff < diff_step)
@@ -311,37 +296,15 @@ def similar_fit_meta_sse(a, b):
     return numpy.all(diff < diff_step)
 
 
-def similar_fit_meta_sse_split(a, b):
-    "SSE is negative and in the last slot and the only score needed"
-    a = numpy.abs(numpy.array(a))
-    b = numpy.abs(numpy.array(b))
-
-    # used to catch division by zero
-    a[a == 0.0] = smallest
-
-    # SSE should be handled in log scale
-    a = numpy.log(a[:3])
-    b = numpy.log(b[:3])
-
-    diff = numpy.abs((a - b) / a)
-    return numpy.all(diff < diff_step)
-
-
 def similar_fit_meta(cache):
-    if cache.allScoreNorm:
-        return similar_fit_meta_norm
-    elif cache.allScoreSSE:
-        if cache.MultiObjectiveSSE:
-            return similar_fit_meta_sse_split
-        else:
-            return similar_fit_meta_sse
+    if cache.allScoreSSE and not cache.MultiObjectiveSSE:
+        return similar_fit_meta_sse
+    else:
+        return similar_fit_meta_split
 
 
 def similar_fit(cache):
-    if cache.allScoreNorm:
-        return similar_fit_norm
-    elif cache.allScoreSSE:
-        return similar_fit_sse
+    return similar_fit_norm
 
 
 def updateParetoFront(halloffame, offspring, cache):

@@ -18,7 +18,7 @@ name = "fractionationSSE"
 def get_settings(feature):
     settings = Dict()
     settings.adaptive = False
-    settings.badScore = -sys.float_info.max
+    settings.badScore = sys.float_info.max
     settings.meta_mask = True
     settings.count = 1
     settings.graph_der = 0
@@ -77,16 +77,13 @@ def run(sim_data, feature):
 
     return (
         [
-            -sse,
+            sse,
         ],
         sse,
         len(sim_values_sse),
         time_center,
         numpy.array(sim_values_sse),
-        numpy.array(exp_values_sse),
-        [
-            sse,
-        ],
+        numpy.array(exp_values_sse)
     )
 
 

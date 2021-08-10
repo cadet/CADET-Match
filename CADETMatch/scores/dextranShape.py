@@ -15,7 +15,7 @@ name = "DextranShape"
 def get_settings(feature):
     settings = Dict()
     settings.adaptive = True
-    settings.badScore = 0
+    settings.badScore = 1
     settings.meta_mask = True
     settings.count = 2
     settings.graph_der = 0
@@ -47,24 +47,23 @@ def run(sim_data, feature):
             exp_time_zero, exp_data_zero, sim_spline
         )
     else:
-        pearson = 0.0
+        pearson = 1.0
         diff_time = 1e308
 
     exp_data_zero_sse = feature["exp_data_zero_sse"]
 
-    temp = [
+    scores = [
         pearson,
         feature["offsetTimeFunction"](numpy.abs(diff_time)),
     ]
 
     data = (
-        temp,
+        scores,
         util.sse(sim_data_zero_sse, exp_data_zero_sse),
         len(sim_data_zero_sse),
         sim_time_values,
         sim_data_zero_sse,
-        exp_data_zero_sse,
-        [1.0 - i for i in temp],
+        exp_data_zero_sse
     )
     return data
 

@@ -90,21 +90,11 @@ def print_progress(
 
 def get_best(cache, data_meta):
     if len(data_meta) and data_meta.ndim > 1:
-        best_product = numpy.max(data_meta[:, 0])
-        best_min = numpy.max(data_meta[:, 1])
-        best_mean = numpy.max(data_meta[:, 2])
+        best_product = numpy.min(data_meta[:, 0])
+        best_min = numpy.min(data_meta[:, 1])
+        best_mean = numpy.min(data_meta[:, 2])
         best_sse = numpy.min(data_meta[:, 3])
         best_rmse = numpy.min(data_meta[:, 4])
-
-        score = (best_product, best_min, best_mean, best_sse, best_rmse)
-
-        (
-            best_product,
-            best_min,
-            best_mean,
-            best_sse,
-            best_rmse,
-        ) = util.translate_meta_min(score, cache)
 
         return best_product, best_min, best_mean, best_sse, best_rmse
     else:
@@ -251,24 +241,13 @@ def write_results(
             )
 
         hf.create_dataset(
-            "output_original",
+            "output",
             data=result_data["output"],
             maxshape=(None, len(result_data["output"][0])),
         )
         hf.create_dataset(
-            "output_meta_original",
-            data=result_data["output_meta"],
-            maxshape=(None, len(result_data["output_meta"][0])),
-        )
-
-        hf.create_dataset(
-            "output",
-            data=score_trans(cache, result_data["output"]),
-            maxshape=(None, len(result_data["output"][0])),
-        )
-        hf.create_dataset(
             "output_meta",
-            data=meta_score_trans(cache, result_data["output_meta"]),
+            data=result_data["output_meta"],
             maxshape=(None, len(result_data["output_meta"][0])),
         )
 
@@ -331,7 +310,7 @@ def write_results(
             )
             hf.create_dataset(
                 "hof_score",
-                data=score_trans(cache, data),
+                data=data,
                 maxshape=(None, data.shape[1]),
             )
 
@@ -345,13 +324,8 @@ def write_results(
                 maxshape=(None, meta_param_transform.shape[1]),
             )
             hf.create_dataset(
-                "meta_score_original",
-                data=data_meta,
-                maxshape=(None, data_meta.shape[1]),
-            )
-            hf.create_dataset(
                 "meta_score",
-                data=meta_score_trans(cache, data_meta),
+                data=data_meta,
                 maxshape=(None, data_meta.shape[1]),
             )
 
@@ -371,7 +345,7 @@ def write_results(
             )
             hf.create_dataset(
                 "grad_score",
-                data=score_trans(cache, data_grad),
+                data=data_grad,
                 maxshape=(None, data_grad.shape[1]),
             )
 
@@ -384,28 +358,6 @@ def write_results(
 
             for filename, chroma in result_data["times"].items():
                 hf.create_dataset(filename, data=chroma)
-
-
-def score_trans(cache, score):
-    temp = numpy.copy(score)
-
-    if cache.allScoreSSE:
-        temp = -temp
-    else:
-        temp = 1 - temp
-
-    return temp
-
-
-def meta_score_trans(cache, score):
-    temp = numpy.copy(score)
-
-    if cache.allScoreSSE:
-        temp[:, :3] = -temp[:, :3]
-    else:
-        temp[:, :3] = 1 - temp[:, :3]
-
-    return temp
 
 
 def update_results(
@@ -501,32 +453,15 @@ def update_results(
                 )
                 hf["mcmc_score"][-len(mcmc_score) :] = mcmc_score
 
-        hf["output_original"].resize(
-            (hf["output_original"].shape[0] + len(result_data["output"])), axis=0
-        )
-        hf["output_original"][-len(result_data["output"]) :] = result_data["output"]
-
-        hf["output_meta_original"].resize(
-            (hf["output_meta_original"].shape[0] + len(result_data["output_meta"])),
-            axis=0,
-        )
-        hf["output_meta_original"][-len(result_data["output_meta"]) :] = result_data[
-            "output_meta"
-        ]
-
         hf["output"].resize(
             (hf["output"].shape[0] + len(result_data["output"])), axis=0
         )
-        hf["output"][-len(result_data["output"]) :] = score_trans(
-            cache, result_data["output"]
-        )
+        hf["output"][-len(result_data["output"]) :] = result_data["output"]
 
         hf["output_meta"].resize(
             (hf["output_meta"].shape[0] + len(result_data["output_meta"])), axis=0
         )
-        hf["output_meta"][-len(result_data["output_meta"]) :] = meta_score_trans(
-            cache, result_data["output_meta"]
-        )
+        hf["output_meta"][-len(result_data["output_meta"]) :] = result_data["output_meta"]
 
         hf["input_transform"].resize(
             (hf["input_transform"].shape[0] + len(result_data["input_transform"])),
@@ -563,7 +498,7 @@ def update_results(
             hf["hof_score_original"][:] = data
 
             hf["hof_score"].resize((data.shape[0]), axis=0)
-            hf["hof_score"][:] = score_trans(cache, data)
+            hf["hof_score"][:] = data
 
         if len(meta_param):
             hf["meta_population"].resize((meta_param.shape[0]), axis=0)
@@ -574,11 +509,8 @@ def update_results(
             )
             hf["meta_population_transform"][:] = meta_param_transform
 
-            hf["meta_score_original"].resize((data_meta.shape[0]), axis=0)
-            hf["meta_score_original"][:] = data_meta
-
             hf["meta_score"].resize((data_meta.shape[0]), axis=0)
-            hf["meta_score"][:] = meta_score_trans(cache, data_meta)
+            hf["meta_score"][:] = data_meta
 
         if len(grad_param):
             if "grad_population" in hf:
@@ -594,7 +526,7 @@ def update_results(
                 hf["grad_score_original"][:] = data_grad
 
                 hf["grad_score"].resize((data_grad.shape[0]), axis=0)
-                hf["grad_score"][:] = score_trans(cache, data_grad)
+                hf["grad_score"][:] = data_grad
             else:
                 hf.create_dataset(
                     "grad_population",
@@ -614,7 +546,7 @@ def update_results(
 
                 hf.create_dataset(
                     "grad_score",
-                    data=score_trans(cache, data_grad),
+                    data=data_grad,
                     maxshape=(None, data_grad.shape[1]),
                 )
 

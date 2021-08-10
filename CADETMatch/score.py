@@ -205,12 +205,12 @@ def pearson_spline_fun(
 
 def time_function_decay(max_time):
     x_exp = numpy.array([0, max_time])
-    y_exp = numpy.array([1, 0.0])
+    y_exp = numpy.array([0, 1.0])
 
     a, b = calc_coeff.linear_coeff(x_exp[0], y_exp[0], x_exp[1], y_exp[1])
 
     def wrapper(diff):
-        value = max(0.0, calc_coeff.linear(diff, a, b))
+        value = numpy.clip(calc_coeff.linear(diff, a, b), 0.0, 1.0)
 
         return value
 
@@ -219,30 +219,29 @@ def time_function_decay(max_time):
 
 def time_function(max_time, delay=10):
     x_lin_1 = numpy.array([0.0, delay])
-    y_lin_1 = numpy.array([1.0, 0.95])
+    y_lin_1 = numpy.array([0.0, 0.95])
 
     x_lin_2 = numpy.array([delay, max_time])
-    y_lin_2 = numpy.array([0.95, 0.0])
+    y_lin_2 = numpy.array([0.95, 1.0])
 
     a1, b1 = calc_coeff.linear_coeff(x_lin_1[0], y_lin_1[0], x_lin_1[1], y_lin_1[1])
     a2, b2 = calc_coeff.linear_coeff(x_lin_2[0], y_lin_2[0], x_lin_2[1], y_lin_2[1])
 
     def wrapper(diff):
         if diff <= delay:
-            value = max(0.0, calc_coeff.linear(diff, a1, b1))
+            value = numpy.clip(calc_coeff.linear(diff, a1, b1), 0.0, 1.0)
         else:
-            value = max(0.0, calc_coeff.linear(diff, a2, b2))
+            value = numpy.clip(calc_coeff.linear(diff, a2, b2), 0.0, 1.0)
         return value
 
     return wrapper
 
 
-def value_function(peak_height, tolerance=1e-8, bottom_score=0.0):
+def value_function(peak_height, tolerance=1e-8):
     # if the peak height is 0 or less than the tolerance it needs to be treated as a special case to prevent divide by zero problems
     x = numpy.array([0.0, 1.0])
-    y = numpy.array([1.0, bottom_score])
+    y = numpy.array([0.0, 1.0])
 
-    # a, b = calc_coeff.exponential_coeff(x[0], y[0], x[1], y[1])
     a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
 
     if numpy.abs(peak_height) < tolerance:
@@ -252,49 +251,16 @@ def value_function(peak_height, tolerance=1e-8, bottom_score=0.0):
 
         def wrapper(x):
             if numpy.abs(x) < tolerance:
-                return 1.0
+                return 0.0
             else:
                 diff = numpy.abs(x - tolerance) / numpy.abs(tolerance)
-                # return max(0, calc_coeff.exponential(diff, a, b))
-                return max(0, calc_coeff.linear(diff, a, b))
+                return numpy.clip(calc_coeff.linear(diff, a, b), 0.0, 1.0)
 
     else:
-
+         
         def wrapper(x):
             diff = numpy.abs(x - peak_height) / numpy.abs(peak_height)
-            # return max(0, calc_coeff.exponential(diff, a, b))
-            return max(0, calc_coeff.linear(diff, a, b))
-
-    return wrapper
-
-
-def value_function_exp(peak_height, tolerance=1e-8, bottom_score=0.05):
-    # if the peak height is 0 or less than the tolerance it needs to be treated as a special case to prevent divide by zero problems
-    x = numpy.array([0.0, 1.0])
-    y = numpy.array([1.0, bottom_score])
-
-    a, b = calc_coeff.exponential_coeff(x[0], y[0], x[1], y[1])
-    # a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
-
-    if numpy.abs(peak_height) < tolerance:
-        multiprocessing.get_logger().warn(
-            "peak height less than tolerance %s %s", tolerance, peak_height
-        )
-
-        def wrapper(x):
-            if numpy.abs(x) < tolerance:
-                return 1.0
-            else:
-                diff = numpy.abs(x - tolerance) / numpy.abs(tolerance)
-                return max(0, calc_coeff.exponential(diff, a, b))
-                # return max(0, calc_coeff.linear(diff, a, b))
-
-    else:
-
-        def wrapper(x):
-            diff = numpy.abs(x - peak_height) / numpy.abs(peak_height)
-            return max(0, calc_coeff.exponential(diff, a, b))
-            # return max(0, calc_coeff.linear(diff, a, b))
+            return numpy.clip(calc_coeff.linear(diff, a, b), 0.0, 1.0)
 
     return wrapper
 
@@ -302,13 +268,13 @@ def value_function_exp(peak_height, tolerance=1e-8, bottom_score=0.05):
 def slope_function(peak_slope):
     # if the peak height is 0 or less than the tolerance it needs to be treated as a special case to prevent divide by zero problems
     x = numpy.array([0.0, 4.0])
-    y = numpy.array([1.0, 0.0])
+    y = numpy.array([0.0, 1.0])
 
     a, b = calc_coeff.linear_coeff(x[0], y[0], x[1], y[1])
 
     def wrapper(x):
         diff = numpy.abs(x - peak_slope) / numpy.abs(peak_slope)
-        return max(0, calc_coeff.linear(diff, a, b))
+        return numpy.clip(calc_coeff.linear(diff, a, b), 0.0, 1.0)
 
     return wrapper
 
@@ -316,11 +282,11 @@ def slope_function(peak_slope):
 def pear_corr(cr):
     # handle the case where a nan is returned
     if numpy.isnan(cr):
-        return 0.0
+        return 1.0
     if cr < 0.0:
-        return 0.0
+        return 1.0
     else:
-        return cr
+        return 1 - cr
 
     # so far in looking cr has never been negative and the scores mostly just sit in the 0.8 to 0.99999 range
     # I am not even sure if cr could be negative with chromatography (indicating inverse relationship between simulation and experiment)

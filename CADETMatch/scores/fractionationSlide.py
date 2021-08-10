@@ -14,7 +14,7 @@ name = "fractionationSlide"
 def get_settings(feature):
     settings = Dict()
     settings.adaptive = True
-    settings.badScore = 0
+    settings.badScore = 1
     settings.meta_mask = True
 
     data = pandas.read_csv(feature["fraction_csv"])
@@ -145,8 +145,7 @@ def run(sim_data, feature):
         len(sim_values_sse),
         time_center,
         numpy.array(sim_values_sse),
-        numpy.array(exp_values_sse),
-        [1.0 - i for i in scores],
+        numpy.array(exp_values_sse)
     )
 
 

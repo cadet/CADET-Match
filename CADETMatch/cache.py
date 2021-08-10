@@ -312,7 +312,7 @@ class Cache:
         ]
 
         self.numGoals = 0
-        self.badScore = 0.0
+        self.badScore = 1.0
 
         base = len(self.headers)
 
@@ -352,9 +352,9 @@ class Cache:
                     experiment["headers"].extend(temp)
 
         self.badScores = numpy.array(badScore)
-        self.allScoreNorm = numpy.all(self.badScores == 0.0)
-        self.allScoreSSE = numpy.all(self.badScores == -sys.float_info.max)
-        self.badScore = min(badScore)
+        self.allScoreNorm = numpy.all(self.badScores != sys.float_info.max)
+        self.allScoreSSE = numpy.all(self.badScores == sys.float_info.max)
+        self.badScore = max(badScore)
         self.numGoalsOrig = self.numGoals
 
         if self.allScoreSSE and self.MultiObjectiveSSE is False:
@@ -422,10 +422,7 @@ class Cache:
             self.target[experiment["name"]] = self.setupExperiment(experiment)
         if "errorModel" in self.settings:
             self.add_units_error_model(self.settings["errorModel"], self.target)
-        self.target["bestHumanScores"] = numpy.ones(5) * self.badScore
 
-        # SSE are negative so they sort correctly with better scores being less negative
-        self.target["bestHumanScores"][4] = self.badScore
 
     def setupExperiment(self, experiment, sim=None, dataFromSim=0):
         temp = {}

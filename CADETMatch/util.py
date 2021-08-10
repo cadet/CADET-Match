@@ -108,14 +108,13 @@ def calcMetaScores(scores, cache):
     scores = numpy.array(scores)[cache.meta_mask]
     if cache.allScoreNorm:
         prod_score = product_score(scores)
-        min_score = min(scores)
+        min_score = max(scores)
         mean_score = sum(scores) / len(scores)
         human = [prod_score, min_score, mean_score]
     elif cache.allScoreSSE:
         if cache.MultiObjectiveSSE:
-            # scores = numpy.abs(scores)
             prod_score = product_score(scores)
-            min_score = min(scores)
+            min_score = max(scores)
             mean_score = sum(scores) / len(scores)
             human = [prod_score, min_score, mean_score]
         else:
@@ -126,10 +125,7 @@ def calcMetaScores(scores, cache):
 
 def product_score(values):
     values = numpy.array(values)
-    if numpy.all(values >= 0.0):
-        return numpy.prod(values) ** (1.0 / len(values))
-    else:
-        return -numpy.prod(numpy.abs(values)) ** (1.0 / len(values))
+    return 1.0 - scipy.stats.gmean(1-values)
 
 
 def saveExperiments(save_name_base, settings, target, results, directory, file_pattern):
@@ -382,7 +378,6 @@ def runExperiment(
     if individual is not None:
         temp["individual"] = tuple(individual)
     temp["diff"] = []
-    temp["minimize"] = []
     temp["sim_time"] = []
     temp["sim_value"] = []
     temp["exp_value"] = []
@@ -399,8 +394,7 @@ def runExperiment(
                     sse_count,
                     sim_time,
                     sim_value,
-                    exp_value,
-                    minimize,
+                    exp_value
                 ) = cache.scores[featureType].run(
                     temp, target[experiment["name"]][featureName]
                 )
@@ -413,7 +407,6 @@ def runExperiment(
             temp["error"] += sse
             temp["error_count"] += sse_count
             temp["diff"].extend(diff)
-            temp["minimize"].extend(minimize)
             temp["sim_time"].append(sim_time)
             temp["sim_value"].append(sim_value)
             temp["exp_value"].append(exp_value)
@@ -1458,15 +1451,6 @@ def fractionate_sim(start_times, stop_times, components, simulation, unit):
 
     return fracs
 
-
-def translate_meta_min(score, cache):
-    temp = numpy.array(score)
-    if cache.allScoreSSE:
-        temp[:3] = -temp[:3]
-    else:
-        temp[:3] = 1 - temp[:3]
-
-    return temp
 
 def get_bins(array, axis=None):
     array = numpy.atleast_2d(array)
