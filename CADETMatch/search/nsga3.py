@@ -56,7 +56,6 @@ def setupDEAP(
     grad_fitness,
     grad_search,
     grad_search_fine,
-    map_function,
     creator,
     base,
     tools,
@@ -144,8 +143,6 @@ def setupDEAP(
         "evaluate_grad_fine", grad_search_fine, json_path=cache.json_path
     )
     cache.toolbox.register("grad_search", grad_search)
-
-    cache.toolbox.register("map", map_function)
 
 
 def num_ref_points(n, k):

@@ -104,12 +104,13 @@ def setup(cache, json_path, map_function):
     print_version()
 
     cache.setup(json_path)
+    cache.map_function = map_function
 
     createCSV(cache)
     createProgressCSV(cache)
     createErrorCSV(cache)
     setupTemplates(cache)
-    setupDeap(cache, map_function)
+    setupDeap(cache)
 
 
 def print_version():
@@ -342,7 +343,7 @@ def setupTemplates(cache):
         experiment["simulation_final"] = template_final
 
 
-def setupDeap(cache, map_function):
+def setupDeap(cache):
     "setup the DEAP variables"
     searchMethod = cache.settings.get("searchMethod", "NSGA3")
     cache.toolbox = base.Toolbox()
@@ -353,7 +354,6 @@ def setupDeap(cache, map_function):
         gradFD.gradSearch,
         gradFD.search,
         gradFD.gradSearchFine,
-        map_function,
         creator,
         base,
         tools,

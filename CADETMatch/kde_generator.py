@@ -466,7 +466,7 @@ def generate_synthetic_error(cache):
         indexes = []
 
         for idx, (scores, simulations, outputs, errors) in enumerate(
-            cache.toolbox.map(synthetic_error_simulation, zip(json_path, errors_split))
+            cache.map_function(synthetic_error_simulation, zip(json_path, errors_split))
         ):
             if scores and simulations and outputs:
                 indexes.append(idx)

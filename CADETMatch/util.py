@@ -23,6 +23,7 @@ from deap import tools
 
 import CADETMatch.calc_coeff as calc_coeff
 import CADETMatch.sub as sub
+import CADETMatch.pop as pop
 
 decim.getcontext().prec = 64
 __logBase10of2_decim = decim.Decimal(2).log10()
@@ -875,7 +876,6 @@ def calcFitness(scores_orig, cache):
 
 
 def process_population(
-    toolbox,
     cache,
     population,
     fitnesses,
@@ -927,7 +927,7 @@ def process_population(
         ind.fitness.values = calcFitness(fit, cache)
         ind.csv_line = [time.ctime(), save_name_base] + csv_line
 
-        ind_meta = toolbox.individualMeta(ind)
+        ind_meta = pop.Individual(ind)
 
         ind_meta.fitness.values = meta_score
         ind_meta.csv_line = [time.ctime(), save_name_base] + csv_line
@@ -1008,7 +1008,6 @@ def eval_population(
 ):
     return eval_population_base(
         toolbox.evaluate,
-        toolbox,
         cache,
         invalid_ind,
         writer,
@@ -1035,7 +1034,6 @@ def eval_population_final(
 ):
     return eval_population_base(
         toolbox.evaluate_final,
-        toolbox,
         cache,
         invalid_ind,
         writer,
@@ -1050,7 +1048,6 @@ def eval_population_final(
 
 def eval_population_base(
     evaluate,
-    toolbox,
     cache,
     invalid_ind,
     writer,
@@ -1061,10 +1058,9 @@ def eval_population_base(
     generation,
     result_data=None,
 ):
-    fitnesses = toolbox.map(evaluate, map(list, invalid_ind))
+    fitnesses = cache.map_function(evaluate, map(list, invalid_ind))
 
     return process_population(
-        toolbox,
         cache,
         invalid_ind,
         fitnesses,

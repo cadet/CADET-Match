@@ -114,7 +114,7 @@ def log_posterior_vectorize(
     writer,
     csvfile,
 ):
-    results = cache.toolbox.map(
+    results = cache.map_function(
         log_posterior, ((population[i], json_path) for i in range(len(population)))
     )
     results = process(
@@ -1127,7 +1127,6 @@ def setupDEAP(
     grad_fitness,
     grad_search,
     grad_search_fine,
-    map_function,
     creator,
     base,
     tools,
@@ -1163,8 +1162,6 @@ def setupDEAP(
     cache.toolbox.register(
         "individual_guess", util.initIndividual, creator.Individual, cache
     )
-
-    cache.toolbox.register("map", map_function)
 
 
 def process(

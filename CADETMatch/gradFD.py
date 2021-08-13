@@ -106,7 +106,7 @@ def search(
         )
     if filterOverlap:
         checkOffspring = filterOverlapArea(cache, checkOffspring)
-    newOffspring = cache.toolbox.map(
+    newOffspring = cache.map_function(
         cache.toolbox.evaluate_grad, map(tuple, checkOffspring)
     )
 
@@ -133,7 +133,7 @@ def search(
 
     if new_results:
         multiprocessing.get_logger().info("starting fine refine")
-        fineOffspring = cache.toolbox.map(
+        fineOffspring = cache.map_function(
             cache.toolbox.evaluate_grad_fine, map(tuple, meta_hof)
         )
         processOffspring(
@@ -264,7 +264,7 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
     """if there is no overlap between the simulation and the data there is no gradient to follow and these entries need to be skipped
     This function also sorts from highest to lowest overlap and keeps the top multiStartPercent"""
     checkOffspring = list(checkOffspring)
-    temp = cache.toolbox.map(cache.toolbox.evaluate, map(list, checkOffspring))
+    temp = cache.map_function(cache.toolbox.evaluate, map(list, checkOffspring))
 
     temp_offspring = []
 
