@@ -56,18 +56,14 @@ def setupDEAP(
     tools,
 ):
     "setup the DEAP variables"
-    creator.create("FitnessMin", base.Fitness, weights=[-1.0] * cache.numGoals)
     creator.create(
         "Individual",
-        pop.Individual,
-        fitness=creator.FitnessMin
+        pop.Individual
     )
 
-    creator.create("FitnessMinMeta", base.Fitness, weights=[-1.0, -1.0, -1.0, -1.0, -1.0])
     creator.create(
         "IndividualMeta",
-        pop.Individual,
-        fitness=creator.FitnessMinMeta
+        pop.Individual
     )
     cache.toolbox.register(
         "individualMeta", util.initIndividual, creator.IndividualMeta, cache
