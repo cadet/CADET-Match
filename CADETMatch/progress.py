@@ -18,7 +18,7 @@ with warnings.catch_warnings():
 
 def process_pareto(cache, hof):
     data = numpy.array([i.fitness.values for i in hof])
-    data_param = numpy.array(hof)
+    data_param = numpy.array([i.value for i in hof])
     data_param_transform = util.convert_population_inputorder(data_param, cache)
 
     return data, data_param, data_param_transform
@@ -88,19 +88,6 @@ def print_progress(
             )
 
 
-def get_best(cache, data_meta):
-    if len(data_meta) and data_meta.ndim > 1:
-        best_product = numpy.min(data_meta[:, 0])
-        best_min = numpy.min(data_meta[:, 1])
-        best_mean = numpy.min(data_meta[:, 2])
-        best_sse = numpy.min(data_meta[:, 3])
-        best_rmse = numpy.min(data_meta[:, 4])
-
-        return best_product, best_min, best_mean, best_sse, best_rmse
-    else:
-        return None, None, None, None, None
-
-
 def clear_result_data(result_data):
     result_data["input"] = []
     result_data["strategy"] = []
@@ -127,14 +114,14 @@ def write_progress_csv(
     generation_start,
     cpu_time,
     line_log,
-    meta_length,
+    meta_halloffame,
 ):
     with cache.progress_path.open("a", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=",", quoting=csv.QUOTE_ALL)
 
-        best_product, best_min, best_mean, best_sse, best_rmse = get_best(
-            cache, data_meta
-        )
+        meta_length = len(meta_halloffame)
+
+        best_product, best_min, best_mean, best_sse, best_rmse = meta_halloffame.getBestScores()
 
         print_progress(
             cache,
@@ -679,5 +666,5 @@ def writeProgress(
         generation_start,
         cpu_time,
         line_log,
-        len(meta_halloffame),
+        meta_halloffame,
     )

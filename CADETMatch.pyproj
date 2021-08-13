@@ -12,8 +12,8 @@
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>CondaEnv|CondaEnv|cadet_devel</InterpreterId>
-    <CommandLineArguments>"F:\fast_test_ryzen_min\search\mcmc\stage1\results\mcmc_refine\dextran.json" 12</CommandLineArguments>
-    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+    <CommandLineArguments>"F:\fast_test_ryzen_min\scores\DextranShape\dextran.json" 12</CommandLineArguments>
+    <EnableNativeCodeDebugging>True</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
     <InterpreterArguments>
     </InterpreterArguments>
@@ -136,6 +136,7 @@
     <Compile Include="CADETMatch\obsolete\search\theta_nsga3.py" />
     <Compile Include="CADETMatch\pareto.py" />
     <Compile Include="CADETMatch\plugins.py" />
+    <Compile Include="CADETMatch\pop.py" />
     <Compile Include="CADETMatch\progress.py" />
     <Compile Include="CADETMatch\score.py" />
     <Compile Include="CADETMatch\scores\absoluteHeight.py" />

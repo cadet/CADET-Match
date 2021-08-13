@@ -9,6 +9,7 @@ from deap import tools
 import CADETMatch.checkpoint_algorithms as checkpoint_algorithms
 import CADETMatch.pareto as pareto
 import CADETMatch.util as util
+import CADETMatch.pop as pop
 
 name = "NSGA3"
 
@@ -64,24 +65,15 @@ def setupDEAP(
     creator.create("FitnessMin", base.Fitness, weights=[-1.0] * cache.numGoals)
     creator.create(
         "Individual",
-        array.array,
-        typecode="d",
-        fitness=creator.FitnessMin,
-        strategy=None,
-        mean=None,
-        confidence=None,
-        csv_line=None,
+        pop.Individual,
+        fitness=creator.FitnessMin
     )
 
     creator.create("FitnessMinMeta", base.Fitness, weights=[-1.0, -1.0, -1.0, -1.0, -1.0])
     creator.create(
         "IndividualMeta",
-        array.array,
-        typecode="d",
-        fitness=creator.FitnessMinMeta,
-        strategy=None,
-        csv_line=None,
-        best=None,
+        pop.Individual,
+        fitness=creator.FitnessMinMeta
     )
     cache.toolbox.register(
         "individualMeta", util.initIndividual, creator.IndividualMeta, cache

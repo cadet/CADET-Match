@@ -93,18 +93,18 @@ def eaMuPlusLambda(
             if cache.metaResultsOnly:
                 halloffame = pareto.DummyFront()
             else:
-                halloffame = pareto.ParetoFront(
+                halloffame = pareto.ParetoFront(dimensions=len(cache.WORST),
                     similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
                 )
-            meta_hof = pareto.ParetoFrontMeta(
+            meta_hof = pareto.ParetoFront(dimensions=len(cache.WORST_META),
                 similar=pareto.similar,
                 similar_fit=pareto.similar_fit_meta(cache),
                 slice_object=cache.meta_slice,
             )
-            grad_hof = pareto.ParetoFront(
+            grad_hof = pareto.ParetoFront(dimensions=len(cache.WORST),
                 similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
             )
-            progress_hof = pareto.ParetoFrontMeta(
+            progress_hof = pareto.ParetoFront(dimensions=len(cache.WORST_META),
                 similar=pareto.similar,
                 similar_fit=pareto.similar_fit_meta(cache),
                 slice_object=cache.meta_slice,
@@ -359,18 +359,18 @@ def nsga2(populationSize, ngen, cache, tools):
             if cache.metaResultsOnly:
                 halloffame = pareto.DummyFront()
             else:
-                halloffame = pareto.ParetoFront(
+                halloffame = pareto.ParetoFront(dimensions=len(cache.WORST),
                     similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
                 )
-            meta_hof = pareto.ParetoFrontMeta(
+            meta_hof = pareto.ParetoFront(dimensions=len(cache.WORST_META),
                 similar=pareto.similar,
                 similar_fit=pareto.similar_fit_meta(cache),
                 slice_object=cache.meta_slice,
             )
-            grad_hof = pareto.ParetoFront(
+            grad_hof = pareto.ParetoFront(dimensions=len(cache.WORST),
                 similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
             )
-            progress_hof = pareto.ParetoFrontMeta(
+            progress_hof = pareto.ParetoFront(dimensions=len(cache.WORST_META),
                 similar=pareto.similar,
                 similar_fit=pareto.similar_fit_meta(cache),
                 slice_object=cache.meta_slice,

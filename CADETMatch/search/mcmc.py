@@ -25,6 +25,7 @@ import CADETMatch.pareto as pareto
 import CADETMatch.progress as progress
 import CADETMatch.util as util
 import CADETMatch.sub as sub
+import CADETMatch.pop as pop
 
 name = "MCMC"
 
@@ -954,7 +955,7 @@ def run(cache, tools, creator):
             "mcmc_score": [],
         }
         halloffame = pareto.DummyFront()
-        meta_hof = pareto.ParetoFrontMeta(
+        meta_hof = pareto.ParetoFront(dimensions=len(cache.WORST_META),
             similar=pareto.similar,
             similar_fit=pareto.similar_fit_meta(cache),
             slice_object=cache.meta_slice,
@@ -1135,24 +1136,15 @@ def setupDEAP(
     creator.create("FitnessMin", base.Fitness, weights=[-1.0] * cache.numGoals)
     creator.create(
         "Individual",
-        array.array,
-        typecode="d",
-        fitness=creator.FitnessMin,
-        strategy=None,
-        mean=None,
-        confidence=None,
-        csv_line=None,
+        pop.Individual,
+        fitness=creator.FitnessMin
     )
 
     creator.create("FitnessMinMeta", base.Fitness, weights=[-1.0, -1.0, -1.0, -1.0, -1.0])
     creator.create(
         "IndividualMeta",
-        array.array,
-        typecode="d",
-        fitness=creator.FitnessMinMeta,
-        strategy=None,
-        csv_line=None,
-        best=None,
+        pop.Individual,
+        fitness=creator.FitnessMinMeta
     )
     cache.toolbox.register(
         "individualMeta", util.initIndividual, creator.IndividualMeta, cache

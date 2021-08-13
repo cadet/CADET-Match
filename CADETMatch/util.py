@@ -106,21 +106,14 @@ def sobolGenerator(icls, cache, n):
 
 def calcMetaScores(scores, cache):
     scores = numpy.array(scores)[cache.meta_mask]
-    if cache.allScoreNorm:
+    if cache.allScoreSSE and not cache.MultiObjectiveSSE:
+        sse = numpy.sum(numpy.array(scores))
+        return [sse, sse, sse]
+    else:
         prod_score = product_score(scores)
         min_score = max(scores)
         mean_score = sum(scores) / len(scores)
-        human = [prod_score, min_score, mean_score]
-    elif cache.allScoreSSE:
-        if cache.MultiObjectiveSSE:
-            prod_score = product_score(scores)
-            min_score = max(scores)
-            mean_score = sum(scores) / len(scores)
-            human = [prod_score, min_score, mean_score]
-        else:
-            sse = numpy.sum(numpy.array(scores))
-            human = [sse, sse, sse]
-    return human
+        return [prod_score, min_score, mean_score]
 
 
 def product_score(values):
@@ -830,13 +823,6 @@ def metaCSV(cache):
 def update_result_data(cache, ind, fit, result_data, results, meta_scores):
     if result_data is not None and results is not None:
         result_data["input"].append(tuple(ind))
-
-        if ind.strategy is not None:
-            result_data["strategy"].append(tuple(ind.strategy))
-        if ind.mean is not None:
-            result_data["mean"].append(tuple(ind.mean))
-        if ind.confidence is not None:
-            result_data["confidence"].append(tuple(ind.confidence))
         result_data["output"].append(tuple(fit))
         result_data["output_meta"].append(tuple(meta_scores))
 
@@ -952,13 +938,11 @@ def process_population(
             csv_lines.append([time.ctime(), save_name_base] + csv_line)
 
             if halloffame is not None:
-                onFront, significant = pareto.updateParetoFront(halloffame, ind, cache)
+                onFront, significant = pareto.updateParetoFront(halloffame, ind)
                 if onFront and not cache.metaResultsOnly:
                     processResults(save_name_base, ind, cache, results)
 
-            onFrontMeta, significant_meta = pareto.updateParetoFront(
-                meta_hof, ind_meta, cache
-            )
+            onFrontMeta, significant_meta = pareto.updateParetoFront(meta_hof, ind_meta)
             if onFrontMeta:
                 meta_csv_lines.append([time.ctime(), save_name_base] + csv_line)
                 processResultsMeta(save_name_base, ind, cache, results)
@@ -967,11 +951,11 @@ def process_population(
             # None if used with algorithms like multistart or scoretest which don't need progress
             if progress_hof is not None:
                 onFrontProgress, significant_progress = pareto.updateParetoFront(
-                    copy.deepcopy(progress_hof), ind_meta, cache
+                    copy.deepcopy(progress_hof), ind_meta
                 )
                 if significant_progress:
                     made_progress = True
-                    pareto.updateParetoFront(progress_hof, ind_meta, cache)
+                    pareto.updateParetoFront(progress_hof, ind_meta)
 
     writer.writerows(csv_lines)
 
@@ -1174,10 +1158,7 @@ def cleanDir(dir, hof):
     exists = {str(path.name).split("_", 1)[0] for path in paths}
 
     # make set of allowed keys based on hall of hame
-    allowed = {
-        hashlib.md5(str(list(individual)).encode("utf-8", "ignore")).hexdigest()
-        for individual in hof.items
-    }
+    allowed = hof.hashes()
 
     # remove everything not in hall of fame
     remove = exists - allowed
