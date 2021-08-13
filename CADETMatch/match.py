@@ -120,23 +120,24 @@ def print_version():
     import importlib_metadata
 
     modules = [
+        ('attrs', '21.2.0'),
         ("joblib", "1.0.1"),
-        ("addict", "2.2.1"),
-        ("corner", "2.1.0"),
+        ("addict", "2.4.0"),
+        ("corner", "2.2.1"),
         ("emcee", "3.0.2"),
         ("SALib", "1.3.11"),
         ("deap", "1.3.1"),
         ("psutil", "5.8.0"),
-        ("numpy", "1.20.1"),
+        ("numpy", "1.21.1"),
         ("openpyxl", "3.0.7"),
-        ("scipy", "1.6.1"),
-        ("matplotlib", "3.3.4"),
-        ("pandas", "1.2.3"),
-        ("h5py", "3.1.0"),
+        ("scipy", "1.7.0"),
+        ("matplotlib", "3.4.2"),
+        ("pandas", "1.3.0"),
+        ("h5py", "3.3.0"),
         ("cadet-python", "0.11"),
         ("seaborn", "0.11.1"),
-        ("scikit-learn", "0.24.1"),
-        ("jstyleson", "0.0.2"),
+        ("scikit-learn", "0.24.2"),
+        ("jstyleson", "0.2.0"),
         ('filelock', "3.0.12")
     ]
 

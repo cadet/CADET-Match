@@ -34,6 +34,7 @@ setuptools.setup(
           'scikit-learn>=0.23.1',
           'importlib-metadata>=1.7.0',
           'jstyleson>=0.0.2',
+          'attrs>=21.2.0',
           'filelock',
           'numba'
       ],
