@@ -89,15 +89,17 @@ def generateIndividual(icls, size, imin, imax, cache):
 def initIndividual(icls, cache, content):
     return icls(content)
 
+def sobolPopulation(populationSize, populationDimension, lb, ub):
+    sobol = SALib.sample.sobol_sequence.sample(populationSize, populationDimension)
+    sobol = sobol * (ub - lb) + lb
+    return sobol
+
 
 def sobolGenerator(icls, cache, n):
     if n > 0:
         populationDimension = len(cache.MIN_VALUE)
         populationSize = n
-        sobol = SALib.sample.sobol_sequence.sample(populationSize, populationDimension)
-        lb = numpy.array(cache.MIN_VALUE)
-        ub = numpy.array(cache.MAX_VALUE)
-        sobol = sobol * (ub - lb) + lb
+        sobol = sobolPopulation(populationSize, populationDimension, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE))
         data = numpy.apply_along_axis(list, 1, sobol)
         data = list(map(icls, data))
         return data

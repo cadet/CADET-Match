@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>CondaEnv|CondaEnv|cadet_devel</InterpreterId>
+    <InterpreterId>CondaEnv|CondaEnv|pymoo_devel</InterpreterId>
     <CommandLineArguments>"F:\fast_test_ryzen_min\scores\DextranShape\dextran.json" 12</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
@@ -171,6 +171,7 @@
     <Compile Include="CADETMatch\search\mcmc.py" />
     <Compile Include="CADETMatch\search\multistart.py" />
     <Compile Include="CADETMatch\search\nsga3.py" />
+    <Compile Include="CADETMatch\search\pymoo.py" />
     <Compile Include="CADETMatch\search\scoretest.py" />
     <Compile Include="CADETMatch\search\__init__.py" />
     <Compile Include="CADETMatch\smoothing.py" />
@@ -333,6 +334,7 @@
   <ItemGroup>
     <InterpreterReference Include="CondaEnv|CondaEnv|cadet_devel" />
     <InterpreterReference Include="CondaEnv|CondaEnv|cadet_run" />
+    <InterpreterReference Include="CondaEnv|CondaEnv|pymoo_devel" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>
