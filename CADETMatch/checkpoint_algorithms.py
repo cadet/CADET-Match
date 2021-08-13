@@ -114,7 +114,6 @@ def eaMuPlusLambda(
             invalid_ind = [ind for ind in population if not ind.fitness.valid]
             if invalid_ind:
                 stalled, stallWarn, progressWarn = util.eval_population(
-                    toolbox,
                     cache,
                     invalid_ind,
                     writer,
@@ -167,7 +166,6 @@ def eaMuPlusLambda(
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             stalled, stallWarn, progressWarn = util.eval_population(
-                toolbox,
                 cache,
                 invalid_ind,
                 writer,
@@ -179,7 +177,7 @@ def eaMuPlusLambda(
                 result_data,
             )
 
-            gradCheck, newChildren = cache.toolbox.grad_search(
+            gradCheck, newChildren = cache.eval.grad_search(
                 gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
             )
             offspring.extend(newChildren)
@@ -236,7 +234,7 @@ def eaMuPlusLambda(
         if cache.finalGradRefinement:
             gen = gen + 1
             best_individuals = [cache.toolbox.individual_guess(i) for i in meta_hof]
-            gradCheck, newChildren = cache.toolbox.grad_search(
+            gradCheck, newChildren = cache.eval.grad_search(
                 gradCheck,
                 best_individuals,
                 cache,
@@ -264,7 +262,6 @@ def eaMuPlusLambda(
 
         population = [cache.toolbox.individual_guess(i) for i in meta_hof]
         stalled, stallWarn, progressWarn = util.eval_population_final(
-            cache.toolbox,
             cache,
             population,
             writer,
@@ -383,7 +380,6 @@ def nsga2(populationSize, ngen, cache, tools):
         invalid_ind = [ind for ind in population if not ind.fitness.valid]
         if invalid_ind:
             stalled, stallWarn, progressWarn = util.eval_population(
-                cache.toolbox,
                 cache,
                 invalid_ind,
                 writer,
@@ -448,7 +444,6 @@ def nsga2(populationSize, ngen, cache, tools):
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             stalled, stallWarn, progressWarn = util.eval_population(
-                cache.toolbox,
                 cache,
                 invalid_ind,
                 writer,
@@ -460,7 +455,7 @@ def nsga2(populationSize, ngen, cache, tools):
                 result_data,
             )
 
-            gradCheck, newChildren = cache.toolbox.grad_search(
+            gradCheck, newChildren = cache.eval.grad_search(
                 gradCheck, offspring, cache, writer, csvfile, grad_hof, meta_hof, gen
             )
             offspring.extend(newChildren)
@@ -495,7 +490,6 @@ def nsga2(populationSize, ngen, cache, tools):
 
                 invalid_ind = [ind for ind in newPopulation if not ind.fitness.valid]
                 util.eval_population(
-                    cache.toolbox,
                     cache,
                     invalid_ind,
                     writer,

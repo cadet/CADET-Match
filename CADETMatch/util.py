@@ -995,7 +995,6 @@ def process_population(
 
 
 def eval_population(
-    toolbox,
     cache,
     invalid_ind,
     writer,
@@ -1007,7 +1006,7 @@ def eval_population(
     result_data=None,
 ):
     return eval_population_base(
-        toolbox.evaluate,
+        cache.eval.evaluate,
         cache,
         invalid_ind,
         writer,
@@ -1021,7 +1020,6 @@ def eval_population(
 
 
 def eval_population_final(
-    toolbox,
     cache,
     invalid_ind,
     writer,
@@ -1033,7 +1031,7 @@ def eval_population_final(
     result_data=None,
 ):
     return eval_population_base(
-        toolbox.evaluate_final,
+        cache.eval.evaluate_final,
         cache,
         invalid_ind,
         writer,

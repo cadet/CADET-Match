@@ -67,7 +67,7 @@ def run(cache, tools, creator):
 
         multiprocessing.get_logger().info("Population %s", pop)
 
-        gradCheck, newChildren = cache.toolbox.grad_search(
+        gradCheck, newChildren = cache.eval.grad_search(
             gradCheck,
             pop,
             cache,
@@ -81,7 +81,6 @@ def run(cache, tools, creator):
         )
 
         stalled, stallWarn, progressWarn = util.eval_population(
-            cache.toolbox,
             cache,
             newChildren,
             writer,
@@ -117,11 +116,6 @@ def run(cache, tools, creator):
 
 def setupDEAP(
     cache,
-    fitness,
-    fitness_final,
-    grad_fitness,
-    grad_search,
-    grad_search_fine,
     creator,
     base,
     tools,
@@ -157,11 +151,3 @@ def setupDEAP(
     cache.toolbox.register(
         "individual_guess", util.initIndividual, creator.Individual, cache
     )
-
-    cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
-    cache.toolbox.register("evaluate_final", fitness_final, json_path=cache.json_path)
-    cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
-    cache.toolbox.register(
-        "evaluate_grad_fine", grad_search_fine, json_path=cache.json_path
-    )
-    cache.toolbox.register("grad_search", grad_search)

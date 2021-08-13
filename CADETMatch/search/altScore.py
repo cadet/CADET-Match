@@ -81,7 +81,6 @@ def run(cache, tools, creator):
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
         stalled, stallWarn, progressWarn = util.eval_population(
-            cache.toolbox,
             cache,
             invalid_ind,
             writer,
@@ -112,7 +111,6 @@ def run(cache, tools, creator):
 
         population = [cache.toolbox.individual_guess(i) for i in meta_hof]
         stalled, stallWarn, progressWarn = util.eval_population_final(
-            cache.toolbox,
             cache,
             population,
             writer,
@@ -143,11 +141,6 @@ def run(cache, tools, creator):
 
 def setupDEAP(
     cache,
-    fitness,
-    fitness_final,
-    grad_fitness,
-    grad_search,
-    grad_search_fine,
     creator,
     base,
     tools,
@@ -186,11 +179,3 @@ def setupDEAP(
     cache.toolbox.register(
         "individual_guess", util.initIndividual, creator.Individual, cache
     )
-
-    cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
-    cache.toolbox.register("evaluate_final", fitness_final, json_path=cache.json_path)
-    cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
-    cache.toolbox.register(
-        "evaluate_grad_fine", grad_search_fine, json_path=cache.json_path
-    )
-    cache.toolbox.register("grad_search", grad_search)

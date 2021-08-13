@@ -1122,11 +1122,6 @@ def getCheckPoint(checkpointFile, cache):
 
 def setupDEAP(
     cache,
-    fitness,
-    fitness_final,
-    grad_fitness,
-    grad_search,
-    grad_search_fine,
     creator,
     base,
     tools,

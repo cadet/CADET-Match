@@ -51,11 +51,6 @@ def run(cache, tools, creator):
 
 def setupDEAP(
     cache,
-    fitness,
-    fitness_final,
-    grad_fitness,
-    grad_search,
-    grad_search_fine,
     creator,
     base,
     tools,
@@ -135,14 +130,6 @@ def setupDEAP(
     else:
         ref_points = generate_reference_points(cache.numGoals)
         cache.toolbox.register("select", tools.selNSGA3WithMemory(ref_points))
-
-    cache.toolbox.register("evaluate", fitness, json_path=cache.json_path)
-    cache.toolbox.register("evaluate_final", fitness_final, json_path=cache.json_path)
-    cache.toolbox.register("evaluate_grad", grad_fitness, json_path=cache.json_path)
-    cache.toolbox.register(
-        "evaluate_grad_fine", grad_search_fine, json_path=cache.json_path
-    )
-    cache.toolbox.register("grad_search", grad_search)
 
 
 def num_ref_points(n, k):

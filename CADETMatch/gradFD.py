@@ -13,6 +13,7 @@ import CADETMatch.cache as cache
 import CADETMatch.evo as evo
 import CADETMatch.pareto as pareto
 import CADETMatch.util as util
+import CADETMatch.pop as pop
 
 
 class GradientException(Exception):
@@ -107,7 +108,7 @@ def search(
     if filterOverlap:
         checkOffspring = filterOverlapArea(cache, checkOffspring)
     newOffspring = cache.map_function(
-        cache.toolbox.evaluate_grad, map(tuple, checkOffspring)
+        cache.eval.evaluate_grad, map(tuple, checkOffspring)
     )
 
     temp = []
@@ -134,7 +135,7 @@ def search(
     if new_results:
         multiprocessing.get_logger().info("starting fine refine")
         fineOffspring = cache.map_function(
-            cache.toolbox.evaluate_grad_fine, map(tuple, meta_hof)
+            cache.eval.evaluate_grad_fine, map(tuple, meta_hof)
         )
         processOffspring(
             fineOffspring,
@@ -203,7 +204,7 @@ def processOffspring(
                 meta_score,
                 results,
                 individual,
-            ) = cache.toolbox.evaluate_final(ind, run_experiment=runExperimentSens)
+            ) = cache.eval.evaluate_final(ind, run_experiment=runExperimentSens)
 
             ind.fitness.values = fit
 
@@ -219,7 +220,7 @@ def processOffspring(
             ).hexdigest()
             ind.csv_line = [time.ctime(), save_name_base] + csv_line
 
-            ind_meta = cache.toolbox.individualMeta(ind)
+            ind_meta = pop.Individual(ind)
             ind_meta.fitness.values = meta_score
             ind_meta.csv_line = [time.ctime(), save_name_base] + csv_line
 
@@ -264,7 +265,7 @@ def filterOverlapArea(cache, checkOffspring, cutoff=0.01):
     """if there is no overlap between the simulation and the data there is no gradient to follow and these entries need to be skipped
     This function also sorts from highest to lowest overlap and keeps the top multiStartPercent"""
     checkOffspring = list(checkOffspring)
-    temp = cache.map_function(cache.toolbox.evaluate, map(list, checkOffspring))
+    temp = cache.map_function(cache.eval.evaluate, map(list, checkOffspring))
 
     temp_offspring = []
 

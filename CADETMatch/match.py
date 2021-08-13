@@ -10,6 +10,7 @@ from pathlib import Path
 
 import h5py
 import numpy
+import functools
 from cadet import H5, Cadet
 from deap import base, creator, tools
 
@@ -105,6 +106,12 @@ def setup(cache, json_path, map_function):
 
     cache.setup(json_path)
     cache.map_function = map_function
+
+    cache.eval.evaluate = functools.partial(evo.fitness, json_path=json_path)
+    cache.eval.evaluate_final = functools.partial(evo.fitness_final, json_path=json_path)
+    cache.eval.evaluate_grad = functools.partial(gradFD.gradSearch, json_path=json_path)
+    cache.eval.evaluate_grad_fine = functools.partial(gradFD.gradSearchFine, json_path=json_path)
+    cache.eval.grad_search = gradFD.search
 
     createCSV(cache)
     createProgressCSV(cache)
@@ -349,11 +356,6 @@ def setupDeap(cache):
     cache.toolbox = base.Toolbox()
     cache.search[searchMethod].setupDEAP(
         cache,
-        evo.fitness,
-        evo.fitness_final,
-        gradFD.gradSearch,
-        gradFD.search,
-        gradFD.gradSearchFine,
         creator,
         base,
         tools,

@@ -13,6 +13,8 @@ from sklearn import preprocessing
 
 import CADETMatch.plugins as plugins
 
+class Node:
+    pass
 
 class Cache:
     def __init__(self):
@@ -64,6 +66,7 @@ class Cache:
             "Last Progress Generation",
             "Generations of Progress",
         ]
+        self.eval = Node()
 
     def setup_dir(self, json_path):
         self.json_path = json_path
