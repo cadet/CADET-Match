@@ -32,7 +32,7 @@ def run(cache, tools, creator):
         "confidence": [],
     }
 
-    pop = []
+    population = []
 
     if "seeds" in cache.settings:
         seed_pop = [
@@ -41,7 +41,7 @@ def run(cache, tools, creator):
             )
             for sublist in cache.settings["seeds"]
         ]
-        pop.extend(seed_pop)
+        population.extend(seed_pop)
 
     gradCheck = cache.badScore
 
@@ -65,11 +65,11 @@ def run(cache, tools, creator):
     with path.open("a", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=",", quoting=csv.QUOTE_ALL)
 
-        multiprocessing.get_logger().info("Population %s", pop)
+        multiprocessing.get_logger().info("Population %s", population)
 
         gradCheck, newChildren = cache.eval.grad_search(
             gradCheck,
-            pop,
+            population,
             cache,
             writer,
             csvfile,

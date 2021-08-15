@@ -152,14 +152,18 @@ def run(cache, tools, creator):
 
         problem = MyProblem(parameters, cache.numGoals, cache.MIN_VALUE, cache.MAX_VALUE, cache.eval.evaluate, problem_state)
 
-        ref_dirs = get_reference_directions("energy", cache.numGoals, 100, seed=1)
+        #we don't need more than 100 reference directions but reference directions should not be
+        #greater than the population size so if the populatino size is smaller reduce the number of reference direction
+        numRefDirs = min(populationSize, 100)
+
+        ref_dirs = get_reference_directions("energy", cache.numGoals, numRefDirs, seed=1)
 
 
         if pymoo_checkpointFile.exists():
             algorithm, = numpy.load(pymoo_checkpointFile, allow_pickle=True).flatten()
             algorithm.problem = problem
         else:
-            algorithm = get_algorithm('unsga3', ref_dirs=ref_dirs, sampling=init_pop, pop_size=populationSize )
+            algorithm = get_algorithm('nsga3', ref_dirs=ref_dirs, sampling=init_pop, pop_size=populationSize )
             algorithm.setup(problem, termination=('n_gen', totalGenerations), seed=1)
 
         while algorithm.has_next():
