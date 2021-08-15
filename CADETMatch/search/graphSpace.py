@@ -41,7 +41,7 @@ def run(cache, tools, creator):
 
     if "seeds" in cache.settings:
         seed_pop = [
-            cache.toolbox.individual_guess(
+            pop.Individual(
                 [f(v) for f, v in zip(cache.settings["transform"], sublist)]
             )
             for sublist in cache.settings["seeds"]
@@ -143,8 +143,4 @@ def setupDEAP(
         )
     cache.toolbox.register(
         "randomPopulation", tools.initRepeat, list, cache.toolbox.individual
-    )
-
-    cache.toolbox.register(
-        "individual_guess", util.initIndividual, creator.Individual, cache
     )

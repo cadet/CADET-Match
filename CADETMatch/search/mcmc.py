@@ -1150,10 +1150,6 @@ def setupDEAP(
         cache,
     )
 
-    cache.toolbox.register(
-        "individual_guess", util.initIndividual, creator.Individual, cache
-    )
-
 
 def process(
     population_order,
@@ -1199,7 +1195,7 @@ def process(
                 tuple(individual),
             )
 
-            ind = cache.toolbox.individual_guess(individual)
+            ind = pop.Individual(individual)
             population_lookup[tuple(individual)] = ind
 
     # everything above is async (unordered) and needs to be reordered based on the population_order
@@ -1219,7 +1215,6 @@ def process(
     ]
 
     stalled, stallWarn, progressWarn = util.process_population(
-        cache.toolbox,
         cache,
         population,
         fitnesses,

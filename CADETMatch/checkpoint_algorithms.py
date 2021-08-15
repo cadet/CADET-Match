@@ -233,7 +233,7 @@ def eaMuPlusLambda(
 
         if cache.finalGradRefinement:
             gen = gen + 1
-            best_individuals = [cache.toolbox.individual_guess(i) for i in meta_hof]
+            best_individuals = [pop.Individual(i) for i in meta_hof]
             gradCheck, newChildren = cache.eval.grad_search(
                 gradCheck,
                 best_individuals,
@@ -260,7 +260,7 @@ def eaMuPlusLambda(
                     result_data,
                 )
 
-        population = [cache.toolbox.individual_guess(i) for i in meta_hof]
+        population = [pop.Individual(i) for i in meta_hof]
         stalled, stallWarn, progressWarn = util.eval_population_final(
             cache,
             population,
@@ -344,7 +344,7 @@ def nsga2(populationSize, ngen, cache, tools):
 
             if "seeds" in cache.settings:
                 seed_pop = [
-                    cache.toolbox.individual_guess(
+                    pop.Individual(
                         [f(v) for f, v in zip(cache.settings["transform"], sublist)]
                     )
                     for sublist in cache.settings["seeds"]

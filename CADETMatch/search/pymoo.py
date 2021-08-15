@@ -75,11 +75,11 @@ def run(cache, tools, creator):
 
     totalGenerations = parameters * cache.settings.get("generations", 1000)
 
-    init_pop = util.sobolPopulation(populationSize, cache.numGoals, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE))
+    init_pop = util.sobolPopulation(populationSize, parameters, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE))
 
     if "seeds" in cache.settings:
         seed_pop = [
-            cache.toolbox.individual_guess(
+            pop.Individual(
                 [f(v) for f, v in zip(cache.settings["transform"], sublist)]
             )
             for sublist in cache.settings["seeds"]
@@ -108,6 +108,12 @@ def run(cache, tools, creator):
             progress_hof = cp["progress_halloffame"]
             cache.generationsOfProgress = cp["generationsOfProgress"]
             cache.lastProgressGeneration = cp["lastProgressGeneration"]
+
+            if cp["gradCheck"] > cache.settings.get("gradCheck", 0.0):
+                gradCheck = cp["gradCheck"]
+            else:
+                gradCheck = cache.settings.get("gradCheck", 0.0)
+
         else:
             if cache.metaResultsOnly:
                 hof = pareto.DummyFront()
@@ -124,6 +130,8 @@ def run(cache, tools, creator):
             progress_hof = pareto.ParetoFront(dimensions=len(cache.WORST_META),
                 similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache)
             )
+
+            gradCheck = cache.settings.get("gradCheck", 0.0)
 
         sim_start = generation_start = time.time()
         result_data = {
@@ -185,6 +193,7 @@ def run(cache, tools, creator):
                 rndstate=random.getstate(),
                 meta_halloffame=meta_hof,
                 grad_halloffame=grad_hof,
+                gradCheck=gradCheck,
                 generationsOfProgress=cache.generationsOfProgress,
                 lastProgressGeneration=cache.lastProgressGeneration,
                 progress_halloffame=progress_hof,

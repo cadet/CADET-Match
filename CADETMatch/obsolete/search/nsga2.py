@@ -73,10 +73,6 @@ def setupDEAP(
     )
 
     cache.toolbox.register(
-        "individual_guess", util.initIndividual, creator.Individual, cache
-    )
-
-    cache.toolbox.register(
         "mate",
         tools.cxSimulatedBinaryBounded,
         eta=2.0,

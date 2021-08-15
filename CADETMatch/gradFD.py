@@ -196,7 +196,7 @@ def processOffspring(
         elif i.x is not None:
             gradient_results.append(i)
 
-            ind = cache.toolbox.individual_guess(i.x)
+            ind = pop.Individual(i.x)
 
             (
                 fit,

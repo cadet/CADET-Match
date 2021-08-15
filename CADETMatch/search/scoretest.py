@@ -36,7 +36,7 @@ def run(cache, tools, creator):
 
         if "seeds" in cache.settings:
             seed_pop = [
-                cache.toolbox.individual_guess(
+                pop.Individual(
                     [f(v) for f, v in zip(cache.settings["transform"], sublist)]
                 )
                 for sublist in cache.settings["seeds"]
@@ -89,7 +89,7 @@ def run(cache, tools, creator):
                 J = jacobian.jac(ind, cache)
                 multiprocessing.get_logger().info("%s %s", ind, J)
 
-        population = [cache.toolbox.individual_guess(i) for i in meta_hof]
+        population = [pop.Individual(i) for i in meta_hof]
         stalled, stallWarn, progressWarn = util.eval_population_final(
             cache,
             population,
@@ -150,8 +150,4 @@ def setupDEAP(
     )
     cache.toolbox.register(
         "population", tools.initRepeat, list, cache.toolbox.individual
-    )
-
-    cache.toolbox.register(
-        "individual_guess", util.initIndividual, creator.Individual, cache
     )

@@ -353,6 +353,9 @@ def setupTemplates(cache):
 def setupDeap(cache):
     "setup the DEAP variables"
     searchMethod = cache.settings.get("searchMethod", "NSGA3")
+    if searchMethod == 'NSGA3':
+        searchMethod = "pymoo"
+        cache.settings['searchMethod'] = searchMethod
     cache.toolbox = base.Toolbox()
     cache.search[searchMethod].setupDEAP(
         cache,

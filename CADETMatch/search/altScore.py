@@ -46,7 +46,7 @@ def run(cache, tools, creator):
         meta_population_transform = data.root.meta_population_transform
 
         for line in meta_population:
-            pop.append(cache.toolbox.individual_guess(line))
+            pop.append(pop.Individual(line))
 
         multiprocessing.get_logger().info(
             "altScore starting population %s %s", len(pop), pop
@@ -109,7 +109,7 @@ def run(cache, tools, creator):
                 J = jacobian.jac(ind, cache)
                 multiprocessing.get_logger().info("%s %s", ind, J)
 
-        population = [cache.toolbox.individual_guess(i) for i in meta_hof]
+        population = [pop.Individual(i) for i in meta_hof]
         stalled, stallWarn, progressWarn = util.eval_population_final(
             cache,
             population,
@@ -170,8 +170,4 @@ def setupDEAP(
     )
     cache.toolbox.register(
         "population", tools.initRepeat, list, cache.toolbox.individual
-    )
-
-    cache.toolbox.register(
-        "individual_guess", util.initIndividual, creator.Individual, cache
     )
