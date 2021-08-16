@@ -120,26 +120,4 @@ def setupDEAP(
     base,
     tools,
 ):
-    "setup the DEAP variables"
-    creator.create(
-        "Individual",
-        pop.Individual
-    )
-
-    creator.create(
-        "IndividualMeta",
-        pop.Individual
-    )
-    cache.toolbox.register(
-        "individualMeta", util.initIndividual, creator.IndividualMeta, cache
-    )
-
-    cache.toolbox.register(
-        "individual",
-        util.generateIndividual,
-        creator.Individual,
-        len(cache.MIN_VALUE),
-        cache.MIN_VALUE,
-        cache.MAX_VALUE,
-        cache,
-    )
+    pass
