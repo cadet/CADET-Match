@@ -22,7 +22,6 @@ def run(cache, tools, creator):
     path = Path(cache.settings["resultsDirBase"], cache.settings["csv"])
     with path.open("a", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=",", quoting=csv.QUOTE_ALL)
-        pop = cache.toolbox.population(n=0)
         sim_start = generation_start = time.time()
         result_data = {
             "input": [],
@@ -45,11 +44,10 @@ def run(cache, tools, creator):
         meta_population = data.root.meta_population
         meta_population_transform = data.root.meta_population_transform
 
-        for line in meta_population:
-            pop.append(pop.Individual(line))
+        population = [pop.Individual(line) for line in meta_population]
 
         multiprocessing.get_logger().info(
-            "altScore starting population %s %s", len(pop), pop
+            "altScore starting population %s %s", len(population), population
         )
         multiprocessing.get_logger().info(
             "altScore starting population (transform) %s %s",
@@ -57,7 +55,7 @@ def run(cache, tools, creator):
             meta_population_transform,
         )
 
-        convert = util.convert_population_inputorder(numpy.array(pop), cache)
+        convert = util.convert_population_inputorder(numpy.array(population), cache)
 
         multiprocessing.get_logger().info(
             "altScore starting population (convert) %s %s", len(convert), convert
@@ -79,7 +77,7 @@ def run(cache, tools, creator):
             similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache)
         )
 
-        invalid_ind = [ind for ind in pop if not ind.fitness.valid]
+        invalid_ind = [ind for ind in population if not ind.fitness.valid]
         stalled, stallWarn, progressWarn = util.eval_population(
             cache,
             invalid_ind,
@@ -94,7 +92,7 @@ def run(cache, tools, creator):
         progress.writeProgress(
             cache,
             -1,
-            pop,
+            population,
             hof,
             meta_hof,
             grad_hof,
@@ -145,29 +143,4 @@ def setupDEAP(
     base,
     tools,
 ):
-    "setup the DEAP variables"
-    creator.create(
-        "Individual",
-        pop.Individual
-    )
-
-    creator.create(
-        "IndividualMeta",
-        pop.Individual
-    )
-    cache.toolbox.register(
-        "individualMeta", util.initIndividual, creator.IndividualMeta, cache
-    )
-
-    cache.toolbox.register(
-        "individual",
-        util.generateIndividual,
-        creator.Individual,
-        len(cache.MIN_VALUE),
-        cache.MIN_VALUE,
-        cache.MAX_VALUE,
-        cache,
-    )
-    cache.toolbox.register(
-        "population", tools.initRepeat, list, cache.toolbox.individual
-    )
+    pass
