@@ -60,7 +60,6 @@
     <Compile Include="CADETMatch\abstract\__init__.py" />
     <Compile Include="CADETMatch\cache.py" />
     <Compile Include="CADETMatch\calc_coeff.py" />
-    <Compile Include="CADETMatch\checkpoint_algorithms.py" />
     <Compile Include="CADETMatch\code_test.py" />
     <Compile Include="CADETMatch\de.py" />
     <Compile Include="CADETMatch\de_snooker.py" />
@@ -171,8 +170,11 @@
     <Compile Include="CADETMatch\search\mcmc.py" />
     <Compile Include="CADETMatch\search\multistart.py" />
     <Compile Include="CADETMatch\search\nsga3.py" />
-    <Compile Include="CADETMatch\search\pymoo.py" />
+    <Compile Include="CADETMatch\pymoo_config.py" />
     <Compile Include="CADETMatch\search\scoretest.py" />
+    <Compile Include="CADETMatch\search\unsga3.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="CADETMatch\search\__init__.py" />
     <Compile Include="CADETMatch\smoothing.py" />
     <Compile Include="CADETMatch\stretch.py" />

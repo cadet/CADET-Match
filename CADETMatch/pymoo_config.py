@@ -13,7 +13,6 @@ import CADETMatch.progress as progress
 import CADETMatch.sub as sub
 import CADETMatch.util as util
 import CADETMatch.pop as pop
-import CADETMatch.checkpoint_algorithms
 
 from pymoo.factory import get_algorithm, get_reference_directions
 from pymoo.optimize import minimize
@@ -66,7 +65,17 @@ class MyProblem(Problem):
         out["F"] = error
 
 
-def run(cache, tools, creator):
+def stop_iteration(best, stalled, cache):
+    stopAverage = cache.settings.get("stopAverage", 0.0)
+    stopBest = cache.settings.get("stopBest", 0.0)
+    stopRMSE = cache.settings.get("stopRMSE", 0.0)
+    if best[2] <= stopAverage or best[1] <= stopBest or stalled or best[-1] <= stopRMSE:
+        return True
+    else:
+        return False
+
+
+def run(cache, alg="unsga3"):
     "run the parameter estimation"
     random.seed()
     parameters = len(cache.MIN_VALUE)
@@ -163,7 +172,7 @@ def run(cache, tools, creator):
             algorithm, = numpy.load(pymoo_checkpointFile, allow_pickle=True).flatten()
             algorithm.problem = problem
         else:
-            algorithm = get_algorithm('nsga3', ref_dirs=ref_dirs, sampling=init_pop, pop_size=populationSize )
+            algorithm = get_algorithm(alg, ref_dirs=ref_dirs, sampling=init_pop, pop_size=populationSize )
             algorithm.setup(problem, termination=('n_gen', totalGenerations), seed=1)
 
         while algorithm.has_next():
@@ -212,7 +221,7 @@ def run(cache, tools, creator):
             numpy.save(pymoo_checkpointFile, algorithm)
             algorithm.problem.problem_state = problem_state
 
-            if CADETMatch.checkpoint_algorithms.stop_iteration(best, stalled, cache):
+            if stop_iteration(best, stalled, cache):
                 break
 
         gen = problem.ngen + 1
