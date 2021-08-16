@@ -146,7 +146,7 @@ def write_progress_csv(
                 len(population),
                 len(cache.MIN_VALUE),
                 cache.numGoals,
-                cache.settings.get("searchMethod", "NSGA3"),
+                cache.settings.get("searchMethod", "UNSGA3"),
                 meta_length,
                 best_min,
                 best_product,

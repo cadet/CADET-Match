@@ -12,7 +12,7 @@ def create_experiments(defaults):
     config = Dict()
     config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     
@@ -147,7 +147,7 @@ def create_slicing(defaults):
     config = Dict()
     config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     
@@ -202,7 +202,7 @@ def create_fractionation(defaults):
     config = Dict()
     config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     
@@ -282,7 +282,7 @@ def create_ceiling(defaults):
     config = Dict()
     config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     
@@ -322,7 +322,7 @@ def create_shared_scores(defaults):
     config = Dict()
     config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     
@@ -421,6 +421,7 @@ def create_search(defaults):
     experiment1.scores = [feature1,]
 
     create_nsga3(defaults, config)
+    create_unsga3(defaults, config)
     create_multistart(defaults, config)
     create_graphspace(defaults, config)
     create_scoretest(defaults, config)
@@ -446,7 +447,7 @@ def create_common(dir, config, altDir=None):
 def create_mcmc_stage1(defaults, config):
     dir = defaults.base_dir / "search" / "mcmc" / "stage1"
     config = config.deepcopy()
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.continueMCMC = 1
     config.MCMCpopulationSet = defaults.MCMCpopulation
@@ -469,7 +470,7 @@ def create_mcmc_stage2(defaults, config):
     dir = defaults.base_dir / "search" / "mcmc" / "stage2"
     config = config.deepcopy()
     config.baseDir = dir.as_posix()
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.continueMCMC = 1
     config.MCMCpopulationSet = defaults.MCMCpopulation
@@ -525,16 +526,16 @@ def create_altScore(defaults, config):
     config = config.deepcopy()
     config.searchMethod = 'AltScore'
     config.population = 0
-    config.PreviousResults = (defaults.base_dir / "search" / "nsga3" / "results" / "result.h5").as_posix()
+    config.PreviousResults = (defaults.base_dir / "search" / "unsga3" / "results" / "result.h5").as_posix()
     config.experiments[0].scores[0].type = "Shape"
     config.resultsDir = (dir / "results").as_posix()
-    config.resultsDirOriginal = (defaults.base_dir / "search" / "nsga3" / "results").as_posix()
-    create_common(dir, config, altDir = (defaults.base_dir / "search" / "nsga3"))
+    config.resultsDirOriginal = (defaults.base_dir / "search" / "unsga3" / "results").as_posix()
+    create_common(dir, config, altDir = (defaults.base_dir / "search" / "unsga3"))
 
 def create_refine_shape(defaults, config):
     dir = defaults.base_dir / "search" / "other" / "refine_shape"
     config = config.deepcopy()
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = False
     create_common(dir, config)
@@ -542,7 +543,7 @@ def create_refine_shape(defaults, config):
 def create_refine_sse(defaults, config):
     dir = defaults.base_dir / "search" / "other" / "refine_sse"
     config = config.deepcopy()
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     create_common(dir, config)
@@ -550,7 +551,7 @@ def create_refine_sse(defaults, config):
 def create_early_stopping(defaults, config):
     dir = defaults.base_dir / "search" / "other" / "early_stopping"
     config = config.deepcopy()
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     config.stopAverage = 1e-3
@@ -578,7 +579,6 @@ def create_scoretest(defaults, config):
     create_common(dir, config)
 
 def create_graphspace(defaults, config):
-    #nsga3
     dir = defaults.base_dir / "search" / "graphSpace"
     config = config.deepcopy()
     config.searchMethod = 'GraphSpace'
@@ -588,7 +588,6 @@ def create_graphspace(defaults, config):
     create_common(dir, config)
 
 def create_multistart(defaults, config):
-    #nsga3
     dir = defaults.base_dir / "search" / "multistart"
     config = config.deepcopy()
     config.searchMethod = 'Multistart'
@@ -597,7 +596,6 @@ def create_multistart(defaults, config):
     create_common(dir, config)
 
 def create_nsga3(defaults, config):
-    #nsga3
     dir = defaults.base_dir / "search" / "nsga3"
     config = config.deepcopy()
     config.searchMethod = 'NSGA3'
@@ -607,6 +605,15 @@ def create_nsga3(defaults, config):
     config.gradVector = True
     create_common(dir, config)
 
+def create_unsga3(defaults, config):
+    dir = defaults.base_dir / "search" / "unsga3"
+    config = config.deepcopy()
+    config.searchMethod = 'UNSGA3'
+    config.population = defaults.population
+    config.stallGenerations = 10
+    config.finalGradRefinement = True
+    config.gradVector = True
+    create_common(dir, config)
 
 def create_transforms(defaults):
     create_transforms_dextran(defaults)
@@ -620,7 +627,7 @@ def create_experiments_index(defaults):
     config = Dict()
     config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     
@@ -668,7 +675,7 @@ def create_experiments_linear_exp(defaults):
     config = Dict()
     config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     
@@ -729,7 +736,7 @@ def create_experiments_cstr(defaults):
     config = Dict()
     config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     
@@ -787,7 +794,7 @@ def create_experiments_linear(defaults):
     config = Dict()
     config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     
@@ -858,7 +865,7 @@ def create_transforms_non(defaults):
     config = Dict()
     config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     
@@ -924,7 +931,7 @@ def create_transforms_dextran(defaults):
     config = Dict()
     config.CADETPath = Cadet.cadet_path
     config.resultsDir = 'results'
-    config.searchMethod = 'NSGA3'
+    config.searchMethod = 'UNSGA3'
     config.population = defaults.population
     config.gradVector = True
     
