@@ -526,11 +526,11 @@ def create_altScore(defaults, config):
     config = config.deepcopy()
     config.searchMethod = 'AltScore'
     config.population = 0
-    config.PreviousResults = (defaults.base_dir / "search" / "unsga3" / "results" / "result.h5").as_posix()
+    config.PreviousResults = (defaults.base_dir / "search" / "nsga3" / "results" / "result.h5").as_posix()
     config.experiments[0].scores[0].type = "Shape"
     config.resultsDir = (dir / "results").as_posix()
-    config.resultsDirOriginal = (defaults.base_dir / "search" / "unsga3" / "results").as_posix()
-    create_common(dir, config, altDir = (defaults.base_dir / "search" / "unsga3"))
+    config.resultsDirOriginal = (defaults.base_dir / "search" / "nsga3" / "results").as_posix()
+    create_common(dir, config, altDir = (defaults.base_dir / "search" / "nsga3"))
 
 def create_refine_shape(defaults, config):
     dir = defaults.base_dir / "search" / "other" / "refine_shape"
