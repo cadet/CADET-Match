@@ -88,12 +88,11 @@ def run(cache, alg="unsga3"):
 
     if "seeds" in cache.settings:
         seed_pop = [
-            pop.Individual(
-                [f(v) for f, v in zip(cache.settings["transform"], sublist)]
-            )
+            [f(v) for f, v in zip(cache.settings["transform"], sublist)]
             for sublist in cache.settings["seeds"]
         ]
-        init_pop.extend(seed_pop)
+        init_pop = numpy.concatenate([init_pop, numpy.array(seed_pop)], axis=0)
+        #init_pop.extend(seed_pop)
 
     
     path = Path(cache.settings["resultsDirBase"], cache.settings["csv"])
