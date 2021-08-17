@@ -1,7 +1,7 @@
 Experiments
 -----------
 
-CADETMatch supports one or more experiments with one or more components. 
+CADET-Match supports one or more experiments with one or more components. 
 The basic structure is shown below.
 
 .. code-block:: json

@@ -1,11 +1,11 @@
-CADETMatch Examples
+CADET-Match Examples
 -------------------
 
 Generating Examples and running them
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-CADETMatch can generate a complete set of examples and run them. This can be used to verify that all features used in CADETMatch
-are working correctly on your installation and to see how to run CADETMatch in various situations. The examples include variable transforms,
+CADET-Match can generate a complete set of examples and run them. This can be used to verify that all features used in CADET-Match
+are working correctly on your installation and to see how to run CADET-Match in various situations. The examples include variable transforms,
 search strategies, and search stratgies. Depending on the hardware available running the complete set of examples can hours to days.
 
 Generate examples
@@ -16,7 +16,7 @@ needs to be supplied. You can have multiple example directories that are run wit
 working correctly.
 
 The examples generated can all be run individually and the files used as a template to make your own matches. There are examples for every feature in 
-CADETMatch.
+CADET-Match.
 
 .. code-block:: bash
 

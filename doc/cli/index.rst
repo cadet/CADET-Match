@@ -1,8 +1,8 @@
 Running
 ^^^^^^^
 
-CADETMatch is designed to be used through a command line interface. It is also possible to use CADETMatch using Jupyter notebooks but this
-is not recommended for normal usage. CADETMatch has automatic checkpointing and if matching is interrupted it will resume from the last step
+CADET-Match is designed to be used through a command line interface. It is also possible to use CADET-Match using Jupyter notebooks but this
+is not recommended for normal usage. CADET-Match has automatic checkpointing and if matching is interrupted it will resume from the last step
 completed.
 
 These commands can be run from the Windows command line or from any Linux command line. These commands can also be run through cluster
@@ -19,7 +19,7 @@ control software.
 ``--generate_map`` Find the maximum a posteriori for an MCMC run 
 
 
-The following options are for genering graphs. CADETMatch generates graphs automatically periodically but these commands
+The following options are for genering graphs. CADET-Match generates graphs automatically periodically but these commands
 can be used to generate graphs immediately. These commands should be safe to run while matching is proceeding but they
 may fail if the required data has not been generated yet.
 
@@ -52,11 +52,11 @@ Generate graphs using 6 cores
     python -m CADETMatch --generate_graphs --json <path to connfiguration file> -n 6
 
 
-Running CADETMatch remotely
+Running CADET-Match remotely
 ---------------------------
 
-The most common way CADETMatch is used is by logging into a server with SSH and starting a matching session.
-These matches can take hours to days to complete and the following command allows CADETMatch to keep running
+The most common way CADET-Match is used is by logging into a server with SSH and starting a matching session.
+These matches can take hours to days to complete and the following command allows CADET-Match to keep running
 once you logout.
 
 .. code-block:: bash

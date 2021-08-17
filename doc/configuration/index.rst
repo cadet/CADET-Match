@@ -3,8 +3,8 @@
 Configuration
 -------------
 
-CADETMatch uses a JSON based configuration file format.
-CADETMatch uses `jstyleson <https://github.com/linjackson78/jstyleson>`_ to support JSON with comments.
+CADET-Match uses a JSON based configuration file format.
+CADET-Match uses `jstyleson <https://github.com/linjackson78/jstyleson>`_ to support JSON with comments.
 You can programatically create the JSON in Python using nested dictionaries or `addict <https://github.com/mewwts/addict>`_ and then convert to JSON.
 
 Ususally, the configuration has to include:

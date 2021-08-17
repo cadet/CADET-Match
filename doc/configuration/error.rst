@@ -1,8 +1,8 @@
 Error Modeling
 --------------
 
-CADETMatch includes error modeling and parameter estimation.
-Error modeling in CADETMatch is based on using a fitted simulation and creating an error model by manipulations to the fitted simulation.
+CADET-Match includes error modeling and parameter estimation.
+Error modeling in CADET-Match is based on using a fitted simulation and creating an error model by manipulations to the fitted simulation.
 Error modeling uses MCMC and can be a slow process which requires a lot of computing time.
 Some simple problems can be solved in a few hours on a powerful desktop and others can take weeks on a powerful server.
 

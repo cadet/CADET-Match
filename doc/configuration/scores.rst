@@ -1,7 +1,7 @@
 Scores
 ------
 
-CADETMatch has many scores available.
+CADET-Match has many scores available.
 Each score is designed to solve a particular type of problem. 
 The most common ones will be covered first.
 There are a few additional ones available in the code that are retained for backwards compatibility that will not be covered and their usage is not recomended.

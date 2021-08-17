@@ -1,7 +1,7 @@
 Transform
 ---------
 
-CADETMatch has many variable transforms available.
+CADET-Match has many variable transforms available.
 The most common ones will be covered first.
 There are a few additional ones available in the code that are retained for backwards compatibility that will not be covered and their usage is not recomended.
 

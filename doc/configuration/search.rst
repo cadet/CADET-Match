@@ -1,23 +1,26 @@
 Search
 ------
 
-CADETMatch uses a number of different search strategies for parameter estimation.
+CADET-Match uses a number of different search strategies for parameter estimation.
 Parameters that are common to more than one search method will be repeated.
 The choice of search strategy is set by using searchMethod. 
 
 =================== =========== ================ ========== =========================================================================================================
  Key                  Values       Default        Required     Description
 =================== =========== ================ ========== =========================================================================================================
-searchMethod           String       NSGA3            No       Select the search method to use. (NSGA3, Multistart, GraphSpace, MCMC, AltScore, Gradient, ScoreTest)
+searchMethod           String       UNSGA3            No       Select the search method to use. (UNSGA3, NSGA3, Multistart, GraphSpace, MCMC, AltScore, Gradient, ScoreTest)
 =================== =========== ================ ========== =========================================================================================================
 
 Most of the search strategies are population based and capable of running in parallel. 
 
-NSGA3
-^^^^^
+UNSGA3
+^^^^^^
 
-NSGA3 is a genetic algorithm designed for high-dimensional problems.
-If only a single objective is used the system will automatically switch to NSGA2.
+UNSGA3 is a genetic algorithm designed for high-dimensional problems. `UNSGA3 <https://pymoo.org/algorithms/unsga3.html>`_ from pymoo is used.
+
+The difference between UNSGA3 and NSGA3 is that UNSGA3 uses a tournament selection to bread the best members instead
+of random mating. In almost all cases UNSGA3 will converge faster and to a better optimum. NSGA3 is mostly retained for backwards
+compatibility.
 
 =================== =========== ================ ========== =================================================================================================================================
  Key                  Values       Default        Required     Description
@@ -26,10 +29,32 @@ population            Integer       100            No        Set the population 
 generations           Integer       1000           No        Set the max number of generations to population size * generations.
 sobolGeneration       Boolean       True           No        Use a sobol sequence to generate the initial population instead of random initialization
 stallGenerations      Integer       10             No        Terminate optimization after this many generations without progress
-stallCorrect          Integer       5              No        Increase population size (if allowed) after this many generations without progress
-progressCorrect       Integer       5              No        Decrease population size (if allowed) after this many generations with progress
-minPopulation         Integer     population       No        Allow CADETMatch to decrease the population to this size if progress is fast
-maxPopulation         Integer     population       No        Allow CADETMatch to increase the population to this size if progress stalls
+stopAverage           Float         0.0            No        Stop searching when the average value of all metrics is less than or equal to this value
+stopBest              Float         0.0            No        Stop searching when the highest metric is less than or equal to this value
+stopRMSE              Float         0.0            No        Stop when the Root Mean Square Error is less than or equal to this value
+gradCheck             Float         0.0            No        If the geometric mean of the metrics drop below this value run gradient descent to refine the value
+finalGradRefinement   Boolean       False          No        Take the final pareto front and refine it with gradient descent
+gradFineStop          Float         1e-14          No        set xtol of scipy.optimize.least_squares
+localRefine           String        gradient       No        Can be gradient or powell
+continueMCMC          Boolean       False          No        Once search finishes start MCMC and carry over useful information automatically
+seeds                 List          None           No        Optimization can be seeded with specific values to test
+MultiObjectiveSSE     Boolean       False          No        If set to true SSE objectives are split apart and turned into a multi-objective system. This is useful for multiple experiments.
+=================== =========== ================ ========== =================================================================================================================================
+
+
+NSGA3
+^^^^^
+
+NSGA3 is a genetic algorithm designed for high-dimensional problems. `NSGA3 <https://pymoo.org/algorithms/nsga3.html>`_ from pymoo is used. In most cases UNSGA3 should be used
+and NSGA3 is retained for backwards compatibility.
+
+=================== =========== ================ ========== =================================================================================================================================
+ Key                  Values       Default        Required     Description
+=================== =========== ================ ========== =================================================================================================================================
+population            Integer       100            No        Set the population size per parameter estimated.
+generations           Integer       1000           No        Set the max number of generations to population size * generations.
+sobolGeneration       Boolean       True           No        Use a sobol sequence to generate the initial population instead of random initialization
+stallGenerations      Integer       10             No        Terminate optimization after this many generations without progress
 stopAverage           Float         0.0            No        Stop searching when the average value of all metrics is less than or equal to this value
 stopBest              Float         0.0            No        Stop searching when the highest metric is less than or equal to this value
 stopRMSE              Float         0.0            No        Stop when the Root Mean Square Error is less than or equal to this value

@@ -7,10 +7,10 @@
 .. image:: https://img.shields.io/github/release/modsim/CADET-Match.svg
    :target: https://github.com/modsim/CADET-Match/releases
 
-CADETMatch
+CADET-Match
 ==========
-CADETMatch is a parameter estimation and error modeling library for CADET.
-CADETMatch is developed at the Institute of Bio- and Geosciences 1 (IBG-1) of Forschungszentrum Jülich (FZJ) under supervision of Dr. Eric von Lieres.
+CADET-Match is a parameter estimation and error modeling library for CADET.
+CADET-Match is developed at the Institute of Bio- and Geosciences 1 (IBG-1) of Forschungszentrum Jülich (FZJ) under supervision of Dr. Eric von Lieres.
 
 
 - **Source:** https://github.com/modsim/CADET-Match
@@ -29,7 +29,7 @@ CADETMatch is developed at the Institute of Bio- and Geosciences 1 (IBG-1) of Fo
 
 .. rubric:: Ongoing Development
 
-CADETMatch is actively developed and we do our best to prevent breaking changes.
+CADET-Match is actively developed and we do our best to prevent breaking changes.
 For non-developers, it is recommended to upgrade from release to release instead of always working with the most recent commit.
 
 

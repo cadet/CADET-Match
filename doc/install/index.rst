@@ -3,7 +3,7 @@
 Install
 -------
 
-CADETMatch is a parameter estimation and error modeling library for Python. CADETMatch has a number of
+CADET-Match is a parameter estimation and error modeling library for Python. CADET-Match has a number of
 dependencies and they can be automatically installed. 
 
 The Python libraries for CADET don't include CADET and it must be installed separately by following the
@@ -27,6 +27,6 @@ If you prefer to install from PyPi you can run
 
 .. code-block:: bash
 
-   pip install CADETMatch
+   pip install cadetmatch
 
 The PyPi packages are updated more frequently than the conda packages are.
