@@ -8,7 +8,6 @@ from pathlib import Path
 import jstyleson
 import numpy
 from cadet import Cadet
-from deap import tools
 from sklearn import preprocessing
 
 import CADETMatch.plugins as plugins

@@ -19,7 +19,6 @@ import psutil
 import scipy.signal
 from addict import Dict
 from cadet import H5, Cadet
-from deap import tools
 
 import CADETMatch.calc_coeff as calc_coeff
 import CADETMatch.sub as sub

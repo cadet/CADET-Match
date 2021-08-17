@@ -14,7 +14,7 @@ import CADETMatch.pop as pop
 name = "ScoreTest"
 
 
-def run(cache, tools, creator):
+def run(cache):
     "run the parameter estimation"
     path = Path(cache.settings["resultsDirBase"], cache.settings["csv"])
     with path.open("a", newline="") as csvfile:

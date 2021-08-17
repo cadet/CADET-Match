@@ -15,7 +15,7 @@ import numpy
 name = "Multistart"
 
 
-def run(cache, tools, creator):
+def run(cache):
     "run the parameter estimation"
     random.seed()
 

@@ -6,7 +6,7 @@ import bisect
 
 import numpy
 class ParetoFront:
-    "Modification of the pareto front in DEAP that takes cache as an argument to update to use for similar comparison"
+    "Pareto front designed to be compatible with DEAP"
 
     def __init__(self, dimensions, similar=None, similar_fit=None, slice_object=slice(None)):
         if similar is None:
@@ -135,7 +135,7 @@ class ParetoFront:
         return numpy.min(data, 0)
 
 class DummyFront(ParetoFront):
-    "Modification of the pareto front in DEAP that takes cache as an argument to update to use for similar comparison"
+    "Pareto front designed to be compatible with DEAP"
 
     def __init__(self, dimensions=None, similar=None):
         "This is here for API compatibility, don't do anything"

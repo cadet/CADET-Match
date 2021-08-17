@@ -12,7 +12,6 @@ import h5py
 import numpy
 import functools
 from cadet import H5, Cadet
-from deap import base, creator, tools
 
 import CADETMatch.evo as evo
 import CADETMatch.gradFD as gradFD
@@ -26,7 +25,6 @@ def main(map_function):
     path = sys.argv[1]
     setup(cache, path, map_function)
     gradFD.setupTemplates(cache)
-    # grad.setupTemplates(cache)
     hof = evo.run(cache)
 
     multiprocessing.get_logger().info("altScoress %s", cache.altScores)
@@ -133,7 +131,6 @@ def print_version():
         ("corner", "2.2.1"),
         ("emcee", "3.0.2"),
         ("SALib", "1.3.11"),
-        ("deap", "1.3.1"),
         ("psutil", "5.8.0"),
         ("numpy", "1.21.1"),
         ("openpyxl", "3.0.7"),
@@ -145,7 +142,8 @@ def print_version():
         ("seaborn", "0.11.1"),
         ("scikit-learn", "0.24.2"),
         ("jstyleson", "0.2.0"),
-        ('filelock', "3.0.12")
+        ('filelock', "3.0.12"),
+        ('pymoo', '0.4.2.2')
     ]
 
     for module, version_tested in modules:

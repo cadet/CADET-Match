@@ -896,7 +896,7 @@ def write_interval(
         write_interval.last_time = time.time()
 
 
-def run(cache, tools, creator):
+def run(cache):
     "run the parameter estimation"
     random.seed()
     checkpointFile = Path(

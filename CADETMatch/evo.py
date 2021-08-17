@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy
 from cadet import Cadet
-from deap import creator, tools
 
 import CADETMatch.cache as cache
 import CADETMatch.progress as progress
@@ -151,4 +150,4 @@ def runExperimentBase(
 def run(cache):
     "run the parameter estimation"
     searchMethod = cache.settings.get("searchMethod", "UNSGA3")
-    return cache.search[searchMethod].run(cache, tools, creator)
+    return cache.search[searchMethod].run(cache)

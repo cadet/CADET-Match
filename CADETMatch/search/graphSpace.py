@@ -17,7 +17,7 @@ name = "GraphSpace"
 "This is not actually an optimization method. It is used to sample a space and generate graphs to see what the space looks like."
 
 
-def run(cache, tools, creator):
+def run(cache):
     "run the parameter estimation"
     random.seed()
 

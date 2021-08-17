@@ -60,7 +60,6 @@
     <Compile Include="CADETMatch\abstract\__init__.py" />
     <Compile Include="CADETMatch\cache.py" />
     <Compile Include="CADETMatch\calc_coeff.py" />
-    <Compile Include="CADETMatch\code_test.py" />
     <Compile Include="CADETMatch\de.py" />
     <Compile Include="CADETMatch\de_snooker.py" />
     <Compile Include="CADETMatch\evo.py" />
