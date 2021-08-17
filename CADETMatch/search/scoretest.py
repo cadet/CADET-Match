@@ -19,7 +19,6 @@ def run(cache, tools, creator):
     path = Path(cache.settings["resultsDirBase"], cache.settings["csv"])
     with path.open("a", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=",", quoting=csv.QUOTE_ALL)
-        pop = cache.toolbox.population(n=0)
         sim_start = generation_start = time.time()
         result_data = {
             "input": [],
@@ -34,6 +33,7 @@ def run(cache, tools, creator):
             "confidence": [],
         }
 
+        population = []
         if "seeds" in cache.settings:
             seed_pop = [
                 pop.Individual(
@@ -41,7 +41,7 @@ def run(cache, tools, creator):
                 )
                 for sublist in cache.settings["seeds"]
             ]
-            pop.extend(seed_pop)
+            population.extend(seed_pop)
 
         if cache.metaResultsOnly:
             hof = pareto.DummyFront()
@@ -59,10 +59,9 @@ def run(cache, tools, creator):
             similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache)
         )
 
-        invalid_ind = [ind for ind in pop if not ind.fitness.valid]
         stalled, stallWarn, progressWarn = util.eval_population(
             cache,
-            invalid_ind,
+            population,
             writer,
             csvfile,
             hof,
@@ -74,7 +73,7 @@ def run(cache, tools, creator):
         progress.writeProgress(
             cache,
             -1,
-            pop,
+            population,
             hof,
             meta_hof,
             grad_hof,
@@ -85,7 +84,7 @@ def run(cache, tools, creator):
         )
 
         if cache.settings.get("condTest", None):
-            for ind in invalid_ind:
+            for ind in population:
                 J = jacobian.jac(ind, cache)
                 multiprocessing.get_logger().info("%s %s", ind, J)
 
@@ -125,29 +124,4 @@ def setupDEAP(
     base,
     tools,
 ):
-    "setup the DEAP variables"
-    creator.create(
-        "Individual",
-        pop.Individual
-    )
-
-    creator.create(
-        "IndividualMeta",
-        pop.Individual
-    )
-    cache.toolbox.register(
-        "individualMeta", util.initIndividual, creator.IndividualMeta, cache
-    )
-
-    cache.toolbox.register(
-        "individual",
-        util.generateIndividual,
-        creator.Individual,
-        len(cache.MIN_VALUE),
-        cache.MIN_VALUE,
-        cache.MAX_VALUE,
-        cache,
-    )
-    cache.toolbox.register(
-        "population", tools.initRepeat, list, cache.toolbox.individual
-    )
+    pass
