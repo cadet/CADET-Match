@@ -10,6 +10,7 @@ import CADETMatch.progress as progress
 import CADETMatch.sub as sub
 import CADETMatch.util as util
 import CADETMatch.pop as pop
+import numpy
 
 name = "Multistart"
 
@@ -20,7 +21,7 @@ def run(cache, tools, creator):
 
     parameters = len(cache.MIN_VALUE)
 
-    LAMBDA = parameters * cache.settings["population"]
+    populationSize = parameters * cache.settings["population"]
     sim_start = generation_start = time.time()
     result_data = {
         "input": [],
@@ -35,7 +36,8 @@ def run(cache, tools, creator):
         "confidence": [],
     }
 
-    pop = cache.toolbox.population(n=LAMBDA)
+    init_pop = util.sobolPopulation(populationSize, parameters, numpy.array(cache.MIN_VALUE), numpy.array(cache.MAX_VALUE))
+    init_pop = [pop.Individual(row) for row in init_pop]
 
     if "seeds" in cache.settings:
         seed_pop = [
@@ -44,7 +46,7 @@ def run(cache, tools, creator):
             )
             for sublist in cache.settings["seeds"]
         ]
-        pop.extend(seed_pop)
+        init_pop.extend(seed_pop)
 
     gradCheck = cache.badScore
 
@@ -69,11 +71,11 @@ def run(cache, tools, creator):
         writer = csv.writer(csvfile, delimiter=",", quoting=csv.QUOTE_ALL)
 
         multiprocessing.get_logger().info(
-            "Population %s", [util.convert_individual_inputorder(i, cache) for i in pop]
+            "Population %s", [util.convert_individual_inputorder(i, cache) for i in init_pop]
         )
 
         gradCheck, newChildren = cache.eval.grad_search(
-            gradCheck, pop, cache, writer, csvfile, hof, meta_hof, -1, check_all=True
+            gradCheck, init_pop, cache, writer, csvfile, hof, meta_hof, -1, check_all=True
         )
 
         stalled, stallWarn, progressWarn = util.eval_population(
@@ -114,37 +116,4 @@ def setupDEAP(
     tools,
 ):
     "setup the DEAP variables"
-    creator.create(
-        "Individual",
-        pop.Individual
-    )
-
-    creator.create(
-        "IndividualMeta",
-        pop.Individual
-    )
-    cache.toolbox.register(
-        "individualMeta", util.initIndividual, creator.IndividualMeta, cache
-    )
-
-    cache.toolbox.register(
-        "individual",
-        util.generateIndividual,
-        creator.Individual,
-        len(cache.MIN_VALUE),
-        cache.MIN_VALUE,
-        cache.MAX_VALUE,
-        cache,
-    )
-
-    if cache.sobolGeneration:
-        cache.toolbox.register(
-            "population", util.sobolGenerator, creator.Individual, cache
-        )
-    else:
-        cache.toolbox.register(
-            "population", tools.initRepeat, list, cache.toolbox.individual
-        )
-    cache.toolbox.register(
-        "randomPopulation", tools.initRepeat, list, cache.toolbox.individual
-    )
+    pass
