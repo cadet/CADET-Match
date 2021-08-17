@@ -281,12 +281,3 @@ def run(cache, alg="unsga3"):
         util.finish(cache)
         sub.graph_corner_process(cache, last=True)
         return hof
-
-def setupDEAP(
-    cache,
-    creator,
-    base,
-    tools,
-):
-    pass
-

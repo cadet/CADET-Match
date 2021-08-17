@@ -7,12 +7,3 @@ name = "NSGA3"
 def run(cache, tools, creator):
     "run the parameter estimation"
     return CADETMatch.pymoo_config.run(cache, 'nsga3')
-    
-
-def setupDEAP(
-    cache,
-    creator,
-    base,
-    tools,
-):
-    pass

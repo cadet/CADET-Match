@@ -104,11 +104,3 @@ def run(cache, tools, creator):
 
         return hof
 
-
-def setupDEAP(
-    cache,
-    creator,
-    base,
-    tools,
-):
-    pass

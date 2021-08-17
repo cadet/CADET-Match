@@ -117,7 +117,6 @@ def setup(cache, json_path, map_function):
     createProgressCSV(cache)
     createErrorCSV(cache)
     setupTemplates(cache)
-    setupDeap(cache)
 
 
 def print_version():
@@ -348,18 +347,6 @@ def setupTemplates(cache):
 
         template_final.save()
         experiment["simulation_final"] = template_final
-
-
-def setupDeap(cache):
-    "setup the DEAP variables"
-    searchMethod = cache.settings.get("searchMethod", "UNSGA3")
-    cache.toolbox = base.Toolbox()
-    cache.search[searchMethod].setupDEAP(
-        cache,
-        creator,
-        base,
-        tools,
-    )
 
 
 def continue_mcmc(cache, map_function):

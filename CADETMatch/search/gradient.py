@@ -112,12 +112,3 @@ def run(cache, tools, creator):
         sub.graph_corner_process(cache, last=True)
 
         return hof
-
-
-def setupDEAP(
-    cache,
-    creator,
-    base,
-    tools,
-):
-    pass
