@@ -20,9 +20,6 @@ After installing Anaconda open an `Anaconda Shell` and run the following command
     conda config --add channels anaconda-fusion
     conda config --add channels conda-forge
 
-    conda install numpy scipy matplotlib autograd cma==2.7
-    pip install -U pymoo
-
     conda install -c immudzen cadetmatch
 
 
