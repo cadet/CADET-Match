@@ -28,7 +28,7 @@ class ParetoFront:
         #merged in
         self.dimensions = dimensions
         self.best_keys = [1e308]*dimensions
-        self.best_items = [pop.Individual([0], [1e308]*dimensions)]*dimensions
+        self.best_items = [None]*dimensions
 
     def insert(self, item):
         """Insert a new item in sorted order"""
@@ -120,21 +120,16 @@ class ParetoFront:
     def hashes(self):
         hashes = {
             hashlib.md5(str(list(individual.value)).encode("utf-8", "ignore")).hexdigest()
-            for individual in self.items
+            for individual in itertools.chain(self.items, self.best_items) if individual is not None
         }
-        hashes_best = {
-            hashlib.md5(str(list(individual.value)).encode("utf-8", "ignore")).hexdigest()
-            for individual in self.best_items
-        }
-        all_hashes = hashes | hashes_best
-        return all_hashes 
+        return hashes 
 
 
     def totalEntries(self):
         population = []
 
         for ind in itertools.chain(self.items, self.best_items):
-            if ind.value not in population:
+            if ind is not None and ind.value not in population:
                 population.append(ind.value)
 
         return len(population)
@@ -145,7 +140,7 @@ class ParetoFront:
         fitnesses  = []
 
         for ind in itertools.chain(self.items, self.best_items):
-            if ind.value not in population:
+            if ind is not None and ind.value not in population:
                 population.append(ind.value)
                 fitnesses.append(ind.fitness.values)
 
@@ -154,7 +149,7 @@ class ParetoFront:
 
 
     def getBestScores(self):
-        items = [i.fitness.values for i in itertools.chain(self.items, self.best_items)]
+        items = [i.fitness.values for i in itertools.chain(self.items, self.best_items) if i is not None]
         data = numpy.array(items)
         return numpy.min(data, 0)
 
