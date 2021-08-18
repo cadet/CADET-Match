@@ -3,6 +3,7 @@ from operator import eq
 import hashlib
 import CADETMatch.pop as pop
 import bisect
+import itertools
 
 import numpy
 class ParetoFront:
@@ -128,9 +129,32 @@ class ParetoFront:
         all_hashes = hashes | hashes_best
         return all_hashes 
 
+
+    def totalEntries(self):
+        population = []
+
+        for ind in itertools.chain(self.items, self.best_items):
+            if ind.value not in population:
+                population.append(ind.value)
+
+        return len(population)
+
+
+    def getEntries(self):
+        population = []
+        fitnesses  = []
+
+        for ind in itertools.chain(self.items, self.best_items):
+            if ind.value not in population:
+                population.append(ind.value)
+                fitnesses.append(ind.fitness.values)
+
+        return numpy.array(population), numpy.array(fitnesses)
+
+
+
     def getBestScores(self):
-        items = [i.fitness.values for i in self.items]
-        items.extend([i.fitness.values for i in self.best_items])
+        items = [i.fitness.values for i in itertools.chain(self.items, self.best_items)]
         data = numpy.array(items)
         return numpy.min(data, 0)
 
@@ -186,8 +210,3 @@ def updateParetoFront(halloffame, offspring):
         ]
     )
     return bool(new_members), significant
-
-def getBestScoresMonkey(self):
-    items = [i.fitness.values for i in self.items]
-    data = numpy.array(items)
-    return numpy.min(data, 0)

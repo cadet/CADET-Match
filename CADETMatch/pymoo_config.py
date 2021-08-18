@@ -92,7 +92,6 @@ def run(cache, alg="unsga3"):
             for sublist in cache.settings["seeds"]
         ]
         init_pop = numpy.concatenate([init_pop, numpy.array(seed_pop)], axis=0)
-        #init_pop.extend(seed_pop)
 
     
     path = Path(cache.settings["resultsDirBase"], cache.settings["csv"])
@@ -130,13 +129,15 @@ def run(cache, alg="unsga3"):
                     similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
                 )
             meta_hof = pareto.ParetoFront(dimensions=len(cache.WORST_META),
-                similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache)
+                similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+                slice_object=cache.meta_slice
             )
             grad_hof = pareto.ParetoFront(dimensions=len(cache.WORST),
                 similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
             )
             progress_hof = pareto.ParetoFront(dimensions=len(cache.WORST_META),
-                similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache)
+                similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+                slice_object=cache.meta_slice
             )
 
             gradCheck = cache.settings.get("gradCheck", 0.0)

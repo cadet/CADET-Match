@@ -17,8 +17,7 @@ with warnings.catch_warnings():
 
 
 def process_pareto(cache, hof):
-    data = numpy.array([i.fitness.values for i in hof])
-    data_param = numpy.array([i.value for i in hof])
+    data_param, data = hof.getEntries()
     data_param_transform = util.convert_population_inputorder(data_param, cache)
 
     return data, data_param, data_param_transform
@@ -47,6 +46,7 @@ def get_population_information(cache, population, generation):
 
 def print_progress(
     cache,
+    data_meta,
     line_log,
     best_product,
     best_min,
@@ -57,22 +57,23 @@ def print_progress(
     population,
 ):
     if best_product is not None:
-        alt_line_format = "Generation: %s \tPopulation: %s \tAverage Best: %.1e \tMinimum Best: %.1e \tProduct Best: %.1e\tSSE Best: %.3e \tRMSE Best: %.3e"
+        alt_line_format = "Generation: %s \tPopulation: %s \tMeta: %d \tMean: %.1e \tMin: %.1e \tProd: %.1e\tSSE: %.3e \tRMSE: %.3e"
 
         sse_line_format = (
-            "Generation: %s \tPopulation: %s \tSSE Best: %.3e \tRMSE Best: %.3e"
+            "Generation: %s \tPopulation: %s \tMeta: %d \tSSE: %.3e \tRMSE: %.3e"
         )
 
         if line_log:
             if cache.allScoreSSE and not cache.MultiObjectiveSSE:
                 multiprocessing.get_logger().info(
-                    sse_line_format, generation, len(population), best_sse, best_rmse
+                    sse_line_format, generation, len(population), data_meta.shape[0], best_sse, best_rmse
                 )
             else:
                 multiprocessing.get_logger().info(
                     alt_line_format,
                     generation,
                     len(population),
+                    data_meta.shape[0],
                     best_mean,
                     best_min,
                     best_product,
@@ -125,6 +126,7 @@ def write_progress_csv(
 
         print_progress(
             cache,
+            data_meta,
             line_log,
             best_product,
             best_min,

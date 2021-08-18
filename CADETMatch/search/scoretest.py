@@ -50,13 +50,15 @@ def run(cache):
                 similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
             )
         meta_hof = pareto.ParetoFront(dimensions=len(cache.WORST_META),
-            similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache)
+            similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+            slice_object=cache.meta_slice
         )
         grad_hof = pareto.ParetoFront(dimensions=len(cache.WORST),
             similar=pareto.similar, similar_fit=pareto.similar_fit(cache)
         )
         progress_hof = pareto.ParetoFront(dimensions=len(cache.WORST_META),
-            similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache)
+            similar=pareto.similar, similar_fit=pareto.similar_fit_meta(cache),
+            slice_object=cache.meta_slice
         )
 
         stalled, stallWarn, progressWarn = util.eval_population(
