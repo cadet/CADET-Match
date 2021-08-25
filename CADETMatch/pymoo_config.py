@@ -161,9 +161,7 @@ def run(cache, alg="unsga3"):
 
         problem = MyProblem(parameters, cache.numGoals, cache.MIN_VALUE, cache.MAX_VALUE, cache.eval.evaluate, problem_state)
 
-        #we don't need more than 100 reference directions but reference directions should not be
-        #greater than the population size so if the populatino size is smaller reduce the number of reference direction
-        numRefDirs = min(populationSize, 100)
+        numRefDirs = populationSize
 
         ref_dirs = get_reference_directions("energy", cache.numGoals, numRefDirs, seed=1)
 

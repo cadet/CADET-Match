@@ -32,14 +32,19 @@ def get_p(x, y):
 
     return x, min(x), y, min(y), p1, p2, p3, factor
 
+def signal_bessel(crit_fs, fs):
+    return scipy.signal.bessel(butter_order, crit_fs, btype="lowpass", analog=False, fs=fs, output="sos", norm="delay")
 
-def refine_butter(times, values, x, y, fs, start):
+def signal_butter(crit_fs, fs):
+    return scipy.signal.butter(butter_order, crit_fs, btype="lowpass", analog=False, fs=fs, output="sos")
+
+def refine_signal(func, times, values, x, y, fs, start):
     x, x_min, y, y_min, p1, p2, p3, factor = get_p(x, y)
 
     def goal(crit_fs):
         crit_fs = 10.0 ** crit_fs[0]
         try:
-            sos = scipy.signal.bessel(butter_order, crit_fs, btype="lowpass", analog=False, fs=fs, output="sos", norm="delay")
+            sos = func(crit_fs, fs)
         except ValueError:
             return 1e6
         low_passed = scipy.signal.sosfiltfilt(sos, values)
@@ -143,7 +148,7 @@ def find_L(x, y):
     return l_x, l_y
 
 
-def find_butter(times, values):
+def find_signal(func, times, values):
     filters = []
     sse = []
 
@@ -154,7 +159,7 @@ def find_butter(times, values):
 
     for i in numpy.logspace(-6, ub_l, 50):
         try:
-            sos = scipy.signal.bessel(butter_order, i, btype="lowpass", analog=False, fs=fs, output="sos", norm="delay")
+            sos = func(i, fs)
             low_passed = scipy.signal.sosfiltfilt(sos, values)
 
             filters.append(i)
@@ -165,17 +170,16 @@ def find_butter(times, values):
     L_x, L_y = find_L(filters, numpy.log(sse))
 
     if L_x is not None:
-        L_x = refine_butter(times, values, filters, numpy.log(sse), fs, L_x)
+        L_x = refine_signal(func, times, values, filters, numpy.log(sse), fs, L_x)
 
     return L_x
 
 
-def smoothing_filter_butter(times, values, crit_fs):
+def smoothing_filter_signal(func, times, values, crit_fs):
     if crit_fs is None:
         return values
     fs = 1.0 / (times[1] - times[0])
-
-    sos = scipy.signal.bessel(butter_order, crit_fs, btype="lowpass", analog=False, fs=fs, output="sos", norm="delay")
+    sos = func(crit_fs, fs)
     low_passed = scipy.signal.sosfiltfilt(sos, values)
     return low_passed
 
@@ -245,14 +249,14 @@ def find_smoothing_factors(times, values, name, cache):
     # normalize the data
     values = values * 1.0 / max(values)
 
-    crit_fs = find_butter(times, values)
+    crit_fs = find_signal(signal_bessel, times, values)
 
     if crit_fs is None:
         multiprocessing.get_logger().info(
             "%s butter filter disabled, no viable L point found", name
         )
 
-    values_filter = smoothing_filter_butter(times, values, crit_fs)
+    values_filter = smoothing_filter_signal(signal_bessel, times, values, crit_fs)
 
     spline = scipy.interpolate.UnivariateSpline(times, values_filter, s=min, k=5, ext=3)
     knots = []
@@ -298,7 +302,7 @@ def find_smoothing_factors(times, values, name, cache):
 
     # run a quick butter pass to remove high frequency noise in the derivative (needed for some experimental data)
     values_filter = spline.derivative()(times) / factor
-    crit_fs_der = find_butter(times, values_filter)
+    crit_fs_der = find_signal(signal_butter, times, values_filter)
 
     record_smoothing(s, s_knots, crit_fs, crit_fs_der, knots, all_s, name, cache)
 
@@ -355,7 +359,7 @@ def create_spline(times, values, crit_fs, s):
     times, values = resample(times, values)
     factor = 1.0 / max(values)
     values = values * factor
-    values_filter = smoothing_filter_butter(times, values, crit_fs)
+    values_filter = smoothing_filter_signal(signal_bessel, times, values, crit_fs)
 
     return (
         scipy.interpolate.UnivariateSpline(times, values_filter, s=s, k=5, ext=3),
@@ -375,11 +379,7 @@ def smooth_data_derivative(times, values, crit_fs, s, crit_fs_der, smooth=True):
 
     if smooth:
         values_filter_der = spline.derivative()(times_resample) / factor
-        factor_der = numpy.max(values_filter_der)
-        values_filter_der = (
-            butter(times_resample, values_filter_der / factor_der, crit_fs_der)
-            * factor_der
-        )
+        values_filter_der = butter(times_resample, values_filter_der, crit_fs_der)
         spline_der = scipy.interpolate.InterpolatedUnivariateSpline(
             times_resample, values_filter_der, k=5, ext=3
         )
@@ -400,11 +400,7 @@ def full_smooth(times, values, crit_fs, s, crit_fs_der, smooth=True):
 
     if smooth:
         values_filter_der = spline.derivative()(times_resample) / factor
-        factor_der = numpy.max(values_filter_der)
-        values_filter_der = (
-            butter(times_resample, values_filter_der / factor_der, crit_fs_der)
-            * factor_der
-        )
+        values_filter_der = butter(times_resample, values_filter_der, crit_fs_der)
         spline_der = scipy.interpolate.InterpolatedUnivariateSpline(
             times_resample, values_filter_der, k=5, ext=3
         )
@@ -415,10 +411,10 @@ def full_smooth(times, values, crit_fs, s, crit_fs_der, smooth=True):
 
 
 def butter(times, values, crit_fs_der):
-    factor = 1.0 / max(values)
-    values = values * factor
+    max_value = numpy.max(values)
+    values = values / max_value
 
-    values_filter = smoothing_filter_butter(times, values, crit_fs_der) / factor
+    values_filter = smoothing_filter_signal(signal_butter, times, values, crit_fs_der) * max_value
 
     return values_filter
 
