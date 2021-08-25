@@ -426,13 +426,16 @@ def select_best_kmeans(chain, probability):
     return best_chain, best_prob
 
 
-def auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5):
+def auto_high_probability(cache, checkpoint, sampler, iterations=100):
     auto_chain = None
     auto_probability = None
 
     pop_size = checkpoint["populationSize"]
 
-    for i in range(steps):
+    finished = None
+    prev_prob = -1e308
+
+    while not finished:
         chain, probability = auto_high_probability_iterations(
             cache, checkpoint, sampler, iterations
         )
@@ -449,6 +452,16 @@ def auto_high_probability(cache, checkpoint, sampler, iterations=100, steps=5):
         checkpoint["p_bounds"] = best_chain
         checkpoint["ln_prob_bounds"] = best_prob
         checkpoint["rstate_bounds"] = None
+
+        best_prob = numpy.max(best_prob)
+        
+        change = numpy.abs(best_prob - prev_prob)/numpy.abs(prev_prob)
+        
+        if change < 0.01:
+            finished=True
+        else:
+            print(f"Auto high probability has not converged yet, change {change} > 0.01")
+            prev_prob = best_prob
 
     return auto_chain, auto_probability
 
@@ -519,7 +532,7 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
     sampler.naccepted = checkpoint["sampler_naccepted"]
 
     auto_chain, auto_probability = auto_high_probability(
-        cache, checkpoint, sampler, iterations=100, steps=5
+        cache, checkpoint, sampler, iterations=100
     )
 
     mcmc_store.root.bounds.auto_chain = auto_chain
@@ -989,6 +1002,7 @@ def run(cache):
         if checkpoint["state"] == "auto_bounds":
             sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store)
             sub.graph_corner_process(cache, last=False, interval=60)
+
 
         if checkpoint["state"] == "chain":
             sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store)
