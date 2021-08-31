@@ -9,8 +9,60 @@ from cadet import H5
 
 import CADETMatch.util as util
 
+from pymoo.model.problem import Problem
+from pymoo.factory import get_algorithm, get_reference_directions
+from pymoo.optimize import minimize
+
 butter_order = 3
 
+class TargetProblem(Problem):
+
+    def __init__(self, lb, ub, sse_target, func, values, fs):
+        super().__init__(n_var=1, n_obj=1, n_constr=0, xl=lb, xu=ub, elementwise_evaluation=True)
+        self.sse_target = sse_target
+        self.func = func
+        self.values = values
+        self.fs = fs        
+
+    def _evaluate(self, crit_fs, out, *args, **kwargs):
+        crit_fs = 10**crit_fs
+        try:
+            sos = self.func(crit_fs, self.fs)
+            low_passed = scipy.signal.sosfiltfilt(sos, self.values)
+            sse = numpy.sum((low_passed - self.values) ** 2)
+
+            error = (sse - self.sse_target)**2
+        except ValueError:
+            error = numpy.inf
+        out["F"] = error
+
+class MaxDistance(Problem):
+
+    def __init__(self, lb, ub, func, fs, values, x_min, y_min, p1, p2, factor):
+        super().__init__(n_var=1, n_obj=1, n_constr=0, xl=lb, xu=ub, elementwise_evaluation=True)
+        self.func = func
+        self.fs = fs   
+        self.values = values
+        self.x_min = x_min
+        self.y_min = y_min
+        self.p1 = p1
+        self.p2 = p2
+        self.factor = factor
+
+    def _evaluate(self, crit_fs, out, *args, **kwargs):
+        crit_fs = 10.0 ** crit_fs[0]
+        try:
+            sos = self.func(crit_fs, self.fs)
+        except ValueError:
+            return 1e6
+        low_passed = scipy.signal.sosfiltfilt(sos, self.values)
+
+        sse = numpy.sum((low_passed - self.values) ** 2)
+
+        pT = numpy.array([crit_fs - self.x_min, numpy.log(sse) - self.y_min]).T / self.factor
+
+        d = numpy.cross(self.p2 - self.p1, self.p1 - pT) / numpy.linalg.norm(self.p2 - self.p1)
+        out["F"] = -d
 
 def get_p(x, y):
     x = numpy.array(x)
@@ -41,39 +93,19 @@ def signal_butter(crit_fs, fs):
 def refine_signal(func, times, values, x, y, fs, start):
     x, x_min, y, y_min, p1, p2, p3, factor = get_p(x, y)
 
-    def goal(crit_fs):
-        crit_fs = 10.0 ** crit_fs[0]
-        try:
-            sos = func(crit_fs, fs)
-        except ValueError:
-            return 1e6
-        low_passed = scipy.signal.sosfiltfilt(sos, values)
-
-        sse = numpy.sum((low_passed - values) ** 2)
-
-        pT = numpy.array([crit_fs - x_min, numpy.log(sse) - y_min]).T / factor
-
-        d = numpy.cross(p2 - p1, p1 - pT) / numpy.linalg.norm(p2 - p1)
-
-        return -d
-
     lb = numpy.log10(x[0])
     ub = numpy.log10(x[-1])
 
-    crit_fs_sample = numpy.linspace(lb, ub, 50)
-    errors = numpy.array([goal([i]) for i in crit_fs_sample])
+    problem = MaxDistance(lb, ub, func, fs, values, x_min, y_min, p1, p2, factor)
 
-    root, fs_x, fs_y = util.find_opt_poly(crit_fs_sample, errors, numpy.argmin(errors))
+    algorithm = get_algorithm('pattern-search', n_sample_points=50, eps=1e-13)
 
-    result = scipy.optimize.minimize(
-        goal,
-        root,
-        method="powell",
-        bounds=[
-            (fs_x[0], fs_x[-1]),
-        ],
-    )
-    crit_fs = 10 ** result.x[0]
+    res = minimize(problem,
+               algorithm,
+               verbose=False,
+               seed=1)
+
+    crit_fs = 10**res.X[0]
 
     return crit_fs
 
@@ -148,31 +180,52 @@ def find_L(x, y):
     return l_x, l_y
 
 
-def find_signal(func, times, values):
+def find_signal(func, times, values, sse_target):
     filters = []
     sse = []
 
     fs = 1.0 / (times[1] - times[0])
 
     ub = fs / 2.0
-    ub_l = numpy.log10(ub)
 
-    for i in numpy.logspace(-6, ub_l, 50):
+    for i in numpy.logspace(-8, numpy.log10(ub), 50):
         try:
             sos = func(i, fs)
             low_passed = scipy.signal.sosfiltfilt(sos, values)
 
             filters.append(i)
             sse.append(numpy.sum((low_passed - values) ** 2))
-        except ValueError:
+        except (ValueError, numpy.linalg.LinAlgError):
             continue
+
+    crit_fs_max = find_max_signal(func, times, values, sse_target, filters, sse)
 
     L_x, L_y = find_L(filters, numpy.log(sse))
 
     if L_x is not None:
         L_x = refine_signal(func, times, values, filters, numpy.log(sse), fs, L_x)
 
+    if L_x  is not None and crit_fs_max < L_x:
+        L_x = crit_fs_max
+
     return L_x
+
+def find_max_signal(func, times, values, sse_target, filters, sse):
+    fs = 1.0 / (times[1] - times[0])
+
+    filters = numpy.log10(filters)
+    problem = TargetProblem(filters[0], filters[-1], sse_target, func, values, fs)
+
+    algorithm = get_algorithm('pattern-search', n_sample_points=50, eps=1e-13)
+
+    res = minimize(problem,
+               algorithm,
+               verbose=False,
+               seed=1)
+
+    crit_fs = 10**res.X[0]
+
+    return crit_fs
 
 
 def smoothing_filter_signal(func, times, values, crit_fs):
@@ -237,9 +290,11 @@ def load_data(name, cache):
     return s, crit_fs, crit_fs_der
 
 
-def find_smoothing_factors(times, values, name, cache):
+def find_smoothing_factors(times, values, name, cache, rmse_target=1e-4):
     times, values = resample(times, values)
     min = 1e-3
+
+    sse_target = (rmse_target**2.0)*len(values)
 
     s, crit_fs, crit_fs_der = load_data(name, cache)
 
@@ -249,7 +304,7 @@ def find_smoothing_factors(times, values, name, cache):
     # normalize the data
     values = values * 1.0 / max(values)
 
-    crit_fs = find_signal(signal_bessel, times, values)
+    crit_fs = find_signal(signal_bessel, times, values, sse_target)
 
     if crit_fs is None:
         multiprocessing.get_logger().info(
@@ -258,51 +313,19 @@ def find_smoothing_factors(times, values, name, cache):
 
     values_filter = smoothing_filter_signal(signal_bessel, times, values, crit_fs)
 
-    spline = scipy.interpolate.UnivariateSpline(times, values_filter, s=min, k=5, ext=3)
-    knots = []
-    all_s = []
-
-    knots.append(len(spline.get_knots()))
-    all_s.append(min)
-
-    max_knots = 600
-
-    if len(spline.get_knots()) < max_knots:  #if we already need more knots than the max knots at min accuracy there is no reason to check
-        # This limits to 1e-14 max smoothness which is way beyond anything normal
-        for i in range(1, 200):
-            s = min / (1.1 ** i)
-            with warnings.catch_warnings():
-                warnings.filterwarnings("error")
-
-                try:
-                    spline = scipy.interpolate.UnivariateSpline(
-                        times, values_filter, s=s, k=5, ext=3
-                    )
-                    knots.append(len(spline.get_knots()))
-                    all_s.append(s)
-
-                    if len(spline.get_knots()) > max_knots:
-                        break
-
-                except Warning:
-                    multiprocessing.get_logger().info("caught a warning for %s %s", name, s)
-                    break
-
-        knots = numpy.array(knots)
-        all_s = numpy.array(all_s)
-
-        s, s_knots = find_L(all_s, knots)
-
-        if s is not None:
-            s, s_knots = refine_smooth(times, values_filter, all_s, knots, s, name)
-    else:
-        s = min
-
+    s = sse_target
+ 
     spline, factor = create_spline(times, values, crit_fs, s)
 
     # run a quick butter pass to remove high frequency noise in the derivative (needed for some experimental data)
     values_filter = spline.derivative()(times) / factor
-    crit_fs_der = find_signal(signal_butter, times, values_filter)
+    factor = 1.0/numpy.max(values_filter)
+    values_filter = values_filter * factor
+    crit_fs_der = find_signal(signal_bessel, times, values_filter, sse_target)
+
+    s_knots = 0
+    knots = spline.get_knots()
+    all_s = [s, s]
 
     record_smoothing(s, s_knots, crit_fs, crit_fs_der, knots, all_s, name, cache)
 
@@ -357,7 +380,7 @@ def record_smoothing(
 
 def create_spline(times, values, crit_fs, s):
     times, values = resample(times, values)
-    factor = 1.0 / max(values)
+    factor = 1.0 / numpy.max(values)
     values = values * factor
     values_filter = smoothing_filter_signal(signal_bessel, times, values, crit_fs)
 
@@ -379,7 +402,11 @@ def smooth_data_derivative(times, values, crit_fs, s, crit_fs_der, smooth=True):
 
     if smooth:
         values_filter_der = spline.derivative()(times_resample) / factor
+
+        factor_der = 1.0/numpy.max(values_filter_der)
+        values_filter_der = values_filter_der * factor_der
         values_filter_der = butter(times_resample, values_filter_der, crit_fs_der)
+        values_filter_der = values_filter_der / factor_der
         spline_der = scipy.interpolate.InterpolatedUnivariateSpline(
             times_resample, values_filter_der, k=5, ext=3
         )
@@ -400,7 +427,11 @@ def full_smooth(times, values, crit_fs, s, crit_fs_der, smooth=True):
 
     if smooth:
         values_filter_der = spline.derivative()(times_resample) / factor
+
+        factor_der = 1.0/numpy.max(values_filter_der)
+        values_filter_der = values_filter_der * factor_der
         values_filter_der = butter(times_resample, values_filter_der, crit_fs_der)
+        values_filter_der = values_filter_der / factor_der
         spline_der = scipy.interpolate.InterpolatedUnivariateSpline(
             times_resample, values_filter_der, k=5, ext=3
         )
@@ -414,7 +445,7 @@ def butter(times, values, crit_fs_der):
     max_value = numpy.max(values)
     values = values / max_value
 
-    values_filter = smoothing_filter_signal(signal_butter, times, values, crit_fs_der) * max_value
+    values_filter = smoothing_filter_signal(signal_bessel, times, values, crit_fs_der) * max_value
 
     return values_filter
 
