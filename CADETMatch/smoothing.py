@@ -110,59 +110,6 @@ def refine_signal(func, times, values, x, y, fs, start):
     return crit_fs
 
 
-def refine_smooth(times, values, x, y, start, name):
-    x, x_min, y, y_min, p1, p2, p3, factor = get_p(x, y)
-    if name is None:
-        name = "unknown"
-
-    def goal(s):
-        s = 10 ** s[0]
-        with warnings.catch_warnings():
-            warnings.filterwarnings("error")
-
-            try:
-                spline = scipy.interpolate.UnivariateSpline(
-                    times, values, s=s, k=5, ext=3
-                )
-            except Warning:
-                multiprocessing.get_logger().info("caught a warning for %s %s", name, s)
-                return 1e6
-
-        pT = numpy.array([s - x_min, len(spline.get_knots()) - y_min]).T / factor
-        d = numpy.cross(p2 - p1, p1 - pT) / numpy.linalg.norm(p2 - p1)
-
-        return -d
-
-    lb = numpy.log10(x[0])
-    ub = numpy.log10(x[-1])
-
-    smoothing_sample = numpy.linspace(lb, ub, 50)
-    errors = numpy.array([goal([i]) for i in smoothing_sample])
-
-    if numpy.any(numpy.isnan(errors)):
-        #all points are equal distant to our min point, changing smoothness does not change number of knots
-        #this means we should use the lowest smoothness possible to have the least error possible with no impact on knots
-        s = 10 ** lb
-    else:
-        root, fs_x, fs_y = util.find_opt_poly(
-            smoothing_sample, errors, numpy.argmin(errors)
-        )
-
-        result = scipy.optimize.minimize(
-            goal,
-            root,
-            method="powell",
-            bounds=[
-                (fs_x[0], fs_x[-1]),
-            ],
-        )
-        s = 10 ** result.x[0]
-
-    spline = scipy.interpolate.UnivariateSpline(times, values, s=s, k=5, ext=3)
-
-    return s, len(spline.get_knots())
-
-
 def find_L(x, y):
     # find the largest value greater than 0, otherwise return none to just turn off butter filter
     x, x_min, y, y_min, p1, p2, p3, factor = get_p(x, y)
