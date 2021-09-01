@@ -38,6 +38,10 @@ import CADETMatch.loggerwriter as loggerwriter
 
 import arviz as az
 
+from pymoo.factory import get_algorithm, get_reference_directions
+from pymoo.optimize import minimize
+from pymoo.model.problem import Problem
+
 
 def get_color(idx, max_colors, cmap):
     return cmap(1.0 * float(idx) / max_colors)
@@ -62,6 +66,16 @@ plt.rc("legend", fontsize=size)  # legend fontsize
 plt.rc("figure", titlesize=size)  # fontsize of the figure title
 plt.rc("figure", autolayout=True)
 
+class MLEProblem(Problem):
+
+    def __init__(self, n_var, n_obj, lb, ub, kde):
+        super().__init__(n_var=n_var, n_obj=n_obj, n_constr=0, xl=lb, xu=ub, elementwise_evaluation=False)
+        self.kde = kde
+
+    def _evaluate(self, population, out, *args, **kwargs):
+        score = self.kde.score_samples(population)
+        out["F"] = -score
+
 class ArvizSampler:
     def __init__(self, chain, prob):
         self.chain = chain.swapaxes(0, 1)
@@ -78,7 +92,7 @@ def flatten(chain):
     flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
     return flat_chain
 
-def reduce_data(data_chain, probability, headers, size, bw_size):
+def reduce_data(data_chain, probability, size, bw_size):
     sampler = ArvizSampler(data_chain, probability)
     emcee_data = az.from_emcee(sampler)
     hdi = az.hdi(emcee_data, hdi_prob=0.9).to_array().values
@@ -111,19 +125,14 @@ def reduce_data(data_chain, probability, headers, size, bw_size):
     return data, data_reduced, bw_data_reduced, scaler
 
 
-def goal_kde(x, kde):
-    test_value = numpy.array(x).reshape(1, -1)
-    score = kde.score_samples(test_value)
-    return -score[0]
-
-
 def get_mle(data_chain, probability, headers):
     popsize = 100
 
     multiprocessing.get_logger().info("setting up scaler and reducing data")
     data_transform, data_reduced, data_reduced_bw, scaler = reduce_data(
-        data_chain, probability, headers, 32000, 20000
+        data_chain, probability, 32000, 20000
     )
+
     multiprocessing.get_logger().info("finished setting up scaler and reducing data")
     multiprocessing.get_logger().info("data_reduced shape %s", data_reduced.shape)
 
@@ -140,35 +149,39 @@ def get_mle(data_chain, probability, headers):
     multiprocessing.get_logger().info("mle bandwidth: %.2g", bandwidth)
 
     multiprocessing.get_logger().info("fitting kde with mle bandwidth")
+
     kde_ga.fit(data_reduced)
+
     multiprocessing.get_logger().info("finished fitting and starting mle search")
 
-    probability_ln = kde_ga.score_samples(data_transform)
+    unique_data = numpy.unique(data_transform, axis=0)
+
+    probability_ln = kde_ga.score_samples(unique_data)
 
     idx_max_ln = numpy.argmax(probability_ln)
     prob_best_ln = probability_ln[idx_max_ln]
-    best_point = data_transform[idx_max_ln].reshape(1, -1)
+    best_point = unique_data[idx_max_ln].reshape(1, -1)
 
     multiprocessing.get_logger().info(
-        "starting point %s=%s", data_transform[idx_max_ln], -prob_best_ln
+        "starting point %s=%s", unique_data[idx_max_ln], -prob_best_ln
     )
 
     individuals_mle = kde_ga.sample(popsize - 1)
 
     init = numpy.concatenate([best_point, individuals_mle])
 
-    result_kde = scipy.optimize.differential_evolution(
-        goal_kde,
-        bounds=list(zip(BOUND_LOW_trans, BOUND_UP_trans)),
-        args=(kde_ga,),
-        disp=True,
-        popsize=popsize,
-        init=init,
-    )
+    mle_problem = MLEProblem(len(BOUND_LOW_trans), 1, BOUND_LOW_trans, BOUND_UP_trans, kde_ga)
+
+    algorithm = get_algorithm('cmaes', x0=init, popsize=popsize )
+
+    res = minimize(mle_problem,
+               algorithm,
+               verbose=True,
+               seed=1)
 
     multiprocessing.get_logger().info("finished mle search")
 
-    x = list(scaler.inverse_transform(numpy.array(result_kde.x).reshape(1, -1))[0])
+    x = list(scaler.inverse_transform(numpy.array(res.X).reshape(1, -1))[0])
 
     multiprocessing.get_logger().info("mle found %s", x)
 
@@ -203,15 +216,6 @@ def process_mle(chain, probability, gen, cache):
                 "new information is not yet available and mle will quit"
             )
             return
-
-    #multiprocessing.get_logger().info("process mle chain shape before %s", chain.shape)
-    # This step cleans up bad entries
-    #selected = ~numpy.all(chain == 0, axis=1)
-    #chain = chain[selected]
-    #probability = probability[selected]
-    #multiprocessing.get_logger().info(
-    #    "process mle chain shape after cleaning 0 entries %s", chain.shape
-    #)
 
     mle_x, kde, scaler = get_mle(chain, probability, cache.parameter_headers_actual)
 
