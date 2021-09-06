@@ -58,7 +58,6 @@ def get_times_values(simulation, target, selected=None):
 
     if selected is None:
         selected = target["selected"]
-
     return times[selected], values[selected] * target["factor"]
 
 
@@ -350,8 +349,11 @@ def runExperiment(
     if simulation.is_file:
         os.remove(path)
 
-    simulationFailed = isinstance(simulation.root.output.solution.solution_times, Dict)
+    user_solution_times = simulation.root.input.solver.user_solution_times
+    simulationFailed = len(simulation.root.output.solution.solution_times) != len(user_solution_times)
     if simulationFailed:
+        if not simulation.is_file:
+            path = "dll interface"
         multiprocessing.get_logger().error(
             "%s sim must have failed %s", individual, path
         )
