@@ -71,34 +71,22 @@ def pearsonr_mat(x, Y, times):
     r = numpy.zeros(Y.shape[0])
     xm = x - x.mean()
     
-    r_x_den = 0.0
-    for i in range(x.shape[0]):
-        r_x_den += xm[i]*xm[i]
-    r_x_den = numpy.sqrt(r_x_den)
+    r_x_den = numpy.linalg.norm(xm) 
 
     for i in range(Y.shape[0]):
-        ymean = 0.0
-        for j in range(Y.shape[1]):
-            ymean += Y[i,j]
-        ym = Y[i] - ymean/Y.shape[1]
+        ym = Y[i] - numpy.mean(Y[i])
 
-        r_num = 0.0
-        r_y_den = 0.0
-        for j in range(Y.shape[1]):
-            r_num += xm[j]*ym[j]
-            r_y_den += ym[j] * ym[j]
-        r_y_den = numpy.sqrt(r_y_den)
+        r_num = numpy.dot(xm, ym)
+        r_y_den = numpy.linalg.norm(ym)
 
         if r_y_den == 0.0:
             r[i] = -1.0
         else:
-            min_fun = numpy.zeros(x.shape[0])
+            min_fun = 0
             for j in range(x.shape[0]):
-                min_fun[j] = min(x[j], Y[i,j])
+                min_fun += min(x[j], Y[i,j])
 
-            area = numpy.trapz(min_fun, times)
-
-            r[i] = min(max(r_num/(r_x_den*r_y_den), -1.0), 1.0) * area
+            r[i] = min(max(r_num/(r_x_den*r_y_den), -1.0), 1.0) * min_fun
     return r
 
 def eval_offsets(offsets, sim_spline, exp_time_values, exp_data_values):
@@ -127,13 +115,13 @@ def pearson_offset(offset, times, sim_data, exp_data):
 
 
 def pearson_spline_fun(
-    exp_time_values, exp_data_values, sim_spline, size=100, nest=10, bounds=3, tol=1e-13
+    exp_time_values, exp_data_values, sim_spline, size=20, nest=50, bounds=2, tol=1e-13
 ):
     for i in range(nest + 1):
         if i == 0:
             lb = -exp_time_values[-1]
             ub = exp_time_values[-1]
-            local_size = min(1000 + 1, int((ub - lb) * 2 + 1))
+            local_size = min(100+1, int((ub - lb) * 2+1))
         else:
             idx_max = numpy.argmax(pearson)
 
