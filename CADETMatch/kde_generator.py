@@ -495,40 +495,30 @@ def generate_synthetic_error(cache):
 
         scores = numpy.array(scores_all)
 
-        keep_idx = keep_data(scores)
-
-        kept = int(numpy.sum(keep_idx))
-        removed = int(len(scores) - kept)
-
         dir_base = cache.settings.get("resultsDirBase")
         file = dir_base / "kde_data.h5"
 
         kde_data = H5()
         kde_data.filename = file.as_posix()
 
-        kde_data.root.kept = kept
-        kde_data.root.removed = removed
-
-        kde_data.root.scores = scores[keep_idx, :]
-
-        kde_data.root.original.scores = scores
+        kde_data.root.scores = scores
 
         for output_name, output in outputs_all.items():
-            kde_data.root[output_name] = numpy.array(output)[keep_idx, :]
+            kde_data.root[output_name] = numpy.array(output)
 
         for time_name, time in times.items():
             kde_data.root["%s_time" % time_name] = time
 
         for name, experiment in errors_all.items():
             for error_name, error_value in experiment.items():
-                kde_data.root.errors[name][error_name] = error_value[keep_idx, :]
+                kde_data.root.errors[name][error_name] = error_value
 
         for key, value in uv_store_all.items():
-            kde_data.root.uv_store[key] = numpy.array(value)[keep_idx, :]
+            kde_data.root.uv_store[key] = numpy.array(value)
 
         kde_data.save(lock=True)
 
-        return scores[keep_idx, :]
+        return scores
 
     return None
 

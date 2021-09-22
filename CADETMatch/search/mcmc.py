@@ -26,6 +26,7 @@ import CADETMatch.progress as progress
 import CADETMatch.util as util
 import CADETMatch.sub as sub
 import CADETMatch.pop as pop
+import arviz
 
 name = "MCMC"
 
@@ -208,7 +209,10 @@ def converged_bounds(chain, length, error_level):
         temp_chain_flat = temp_chain.reshape(
             temp_chain_shape[0] * temp_chain_shape[1], temp_chain_shape[2]
         )
-        lb_5, mid_50, ub_95 = numpy.percentile(temp_chain_flat, [5, 50, 95], 0)
+        hdi = arviz.hdi(temp_chain, hdi_prob=0.9)
+        lb_5 = hdi[:,0]
+        ub_95 = hdi[:,1]
+        mid_50 = numpy.mean(temp_chain_flat, axis=0)
 
         lb.append(lb_5)
         ub.append(ub_95)
@@ -665,13 +669,16 @@ def sampler_auto_bounds(cache, checkpoint, sampler, checkpointFile, mcmc_store):
 
 
 def process_interval(cache, mcmc_store, interval_chain, interval_chain_transform):
-    mean = numpy.mean(interval_chain_transform, 0)
-    labels = [5, 10, 50, 90, 95]
-    percentile = numpy.percentile(interval_chain_transform, labels, 0)
+    hdi = arviz.hdi(interval_chain_transform, hdi_prob=0.9)
+    lb_5 = hdi[:,0]
+    ub_95 = hdi[:,1]
+    mid_50 = numpy.mean(flatten(interval_chain_transform), axis=0)
 
-    mcmc_store.root.percentile["mean"] = mean
-    for idx, label in enumerate(labels):
-        mcmc_store.root.percentile["percentile_%s" % label] = percentile[idx, :]
+    hdi_stat = numpy.vstack([lb_5, mid_50, ub_95])[:, numpy.newaxis, :]
+
+    mcmc_store.root.percentile["mean"] = mid_50
+    mcmc_store.root.percentile["lb_hdi_90"] = lb_5
+    mcmc_store.root.percentile["ub_hdi_90"] = ub_95
 
     flat_interval = interval(interval_chain, cache)
     flat_interval_transform = interval(interval_chain_transform, cache)
@@ -724,7 +731,7 @@ def process_sampler_run_write(cache, mcmc_store):
 
     interval_chain = chain_flat
     interval_chain_transform = chain_flat_transform
-    process_interval(cache, mcmc_store, interval_chain, interval_chain_transform)
+    process_interval(cache, mcmc_store, chain, chain_transform)
 
 
 def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
@@ -769,9 +776,16 @@ def sampler_run(cache, checkpoint, sampler, checkpointFile, mcmc_store):
         run_chain = addChain(run_chain, p[:, numpy.newaxis, :])
         run_probability = addChain(run_probability, ln_prob[:, numpy.newaxis])
 
+        hdi = arviz.hdi(run_chain, hdi_prob=0.9)
+        lb_5 = hdi[:,0]
+        ub_95 = hdi[:,1]
+        mid_50 = numpy.mean(flatten(run_chain), axis=0)
+
+        hdi_stat = numpy.vstack([lb_5, mid_50, ub_95])[:, numpy.newaxis, :]
+
         run_chain_stat = addChain(
             run_chain_stat,
-            numpy.percentile(flatten(run_chain), [5, 50, 95], 0)[:, numpy.newaxis, :],
+            hdi_stat,
         )
 
         multiprocessing.get_logger().info(
@@ -1249,14 +1263,15 @@ def writeMCMC(cache, mcmc_store, process_mcmc_store):
     mcmc_store.save(lock=True)
 
 
-def interval(flat_chain, cache):
-    mean = numpy.mean(flat_chain, 0)
+def interval(chain, cache):
+    hdi = arviz.hdi(chain, hdi_prob=0.9)
+    lb_5 = hdi[:,0]
+    ub_95 = hdi[:,1]
+    mid_50 = numpy.mean(flatten(chain), axis=0)
 
-    percentile = numpy.percentile(flat_chain, [5, 10, 50, 90, 95], 0)
+    hdi_stat = numpy.vstack([lb_5, mid_50, ub_95])
 
-    data = numpy.vstack((mean, percentile)).transpose()
-
-    pd = pandas.DataFrame(data, columns=["mean", "5", "10", "50", "90", "95"])
+    pd = pandas.DataFrame(hdi_stat.transpose(), columns=["lb_hdi_90", "mean", "ub_hdi_90"])
     pd.insert(0, "name", cache.parameter_headers_actual)
     pd.set_index("name")
     return pd

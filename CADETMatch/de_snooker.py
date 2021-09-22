@@ -43,6 +43,6 @@ class DESnookerMove(RedBlueMove):
             norm = np.linalg.norm(delta)
             u = delta / np.sqrt(norm)
             q[i] = s[i] + u * self.gammas * (np.dot(u, z1) - np.dot(u, z2))
-            q[i] = q[i] % 1
             metropolis[i] = np.log(np.linalg.norm(q[i] - z)) - np.log(norm)
+        q = np.clip(q, 0, 1)
         return q, 0.5 * (ndim - 1.0) * metropolis

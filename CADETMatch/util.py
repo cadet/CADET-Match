@@ -522,7 +522,9 @@ def update_json_mcmc(settings):
         new_parameters = settings["parameters_mcmc"]
 
         for new, prior in zip(new_parameters, prior_parameters):
-            if new["location"].split("/")[-1] == prior["location"].split("/")[-1]:
+            ok_location = "location" in new and new["location"].split("/")[-1] == prior["location"].split("/")[-1]
+            ok_location_from = "locationFrom" in new and new["locationFrom"].split("/")[-1] == prior["locationFrom"].split("/")[-1]
+            if ok_location or ok_location_from:
                 #update just the location data everthing else needs to remain the same
                 for key, value in new.items():
                     if key not in keep:
