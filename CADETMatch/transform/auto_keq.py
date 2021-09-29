@@ -150,15 +150,25 @@ class AutoKeqTransform(AbstractTransform):
         ):
             location = self.parameter["location"]
 
-            comp = self.parameter["component"]
-            bound = self.parameter["bound"]
+            try:
+                comp = self.parameter["component"]
+                bound = self.parameter["bound"]
+                index = None
+            except KeyError:
+                index = self.parameter["index"]
+                bound = None
 
-            unit = self.getUnit(location[0])
-            boundOffset = util.getBoundOffset(sim.root.input.model[unit])
+            if bound is not None:
+                unit = self.getUnit(location[0])
+                boundOffset = util.getBoundOffset(sim.root.input.model[unit])
 
-            position = boundOffset[comp] + bound
-            sim[location[0].lower()][position] = values[0]
-            sim[location[1].lower()][position] = values[1]
+                position = boundOffset[comp] + bound
+                sim[location[0].lower()][position] = values[0]
+                sim[location[1].lower()][position] = values[1]
+
+            if index is not None:
+                sim[location[0].lower()][index] = values[0]
+                sim[location[1].lower()][index] = values[1]
 
         return values, headerValues
 
@@ -188,25 +198,36 @@ class AutoKeqTransform(AbstractTransform):
         location = self.parameter["location"]
         nameKA = location[0].rsplit("/", 1)[-1]
         nameKD = location[1].rsplit("/", 1)[-1]
-        bound = self.parameter["bound"]
-        comp = self.parameter["component"]
+        bound = self.parameter.get("bound", None)
+        index = self.parameter.get("index", None)
+        comp = self.parameter.get("comp", None)
 
         headers = []
-        headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
-        headers.append("%s Comp:%s Bound:%s" % (nameKD, comp, bound))
-        headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
+        if bound is not None:
+            headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
+            headers.append("%s Comp:%s Bound:%s" % (nameKD, comp, bound))
+            headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
+        if index is not None:
+            headers.append("%s Comp:%s Index:%s" % (nameKA, comp, index))
+            headers.append("%s Comp:%s Index:%s" % (nameKD, comp, index))
+            headers.append("%s/%s Comp:%s Index:%s" % (nameKA, nameKD, comp, index))
         return headers
 
     def getHeadersActual(self):
         location = self.parameter["location"]
         nameKA = location[0].rsplit("/", 1)[-1]
         nameKD = location[1].rsplit("/", 1)[-1]
-        bound = self.parameter["bound"]
-        comp = self.parameter["component"]
+        bound = self.parameter.get("bound", None)
+        index = self.parameter.get("index", None)
+        comp = self.parameter.get("comp", None)
 
         headers = []
-        headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
-        headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
+        if bound is not None:
+            headers.append("%s Comp:%s Bound:%s" % (nameKA, comp, bound))
+            headers.append("%s/%s Comp:%s Bound:%s" % (nameKA, nameKD, comp, bound))
+        if index is not None:
+            headers.append("%s Comp:%s Index:%s" % (nameKA, comp, index))
+            headers.append("%s/%s Comp:%s Index:%s" % (nameKA, nameKD, comp, index))
         return headers
 
     def setBounds(self, parameter, lb, ub):
