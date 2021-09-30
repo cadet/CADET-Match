@@ -5,14 +5,14 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{01a11a39-d2ef-492d-aa67-db4b57699a90}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>CADETMatch\match.py</StartupFile>
+    <StartupFile>CADETMatch\mle.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>CondaEnv|CondaEnv|pymoo_devel</InterpreterId>
-    <CommandLineArguments>"C:\Users\kosh\Downloads\cadetmatch_test\ds_cex.json" 12</CommandLineArguments>
+    <CommandLineArguments>"F:\MCMC\Synthetic\NonBinding\release_3\Non_MCMC_pump_delay_1000\mcmc_refine\MCMC_NonBinding_pump_cstr.json" 12</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
     <InterpreterArguments>

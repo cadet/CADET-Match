@@ -38,11 +38,6 @@ import CADETMatch.loggerwriter as loggerwriter
 
 import arviz as az
 
-from pymoo.factory import get_algorithm, get_reference_directions
-from pymoo.optimize import minimize
-from pymoo.model.problem import Problem
-
-
 def get_color(idx, max_colors, cmap):
     return cmap(1.0 * float(idx) / max_colors)
 
@@ -66,16 +61,6 @@ plt.rc("legend", fontsize=size)  # legend fontsize
 plt.rc("figure", titlesize=size)  # fontsize of the figure title
 plt.rc("figure", autolayout=True)
 
-class MLEProblem(Problem):
-
-    def __init__(self, n_var, n_obj, lb, ub, kde):
-        super().__init__(n_var=n_var, n_obj=n_obj, n_constr=0, xl=lb, xu=ub, elementwise_evaluation=False)
-        self.kde = kde
-
-    def _evaluate(self, population, out, *args, **kwargs):
-        score = self.kde.score_samples(population)
-        out["F"] = -score
-
 class ArvizSampler:
     def __init__(self, chain, prob):
         self.chain = chain.swapaxes(0, 1)
@@ -92,10 +77,12 @@ def flatten(chain):
     flat_chain = chain.reshape(chain_shape[0] * chain_shape[1], chain_shape[2])
     return flat_chain
 
-def reduce_data(data_chain, probability, size, bw_size):
+def reduce_data(data_chain, probability, size):
     sampler = ArvizSampler(data_chain, probability)
     emcee_data = az.from_emcee(sampler)
-    hdi = az.hdi(emcee_data, hdi_prob=0.9).to_array().values
+    hdi = az.hdi(emcee_data, hdi_prob=0.95).to_array().values
+
+    multiprocessing.get_logger().info("hdi %s", hdi)
 
     data= flatten(data_chain)
 
@@ -104,7 +91,7 @@ def reduce_data(data_chain, probability, size, bw_size):
 
     data = data[selected]
 
-    scaler = preprocessing.RobustScaler().fit(data)
+    scaler = preprocessing.StandardScaler().fit(data)
 
     data = scaler.transform(data)
 
@@ -116,35 +103,19 @@ def reduce_data(data_chain, probability, size, bw_size):
     else:
         data_reduced = data
 
-    if bw_size < data.shape[0]:
-        indexes = numpy.random.choice(data.shape[0], bw_size, replace=False)
-        bw_data_reduced = data[indexes]
-    else:
-        bw_data_reduced = data
-
-    return data, data_reduced, bw_data_reduced, scaler
+    return data, data_reduced, scaler
 
 
 def get_mle(data_chain, probability, headers):
-    popsize = 100
-
     multiprocessing.get_logger().info("setting up scaler and reducing data")
-    data_transform, data_reduced, data_reduced_bw, scaler = reduce_data(
-        data_chain, probability, 32000, 20000
-    )
+    data_transform, data_reduced, scaler = reduce_data(data_chain, probability, 10000)
 
     multiprocessing.get_logger().info("finished setting up scaler and reducing data")
     multiprocessing.get_logger().info("data_reduced shape %s", data_reduced.shape)
 
-    BOUND_LOW_num = numpy.min(data_transform, 0)
-    BOUND_UP_num = numpy.max(data_transform, 0)
-
-    BOUND_LOW_trans = list(BOUND_LOW_num)
-    BOUND_UP_trans = list(BOUND_UP_num)
-
     kde_ga = KernelDensity(kernel="gaussian")
 
-    kde_ga, bandwidth, store = kde_util.get_bandwidth(kde_ga, data_reduced_bw)
+    kde_ga, bandwidth, store = kde_util.get_bandwidth(kde_ga, data_reduced)
 
     multiprocessing.get_logger().info("mle bandwidth: %.2g", bandwidth)
 
@@ -154,36 +125,13 @@ def get_mle(data_chain, probability, headers):
 
     multiprocessing.get_logger().info("finished fitting and starting mle search")
 
-    unique_data = numpy.unique(data_transform, axis=0)
+    flat_prob = probability.reshape(-1, 1)
+    flat_chain = flatten(data_chain)
+    best_idx = numpy.argmax(flat_prob)
 
-    probability_ln = kde_ga.score_samples(unique_data)
+    x = flat_chain[best_idx]
 
-    idx_max_ln = numpy.argmax(probability_ln)
-    prob_best_ln = probability_ln[idx_max_ln]
-    best_point = unique_data[idx_max_ln].reshape(1, -1)
-
-    multiprocessing.get_logger().info(
-        "starting point %s=%s", unique_data[idx_max_ln], -prob_best_ln
-    )
-
-    individuals_mle = kde_ga.sample(popsize - 1)
-
-    init = numpy.concatenate([best_point, individuals_mle])
-
-    mle_problem = MLEProblem(len(BOUND_LOW_trans), 1, BOUND_LOW_trans, BOUND_UP_trans, kde_ga)
-
-    algorithm = get_algorithm('cmaes', x0=init, popsize=popsize )
-
-    res = minimize(mle_problem,
-               algorithm,
-               verbose=True,
-               seed=1)
-
-    multiprocessing.get_logger().info("finished mle search")
-
-    x = list(scaler.inverse_transform(numpy.array(res.X).reshape(1, -1))[0])
-
-    multiprocessing.get_logger().info("mle found %s", x)
+    multiprocessing.get_logger().info("mle found %s with probability %s", x, flat_prob[best_idx])
 
     return x, kde_ga, scaler
 
@@ -539,10 +487,10 @@ def main():
 
     mcmc_store = H5()
     mcmc_store.filename = mcmc_h5.as_posix()
-    mcmc_store.load(paths=["/full_chain", "/mcmc_acceptance", "/run_probability_flat"], lock=True)
+    mcmc_store.load(paths=["/full_chain", "/mcmc_acceptance", "/run_probability"], lock=True)
 
     process_mle(mcmc_store.root.full_chain, 
-                mcmc_store.root.run_probability_flat,
+                mcmc_store.root.run_probability,
                 len(mcmc_store.root.mcmc_acceptance), cache)
 
 
