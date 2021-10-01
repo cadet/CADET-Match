@@ -80,7 +80,7 @@ def flatten(chain):
 def reduce_data(data_chain, probability, size):
     sampler = ArvizSampler(data_chain, probability)
     emcee_data = az.from_emcee(sampler)
-    hdi = az.hdi(emcee_data, hdi_prob=0.95).to_array().values
+    hdi = az.hdi(emcee_data, hdi_prob=0.99).to_array().values
 
     multiprocessing.get_logger().info("hdi %s", hdi)
 
@@ -91,7 +91,7 @@ def reduce_data(data_chain, probability, size):
 
     data = data[selected]
 
-    scaler = preprocessing.StandardScaler().fit(data)
+    scaler = preprocessing.RobustScaler().fit(data)
 
     data = scaler.transform(data)
 
@@ -108,7 +108,7 @@ def reduce_data(data_chain, probability, size):
 
 def get_mle(data_chain, probability, headers):
     multiprocessing.get_logger().info("setting up scaler and reducing data")
-    data_transform, data_reduced, scaler = reduce_data(data_chain, probability, 10000)
+    data_transform, data_reduced, scaler = reduce_data(data_chain, probability, 30000)
 
     multiprocessing.get_logger().info("finished setting up scaler and reducing data")
     multiprocessing.get_logger().info("data_reduced shape %s", data_reduced.shape)
