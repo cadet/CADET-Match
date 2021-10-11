@@ -158,6 +158,18 @@ def wait_mle():
     wait_sub("graph_mle", "mle.py")
 
 
+def graph_prior(cache):
+    line = [sys.executable, 
+        (Path(__file__).parent / "gen_prior.py").as_posix(), 
+        str(cache.json_path), 
+        str(util.getCoreCounts())]
+    run_sub(cache, "graph_prior", line, "gen_prior.py")
+
+
+def wait_prior():
+    wait_sub("graph_prior", "gen_prior.py")
+
+
 def graph_tube(cache):
     line = [
         sys.executable,
@@ -240,6 +252,10 @@ def mle_process(cache, last=False, interval=3600):
         last_mle_time = time.time()
 
     times["last_mle_time"] = last_mle_time
+
+def prior_process(cache, last=False, interval=3600):
+    graph_prior(cache)
+    wait_prior()
 
 
 def tube_process(cache, last=False, interval=3600):

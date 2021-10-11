@@ -40,7 +40,6 @@ import CADETMatch.de as de
 import CADETMatch.de_snooker as de_snooker
 import CADETMatch.stretch as stretch
 
-log2 = numpy.log(2)
 min_acceptance = 0.05
 acceptance_delta = 0.02
 
@@ -97,8 +96,7 @@ def log_likelihood(individual, json_path):
 
     score_kde = log_likelihood.kde.score_samples(score_scaler)
 
-    score = score_kde + log2 + logPrevious
-    # *2 is from mirroring and we need to double the probability to get back to the normalized distribution
+    score = score_kde + logPrevious
 
     return score, scores, csv_record, meta_score, results, individual
 
@@ -1035,6 +1033,7 @@ def run(cache):
 
     if checkpoint["state"] == "plot_finish":
         sub.mle_process(cache, last=True)
+        sub.prior_process(cache)
         sub.tube_process(cache, last=True)
         sub.graph_corner_process(cache, last=True)
     return numpy.mean(chain, 0)
