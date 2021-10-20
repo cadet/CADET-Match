@@ -11,8 +11,8 @@
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>CondaEnv|CondaEnv|pymoo_devel</InterpreterId>
-    <CommandLineArguments>"F:\fast_test_ryzen\search\mcmc\stage1\results\mcmc_refine\dextran.json" 12</CommandLineArguments>
+    <InterpreterId>CondaEnv|CondaEnv|cadet_devel</InterpreterId>
+    <CommandLineArguments>"F:\MCMC\Synthetic\SMAMultiple_Mult\release_5\SMA_MCMC_pump_delay_1000\MCMC_SMA_pump.json" 1</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
     <InterpreterArguments>

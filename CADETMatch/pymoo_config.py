@@ -169,6 +169,9 @@ def run(cache, alg="unsga3"):
         if pymoo_checkpointFile.exists():
             algorithm, = numpy.load(pymoo_checkpointFile, allow_pickle=True).flatten()
             algorithm.problem = problem
+
+            algorithm.n_offsprings = populationSize
+            algorithm.pop_size = populationSize
         else:
             algorithm = get_algorithm(alg, ref_dirs=ref_dirs, sampling=init_pop, pop_size=populationSize )
             algorithm.setup(problem, termination=('n_gen', totalGenerations), seed=1)
