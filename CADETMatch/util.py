@@ -513,29 +513,35 @@ def update_json_mcmc(settings):
     data.load(paths=["/bounds_change/json"], lock=True)
     prior_parameters = jstyleson.loads(str(data.root.bounds_change.json, "ascii"))
 
-    keep = ['transform', 'min', 'max', 'minKA', 'maxKA',
+    replace = ['transform', 'min', 'max', 'minKA', 'maxKA',
                       'minKEQ', 'maxKEQ', 'factor', 'minNu', 'maxNu',
                       'minSigma', 'maxSigma', 'minVolume', 'maxVolume',
                       'minArea', 'maxArea', 'minLength', 'maxLength']
 
     if "parameters_mcmc" in settings:
-        new_parameters = settings["parameters_mcmc"]
+        parameters = settings["parameters_mcmc"]
 
-        for new, prior in zip(new_parameters, prior_parameters):
+        parameters_iter = (parameter for parameter in parameters if parameter['transform'] != 'set_value')
+        prior_parameters_iter = (parameter for parameter in prior_parameters if parameter['transform'] != 'set_value')
+
+        for new, prior in zip(parameters_iter, prior_parameters_iter):
             ok_location = "location" in new and new["location"].split("/")[-1] == prior["location"].split("/")[-1]
             ok_location_from = "locationFrom" in new and new["locationFrom"].split("/")[-1] == prior["locationFrom"].split("/")[-1]
+
             if ok_location or ok_location_from:
                 #update just the location data everthing else needs to remain the same
                 for key, value in new.items():
-                    if key not in keep:
-                        prior[key] = new[key]
+                    if key in replace:
+                        new[key] = prior[key]
             else:
                 multiprocessing.get_logger().info(
                     "parameters_mcmc does not have the same transform and variables in the same order as the prior, MCMC cannot continue until this is fixed"
                 )
-                sys.exit()
+                sys.exit()     
+    else:
+        parameters = prior_parameters
        
-    settings["parameters"].extend(prior_parameters)
+    settings["parameters"].extend(parameters)
 
 
 def setupAltFeature(cache, name):
