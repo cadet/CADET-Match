@@ -9,16 +9,16 @@ from cadet import H5
 
 import CADETMatch.util as util
 
-from pymoo.model.problem import Problem
+from pymoo.core.problem import ElementwiseProblem
 from pymoo.factory import get_algorithm, get_reference_directions
 from pymoo.optimize import minimize
 
 butter_order = 3
 
-class TargetProblem(Problem):
+class TargetProblem(ElementwiseProblem):
 
     def __init__(self, lb, ub, sse_target, func, values, fs):
-        super().__init__(n_var=1, n_obj=1, n_constr=0, xl=lb, xu=ub, elementwise_evaluation=True)
+        super().__init__(n_var=1, n_obj=1, n_constr=0, xl=lb, xu=ub)
         self.sse_target = sse_target
         self.func = func
         self.values = values
@@ -36,10 +36,10 @@ class TargetProblem(Problem):
             error = numpy.inf
         out["F"] = error
 
-class MaxDistance(Problem):
+class MaxDistance(ElementwiseProblem):
 
     def __init__(self, lb, ub, func, fs, values, x_min, y_min, p1, p2, factor):
-        super().__init__(n_var=1, n_obj=1, n_constr=0, xl=lb, xu=ub, elementwise_evaluation=True)
+        super().__init__(n_var=1, n_obj=1, n_constr=0, xl=lb, xu=ub)
         self.func = func
         self.fs = fs   
         self.values = values

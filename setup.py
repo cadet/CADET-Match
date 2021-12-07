@@ -21,7 +21,7 @@ setuptools.setup(
           'emcee>=3.0.2',
           'SAlib',
           'corner>=2.1.0',
-          'pymoo==0.4.2.2',
+          'pymoo>=0.5.0',
           'psutil>=5.7.0',
           'openpyxl>=3.0.3',
           'numpy>=1.18.5',

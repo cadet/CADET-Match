@@ -1,13 +1,10 @@
-import copy
 import csv
-import multiprocessing
 import time
 import numpy
 import random
 import pickle
 from pathlib import Path
 
-import CADETMatch.jacobian as jacobian
 import CADETMatch.pareto as pareto
 import CADETMatch.progress as progress
 import CADETMatch.sub as sub
@@ -15,8 +12,7 @@ import CADETMatch.util as util
 import CADETMatch.pop as pop
 
 from pymoo.factory import get_algorithm, get_reference_directions
-from pymoo.optimize import minimize
-from pymoo.model.problem import Problem
+from pymoo.core.problem import Problem
 import attr
 
 
@@ -36,7 +32,7 @@ name = "pymoo"
 class MyProblem(Problem):
 
     def __init__(self, n_var, n_obj, lb, ub, evaluate_function, problem_state):
-        super().__init__(n_var=n_var, n_obj=n_obj, n_constr=0, xl=lb, xu=ub, elementwise_evaluation=False)
+        super().__init__(n_var=n_var, n_obj=n_obj, n_constr=0, xl=lb, xu=ub)
         self.evaluate_function = evaluate_function
         self.problem_state = problem_state
 

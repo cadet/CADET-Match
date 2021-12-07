@@ -12,7 +12,7 @@
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>CondaEnv|CondaEnv|cadet_devel</InterpreterId>
-    <CommandLineArguments>"F:\MCMC\Synthetic\SMAMultiple_Mult\release_5\SMA_MCMC_pump_delay_1000\MCMC_SMA_pump.json" 1</CommandLineArguments>
+    <CommandLineArguments>"F:\cadet_release_test\search\unsga3\dextran.json" 12</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
     <InterpreterArguments>
@@ -80,7 +80,6 @@
     <Compile Include="CADETMatch\match.py" />
     <Compile Include="CADETMatch\mcmc_plot_tube.py" />
     <Compile Include="CADETMatch\mle.py" />
-    <Compile Include="CADETMatch\modEnsemble.py" />
     <Compile Include="CADETMatch\obsolete\obsolete_score.py" />
     <Compile Include="CADETMatch\obsolete\scores\breakthrough.py" />
     <Compile Include="CADETMatch\obsolete\scores\breakthroughCross.py" />
