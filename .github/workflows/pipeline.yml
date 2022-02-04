@@ -35,8 +35,8 @@ jobs:
     #    fail_ci_if_error: false
     - name: Test Wheel install and import
       run: |
+        pip install wheel
         python setup.py bdist_wheel
         cd dist
         pip install CADETMatch*.whl
         python -c "import CADETMatch; print(CADETMatch.__version__)"
-        
