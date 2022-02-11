@@ -36,7 +36,8 @@ setuptools.setup(
           'jstyleson>=0.0.2',
           'attrs>=21.2.0',
           'filelock',
-          'numba'
+          'numba',
+          'arviz>=0.11.2'
       ],
     classifiers=[
         "Programming Language :: Python :: 3",
