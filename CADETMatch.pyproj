@@ -12,7 +12,7 @@
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>CondaEnv|CondaEnv|cadet_devel</InterpreterId>
-    <CommandLineArguments>"F:\cadet_release_test\search\unsga3\dextran.json" 12</CommandLineArguments>
+    <CommandLineArguments>"F:\NN_thesis\Synthetic\Dextran\NN_Dextran_bounds.json" 10</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
     <InterpreterArguments>

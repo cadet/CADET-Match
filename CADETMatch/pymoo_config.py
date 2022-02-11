@@ -157,7 +157,7 @@ def run(cache, alg="unsga3"):
 
         problem = MyProblem(parameters, cache.numGoals, cache.MIN_VALUE, cache.MAX_VALUE, cache.eval.evaluate, problem_state)
 
-        numRefDirs = populationSize
+        numRefDirs = min(populationSize, 1000)
 
         ref_dirs = get_reference_directions("energy", cache.numGoals, numRefDirs, seed=1)
 

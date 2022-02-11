@@ -6,13 +6,6 @@ from typing import Iterable
 def seq2array(x: Iterable[float]) -> array.array:
     return array.array("d", x)
 
-class SetterProperty():
-    def __init__(self, func):
-        self.func = func
-        self.__doc__ = func.__doc__
-    def __set__(self, obj, value):
-        return self.func(obj, value)
-
 @attr.s
 class Fitness:
     "designed for DEAP compatibility but only minimization, clean and array.array"
