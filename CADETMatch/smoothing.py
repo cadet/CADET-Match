@@ -54,8 +54,14 @@ class MaxDistance(ElementwiseProblem):
         try:
             sos = self.func(crit_fs, self.fs)
         except ValueError:
-            return 1e6
-        low_passed = scipy.signal.sosfiltfilt(sos, self.values)
+            out['F'] = 1e6
+            return
+
+        try:
+            low_passed = scipy.signal.sosfiltfilt(sos, self.values)
+        except numpy.linalg.LinAlgError:
+            out['F'] = 1e6
+            return
 
         sse = numpy.sum((low_passed - self.values) ** 2)
 
