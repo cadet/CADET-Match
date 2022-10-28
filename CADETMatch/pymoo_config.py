@@ -1,4 +1,5 @@
 import csv
+import importlib
 import time
 import numpy
 import random
@@ -11,7 +12,7 @@ import CADETMatch.sub as sub
 import CADETMatch.util as util
 import CADETMatch.pop as pop
 
-from pymoo.factory import get_algorithm, get_reference_directions
+from pymoo.factory import get_reference_directions
 from pymoo.core.problem import Problem
 import attr
 
@@ -169,7 +170,15 @@ def run(cache, alg="unsga3"):
             algorithm.n_offsprings = populationSize
             algorithm.pop_size = populationSize
         else:
-            algorithm = get_algorithm(alg, ref_dirs=ref_dirs, sampling=init_pop, pop_size=populationSize )
+            module = importlib.import_module(
+                f'pymoo.algorithms.moo.{alg.lower()}'
+            )
+            cls_ = getattr(module, alg.upper())
+            algorithm = cls_(
+                ref_dirs=ref_dirs,
+                pop_size=populationSize,
+                sampling=init_pop,
+            )
             algorithm.setup(problem, termination=('n_gen', totalGenerations), seed=1)
 
         while algorithm.has_next():
