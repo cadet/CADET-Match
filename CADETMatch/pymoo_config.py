@@ -11,8 +11,12 @@ import CADETMatch.sub as sub
 import CADETMatch.util as util
 import CADETMatch.pop as pop
 
-from pymoo.factory import get_algorithm, get_reference_directions
+from pymoo.factory import get_reference_directions
 from pymoo.core.problem import Problem
+
+from pymoo.algorithms.moo.nsga3 import NSGA3
+from pymoo.algorithms.moo.unsga3 import UNSGA3
+from pymoo.algorithms.moo.nsga2 import NSGA2
 import attr
 
 
@@ -69,7 +73,17 @@ def stop_iteration(best, stalled, cache):
         return True
     else:
         return False
-
+    
+def get_algorithm(algorithm: str, pop_size: int, initial_population: numpy.ndarray, objectives: int):
+    "create a pymoo algorithm and return it"
+    if algorithm.upper() == 'NSGA3':
+        ref_dirs = get_reference_directions("energy", objectives, min(pop_size, 1000), seed=1)
+        return NSGA3(ref_dirs=ref_dirs, pop_size=pop_size, sampling=initial_population)
+    elif algorithm.upper() == 'UNSGA3':
+        ref_dirs = get_reference_directions("energy", objectives, min(pop_size, 1000), seed=1)
+        return UNSGA3(ref_dirs=ref_dirs, pop_size=pop_size, sampling=initial_population)
+    elif algorithm.upper() == 'NSGA2':
+        return NSGA2(pop_size=pop_size, sampling=lambda problem, n_samples, **kwargs : initial_population)
 
 def run(cache, alg="unsga3"):
     "run the parameter estimation"
@@ -157,11 +171,6 @@ def run(cache, alg="unsga3"):
 
         problem = MyProblem(parameters, cache.numGoals, cache.MIN_VALUE, cache.MAX_VALUE, cache.eval.evaluate, problem_state)
 
-        numRefDirs = min(populationSize, 1000)
-
-        ref_dirs = get_reference_directions("energy", cache.numGoals, numRefDirs, seed=1)
-
-
         if pymoo_checkpointFile.exists():
             algorithm, = numpy.load(pymoo_checkpointFile, allow_pickle=True).flatten()
             algorithm.problem = problem
@@ -169,7 +178,7 @@ def run(cache, alg="unsga3"):
             algorithm.n_offsprings = populationSize
             algorithm.pop_size = populationSize
         else:
-            algorithm = get_algorithm(alg, ref_dirs=ref_dirs, sampling=init_pop, pop_size=populationSize )
+            algorithm = get_algorithm(algorithm=alg, pop_size=populationSize, initial_population=init_pop, objectives=cache.numGoals)
             algorithm.setup(problem, termination=('n_gen', totalGenerations), seed=1)
 
         while algorithm.has_next():

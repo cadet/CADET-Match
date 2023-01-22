@@ -143,7 +143,7 @@ def print_version():
         ("scikit-learn", "0.24.2"),
         ("jstyleson", "0.2.0"),
         ('filelock', "3.0.12"),
-        ('pymoo', '0.4.2.2')
+        ('pymoo', '0.6.0.1')
     ]
 
     for module, version_tested in modules:
