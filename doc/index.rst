@@ -4,8 +4,8 @@
 
 |
 
-.. image:: https://img.shields.io/github/release/modsim/CADET-Match.svg
-   :target: https://github.com/modsim/CADET-Match/releases
+.. image:: https://img.shields.io/github/release/cadet/CADET-Match.svg
+   :target: https://github.com/cadet/CADET-Match/releases
 
 CADET-Match
 ==========
@@ -13,8 +13,8 @@ CADET-Match is a parameter estimation and error modeling library for CADET.
 CADET-Match is developed at the Institute of Bio- and Geosciences 1 (IBG-1) of Forschungszentrum Jülich (FZJ) under supervision of Dr. Eric von Lieres.
 
 
-- **Source:** https://github.com/modsim/CADET-Match
-- **Releases:** https://github.com/modsim/CADET-Match/releases
+- **Source:** https://github.com/cadet/CADET-Match
+- **Releases:** https://github.com/cadet/CADET-Match/releases
 
 .. rubric:: Features
 
@@ -35,8 +35,8 @@ For non-developers, it is recommended to upgrade from release to release instead
 
 .. rubric:: Bugs
 
-Please report any bugs that you find `here <https://github.com/modsim/CADET-Match/issues>`_.
-Or, even better, fork the repository on `GitHub <https://github.com/modsim/CADET-Match>`_ and create a pull request (PR) with the fix. 
+Please report any bugs that you find `here <https://github.com/cadet/CADET-Match/issues>`_.
+Or, even better, fork the repository on `GitHub <https://github.com/cadet/CADET-Match>`_ and create a pull request (PR) with the fix. 
 
 .. toctree::
     :maxdepth: 3

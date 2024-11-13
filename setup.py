@@ -4,7 +4,7 @@ from CADETMatch import version
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
-    
+
 setuptools.setup(
     name=version.__title__,
     version=version.__version__,
@@ -13,7 +13,7 @@ setuptools.setup(
     description=version.__summary__,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/modsim/CADET-Match",
+    url="https://github.com/cadet/CADET-Match",
     packages=setuptools.find_packages(),
     install_requires=[
           'joblib>=0.15.1',
